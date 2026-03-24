@@ -19,7 +19,7 @@ export default function LoginPage() {
           <h1 className="font-headline text-4xl font-extrabold tracking-tight text-white mb-3">
             Knowledge Vault
           </h1>
-          <p className="text-on-surface-variant text-sm font-medium tracking-wide border-b border-transparent uppercase">
+          <p className="text-on-surface-variant text-sm font-medium tracking-wide uppercase">
             Access your digital library
           </p>
         </div>
