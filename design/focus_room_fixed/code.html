@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Focused Scholar - Focus Room</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "secondary-fixed-dim": "#d6d3d8",
+              "outline-variant": "#404952",
+              "error-container": "#7f2737",
+              "on-secondary-fixed": "#403f43",
+              "tertiary-container": "#ced6f5",
+              "tertiary-dim": "#c0c9e6",
+              "surface-variant": "#1e272f",
+              "tertiary-fixed": "#ced6f5",
+              "on-secondary": "#202023",
+              "surface-dim": "#0b0e11",
+              "on-primary-container": "#ccccff",
+              "on-primary": "#2724b8",
+              "on-error-container": "#ff97a3",
+              "surface": "#0b0e11",
+              "on-surface-variant": "#a3acb7",
+              "inverse-surface": "#f8f9fe",
+              "on-tertiary-fixed": "#2f384f",
+              "primary-container": "#2f2ebe",
+              "primary-dim": "#b0b2ff",
+              "surface-container-highest": "#1e272f",
+              "surface-bright": "#222d37",
+              "error-dim": "#b95463",
+              "outline": "#6d7680",
+              "secondary-container": "#3c3b3f",
+              "on-background": "#dde6f2",
+              "on-primary-fixed-variant": "#4647d3",
+              "background": "#0b0e11",
+              "surface-container-high": "#192027",
+              "secondary-dim": "#9f9da1",
+              "surface-tint": "#c0c1ff",
+              "on-tertiary-fixed-variant": "#4b546d",
+              "on-tertiary": "#4a536c",
+              "secondary-fixed": "#e5e1e6",
+              "surface-container": "#141a20",
+              "surface-container-low": "#0f1418",
+              "inverse-primary": "#494bd7",
+              "primary-fixed-dim": "#d1d0ff",
+              "on-surface": "#dde6f2",
+              "surface-container-lowest": "#000000",
+              "primary-fixed": "#e1e0ff",
+              "error": "#ec7c8a",
+              "on-tertiary-container": "#424a63",
+              "inverse-on-surface": "#535559",
+              "on-secondary-fixed-variant": "#5c5b5f",
+              "tertiary": "#dee5ff",
+              "on-primary-fixed": "#2622b7",
+              "on-error": "#490013",
+              "on-secondary-container": "#c1bec3",
+              "secondary": "#9f9da1",
+              "tertiary-fixed-dim": "#c0c9e6",
+              "primary": "#c0c1ff"
+            },
+            fontFamily: {
+              "headline": ["Manrope", "sans-serif"],
+              "body": ["Inter", "sans-serif"],
+              "label": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-headline { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24;
+        }
+        .timer-display {
+            font-feature-settings: "tnum";
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.05em;
+            background: linear-gradient(180deg, #dde6f2 0%, rgba(221, 230, 242, 0.4) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .glow-soft {
+            box-shadow: 0 0 100px -20px rgba(192, 193, 255, 0.1);
+        }
+        .vignette {
+            background: radial-gradient(circle at center, transparent 0%, rgba(11, 14, 17, 0.8) 100%);
+        }
+    </style>
+</head>
+<body class="bg-[#0b0e11] text-on-surface antialiased overflow-hidden">
+<!-- Navigation (Side) -->
+<aside class="fixed left-0 top-0 bottom-0 w-64 z-50 flex flex-col py-8 px-6 bg-background/40 backdrop-blur-md border-r border-outline-variant/10">
+<div class="mb-12">
+<h1 class="text-xl font-extrabold text-primary tracking-tight font-headline">The Scholar</h1>
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mt-1">Level 42 Mastery</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-primary bg-primary/5 rounded-xl group transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">timer</span>
+<span class="text-sm font-semibold">Focus Room</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">quiz</span>
+<span class="text-sm font-medium">Flashcards</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">insights</span>
+<span class="text-sm font-medium">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">folder_open</span>
+<span class="text-sm font-medium">Subjects</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+<div class="mt-auto">
+<div class="p-4 bg-surface-container rounded-2xl border border-outline-variant/10">
+<div class="flex items-center gap-3 mb-3">
+<img alt="Profile" class="w-8 h-8 rounded-full border border-primary/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVBt7LjNCVhzPjHztCcxF6xHC7KayPsZBg4uipg2J8Akr628lAm5oUZDh5a2Dg60eUVKKuWd61V8AoKxBsuWFcjinjeYCKpUCE9Sa3Az9N5VfVDT8glhQxf1Mqc158pGN5lgvYSkgXM69-Z7uHbUF0OfCp9chAROc72W0eL4wwuV--nP-vvsicWN3D8gjVKIMKLtVvR_zSqpLuqssxotp2vHNss0czixfsERJnJsZdoQ99-x6oHhYrkaFZ0yVj9hlHR8w7MuTcCJPr"/>
+<div class="overflow-hidden">
+<p class="text-xs font-bold truncate">Alex Chen</p>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-tighter">Pro Scholar</p>
+</div>
+</div>
+<button class="w-full py-2 bg-surface-bright hover:bg-surface-variant rounded-lg text-[11px] font-bold transition-colors">Log Out</button>
+</div>
+</div>
+</aside>
+<!-- Top Bar -->
+<header class="fixed top-0 right-0 left-64 h-16 z-40 flex items-center justify-between px-10 border-b border-outline-variant/5">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span class="text-xs font-medium tracking-tight">Session #12 today</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">notifications</span></button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">bolt</span></button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-64 pt-16 h-screen relative flex flex-col items-center justify-center">
+<!-- Minimal Background Elements -->
+<div class="absolute inset-0 vignette pointer-events-none z-0"></div>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[160px] pointer-events-none"></div>
+<!-- Timer Centerpiece -->
+<div class="relative z-10 flex flex-col items-center w-full max-w-2xl text-center">
+<div class="mb-2">
+<span class="text-[11px] font-bold tracking-[0.4em] text-primary/60 uppercase">Deep Focus</span>
+</div>
+<div class="timer-display font-headline text-[12rem] font-extrabold leading-none mb-12 drop-shadow-2xl">
+                25:00
+            </div>
+<div class="flex flex-col items-center gap-8 w-full">
+<!-- Session Actions -->
+<div class="flex items-center gap-6">
+<button class="group relative px-10 py-4 bg-primary text-on-primary font-bold rounded-2xl transition-all hover:scale-105 active:scale-95 glow-soft">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined fill-1">play_arrow</span>
+<span>Start Session</span>
+</div>
+</button>
+<button class="p-4 text-on-surface-variant hover:text-on-surface transition-colors bg-surface-container/50 rounded-2xl hover:bg-surface-container border border-outline-variant/10">
+<span class="material-symbols-outlined">settings_suggest</span>
+</button>
+</div>
+<!-- Active Context -->
+<div class="w-full max-w-md p-6 bg-surface-container/40 backdrop-blur-xl rounded-2xl border border-outline-variant/10 mt-8">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Upcoming Objective</h3>
+<span class="text-[10px] text-primary/80 font-medium">Priority High</span>
+</div>
+<div class="flex items-center gap-4 text-left">
+<div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">menu_book</span>
+</div>
+<div>
+<p class="text-sm font-semibold text-on-surface">Microeconomics Proofs</p>
+<p class="text-xs text-on-surface-variant">Section 4.2 • Mathematical Foundations</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Utility Footer (Floating) -->
+<div class="absolute bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-8 px-8 py-3 bg-surface-container/30 backdrop-blur-md rounded-full border border-outline-variant/10">
+<button class="flex items-center gap-2 text-[11px] font-semibold text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">water_drop</span>
+                Rain
+            </button>
+<div class="w-[1px] h-4 bg-outline-variant/20"></div>
+<button class="flex items-center gap-2 text-[11px] font-semibold text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">graphic_eq</span>
+                Lo-Fi
+            </button>
+<div class="w-[1px] h-4 bg-outline-variant/20"></div>
+<button class="flex items-center gap-2 text-[11px] font-semibold text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">volume_up</span>
+                60%
+            </button>
+</div>
+</main>
+</body></html>

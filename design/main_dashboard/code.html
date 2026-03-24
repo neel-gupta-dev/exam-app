@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Scholar Terminal - Knowledge Vault</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "on-error": "#490013",
+                "surface": "#0b0e11",
+                "surface-variant": "#1e272f",
+                "inverse-surface": "#f8f9fe",
+                "secondary": "#9f9da1",
+                "primary-dim": "#b0b2ff",
+                "on-tertiary-fixed": "#2f384f",
+                "surface-container-highest": "#1e272f",
+                "on-surface": "#dde6f2",
+                "on-secondary-container": "#c1bec3",
+                "surface-dim": "#0b0e11",
+                "tertiary": "#dee5ff",
+                "background": "#0b0e11",
+                "outline-variant": "#404952",
+                "primary-container": "#2f2ebe",
+                "on-primary-fixed-variant": "#4647d3",
+                "on-secondary-fixed-variant": "#5c5b5f",
+                "on-tertiary-container": "#424a63",
+                "inverse-on-surface": "#535559",
+                "surface-tint": "#c0c1ff",
+                "error": "#ec7c8a",
+                "secondary-fixed": "#e5e1e6",
+                "primary-fixed-dim": "#d1d0ff",
+                "surface-bright": "#222d37",
+                "secondary-dim": "#9f9da1",
+                "secondary-fixed-dim": "#d6d3d8",
+                "surface-container-low": "#0f1418",
+                "on-tertiary-fixed-variant": "#4b546d",
+                "error-container": "#7f2737",
+                "tertiary-fixed-dim": "#c0c9e6",
+                "surface-container-high": "#192027",
+                "inverse-primary": "#494bd7",
+                "on-primary": "#2724b8",
+                "tertiary-container": "#ced6f5",
+                "surface-container": "#141a20",
+                "on-secondary-fixed": "#403f43",
+                "on-error-container": "#ff97a3",
+                "on-secondary": "#202023",
+                "on-surface-variant": "#a3acb7",
+                "tertiary-fixed": "#ced6f5",
+                "on-tertiary": "#4a536c",
+                "secondary-container": "#3c3b3f",
+                "error-dim": "#b95463",
+                "outline": "#6d7680",
+                "on-primary-fixed": "#2622b7",
+                "surface-container-lowest": "#000000",
+                "on-background": "#dde6f2",
+                "on-primary-container": "#ccccff",
+                "primary-fixed": "#e1e0ff",
+                "tertiary-dim": "#c0c9e6",
+                "primary": "#c0c1ff"
+              },
+              fontFamily: {
+                "headline": ["Manrope"],
+                "body": ["Inter"],
+                "label": ["Inter"]
+              },
+              borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+            },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            font-size: 20px;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+      </style>
+</head>
+<body class="bg-surface text-on-surface selection:bg-primary/30">
+<!-- SideNavBar Component -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#0f1418] dark:bg-[#0f1418] font-['Manrope'] antialiased tracking-tight flex flex-col h-full overflow-y-auto z-50">
+<div class="px-6 py-8">
+<div class="flex items-center gap-3 mb-10">
+<div class="w-8 h-8 rounded bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary" data-icon="terminal">terminal</span>
+</div>
+<div>
+<h1 class="text-lg font-bold text-indigo-500 dark:text-indigo-400 leading-none">The Focused Scholar</h1>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest mt-1">JEE Preparation</p>
+</div>
+</div>
+<nav class="space-y-2">
+<!-- Vault is ACTIVE -->
+<a class="flex items-center gap-3 px-3 py-2 rounded-md bg-indigo-500/10 text-indigo-400 border-l-2 border-indigo-500 transition-all opacity-90" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="text-sm font-medium">Vault</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-slate-400 hover:text-slate-200 hover:bg-[#222d37] transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="self_improvement">self_improvement</span>
+<span class="text-sm font-medium">Focus Room</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-slate-400 hover:text-slate-200 hover:bg-[#222d37] transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="quiz">quiz</span>
+<span class="text-sm font-medium">Flashcards</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-slate-400 hover:text-slate-200 hover:bg-[#222d37] transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="text-sm font-medium">Analytics</span>
+</a>
+</nav>
+<div class="mt-12">
+<h2 class="px-3 text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-4">Folders</h2>
+<div class="space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-slate-400 hover:text-slate-200 hover:bg-[#222d37] transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="science">science</span>
+<span class="text-sm font-medium">Physics</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-slate-400 hover:text-slate-200 hover:bg-[#222d37] transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="functions">functions</span>
+<span class="text-sm font-medium">Maths</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-slate-400 hover:text-slate-200 hover:bg-[#222d37] transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="science">science</span>
+<span class="text-sm font-medium">Chemistry</span>
+</a>
+</div>
+</div>
+</div>
+<div class="mt-auto p-4">
+<div class="bg-surface-container rounded-xl p-4 flex items-center gap-3">
+<img alt="User Profile Avatar" class="w-8 h-8 rounded-full bg-surface-bright" data-alt="professional minimalist avatar of a young male student wearing glasses with a focused expression" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA24x4nNUrfkQqiaJffG-0wDGOyJK6iCfOYRDiHv-qf3Ut1bNi1PU-q_vN6hTfdNWrgYMgdldoe3-r5vslGyC2jeXy5b5yso2qWyYN7nwSqZdHIuqiEAVWHE8s1dndj_QwJ4FLGWVm8lzN11iMxo3vpq0XSIhKzdmWbiPzAb6uj0ZBTY3D8szOzIa24Gj0GYmak42WtiKWNg9x1xvvF22uY6mKc9wREqqOLaRxNlyXR-dzXFR5Q3t3WiJTbnRo1xKmVGFN5zWOPZx8B"/>
+<div class="overflow-hidden">
+<p class="text-xs font-semibold text-on-surface truncate">Aryan Sharma</p>
+<p class="text-[10px] text-on-surface-variant truncate">Premium Scholar</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopNavBar Component -->
+<header class="fixed top-0 right-0 h-16 bg-[#0b0e11] dark:bg-[#0b0e11] flex items-center justify-between px-8 w-[calc(100%-16rem)] ml-auto z-40">
+<div class="flex items-center gap-4 w-1/2">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm" data-icon="search">search</span>
+<input class="w-full bg-surface-container-highest border-none rounded-xl pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-primary/50 placeholder:text-outline text-on-surface transition-all" placeholder="Command + K to search notes" type="text"/>
+<div class="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1">
+<span class="bg-[#141a20] rounded px-1.5 py-0.5 text-[10px] text-on-surface-variant font-mono border border-outline-variant/20">⌘</span>
+<span class="bg-[#141a20] rounded px-1.5 py-0.5 text-[10px] text-on-surface-variant font-mono border border-outline-variant/20">K</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="bg-indigo-600 dark:bg-indigo-500 hover:opacity-90 transition-all text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined !text-sm" data-icon="add">add</span>
+                Quick Save
+            </button>
+<div class="flex items-center gap-4 text-on-surface-variant">
+<button class="hover:text-indigo-300 transition-opacity">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:text-indigo-300 transition-opacity">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="pt-24 pb-12 ml-64 px-8 min-h-screen">
+<div class="max-w-[1400px] mx-auto flex gap-8">
+<!-- Left Column (70%) -->
+<section class="w-[70%] space-y-8">
+<div class="flex items-end justify-between">
+<div>
+<h2 class="text-2xl font-extrabold tracking-tight text-on-surface">Recent Resources</h2>
+<p class="text-sm text-on-surface-variant mt-1">Your latest focused study materials.</p>
+</div>
+<button class="text-xs font-medium text-primary hover:underline">View All</button>
+</div>
+<!-- Resources Grid -->
+<div class="grid grid-cols-1 gap-4">
+<!-- Card 1: PDF -->
+<div class="group bg-surface-container hover:bg-surface-container-high transition-colors p-5 rounded-xl flex items-center gap-5 cursor-pointer">
+<div class="w-14 h-14 bg-red-500/10 rounded-lg flex items-center justify-center text-red-400 shrink-0">
+<span class="material-symbols-outlined !text-3xl" data-icon="picture_as_pdf">picture_as_pdf</span>
+</div>
+<div class="flex-1">
+<h3 class="font-semibold text-on-surface group-hover:text-primary transition-colors">JEE Advanced 2024 - Physics Notes</h3>
+<div class="flex items-center gap-3 mt-2">
+<span class="px-2 py-0.5 rounded bg-surface-bright text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Physics</span>
+<span class="text-xs text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined !text-xs" data-icon="schedule">schedule</span>
+                                    2h ago
+                                </span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline opacity-0 group-hover:opacity-100 transition-opacity" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Card 2: YouTube Note -->
+<div class="group bg-surface-container hover:bg-surface-container-high transition-colors p-5 rounded-xl flex items-center gap-5 cursor-pointer">
+<div class="relative w-14 h-14 shrink-0 overflow-hidden rounded-lg">
+<img alt="Video Thumbnail" class="w-full h-full object-cover" data-alt="vibrant abstract digital background with neon purple and blue hues suitable for a educational tech video thumbnail" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAC5eucfqTcwWA33WfP60gZdR3IF_5M8FmUUEpWHatCrBjfPL8Wu4Sn-K6zj_2y4-Ly70QvTjCqlDTIW0tNX2sWM1Uen099W6ijqdxW-0D6nTgHt2sk17D42YpHDDytrA8jY5nTAZ-92Wysik2jGDqa9drkk_VSfY6uF6DAZKQnj_fteLSJ0CbdJjjfeXcxyPGgIiYoRdgQ360_adbP-jEyYBQ3RjNLrSHXIPrwCnGRbzWFXj4OqBay0EiO-cy7_idBo8IFS9Ay_Py6"/>
+<div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+<span class="material-symbols-outlined text-white !text-xl" data-icon="play_arrow" data-weight="fill">play_arrow</span>
+</div>
+</div>
+<div class="flex-1">
+<h3 class="font-semibold text-on-surface group-hover:text-primary transition-colors">UGEE Preparation Strategy</h3>
+<div class="flex items-center gap-3 mt-2">
+<span class="px-2 py-0.5 rounded bg-surface-bright text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Strategy</span>
+<span class="text-xs text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined !text-xs" data-icon="schedule">schedule</span>
+                                    5h ago
+                                </span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline opacity-0 group-hover:opacity-100 transition-opacity" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Card 3: PDF Chemistry -->
+<div class="group bg-surface-container hover:bg-surface-container-high transition-colors p-5 rounded-xl flex items-center gap-5 cursor-pointer">
+<div class="w-14 h-14 bg-teal-500/10 rounded-lg flex items-center justify-center text-teal-400 shrink-0">
+<span class="material-symbols-outlined !text-3xl" data-icon="description">description</span>
+</div>
+<div class="flex-1">
+<h3 class="font-semibold text-on-surface group-hover:text-primary transition-colors">Organic Chemistry Mechanisms</h3>
+<div class="flex items-center gap-3 mt-2">
+<span class="px-2 py-0.5 rounded bg-surface-bright text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Chemistry</span>
+<span class="text-xs text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined !text-xs" data-icon="schedule">schedule</span>
+                                    Yesterday
+                                </span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline opacity-0 group-hover:opacity-100 transition-opacity" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<!-- Asymmetric Bento Section -->
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container p-6 rounded-xl aspect-[16/9] flex flex-col justify-between">
+<div>
+<span class="material-symbols-outlined text-primary mb-4" data-icon="auto_awesome">auto_awesome</span>
+<h3 class="font-bold text-lg text-on-surface">AI Synthesis</h3>
+<p class="text-sm text-on-surface-variant mt-2">Generate summary cards from your handwritten Physics notes.</p>
+</div>
+<button class="w-fit text-xs font-semibold px-4 py-2 border border-outline-variant rounded-lg hover:bg-surface-bright transition-colors">Launch Assistant</button>
+</div>
+<div class="bg-primary/5 p-6 rounded-xl aspect-[16/9] flex flex-col justify-center items-center text-center">
+<span class="material-symbols-outlined text-primary !text-4xl mb-3" data-icon="star">star</span>
+<h3 class="font-bold text-lg text-primary">Weekly Goal</h3>
+<p class="text-sm text-on-surface-variant mt-1 max-w-[200px]">Complete 25 Calculus problems by Sunday.</p>
+<div class="w-full bg-surface-container rounded-full h-1 mt-6">
+<div class="bg-primary h-full w-[65%] rounded-full"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant mt-2">65% Achieved</span>
+</div>
+</div>
+</section>
+<!-- Right Column (30%) -->
+<aside class="w-[30%] space-y-6">
+<div class="bg-surface-container p-6 rounded-xl">
+<h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-6">Focus &amp; Progress</h3>
+<!-- Progress Widget -->
+<div class="flex items-center justify-between mb-8">
+<div>
+<p class="text-[10px] text-on-surface-variant font-bold uppercase">Study Time Today</p>
+<h4 class="text-2xl font-extrabold text-on-surface mt-1">4h 30m</h4>
+</div>
+<div class="relative w-16 h-16">
+<svg class="w-full h-full" viewbox="0 0 36 36">
+<circle class="stroke-surface-variant" cx="18" cy="18" fill="none" r="16" stroke-width="3"></circle>
+<circle class="stroke-primary" cx="18" cy="18" fill="none" r="16" stroke-dasharray="75, 100" stroke-linecap="round" stroke-width="3"></circle>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="text-[10px] font-bold text-on-surface">75%</span>
+</div>
+</div>
+</div>
+<!-- Heatmap Calendar -->
+<div class="space-y-3">
+<div class="flex justify-between items-center">
+<p class="text-[10px] text-on-surface-variant font-bold uppercase">Learning Streak</p>
+<span class="text-[10px] text-primary font-bold">12 Days</span>
+</div>
+<div class="grid grid-cols-7 gap-1.5">
+<!-- 28 squares (7x4) -->
+<div class="aspect-square rounded-[2px] bg-surface-variant/50"></div>
+<div class="aspect-square rounded-[2px] bg-primary/20"></div>
+<div class="aspect-square rounded-[2px] bg-primary/40"></div>
+<div class="aspect-square rounded-[2px] bg-primary/20"></div>
+<div class="aspect-square rounded-[2px] bg-primary/60"></div>
+<div class="aspect-square rounded-[2px] bg-primary/80"></div>
+<div class="aspect-square rounded-[2px] bg-primary"></div>
+<div class="aspect-square rounded-[2px] bg-primary/40"></div>
+<div class="aspect-square rounded-[2px] bg-primary/20"></div>
+<div class="aspect-square rounded-[2px] bg-surface-variant/50"></div>
+<div class="aspect-square rounded-[2px] bg-primary/20"></div>
+<div class="aspect-square rounded-[2px] bg-primary/40"></div>
+<div class="aspect-square rounded-[2px] bg-primary/20"></div>
+<div class="aspect-square rounded-[2px] bg-primary/60"></div>
+<div class="aspect-square rounded-[2px] bg-primary/80"></div>
+<div class="aspect-square rounded-[2px] bg-primary"></div>
+<div class="aspect-square rounded-[2px] bg-primary/40"></div>
+<div class="aspect-square rounded-[2px] bg-primary/20"></div>
+<div class="aspect-square rounded-[2px] bg-surface-variant/50"></div>
+<div class="aspect-square rounded-[2px] bg-primary/20"></div>
+<div class="aspect-square rounded-[2px] bg-primary/40"></div>
+<div class="aspect-square rounded-[2px] bg-primary/20"></div>
+<div class="aspect-square rounded-[2px] bg-primary/60"></div>
+<div class="aspect-square rounded-[2px] bg-primary/80"></div>
+<div class="aspect-square rounded-[2px] bg-primary"></div>
+<div class="aspect-square rounded-[2px] bg-primary/40"></div>
+<div class="aspect-square rounded-[2px] bg-primary/20"></div>
+<div class="aspect-square rounded-[2px] bg-surface-variant/50"></div>
+</div>
+</div>
+<button class="w-full mt-8 py-3 bg-primary text-on-primary rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined !text-lg" data-icon="timer">timer</span>
+                        Start Focus Session
+                    </button>
+</div>
+<!-- Tip Card -->
+<div class="bg-surface-bright p-5 rounded-xl border border-outline-variant/10">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-primary !text-sm" data-icon="lightbulb">lightbulb</span>
+<span class="text-[10px] font-bold text-on-surface uppercase tracking-wider">Quick Tip</span>
+</div>
+<p class="text-xs leading-relaxed text-on-surface-variant">
+                        Reviewing your chemistry notes within 24 hours can increase retention by up to 60%. Try a 10-minute flashcard session now.
+                    </p>
+</div>
+</aside>
+</div>
+</main>
+</body></html>

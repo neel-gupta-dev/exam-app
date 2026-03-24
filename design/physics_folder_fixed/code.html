@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "secondary-fixed-dim": "#d6d3d8",
+              "outline-variant": "#404952",
+              "error-container": "#7f2737",
+              "on-secondary-fixed": "#403f43",
+              "tertiary-container": "#ced6f5",
+              "tertiary-dim": "#c0c9e6",
+              "surface-variant": "#1e272f",
+              "tertiary-fixed": "#ced6f5",
+              "on-secondary": "#202023",
+              "surface-dim": "#0b0e11",
+              "on-primary-container": "#ccccff",
+              "on-primary": "#2724b8",
+              "on-error-container": "#ff97a3",
+              "surface": "#0b0e11",
+              "on-surface-variant": "#a3acb7",
+              "inverse-surface": "#f8f9fe",
+              "on-tertiary-fixed": "#2f384f",
+              "primary-container": "#2f2ebe",
+              "primary-dim": "#b0b2ff",
+              "surface-container-highest": "#1e272f",
+              "surface-bright": "#222d37",
+              "error-dim": "#b95463",
+              "outline": "#6d7680",
+              "secondary-container": "#3c3b3f",
+              "on-background": "#dde6f2",
+              "on-primary-fixed-variant": "#4647d3",
+              "background": "#0b0e11",
+              "surface-container-high": "#192027",
+              "secondary-dim": "#9f9da1",
+              "surface-tint": "#c0c1ff",
+              "on-tertiary-fixed-variant": "#4b546d",
+              "on-tertiary": "#4a536c",
+              "secondary-fixed": "#e5e1e6",
+              "surface-container": "#141a20",
+              "surface-container-low": "#0f1418",
+              "inverse-primary": "#494bd7",
+              "primary-fixed-dim": "#d1d0ff",
+              "on-surface": "#dde6f2",
+              "surface-container-lowest": "#000000",
+              "primary-fixed": "#e1e0ff",
+              "error": "#ec7c8a",
+              "on-tertiary-container": "#424a63",
+              "inverse-on-surface": "#535559",
+              "on-secondary-fixed-variant": "#5c5b5f",
+              "tertiary": "#dee5ff",
+              "on-primary-fixed": "#2622b7",
+              "on-error": "#490013",
+              "on-secondary-container": "#c1bec3",
+              "secondary": "#9f9da1",
+              "tertiary-fixed-dim": "#c0c9e6",
+              "primary": "#c0c1ff"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      .fill-1 { font-variation-settings: 'FILL' 1; }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary-container selection:text-primary antialiased">
+<!-- SideNavBar (Authority: JSON) -->
+<aside class="h-full w-64 fixed left-0 top-0 z-40 bg-[#0f1418] dark:bg-[#0f1418] font-['Manrope'] antialiased tracking-tight flex flex-col py-8 border-r border-outline-variant/10">
+<div class="px-6 mb-10 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary-container flex items-center justify-center shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-on-primary text-xl">school</span>
+</div>
+<div>
+<h1 class="text-xl font-bold text-white tracking-tighter">The Scholar</h1>
+<p class="text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">Level 42</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1 px-2">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 transition-colors hover:bg-surface-variant/50 rounded-lg group transition-all duration-200" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform" data-icon="timer">timer</span>
+<span class="font-medium">Focus Room</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 transition-colors hover:bg-surface-variant/50 rounded-lg group transition-all duration-200" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform" data-icon="quiz">quiz</span>
+<span class="font-medium">Flashcards</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 transition-colors hover:bg-surface-variant/50 rounded-lg group transition-all duration-200" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform" data-icon="insights">insights</span>
+<span class="font-medium">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-primary-dim bg-primary/10 rounded-lg border-r-2 border-primary group transition-all duration-200" href="#">
+<span class="material-symbols-outlined fill-1" data-icon="folder_open">folder_open</span>
+<span class="font-semibold">Subjects</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 transition-colors hover:bg-surface-variant/50 rounded-lg group transition-all duration-200" href="#">
+<span class="material-symbols-outlined group-hover:rotate-45 transition-transform" data-icon="settings">settings</span>
+<span class="font-medium">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 transition-colors hover:bg-surface-variant/50 rounded-lg group transition-all duration-200" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform" data-icon="person_outline">person_outline</span>
+<span class="font-medium">Profile</span>
+</a>
+</nav>
+<div class="px-4 mt-auto">
+<button class="w-full py-3 bg-gradient-to-r from-primary-container to-primary text-white font-headline font-bold rounded-xl shadow-lg shadow-primary/20 scale-95 active:scale-90 transition-all hover:scale-100">
+                Start Session
+            </button>
+</div>
+</aside>
+<!-- TopNavBar (Authority: JSON) -->
+<header class="fixed top-0 right-0 left-64 z-30 h-16 bg-[#0b0e11]/80 backdrop-blur-xl flex justify-between items-center px-8 border-b border-outline-variant/10 font-['Inter'] text-sm font-medium">
+<div class="flex items-center flex-1 max-w-xl">
+<div class="relative w-full group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full bg-surface-bright/50 border border-outline-variant/20 rounded-xl pl-12 pr-4 py-2 focus:ring-1 focus:border-primary ring-primary/30 text-on-surface placeholder:text-on-surface-variant/50 outline-none transition-all" placeholder="Search resources..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 text-slate-400">
+<button class="hover:text-primary transition-colors relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full border-2 border-[#0b0e11]"></span>
+</button>
+<button class="hover:text-primary transition-colors"><span class="material-symbols-outlined" data-icon="history_edu">history_edu</span></button>
+<button class="hover:text-primary transition-colors"><span class="material-symbols-outlined" data-icon="bolt">bolt</span></button>
+</div>
+<div class="h-8 w-[1px] bg-outline-variant/30"></div>
+<div class="flex items-center gap-3">
+<div class="text-right hidden sm:block">
+<p class="text-[12px] font-bold text-on-surface leading-tight">Alex Chen</p>
+<p class="text-[10px] text-on-surface-variant">Senior Scholar</p>
+</div>
+<img alt="User avatar" class="w-10 h-10 rounded-full border border-primary/20 p-0.5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAK-72pw0hWXVYYI9bbSlKDnPuYvU6qLr9ZrzlWmcvhf5NRXQoVbSA_TGDPSg7Zw4a4L-i2VYg9S1I06vNVmLb9nTWKF1xr9tgrTUABJxgDrFjkZnbdkRFuGBfQv49FlF6IzyUsHgso0AtULmMGwaoZ-3QwzdxfjrhrXUvQzYqoJq7R5ZmBKQZX56lII9HVpNeozPX6bStEK4RteINeZAlxwvcARrUn7wciG6uBwncAJ4Memf99Az1szb3PYSJfM0kDvW9NjSzlCrtg"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 mt-16 p-8 min-h-screen">
+<!-- Breadcrumbs & Header -->
+<div class="mb-10">
+<nav class="flex items-center gap-2 text-[11px] font-bold text-on-surface-variant mb-6 tracking-widest uppercase">
+<a class="hover:text-primary transition-colors flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-sm">home</span>
+                    Vault
+                </a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-on-surface">Physics</span>
+</nav>
+<div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+<div>
+<h2 class="text-6xl font-black font-headline tracking-tighter text-on-surface mb-3">Physics</h2>
+<p class="text-on-surface-variant max-w-2xl text-lg leading-relaxed">Advanced concepts in classical and modern physics. Curated resources for Semester 2 curriculum and competitive exam preparation.</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-5 py-2.5 bg-surface-container-highest hover:bg-surface-bright text-on-surface font-semibold rounded-xl border border-outline-variant/20 transition-all">
+<span class="material-symbols-outlined text-xl">share</span>
+                        Share
+                    </button>
+<button class="flex items-center gap-2 px-6 py-2.5 bg-primary text-on-primary font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all group">
+<span class="material-symbols-outlined transition-transform group-hover:bounce" data-icon="upload">upload</span>
+                        Upload Resource
+                    </button>
+</div>
+</div>
+</div>
+<!-- Subject Progress Widget (Knowledge Coverage) -->
+<section class="mb-12 grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="lg:col-span-2 bg-[#141a20] rounded-2xl p-8 border border-outline-variant/10 shadow-sm flex items-center justify-between relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[80px] -mr-20 -mt-20"></div>
+<div class="relative z-10 space-y-4 w-full">
+<div class="flex items-center justify-between mb-2">
+<div>
+<h3 class="font-headline font-extrabold text-2xl text-on-surface">Knowledge Coverage</h3>
+<p class="text-on-surface-variant text-sm mt-1">You've mastered 68% of the core Physics syllabus.</p>
+</div>
+<div class="text-right">
+<span class="text-4xl font-black text-primary">68%</span>
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Progress</p>
+</div>
+</div>
+<div class="w-full h-4 bg-surface-variant/30 rounded-full overflow-hidden p-1 border border-outline-variant/10">
+<div class="h-full bg-gradient-to-r from-primary to-primary-dim rounded-full transition-all duration-1000 ease-out" style="width: 68%;"></div>
+</div>
+<div class="grid grid-cols-4 gap-4 pt-2">
+<div class="text-center">
+<p class="text-lg font-bold">14/20</p>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tight">Units</p>
+</div>
+<div class="text-center border-l border-outline-variant/20">
+<p class="text-lg font-bold">128</p>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tight">Flashcards</p>
+</div>
+<div class="text-center border-l border-outline-variant/20">
+<p class="text-lg font-bold">12h</p>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tight">Time</p>
+</div>
+<div class="text-center border-l border-outline-variant/20">
+<p class="text-lg font-bold">92%</p>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tight">Avg Score</p>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-primary/5 border border-primary/20 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden">
+<span class="material-symbols-outlined text-primary/20 absolute -right-4 -bottom-4 text-9xl fill-1 rotate-12">auto_awesome</span>
+<div class="relative z-10">
+<div class="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-primary fill-1">auto_awesome</span>
+</div>
+<h4 class="font-headline font-bold text-xl mb-2">Smart Recommendation</h4>
+<p class="text-on-surface-variant text-sm leading-relaxed mb-6">Reviewing <span class="text-primary font-bold">Electromagnetism Notes</span> now will boost your exam readiness score by +12%.</p>
+<button class="w-full py-3 bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary font-bold rounded-xl transition-all">Start Review</button>
+</div>
+</div>
+</section>
+<!-- Folder Section -->
+<section class="mb-12">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-xl font-bold font-headline text-on-surface flex items-center gap-3">
+<span class="w-2 h-6 bg-primary rounded-full"></span>
+                    Learning Units
+                </h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Unit Card -->
+<div class="group bg-surface-container-low p-6 rounded-2xl border border-outline-variant/10 hover:bg-surface-container hover:border-primary/20 transition-all cursor-pointer">
+<div class="flex justify-between items-start mb-6">
+<div class="w-14 h-14 rounded-xl bg-surface-variant flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+<span class="material-symbols-outlined text-3xl text-primary" style="font-variation-settings: 'FILL' 1;">precision_manufacturing</span>
+</div>
+<span class="text-[10px] font-black text-on-surface-variant tracking-widest bg-outline-variant/20 px-2 py-1 rounded">01</span>
+</div>
+<h4 class="text-lg font-bold font-headline mb-1 group-hover:text-primary transition-colors">Classical Mechanics</h4>
+<p class="text-sm text-on-surface-variant mb-6">14 Resources • 2.4 GB</p>
+<div class="flex items-center justify-between">
+<div class="flex -space-x-2">
+<div class="w-7 h-7 rounded-full bg-outline-variant border-2 border-surface-container-low flex items-center justify-center text-[8px] font-bold">PDF</div>
+<div class="w-7 h-7 rounded-full bg-primary-container border-2 border-surface-container-low flex items-center justify-center text-[8px] font-bold">MP4</div>
+<div class="w-7 h-7 rounded-full bg-tertiary-container text-on-tertiary border-2 border-surface-container-low flex items-center justify-center text-[8px] font-bold">+5</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
+</div>
+</div>
+<!-- Unit Card -->
+<div class="group bg-surface-container-low p-6 rounded-2xl border border-outline-variant/10 hover:bg-surface-container hover:border-primary/20 transition-all cursor-pointer">
+<div class="flex justify-between items-start mb-6">
+<div class="w-14 h-14 rounded-xl bg-surface-variant flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+<span class="material-symbols-outlined text-3xl text-primary" style="font-variation-settings: 'FILL' 1;">lightbulb</span>
+</div>
+<span class="text-[10px] font-black text-on-surface-variant tracking-widest bg-outline-variant/20 px-2 py-1 rounded">02</span>
+</div>
+<h4 class="text-lg font-bold font-headline mb-1 group-hover:text-primary transition-colors">Optics &amp; Waves</h4>
+<p class="text-sm text-on-surface-variant mb-6">8 Resources • 412 MB</p>
+<div class="flex items-center justify-between">
+<div class="flex -space-x-2">
+<div class="w-7 h-7 rounded-full bg-outline-variant border-2 border-surface-container-low flex items-center justify-center text-[8px] font-bold">DOC</div>
+<div class="w-7 h-7 rounded-full bg-primary-container border-2 border-surface-container-low flex items-center justify-center text-[8px] font-bold">SVG</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
+</div>
+</div>
+<!-- Unit Card -->
+<div class="group bg-surface-container-low p-6 rounded-2xl border border-outline-variant/10 hover:bg-surface-container hover:border-primary/20 transition-all cursor-pointer">
+<div class="flex justify-between items-start mb-6">
+<div class="w-14 h-14 rounded-xl bg-surface-variant flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+<span class="material-symbols-outlined text-3xl text-primary" style="font-variation-settings: 'FILL' 1;">thermostat</span>
+</div>
+<span class="text-[10px] font-black text-on-surface-variant tracking-widest bg-outline-variant/20 px-2 py-1 rounded">03</span>
+</div>
+<h4 class="text-lg font-bold font-headline mb-1 group-hover:text-primary transition-colors">Thermodynamics</h4>
+<p class="text-sm text-on-surface-variant mb-6">21 Resources • 1.1 GB</p>
+<div class="flex items-center justify-between">
+<div class="flex -space-x-2">
+<div class="w-7 h-7 rounded-full bg-primary-container border-2 border-surface-container-low flex items-center justify-center text-[8px] font-bold">PDF</div>
+<div class="w-7 h-7 rounded-full bg-tertiary-container border-2 border-surface-container-low flex items-center justify-center text-[8px] font-bold">PPT</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
+</div>
+</div>
+<!-- Add Unit -->
+<div class="group border-2 border-dashed border-outline-variant/30 rounded-2xl flex flex-col items-center justify-center p-6 hover:border-primary/50 transition-all cursor-pointer hover:bg-surface-container-low">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-all group-hover:scale-110">
+<span class="material-symbols-outlined text-primary" data-icon="add">add_circle</span>
+</div>
+<p class="text-sm font-bold text-on-surface">New Unit</p>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest mt-1">Organize vault</p>
+</div>
+</div>
+</section>
+<!-- Resources Table View -->
+<section>
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-xl font-bold font-headline text-on-surface flex items-center gap-3">
+<span class="w-2 h-6 bg-primary rounded-full"></span>
+                    Recent Resources
+                </h3>
+<div class="flex bg-surface-container-low p-1 rounded-xl border border-outline-variant/10">
+<button class="p-2 text-on-surface-variant hover:text-on-surface rounded-lg transition-colors"><span class="material-symbols-outlined text-[20px]">grid_view</span></button>
+<button class="p-2 bg-primary/20 rounded-lg text-primary"><span class="material-symbols-outlined text-[20px] fill-1">list</span></button>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-2xl border border-outline-variant/10 overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant/10 text-on-surface-variant text-[11px] font-black tracking-widest uppercase">
+<th class="px-6 py-4">Name</th>
+<th class="px-6 py-4">Subject Unit</th>
+<th class="px-6 py-4">Type</th>
+<th class="px-6 py-4">Last Modified</th>
+<th class="px-6 py-4 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<!-- Resource Row 1 -->
+<tr class="group hover:bg-surface-container-highest/30 transition-colors cursor-pointer">
+<td class="px-6 py-5">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
+<span class="material-symbols-outlined fill-1">picture_as_pdf</span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Quantum Mechanics Intro.pdf</p>
+<p class="text-xs text-on-surface-variant">12.4 MB</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-tight">Unit 04: Quantum</span>
+</td>
+<td class="px-6 py-5">
+<p class="text-xs font-medium text-on-surface-variant">Lecture Notes</p>
+</td>
+<td class="px-6 py-5">
+<p class="text-xs text-on-surface-variant">2 hours ago</p>
+</td>
+<td class="px-6 py-5">
+<div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-surface-variant rounded-lg transition-colors"><span class="material-symbols-outlined text-[18px]">visibility</span></button>
+<button class="p-2 hover:bg-surface-variant rounded-lg transition-colors"><span class="material-symbols-outlined text-[18px]">download</span></button>
+<button class="p-2 hover:bg-surface-variant rounded-lg transition-colors"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+</div>
+</td>
+</tr>
+<!-- Resource Row 2 -->
+<tr class="group hover:bg-surface-container-highest/30 transition-colors cursor-pointer">
+<td class="px-6 py-5">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+<span class="material-symbols-outlined fill-1">video_library</span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">General Relativity Lecture.mp4</p>
+<p class="text-xs text-on-surface-variant">1.2 GB</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-tight">Unit 01: Classical</span>
+</td>
+<td class="px-6 py-5">
+<p class="text-xs font-medium text-on-surface-variant">Video Lecture</p>
+</td>
+<td class="px-6 py-5">
+<p class="text-xs text-on-surface-variant">Yesterday</p>
+</td>
+<td class="px-6 py-5">
+<div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-surface-variant rounded-lg transition-colors"><span class="material-symbols-outlined text-[18px]">play_circle</span></button>
+<button class="p-2 hover:bg-surface-variant rounded-lg transition-colors"><span class="material-symbols-outlined text-[18px]">download</span></button>
+<button class="p-2 hover:bg-surface-variant rounded-lg transition-colors"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+</div>
+</td>
+</tr>
+<!-- Resource Row 3 -->
+<tr class="group hover:bg-surface-container-highest/30 transition-colors cursor-pointer">
+<td class="px-6 py-5">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400">
+<span class="material-symbols-outlined fill-1">image</span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Experiment_Result_V2.png</p>
+<p class="text-xs text-on-surface-variant">4.8 MB</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-tight">Unit 03: Thermo</span>
+</td>
+<td class="px-6 py-5">
+<p class="text-xs font-medium text-on-surface-variant">Diagram</p>
+</td>
+<td class="px-6 py-5">
+<p class="text-xs text-on-surface-variant">3 days ago</p>
+</td>
+<td class="px-6 py-5">
+<div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-surface-variant rounded-lg transition-colors"><span class="material-symbols-outlined text-[18px]">open_in_new</span></button>
+<button class="p-2 hover:bg-surface-variant rounded-lg transition-colors"><span class="material-symbols-outlined text-[18px]">download</span></button>
+<button class="p-2 hover:bg-surface-variant rounded-lg transition-colors"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="mt-6 text-center">
+<button class="text-sm font-bold text-primary hover:text-primary-dim transition-colors flex items-center gap-2 mx-auto">
+                    View All 142 Resources
+                    <span class="material-symbols-outlined">expand_more</span>
+</button>
+</div>
+</section>
+</main>
+</body></html>

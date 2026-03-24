@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Profile - The Focused Scholar</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "secondary-fixed-dim": "#d6d3d8",
+                        "outline-variant": "#404952",
+                        "error-container": "#7f2737",
+                        "on-secondary-fixed": "#403f43",
+                        "tertiary-container": "#ced6f5",
+                        "tertiary-dim": "#c0c9e6",
+                        "surface-variant": "#1e272f",
+                        "tertiary-fixed": "#ced6f5",
+                        "on-secondary": "#202023",
+                        "surface-dim": "#0b0e11",
+                        "on-primary-container": "#ccccff",
+                        "on-primary": "#2724b8",
+                        "on-error-container": "#ff97a3",
+                        "surface": "#0b0e11",
+                        "on-surface-variant": "#a3acb7",
+                        "inverse-surface": "#f8f9fe",
+                        "on-tertiary-fixed": "#2f384f",
+                        "primary-container": "#2f2ebe",
+                        "primary-dim": "#b0b2ff",
+                        "surface-container-highest": "#1e272f",
+                        "surface-bright": "#222d37",
+                        "error-dim": "#b95463",
+                        "outline": "#6d7680",
+                        "secondary-container": "#3c3b3f",
+                        "on-background": "#dde6f2",
+                        "on-primary-fixed-variant": "#4647d3",
+                        "background": "#0b0e11",
+                        "surface-container-high": "#192027",
+                        "secondary-dim": "#9f9da1",
+                        "surface-tint": "#c0c1ff",
+                        "on-tertiary-fixed-variant": "#4b546d",
+                        "on-tertiary": "#4a536c",
+                        "secondary-fixed": "#e5e1e6",
+                        "surface-container": "#141a20",
+                        "surface-container-low": "#0f1418",
+                        "inverse-primary": "#494bd7",
+                        "primary-fixed-dim": "#d1d0ff",
+                        "on-surface": "#dde6f2",
+                        "surface-container-lowest": "#000000",
+                        "primary-fixed": "#e1e0ff",
+                        "error": "#ec7c8a",
+                        "on-tertiary-container": "#424a63",
+                        "inverse-on-surface": "#535559",
+                        "on-secondary-fixed-variant": "#5c5b5f",
+                        "tertiary": "#dee5ff",
+                        "on-primary-fixed": "#2622b7",
+                        "on-error": "#490013",
+                        "on-secondary-container": "#c1bec3",
+                        "secondary": "#9f9da1",
+                        "tertiary-fixed-dim": "#c0c9e6",
+                        "primary": "#c0c1ff"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.375rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #0b0e11;
+            color: #dde6f2;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0e11;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e272f;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #222d37;
+        }
+    </style>
+</head>
+<body class="font-body antialiased overflow-x-hidden selection:bg-primary/30 selection:text-white">
+<!-- SideNavBar -->
+<aside class="bg-[#0f1418] border-r border-outline-variant/10 h-full w-64 fixed left-0 top-0 z-40 flex flex-col h-screen py-8 font-['Manrope'] antialiased tracking-tight">
+<div class="px-8 mb-10">
+<h1 class="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-dim tracking-tighter">The Scholar</h1>
+<p class="text-xs text-on-surface-variant mt-1 font-semibold opacity-70">Level 42 · Grandmaster</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-8 py-3.5 text-slate-400 hover:text-slate-100 transition-all hover:bg-white/5 group" href="#">
+<span class="material-symbols-outlined transition-colors group-hover:text-primary">timer</span>
+<span class="font-medium">Focus Room</span>
+</a>
+<a class="flex items-center gap-3 px-8 py-3.5 text-slate-400 hover:text-slate-100 transition-all hover:bg-white/5 group" href="#">
+<span class="material-symbols-outlined transition-colors group-hover:text-primary">quiz</span>
+<span class="font-medium">Flashcards</span>
+</a>
+<a class="flex items-center gap-3 px-8 py-3.5 text-slate-400 hover:text-slate-100 transition-all hover:bg-white/5 group" href="#">
+<span class="material-symbols-outlined transition-colors group-hover:text-primary">insights</span>
+<span class="font-medium">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-8 py-3.5 text-slate-400 hover:text-slate-100 transition-all hover:bg-white/5 group" href="#">
+<span class="material-symbols-outlined transition-colors group-hover:text-primary">folder_open</span>
+<span class="font-medium">Subjects</span>
+</a>
+<a class="flex items-center gap-3 px-8 py-3.5 text-slate-400 hover:text-slate-100 transition-all hover:bg-white/5 group" href="#">
+<span class="material-symbols-outlined transition-colors group-hover:text-primary">settings</span>
+<span class="font-medium">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-8 py-3.5 text-primary bg-primary/10 border-r-4 border-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-bold">Profile</span>
+</a>
+</nav>
+<div class="px-6 mt-auto">
+<button class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white font-bold rounded-2xl text-sm shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:scale-[1.02] active:scale-95 transition-all">
+            Start Session
+        </button>
+</div>
+</aside>
+<!-- TopNavBar -->
+<header class="bg-[#0b0e11]/90 backdrop-blur-2xl fixed top-0 right-0 left-64 z-30 h-20 flex justify-between items-center px-10 border-b border-outline-variant/5">
+<div class="flex items-center bg-surface-container-high/50 border border-outline-variant/10 px-5 py-2.5 rounded-2xl w-full max-w-md focus-within:ring-2 ring-primary/40 transition-all">
+<span class="material-symbols-outlined text-on-surface-variant text-xl mr-3">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-full placeholder-on-surface-variant font-medium" placeholder="Search knowledge base..." type="text"/>
+<kbd class="hidden md:inline-flex items-center gap-1 text-[10px] text-on-surface-variant bg-surface-container-highest px-2 py-1 rounded-lg border border-outline-variant/20 font-sans font-bold leading-none">
+<span class="text-xs">⌘</span> K
+        </kbd>
+</div>
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-2">
+<button class="w-10 h-10 flex items-center justify-center rounded-xl text-slate-400 hover:bg-white/5 hover:text-primary transition-all relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-[#0b0e11]"></span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-xl text-slate-400 hover:bg-white/5 hover:text-primary transition-all">
+<span class="material-symbols-outlined">history_edu</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-xl text-slate-400 hover:bg-white/5 hover:text-primary transition-all">
+<span class="material-symbols-outlined">bolt</span>
+</button>
+</div>
+<div class="h-8 w-px bg-outline-variant/20"></div>
+<div class="flex items-center gap-4">
+<div class="text-right hidden sm:block">
+<div class="text-xs font-bold text-on-surface">Alex Sterling</div>
+<div class="text-[10px] text-primary font-bold tracking-wider uppercase">Pro Plus</div>
+</div>
+<div class="w-11 h-11 rounded-2xl overflow-hidden border-2 border-primary/20 p-0.5 shadow-xl shadow-primary/10">
+<img alt="User avatar" class="w-full h-full object-cover rounded-xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWvpr3k4DNlgc-0i6SU5BSnbDO-6HvaZkerj4K-8vxjwL7T5RwRe4sX7QPWxOURD9OiX_R72tw-iDd7RRWimzwcHJd3AShh1wKwzbfEV7V2FSSBdViFNzUjfLD-oIZBxQbJF2E_h8SZ5O38mP0KCptjCcUQT4EFtAVle6m343CXkt8Y0G8b4ujQTYxFp8fc_sXqXP3ITHuqo0S-e2EyCJp7CcHHbO47IORI_dkgCAwCWkgxGKi7YgV2mct25CPSkPXF1ysc4j3i7_6"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-64 pt-20 min-h-screen">
+<div class="p-10 max-w-[1400px] mx-auto space-y-10">
+<!-- Hero Section -->
+<div class="grid grid-cols-12 gap-8 items-stretch">
+<!-- Profile Identity Card -->
+<div class="col-span-12 lg:col-span-8 bg-surface-container rounded-[2rem] p-10 flex flex-col md:flex-row gap-10 items-center md:items-start relative overflow-hidden border border-white/[0.03]">
+<div class="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-[100px]"></div>
+<div class="absolute -bottom-24 -left-24 w-64 h-64 bg-tertiary/5 rounded-full blur-[80px]"></div>
+<div class="relative group">
+<div class="w-40 h-40 rounded-[2.5rem] p-1 bg-gradient-to-br from-primary via-outline-variant to-tertiary shadow-2xl overflow-hidden group-hover:rotate-2 transition-transform duration-500">
+<img alt="User profile avatar" class="w-full h-full object-cover rounded-[2.25rem]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf56VGvlSHQnwtUe9SXU-mqZqqYpFbsSAfUQgDDrZnfjuxOlv27FDb-F_pLixsUWW2gO918ASQr9XlxXUoHoebYB_DzzGMrpqLHkoypFrJN3Dq0LsyK8rn73ul09uReqozAIlZ_-wj1uAUnYBNhDqs861JyfUv2E2xR1EDQ8E-QGB1Q_3fkMHptPX40O5pNCZJFU84eXEm-8pusfdWrAI-s8GUvoQDUCSeZhh82jENNDL5B9N5lypdGzwG_rVKQtQv9IEKdZVsF6ng"/>
+</div>
+<div class="absolute -bottom-3 -right-3 bg-primary text-on-primary w-12 h-12 rounded-2xl flex items-center justify-center border-4 border-surface-container shadow-xl animate-pulse">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+</div>
+<div class="flex-1 text-center md:text-left z-10">
+<div class="flex flex-col md:flex-row md:items-baseline gap-4 mb-4">
+<h2 class="text-5xl font-headline font-extrabold tracking-tight text-white">Alex Sterling</h2>
+<div class="flex items-center gap-2">
+<span class="text-primary font-headline font-black text-2xl uppercase">Level 42</span>
+<span class="bg-primary/20 text-primary text-[10px] font-black px-2.5 py-1 rounded-lg border border-primary/30 uppercase tracking-widest">Grandmaster</span>
+</div>
+</div>
+<p class="text-on-surface-variant max-w-xl mb-8 leading-relaxed text-lg font-medium">Dedicated Scholar specializing in <span class="text-white">Theoretical Physics</span>. Maintaining a consistent <span class="text-primary">114-day deep work streak</span>.</p>
+<div class="flex flex-wrap gap-4 justify-center md:justify-start">
+<button class="bg-white text-black px-8 py-3.5 rounded-2xl font-bold text-sm hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2 shadow-xl shadow-black/20">
+<span class="material-symbols-outlined text-sm font-bold">edit</span>
+                            Edit Profile
+                        </button>
+<button class="bg-surface-container-highest/80 backdrop-blur-md text-on-surface border border-outline-variant/30 px-8 py-3.5 rounded-2xl font-bold text-sm hover:bg-surface-bright transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">logout</span>
+                            Logout
+                        </button>
+</div>
+</div>
+</div>
+<!-- Exam Target Widget -->
+<div class="col-span-12 lg:col-span-4 bg-gradient-to-br from-surface-container-low to-surface-container rounded-[2rem] p-10 flex flex-col justify-between border border-primary/20 relative group overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-primary group-hover:w-2 transition-all duration-300"></div>
+<div>
+<div class="flex items-center justify-between mb-8">
+<h3 class="font-headline font-bold text-on-surface-variant text-xs tracking-[0.2em] uppercase">Target Goal</h3>
+<div class="flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1.5 rounded-full border border-primary/20">
+<span class="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+<span class="text-[10px] font-black uppercase tracking-widest">2024 Cycle</span>
+</div>
+</div>
+<div class="mb-10">
+<div class="text-5xl font-headline font-black text-white mb-2 tracking-tight">JEE 2024</div>
+<p class="text-on-surface-variant text-sm font-medium">Joint Entrance Examination (Advanced)</p>
+</div>
+</div>
+<div class="space-y-6">
+<div class="flex justify-between items-end">
+<div>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.15em] block mb-1">Preparation Readiness</span>
+<span class="text-3xl font-headline font-black text-primary">68<span class="text-xl">%</span></span>
+</div>
+<div class="text-right">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.15em] block mb-1">Target Score</span>
+<span class="text-xl font-headline font-bold text-white">99.5+</span>
+</div>
+</div>
+<div class="relative">
+<div class="w-full h-2.5 bg-surface-variant/50 rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary-container to-primary w-[68%] rounded-full shadow-[0_0_15px_rgba(192,193,255,0.4)] transition-all duration-1000 ease-out"></div>
+</div>
+</div>
+<div class="p-4 bg-primary/5 rounded-2xl border border-primary/10">
+<p class="text-xs text-on-surface-variant/90 leading-relaxed font-medium">
+<span class="text-primary font-bold">Tip:</span> Focus on <span class="text-white">Electromagnetism</span> and <span class="text-white">Organic Synthesis</span> to boost your score by 12% next week.
+                        </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Bento Grid - Achievements & Stats -->
+<div class="grid grid-cols-12 gap-8">
+<!-- Achievements Section -->
+<div class="col-span-12 md:col-span-8 bg-surface-container rounded-[2rem] p-10 border border-white/[0.03]">
+<div class="flex items-center justify-between mb-12">
+<div>
+<h3 class="font-headline font-extrabold text-2xl text-white mb-1">Scholar Achievements</h3>
+<p class="text-sm text-on-surface-variant font-medium">Recognition for your academic dedication</p>
+</div>
+<button class="text-primary text-sm font-bold bg-primary/10 px-5 py-2.5 rounded-xl hover:bg-primary hover:text-on-primary transition-all">View Hall of Fame</button>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-10">
+<!-- Badge 1 -->
+<div class="flex flex-col items-center group">
+<div class="w-24 h-24 rounded-3xl bg-surface-container-high border border-outline-variant/20 flex items-center justify-center mb-5 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-500 shadow-xl shadow-black/20">
+<span class="material-symbols-outlined text-5xl text-primary" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+</div>
+<span class="text-sm font-bold text-white text-center">Centurion Streak</span>
+<span class="text-[11px] text-on-surface-variant font-black uppercase tracking-widest mt-1">114 Days</span>
+</div>
+<!-- Badge 2 -->
+<div class="flex flex-col items-center group">
+<div class="w-24 h-24 rounded-3xl bg-surface-container-high border border-outline-variant/20 flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-xl shadow-black/20">
+<span class="material-symbols-outlined text-5xl text-tertiary" style="font-variation-settings: 'FILL' 1;">auto_stories</span>
+</div>
+<span class="text-sm font-bold text-white text-center">Deep Diver</span>
+<span class="text-[11px] text-on-surface-variant font-black uppercase tracking-widest mt-1">500+ Hours</span>
+</div>
+<!-- Badge 3 -->
+<div class="flex flex-col items-center group opacity-40">
+<div class="w-24 h-24 rounded-3xl bg-surface-variant/30 border border-outline-variant/10 flex items-center justify-center mb-5 grayscale group-hover:grayscale-0 transition-all duration-500">
+<span class="material-symbols-outlined text-5xl text-on-surface-variant">psychology</span>
+</div>
+<span class="text-sm font-bold text-on-surface-variant text-center">Master Mind</span>
+<span class="text-[11px] text-on-surface-variant/60 font-black uppercase tracking-widest mt-1">Locked</span>
+</div>
+<!-- Badge 4 -->
+<div class="flex flex-col items-center group">
+<div class="w-24 h-24 rounded-3xl bg-surface-container-high border border-outline-variant/20 flex items-center justify-center mb-5 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-500 shadow-xl shadow-black/20">
+<span class="material-symbols-outlined text-5xl text-error" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+</div>
+<span class="text-sm font-bold text-white text-center">Night Owl</span>
+<span class="text-[11px] text-on-surface-variant font-black uppercase tracking-widest mt-1">Late Scholar</span>
+</div>
+</div>
+</div>
+<!-- Focus Stats -->
+<div class="col-span-12 md:col-span-4 bg-surface-container rounded-[2rem] p-10 flex flex-col gap-6 border border-white/[0.03]">
+<h3 class="font-headline font-extrabold text-2xl text-white mb-2">Key Metrics</h3>
+<div class="flex flex-col gap-4">
+<div class="group flex items-center gap-5 bg-surface-container-high/60 hover:bg-surface-container-high border border-outline-variant/10 p-5 rounded-2xl transition-all duration-300">
+<div class="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">schedule</span>
+</div>
+<div>
+<div class="text-[10px] text-on-surface-variant font-black uppercase tracking-[0.15em] mb-1">Total Focus Time</div>
+<div class="text-2xl font-headline font-black text-white">1,240<span class="text-sm text-primary-dim ml-1 font-bold">h</span></div>
+</div>
+</div>
+<div class="group flex items-center gap-5 bg-surface-container-high/60 hover:bg-surface-container-high border border-outline-variant/10 p-5 rounded-2xl transition-all duration-300">
+<div class="w-14 h-14 rounded-xl bg-tertiary/10 flex items-center justify-center text-tertiary group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<div>
+<div class="text-[10px] text-on-surface-variant font-black uppercase tracking-[0.15em] mb-1">Quiz Accuracy</div>
+<div class="text-2xl font-headline font-black text-white">84.2<span class="text-sm text-tertiary-dim ml-1 font-bold">%</span></div>
+</div>
+</div>
+<div class="group flex items-center gap-5 bg-surface-container-high/60 hover:bg-surface-container-high border border-outline-variant/10 p-5 rounded-2xl transition-all duration-300">
+<div class="w-14 h-14 rounded-xl bg-error/10 flex items-center justify-center text-error group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">trending_up</span>
+</div>
+<div>
+<div class="text-[10px] text-on-surface-variant font-black uppercase tracking-[0.15em] mb-1">Global Rank</div>
+<div class="text-2xl font-headline font-black text-white">#2,410</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Account Details & Membership -->
+<div class="bg-surface-container rounded-[2rem] overflow-hidden border border-white/[0.03]">
+<div class="px-10 py-8 border-b border-outline-variant/10 flex items-center justify-between">
+<div>
+<h3 class="font-headline font-extrabold text-2xl text-white">Account Configuration</h3>
+<p class="text-sm text-on-surface-variant font-medium mt-1">Manage your academic identity and security</p>
+</div>
+<div class="flex items-center gap-2 px-4 py-2 bg-green-500/10 text-green-400 rounded-full border border-green-500/20">
+<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+<span class="text-[10px] font-black uppercase tracking-widest">Systems Online</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2">
+<!-- Column 1 -->
+<div class="p-10 space-y-10">
+<div class="group">
+<label class="text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-3">Primary Email</label>
+<div class="flex items-center gap-4">
+<div class="text-white font-bold text-lg">a.sterling@scholarship.edu</div>
+<span class="bg-surface-variant px-3 py-1 rounded text-[10px] text-on-surface-variant font-bold">VERIFIED</span>
+</div>
+</div>
+<div class="group">
+<label class="text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-3">Membership Plan</label>
+<div class="flex items-center gap-4">
+<div class="text-white font-bold text-lg">Scholar Pro Plus</div>
+<span class="bg-gradient-to-r from-tertiary/20 to-tertiary/10 text-tertiary text-[10px] font-black px-3 py-1.5 rounded-lg border border-tertiary/20 uppercase tracking-widest">Annual Elite</span>
+</div>
+<p class="text-xs text-on-surface-variant mt-2 font-medium italic">Next billing cycle: Nov 14, 2024</p>
+</div>
+<div class="group">
+<label class="text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-3">Academic Affiliation</label>
+<div class="flex items-center gap-3 p-4 bg-surface-container-high rounded-2xl border border-outline-variant/10">
+<div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-black font-bold">school</span>
+</div>
+<div>
+<span class="text-white font-bold text-sm block">International Academy of Science</span>
+<span class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Physics Department</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column 2 -->
+<div class="p-10 bg-surface-container-high/30 space-y-10 border-l border-outline-variant/5">
+<div class="group">
+<label class="text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-3">Security Infrastructure</label>
+<div class="p-5 bg-surface-container rounded-2xl border border-outline-variant/10 flex items-start gap-4">
+<span class="material-symbols-outlined text-tertiary">shield_lock</span>
+<p class="text-xs text-on-surface-variant leading-relaxed font-medium">Your research data is protected by <span class="text-white">AES-256 end-to-end encryption</span>. Sync active across <span class="text-white">3 authorized devices</span>.</p>
+</div>
+</div>
+<div class="group">
+<label class="text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-3">Account Security</label>
+<div class="flex items-center gap-3 text-green-400 font-bold text-sm bg-green-400/5 px-4 py-3 rounded-xl border border-green-400/10">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            Multi-Factor Authentication Active
+                        </div>
+</div>
+<div class="pt-6 border-t border-outline-variant/10">
+<div class="flex items-center justify-between">
+<button class="text-error-dim text-sm font-bold hover:text-error hover:bg-error-container/20 px-6 py-3 rounded-2xl transition-all border border-transparent hover:border-error/20">
+                                Deactivate Account
+                            </button>
+<button class="text-on-surface-variant text-xs font-bold hover:text-white transition-colors">
+                                Privacy Policy
+                            </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<div class="pt-10 pb-16 flex flex-col items-center gap-4">
+<div class="w-12 h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent rounded-full"></div>
+<div class="text-center">
+<p class="text-on-surface-variant text-[11px] font-black tracking-[0.3em] uppercase opacity-60">The Focused Scholar · Version 4.2.0</p>
+<p class="text-[10px] text-on-surface-variant/40 mt-2 font-medium">© 2024 Academic Excellence Built on Discipline</p>
+</div>
+</div>
+</div>
+</main>
+</body></html>
