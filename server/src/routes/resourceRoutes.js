@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import { protect } from '../middlewares/authMiddleware.js';
+import { createResource, getResources } from '../controllers/resourceController.js';
+
+const router = Router();
+
+router.use(protect);
+
+router.route('/').post(createResource).get(getResources);
+
+export default router;

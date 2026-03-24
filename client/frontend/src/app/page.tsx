@@ -1,57 +1,12 @@
 import DashboardLayout from "@/components/DashboardLayout";
-import { recentResources, progressData } from "@/lib/mockData";
+import DashboardGrid from "@/components/DashboardGrid";
+import { progressData } from "@/lib/mockData";
 import {
-  FileText,
-  Play,
-  Clock,
-  ChevronRight,
   Timer,
   Lightbulb,
   Sparkles,
   Star,
 } from "lucide-react";
-import Image from "next/image";
-
-function ResourceCard({ resource }: { resource: (typeof recentResources)[0] }) {
-  return (
-    <div className="group bg-surface-container hover:bg-surface-container-high transition-colors p-5 rounded-xl flex items-center gap-5 cursor-pointer">
-      {resource.type === "video" && resource.thumbnailUrl ? (
-        <div className="relative w-14 h-14 shrink-0 overflow-hidden rounded-lg">
-          <Image
-            src={resource.thumbnailUrl}
-            alt="Video Thumbnail"
-            fill
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-            <Play className="w-5 h-5 text-white fill-white" />
-          </div>
-        </div>
-      ) : (
-        <div
-          className={`w-14 h-14 ${resource.iconBg} rounded-lg flex items-center justify-center ${resource.iconColor} shrink-0`}
-        >
-          <FileText className="w-7 h-7" />
-        </div>
-      )}
-      <div className="flex-1">
-        <h3 className="font-semibold text-on-surface group-hover:text-primary transition-colors">
-          {resource.title}
-        </h3>
-        <div className="flex items-center gap-3 mt-2">
-          <span className="px-2 py-0.5 rounded bg-surface-bright text-[10px] font-bold text-indigo-400 uppercase tracking-wider">
-            {resource.tag}
-          </span>
-          <span className="text-xs text-on-surface-variant flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            {resource.timeAgo}
-          </span>
-        </div>
-      </div>
-      <ChevronRight className="w-5 h-5 text-outline opacity-0 group-hover:opacity-100 transition-opacity" />
-    </div>
-  );
-}
 
 function ProgressWidget() {
   const heatmapOpacities: Record<number, string> = {
@@ -157,8 +112,6 @@ function QuickTipCard() {
 }
 
 export default function HomePage() {
-  const visibleResources = recentResources.slice(0, 3);
-
   return (
     <DashboardLayout>
       <div className="max-w-[1400px] mx-auto flex gap-8">
@@ -179,11 +132,7 @@ export default function HomePage() {
           </div>
 
           {/* Resource Cards */}
-          <div className="grid grid-cols-1 gap-4">
-            {visibleResources.map((resource) => (
-              <ResourceCard key={resource.id} resource={resource} />
-            ))}
-          </div>
+          <DashboardGrid />
 
           {/* Bento Section */}
           <div className="grid grid-cols-2 gap-4">

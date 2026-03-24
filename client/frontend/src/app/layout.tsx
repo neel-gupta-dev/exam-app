@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
+import AppProviders from "@/components/AppProviders";
 import "./globals.css";
 
 const inter = Inter({
@@ -33,7 +34,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
       <body className="min-h-full bg-surface text-on-surface font-[family-name:var(--font-body)]">
-        {children}
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );

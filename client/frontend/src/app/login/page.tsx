@@ -1,16 +1,42 @@
-import React from 'react';
+'use client';
+
+import React, { useState, FormEvent } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
+  const { login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+    setLoading(true);
+    try {
+      await login(email, password);
+    } catch (err: unknown) {
+      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Login failed. Please try again.';
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="font-body text-on-surface antialiased min-h-screen flex items-center justify-center relative overflow-hidden mesh-grid">
+    <div className="font-body text-on-surface antialiased min-h-screen flex flex-col items-center justify-center relative overflow-hidden mesh-grid">
       {/* Dynamic Background Orbs */}
       <div className="orb bg-primary w-[500px] h-[500px] -top-48 -left-24 animate-pulse"></div>
       <div className="orb bg-on-primary-fixed-variant w-[400px] h-[400px] bottom-0 -right-20" style={{ animationDelay: '2s' }}></div>
       <div className="orb bg-tertiary w-[300px] h-[300px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.05]"></div>
 
       {/* Login Container */}
-      <main className="relative z-10 w-full max-w-[440px] px-6">
+      <main className="relative z-10 w-full max-w-[440px] px-6 flex-grow flex flex-col items-center justify-center py-20">
         {/* Header / Logo Area */}
         <div className="mb-12 text-center">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-primary-container to-on-primary-fixed-variant mb-6 shadow-xl shadow-primary-container/20">
@@ -28,12 +54,20 @@ export default function LoginPage() {
         <section className="glass-card rounded-2xl p-8 shadow-2xl relative overflow-hidden group">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
           <h2 className="font-headline text-xl font-bold mb-8 text-on-surface">Welcome back</h2>
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Email Field */}
             <div className="space-y-2">
               <label className="font-label text-xs font-bold text-on-surface-variant ml-1 uppercase tracking-widest" htmlFor="email">Email Address</label>
               <div className="relative group/input">
-                <input className="w-full bg-surface-container-highest/50 border border-outline-variant/30 rounded-xl py-3.5 px-4 text-sm text-on-surface placeholder:text-outline/60 focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all outline-none" id="email" name="email" placeholder="scholar@vault.io" type="email" />
+                <input
+                  className="w-full bg-surface-container-highest/50 border border-outline-variant/30 rounded-xl py-3.5 px-4 text-sm text-on-surface placeholder:text-outline/60 focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all outline-none"
+                  id="email"
+                  name="email"
+                  placeholder="scholar@vault.io"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
             </div>
             {/* Password Field */}
@@ -43,7 +77,15 @@ export default function LoginPage() {
                 <Link className="text-xs font-semibold text-primary hover:text-primary-dim transition-colors" href="#">Forgot password?</Link>
               </div>
               <div className="relative group/input">
-                <input className="w-full bg-surface-container-highest/50 border border-outline-variant/30 rounded-xl py-3.5 px-4 text-sm text-on-surface placeholder:text-outline/60 focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all outline-none" id="password" name="password" placeholder="••••••••" type="password" />
+                <input
+                  className="w-full bg-surface-container-highest/50 border border-outline-variant/30 rounded-xl py-3.5 px-4 text-sm text-on-surface placeholder:text-outline/60 focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all outline-none"
+                  id="password"
+                  name="password"
+                  placeholder="••••••••"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
               </div>
             </div>
             {/* Remember Me */}
@@ -52,9 +94,19 @@ export default function LoginPage() {
               <label className="text-xs font-medium text-on-surface-variant cursor-pointer select-none" htmlFor="remember">Keep session active</label>
             </div>
             {/* Primary CTA */}
-            <button className="w-full bg-primary-container text-primary-fixed font-headline font-bold py-4 rounded-xl shadow-lg shadow-primary-container/20 hover:bg-on-primary-fixed-variant hover:-translate-y-0.5 active:scale-[0.98] transition-all flex justify-center items-center gap-3 group/btn" type="submit">
-              Unlock Vault
-              <span className="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">key</span>
+            <button
+              className="w-full bg-primary-container text-primary-fixed font-headline font-bold py-4 rounded-xl shadow-lg shadow-primary-container/20 hover:bg-on-primary-fixed-variant hover:-translate-y-0.5 active:scale-[0.98] transition-all flex justify-center items-center gap-3 group/btn disabled:opacity-60 disabled:cursor-not-allowed"
+              type="submit"
+              disabled={loading}
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-primary-fixed border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  Unlock Vault
+                  <span className="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">key</span>
+                </>
+              )}
             </button>
           </form>
 
@@ -98,7 +150,7 @@ export default function LoginPage() {
       </main>
 
       {/* Page Footer Information */}
-      <footer className="fixed bottom-0 left-0 w-full py-8 px-12 flex flex-col md:flex-row justify-between items-center gap-6 z-20">
+      <footer className="mt-auto w-full py-8 px-12 flex flex-col md:flex-row justify-between items-center gap-6 z-20">
         <div className="text-[10px] font-headline font-bold text-outline uppercase tracking-[0.2em] flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-primary/40"></div>
           Knowledge Vault Secure Node
