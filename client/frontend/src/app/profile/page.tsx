@@ -1,6 +1,12 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
-import { profileData } from "@/lib/mockData";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
 import Image from "next/image";
+import { useAuth } from "@/context/AuthContext";
+import api from "@/lib/api";
 import {
   Zap,
   Pen,
@@ -14,9 +20,60 @@ import {
   Flame,
   ShieldCheck,
   GraduationCap,
+  BadgeCheck
 } from "lucide-react";
 
 export default function ProfilePage() {
+  const { user, logout } = useAuth();
+  const [resourceCount, setResourceCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const { data } = await api.get('/resources?page=1&limit=1');
+        setResourceCount(data.total || 0);
+      } catch (error) {
+        console.error("Failed to fetch aggregate stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (user) {
+      fetchStats();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-[1400px] mx-auto p-10">
+          <LoadingSkeleton count={3} />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Calculate Level based on Resources
+  let level = 1;
+  let title = "Novice";
+  if (resourceCount > 50) {
+    level = 50 + Math.floor(resourceCount / 10);
+    title = "Master";
+  } else if (resourceCount > 10) {
+    level = 10 + Math.floor(resourceCount / 2);
+    title = "Scholar";
+  } else {
+    level = Math.max(1, resourceCount);
+  }
+
+  const name = user?.name || "Student";
+  const email = user?.email || "student@example.com";
+  const targetExam = user?.targetExam?.[0] || "Preparation";
+  const initials = name.substring(0, 2).toUpperCase();
+
   return (
     <DashboardLayout>
       <div className="max-w-[1400px] mx-auto space-y-10">
@@ -28,13 +85,9 @@ export default function ProfilePage() {
             <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-tertiary/5 rounded-full blur-[80px]" />
             <div className="relative group">
               <div className="w-40 h-40 rounded-[2.5rem] p-1 bg-gradient-to-br from-primary via-outline-variant to-tertiary shadow-2xl overflow-hidden group-hover:rotate-2 transition-transform duration-500">
-                <Image
-                  src={profileData.avatarUrl}
-                  alt="Profile"
-                  width={160}
-                  height={160}
-                  className="w-full h-full object-cover rounded-[2.25rem]"
-                />
+                <div className="w-full h-full bg-surface-container-highest rounded-[2.25rem] flex items-center justify-center text-4xl font-black text-on-surface">
+                  {initials}
+                </div>
               </div>
               <div className="absolute -bottom-3 -right-3 bg-primary text-on-primary w-12 h-12 rounded-2xl flex items-center justify-center border-4 border-surface-container shadow-xl animate-pulse">
                 <Zap className="w-5 h-5" />
@@ -42,24 +95,35 @@ export default function ProfilePage() {
             </div>
             <div className="flex-1 text-center md:text-left z-10">
               <div className="flex flex-col md:flex-row md:items-baseline gap-4 mb-4">
-                <h2 className="text-5xl font-extrabold tracking-tight text-white">{profileData.name}</h2>
+                <h2 className="text-5xl font-extrabold tracking-tight text-white">{name}</h2>
                 <div className="flex items-center gap-2">
-                  <span className="text-primary font-black text-2xl uppercase">Level {profileData.level}</span>
+                  <span className="text-primary font-black text-2xl uppercase">Level {level}</span>
                   <span className="bg-primary/20 text-primary text-[10px] font-black px-2.5 py-1 rounded-lg border border-primary/30 uppercase tracking-widest">
-                    {profileData.title}
+                    {title}
                   </span>
+                  {user?.isVerifiedStudent && (
+                    <span className="flex items-center gap-1 bg-emerald-500/20 text-emerald-400 text-[10px] font-black px-2.5 py-1 rounded-lg border border-emerald-500/30 uppercase tracking-widest ml-2">
+                      <BadgeCheck className="w-3 h-3" />
+                      Verified Aspirant
+                    </span>
+                  )}
                 </div>
               </div>
               <p className="text-on-surface-variant max-w-xl mb-8 leading-relaxed text-lg font-medium">
-                Dedicated Scholar specializing in <span className="text-white">Theoretical Physics</span>. Maintaining a consistent{" "}
-                <span className="text-primary">114-day deep work streak</span>.
+                Dedicated <span className="text-white">{targetExam}</span> Aspirant. Maintaining a steady collection of{" "}
+                <span className="text-primary">{resourceCount} saved materials</span> in the Vault.
               </p>
               <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-                <button className="bg-white text-black px-8 py-3.5 rounded-2xl font-bold text-sm hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2 shadow-xl shadow-black/20">
-                  <Pen className="w-4 h-4" />
-                  Edit Profile
-                </button>
-                <button className="bg-surface-container-highest/80 backdrop-blur-md text-on-surface border border-outline-variant/30 px-8 py-3.5 rounded-2xl font-bold text-sm hover:bg-surface-bright transition-all flex items-center gap-2">
+                <Link href="/settings">
+                  <button className="cursor-pointer bg-white text-black px-8 py-3.5 rounded-2xl font-bold text-sm hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2 shadow-xl shadow-black/20">
+                    <Pen className="w-4 h-4" />
+                    Edit Profile
+                  </button>
+                </Link>
+                <button
+                  onClick={logout}
+                  className="bg-surface-container-highest/80 backdrop-blur-md text-on-surface border border-outline-variant/30 px-8 py-3.5 rounded-2xl font-bold text-sm hover:bg-error/20 hover:text-error hover:border-error/50 transition-all flex items-center gap-2"
+                >
                   <LogOut className="w-4 h-4" />
                   Logout
                 </button>
@@ -75,31 +139,31 @@ export default function ProfilePage() {
                 <h3 className="font-bold text-on-surface-variant text-xs tracking-[0.2em] uppercase">Target Goal</h3>
                 <div className="flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1.5 rounded-full border border-primary/20">
                   <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">2024 Cycle</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest">Active</span>
                 </div>
               </div>
               <div className="mb-10">
-                <div className="text-5xl font-black text-white mb-2 tracking-tight">{profileData.targetExam}</div>
-                <p className="text-on-surface-variant text-sm font-medium">{profileData.targetExamFull}</p>
+                <div className="text-5xl font-black text-white mb-2 tracking-tight">{targetExam}</div>
+                <p className="text-on-surface-variant text-sm font-medium">Examination Cycle Target</p>
               </div>
             </div>
             <div className="space-y-6">
               <div className="flex justify-between items-end">
                 <div>
-                  <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.15em] block mb-1">Preparation Readiness</span>
-                  <span className="text-3xl font-black text-primary">{profileData.preparationReadiness}<span className="text-xl">%</span></span>
+                  <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.15em] block mb-1">Vault Collection</span>
+                  <span className="text-3xl font-black text-primary">{Math.min(resourceCount, 100)}<span className="text-xl">%</span></span>
                 </div>
                 <div className="text-right">
                   <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.15em] block mb-1">Target Score</span>
-                  <span className="text-xl font-bold text-white">{profileData.targetScore}</span>
+                  <span className="text-xl font-bold text-white">{user?.targetScore || "99.5+"}</span>
                 </div>
               </div>
               <div className="w-full h-2.5 bg-surface-variant/50 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-primary-container to-primary rounded-full" style={{ width: `${profileData.preparationReadiness}%`, boxShadow: "0 0 15px rgba(192,193,255,0.4)" }} />
+                <div className="h-full bg-gradient-to-r from-primary-container to-primary rounded-full" style={{ width: `${Math.min(resourceCount, 100)}%`, boxShadow: "0 0 15px rgba(192,193,255,0.4)" }} />
               </div>
               <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
                 <p className="text-xs text-on-surface-variant/90 leading-relaxed font-medium">
-                  <span className="text-primary font-bold">Tip:</span> Focus on <span className="text-white">Electromagnetism</span> and <span className="text-white">Organic Synthesis</span> to boost your score by 12% next week.
+                  <span className="text-primary font-bold">Tip:</span> Save at least 10 resources to unlock Scholar status.
                 </p>
               </div>
             </div>
@@ -121,10 +185,10 @@ export default function ProfilePage() {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-10">
               {[
-                { icon: <Award className="w-12 h-12 text-primary" />, name: "Centurion Streak", sub: "114 Days", locked: false },
-                { icon: <BookOpen className="w-12 h-12 text-tertiary" />, name: "Deep Diver", sub: "500+ Hours", locked: false },
-                { icon: <Brain className="w-12 h-12 text-on-surface-variant" />, name: "Master Mind", sub: "Locked", locked: true },
-                { icon: <Flame className="w-12 h-12 text-error" />, name: "Night Owl", sub: "Late Scholar", locked: false },
+                { icon: <Award className="w-12 h-12 text-primary" />, name: "Early Adopter", sub: "Joined Beta", locked: false },
+                { icon: <BookOpen className="w-12 h-12 text-tertiary" />, name: "Vault Builder", sub: `${resourceCount} Files`, locked: resourceCount === 0 },
+                { icon: <Brain className="w-12 h-12 text-on-surface-variant" />, name: "Master Mind", sub: "Locked", locked: title !== "Master" },
+                { icon: <Flame className="w-12 h-12 text-error" />, name: "Focused", sub: "Onboarded", locked: !user?.isOnboarded },
               ].map((badge) => (
                 <div key={badge.name} className={`flex flex-col items-center group ${badge.locked ? "opacity-40" : ""}`}>
                   <div className={`w-24 h-24 rounded-3xl ${badge.locked ? "bg-surface-variant/30 border border-outline-variant/10" : "bg-surface-container-high border border-outline-variant/20"} flex items-center justify-center mb-5 group-hover:scale-110 transition-all duration-500 shadow-xl shadow-black/20`}>
@@ -142,9 +206,9 @@ export default function ProfilePage() {
             <h3 className="font-extrabold text-2xl text-white mb-2">Key Metrics</h3>
             <div className="flex flex-col gap-4">
               {[
-                { icon: <Clock className="w-7 h-7" />, label: "Total Focus Time", value: profileData.totalFocusTime, unit: "h", iconBg: "bg-primary/10 text-primary" },
-                { icon: <CheckCircle className="w-7 h-7" />, label: "Quiz Accuracy", value: profileData.quizAccuracy, unit: "%", iconBg: "bg-tertiary/10 text-tertiary" },
-                { icon: <TrendingUp className="w-7 h-7" />, label: "Global Rank", value: profileData.globalRank, unit: "", iconBg: "bg-error/10 text-error" },
+                { icon: <Clock className="w-7 h-7" />, label: "Total Resources", value: resourceCount, unit: "saved", iconBg: "bg-primary/10 text-primary" },
+                { icon: <CheckCircle className="w-7 h-7" />, label: "Onboarding", value: user?.isOnboarded ? "100" : "50", unit: "%", iconBg: "bg-tertiary/10 text-tertiary" },
+                { icon: <TrendingUp className="w-7 h-7" />, label: "Global Level", value: level, unit: "", iconBg: "bg-error/10 text-error" },
               ].map((metric) => (
                 <div key={metric.label} className="group flex items-center gap-5 bg-surface-container-high/60 hover:bg-surface-container-high border border-outline-variant/10 p-5 rounded-2xl transition-all duration-300">
                   <div className={`w-14 h-14 rounded-xl ${metric.iconBg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
@@ -180,17 +244,19 @@ export default function ProfilePage() {
               <div>
                 <label className="text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-3">Primary Email</label>
                 <div className="flex items-center gap-4">
-                  <div className="text-white font-bold text-lg">{profileData.email}</div>
-                  <span className="bg-surface-variant px-3 py-1 rounded text-[10px] text-on-surface-variant font-bold">VERIFIED</span>
+                  <div className="text-white font-bold text-lg">{email}</div>
+                  <span className="bg-surface-variant px-3 py-1 rounded text-[10px] text-on-surface-variant font-bold">
+                    {user?.isVerifiedStudent ? "VERIFIED ACADEMIC" : "BASIC ACCOUNT"}
+                  </span>
                 </div>
               </div>
               <div>
                 <label className="text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-3">Membership Plan</label>
                 <div className="flex items-center gap-4">
-                  <div className="text-white font-bold text-lg">{profileData.membership}</div>
-                  <span className="bg-gradient-to-r from-tertiary/20 to-tertiary/10 text-tertiary text-[10px] font-black px-3 py-1.5 rounded-lg border border-tertiary/20 uppercase tracking-widest">Annual Elite</span>
+                  <div className="text-white font-bold text-lg">Knowledge Vault Initial</div>
+                  <span className="bg-gradient-to-r from-tertiary/20 to-tertiary/10 text-tertiary text-[10px] font-black px-3 py-1.5 rounded-lg border border-tertiary/20 uppercase tracking-widest">Active</span>
                 </div>
-                <p className="text-xs text-on-surface-variant mt-2 font-medium italic">Next billing cycle: Nov 14, 2024</p>
+                <p className="text-xs text-on-surface-variant mt-2 font-medium italic">Your account is active since {new Date().getFullYear()}.</p>
               </div>
               <div>
                 <label className="text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-3">Academic Affiliation</label>
@@ -199,8 +265,8 @@ export default function ProfilePage() {
                     <GraduationCap className="w-5 h-5 text-black" />
                   </div>
                   <div>
-                    <span className="text-white font-bold text-sm block">{profileData.affiliation}</span>
-                    <span className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">{profileData.department}</span>
+                    <span className="text-white font-bold text-sm block">{targetExam} Preparation</span>
+                    <span className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Independent Learner</span>
                   </div>
                 </div>
               </div>
@@ -211,7 +277,7 @@ export default function ProfilePage() {
                 <div className="p-5 bg-surface-container rounded-2xl border border-outline-variant/10 flex items-start gap-4">
                   <ShieldCheck className="w-5 h-5 text-tertiary flex-shrink-0 mt-0.5" />
                   <p className="text-xs text-on-surface-variant leading-relaxed font-medium">
-                    Your research data is protected by <span className="text-white">AES-256 end-to-end encryption</span>. Sync active across <span className="text-white">3 authorized devices</span>.
+                    Your research data is protected by <span className="text-white">secure backend encryption</span>. Sync active across <span className="text-white">your authorized devices</span>.
                   </p>
                 </div>
               </div>
@@ -219,7 +285,7 @@ export default function ProfilePage() {
                 <label className="text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-3">Account Security</label>
                 <div className="flex items-center gap-3 text-green-400 font-bold text-sm bg-green-400/5 px-4 py-3 rounded-xl border border-green-400/10">
                   <CheckCircle className="w-5 h-5" />
-                  Multi-Factor Authentication Active
+                  Standard Authentication Active
                 </div>
               </div>
               <div className="pt-6 border-t border-outline-variant/10">
@@ -238,8 +304,8 @@ export default function ProfilePage() {
         <div className="pt-10 pb-16 flex flex-col items-center gap-4">
           <div className="w-12 h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent rounded-full" />
           <div className="text-center">
-            <p className="text-on-surface-variant text-[11px] font-black tracking-[0.3em] uppercase opacity-60">The Focused Scholar · Version 4.2.0</p>
-            <p className="text-[10px] text-on-surface-variant/40 mt-2 font-medium">© 2024 Academic Excellence Built on Discipline</p>
+            <p className="text-on-surface-variant text-[11px] font-black tracking-[0.3em] uppercase opacity-60">Knowledge Vault · Version 1.0.0</p>
+            <p className="text-[10px] text-on-surface-variant/40 mt-2 font-medium">© {new Date().getFullYear()} Academic Excellence Built on Discipline</p>
           </div>
         </div>
       </div>

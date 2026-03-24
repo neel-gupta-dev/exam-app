@@ -1,177 +1,277 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Minus, Plus } from "lucide-react";
-import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import api from "@/lib/api";
+import { toast } from "sonner";
+import { AutoAwesome, LocalFireDepartment, Database, Flag } from "@mui/icons-material"; // using basic mappings for the material icons used in HTML
 
 export default function SettingsPage() {
-  const [focusTarget, setFocusTarget] = useState(6);
+  const { user, fetchUser } = useAuth();
+
+  const [profileForm, setProfileForm] = useState({
+    name: "",
+    email: "",
+    targetScore: "",
+    bio: "",
+  });
+
+  const [passwordForm, setPasswordForm] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setProfileForm({
+        name: user.name || "",
+        email: user.email || "",
+        targetScore: user.targetScore || "",
+        bio: user.bio || "",
+      });
+    }
+  }, [user]);
+
+  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setProfileForm({ ...profileForm, [e.target.name]: e.target.value });
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPasswordForm({ ...passwordForm, [e.target.name]: e.target.value });
+  };
+
+  const submitProfile = async () => {
+    try {
+      setIsSavingProfile(true);
+      await api.patch('/auth/profile', profileForm);
+      toast.success("Profile updated successfully");
+      fetchUser();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to update profile");
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const submitPassword = async () => {
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      return toast.error("New passwords do not match");
+    }
+
+    try {
+      setIsSavingPassword(true);
+      await api.patch('/auth/password', {
+        oldPassword: passwordForm.oldPassword,
+        newPassword: passwordForm.newPassword,
+      });
+      toast.success("Password changed successfully");
+      setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to change password");
+    } finally {
+      setIsSavingPassword(false);
+    }
+  };
+
+  // derived metrics for the right panel
+  const rank = Math.min((user?.targetExam?.length || 0) * 4, 10);
+  const bioLength = profileForm.bio.length;
 
   return (
     <DashboardLayout>
-      <header className="mb-12">
-        <h1 className="text-4xl font-extrabold tracking-tighter text-on-surface">Settings</h1>
-        <p className="text-on-surface-variant mt-2 max-w-lg">
-          Refine your cognitive environment. Configure your study parameters and interface preferences for maximum focus.
-        </p>
-      </header>
+      <div className="flex h-full w-full -m-8">
+        {/* Main Content Area */}
+        <section className="flex-1 overflow-y-auto px-12 py-10">
+          <header className="mb-10">
+            <h2 className="text-3xl font-extrabold tracking-tight text-on-surface mb-2">Edit Profile</h2>
+            <p className="text-on-surface-variant max-w-lg">Manage your identity and digital presence across the Knowledge Vault ecosystem.</p>
+          </header>
 
-      <div className="grid grid-cols-12 gap-8">
-        {/* Category Nav */}
-        <div className="col-span-3 space-y-2">
-          {["Account", "Study Goals", "Notifications", "Theme", "Security", "Integrations"].map((item, i) => (
-            <button
-              key={item}
-              className={`w-full text-left px-4 py-3 rounded-xl transition-all ${
-                i === 0 ? "bg-surface-container text-primary font-semibold" : "text-on-surface-variant hover:bg-surface-container-low"
-              }`}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-
-        {/* Settings Content */}
-        <div className="col-span-9 space-y-10">
-          {/* Account Section */}
-          <section className="space-y-6">
-            <h2 className="text-xl font-bold text-on-surface border-b border-outline-variant/20 pb-4">Account Profile</h2>
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-widest">Full Name</label>
-                <input
-                  type="text"
-                  defaultValue="Alexander Vance"
-                  className="w-full bg-surface-container border-none rounded-xl px-4 py-3 text-on-surface focus:ring-1 ring-primary/30 outline-none transition-all"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-widest">Email Address</label>
-                <input
-                  type="email"
-                  defaultValue="alexander.v@scholar.io"
-                  className="w-full bg-surface-container border-none rounded-xl px-4 py-3 text-on-surface focus:ring-1 ring-primary/30 outline-none transition-all"
-                />
-              </div>
-            </div>
-          </section>
-
-          {/* Study Goals */}
-          <section className="space-y-6">
-            <h2 className="text-xl font-bold text-on-surface border-b border-outline-variant/20 pb-4">Study Goals</h2>
-            <div className="bg-surface-container rounded-xl p-6 space-y-8">
+          <div className="max-w-3xl space-y-8 pb-10">
+            {/* Personal Details Form */}
+            <div className="bg-surface-container p-8 rounded-xl space-y-8 border border-white/5">
               <div className="flex justify-between items-center">
-                <div className="space-y-1">
-                  <h3 className="font-medium text-on-surface">Daily Focus Target</h3>
-                  <p className="text-sm text-on-surface-variant">Set your desired deep work hours per day.</p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => setFocusTarget(Math.max(1, focusTarget - 1))}
-                    className="h-10 w-10 flex items-center justify-center rounded-lg bg-surface-variant text-on-surface hover:bg-surface-bright transition-colors"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
-                  <span className="text-2xl font-bold w-12 text-center">{focusTarget}h</span>
-                  <button
-                    onClick={() => setFocusTarget(Math.min(16, focusTarget + 1))}
-                    className="h-10 w-10 flex items-center justify-center rounded-lg bg-primary text-on-primary hover:opacity-90 transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-on-surface">Weekly Milestone</span>
-                  <span className="text-primary font-bold">42 Hours</span>
-                </div>
-                <div className="h-1.5 w-full bg-surface-variant rounded-full overflow-hidden">
-                  <div className="h-full bg-primary w-2/3" />
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Notifications */}
-          <section className="space-y-6">
-            <h2 className="text-xl font-bold text-on-surface border-b border-outline-variant/20 pb-4">Notifications</h2>
-            <div className="space-y-4">
-              {[
-                { title: "Pomodoro Reminders", desc: "Alerts when session phases complete.", defaultChecked: true },
-                { title: "Weekly Summary", desc: "Performance analytics delivered via email.", defaultChecked: false },
-              ].map((item) => (
-                <div key={item.title} className="flex items-center justify-between p-4 bg-surface-container-low rounded-xl">
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-secondary-container flex items-center justify-center text-primary">
-                      <span className="text-sm">🔔</span>
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-on-surface text-sm">{item.title}</h3>
-                      <p className="text-xs text-on-surface-variant">{item.desc}</p>
-                    </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" defaultChecked={item.defaultChecked} className="sr-only peer" />
-                    <div className="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
-                  </label>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Theme Section */}
-          <section className="space-y-6">
-            <h2 className="text-xl font-bold text-on-surface border-b border-outline-variant/20 pb-4">Theme & Appearance</h2>
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                { name: "Deep Focus", bg: "#0b0e11", active: true },
-                { name: "Obsidian", bg: "#1a1c20", active: false },
-                { name: "Midnight Blue", bg: "#282c34", active: false },
-              ].map((theme) => (
+                <h3 className="text-lg font-bold">Account Information</h3>
                 <button
-                  key={theme.name}
-                  className={`relative aspect-video rounded-xl overflow-hidden group ${
-                    theme.active ? "border-2 border-primary ring-4 ring-primary/10" : "border border-outline-variant/30"
-                  }`}
-                  style={{ backgroundColor: theme.bg }}
+                  onClick={submitProfile}
+                  disabled={isSavingProfile}
+                  className="bg-gradient-to-br from-primary to-primary-container px-6 py-2 rounded-xl text-xs font-extrabold text-on-primary shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-transform disabled:opacity-50"
                 >
-                  <div className="absolute inset-0 flex flex-col p-3">
-                    <div className="h-2 w-8 bg-primary/40 rounded-full mb-2" />
-                    <div className="h-4 w-full bg-surface-variant/40 rounded-lg mb-1" />
-                    <div className="h-4 w-2/3 bg-surface-variant/40 rounded-lg" />
-                  </div>
-                  {theme.active && (
-                    <div className="absolute bottom-2 right-2 h-4 w-4 rounded-full bg-primary flex items-center justify-center">
-                      <span className="text-[10px] text-on-primary font-bold">✓</span>
-                    </div>
-                  )}
-                  <span className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] font-bold uppercase tracking-widest transition-opacity">
-                    {theme.name}
-                  </span>
+                  {isSavingProfile ? "Saving..." : "Save Info"}
                 </button>
-              ))}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Full Name</label>
+                  <input
+                    name="name"
+                    value={profileForm.name}
+                    onChange={handleProfileChange}
+                    className="w-full bg-surface-container-highest border-none text-on-surface rounded-lg px-4 py-3 focus:ring-1 focus:ring-primary/50 transition-all"
+                    type="text"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Email Address</label>
+                  <input
+                    name="email"
+                    value={profileForm.email}
+                    onChange={handleProfileChange}
+                    className="w-full bg-surface-container-highest border-none text-on-surface rounded-lg px-4 py-3 focus:ring-1 focus:ring-primary/50 transition-all opacity-70"
+                    type="email"
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2 max-w-xs">
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Target Score</label>
+                  <input
+                    name="targetScore"
+                    value={profileForm.targetScore}
+                    onChange={handleProfileChange}
+                    className="w-full bg-surface-container-highest border-none text-on-surface rounded-lg px-4 py-3 focus:ring-1 focus:ring-primary/50 transition-all"
+                    placeholder="9.5+"
+                    type="text"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Bio</label>
+                <textarea
+                  name="bio"
+                  value={profileForm.bio}
+                  onChange={handleProfileChange}
+                  className="w-full bg-surface-container-highest border-none text-on-surface rounded-lg px-4 py-3 focus:ring-1 focus:ring-primary/50 transition-all resize-none"
+                  placeholder="Write a short bio about yourself..."
+                  rows={4}
+                />
+                <p className="text-[11px] text-on-surface-variant text-right">{bioLength} / 300 characters</p>
+              </div>
+            </div>
+
+            {/* Change Password Section */}
+            <div className="bg-surface-container p-8 rounded-xl space-y-6 border border-white/5">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-bold">Change Password</h3>
+                <button
+                  onClick={submitPassword}
+                  disabled={isSavingPassword || !passwordForm.oldPassword || !passwordForm.newPassword}
+                  className="bg-surface-container-highest border border-white/10 px-6 py-2 rounded-xl text-xs font-extrabold text-on-surface shadow-lg hover:bg-surface-bright active:scale-95 transition-transform disabled:opacity-50"
+                >
+                  {isSavingPassword ? "Updating..." : "Update Password"}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6">
+                <div className="space-y-2 max-w-xs">
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Old Password</label>
+                  <input
+                    name="oldPassword"
+                    value={passwordForm.oldPassword}
+                    onChange={handlePasswordChange}
+                    className="w-full bg-surface-container-highest border-none text-on-surface rounded-lg px-4 py-3 focus:ring-1 focus:ring-primary/50 transition-all"
+                    placeholder="••••••••"
+                    type="password"
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">New Password</label>
+                    <input
+                      name="newPassword"
+                      value={passwordForm.newPassword}
+                      onChange={handlePasswordChange}
+                      className="w-full bg-surface-container-highest border-none text-on-surface rounded-lg px-4 py-3 focus:ring-1 focus:ring-primary/50 transition-all"
+                      placeholder="••••••••"
+                      type="password"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Confirm New Password</label>
+                    <input
+                      name="confirmPassword"
+                      value={passwordForm.confirmPassword}
+                      onChange={handlePasswordChange}
+                      className="w-full bg-surface-container-highest border-none text-on-surface rounded-lg px-4 py-3 focus:ring-1 focus:ring-primary/50 transition-all"
+                      placeholder="••••••••"
+                      type="password"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Right Column: Metrics & Goals */}
+        <aside className="w-80 bg-surface-container-low p-8 hidden xl:flex flex-col gap-8 h-full overflow-y-auto border-l border-white/5">
+          {/* Target Goal Widget */}
+          <div className="bg-surface-container p-6 rounded-xl space-y-6 border border-white/5">
+            <div className="flex items-center justify-between">
+              <h4 className="font-bold text-sm">Monthly Goal</h4>
+              <span className="text-primary text-sm">⛳</span>
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-widest">Interface Scaling</label>
-              <select className="w-full bg-surface-container border-none rounded-xl px-4 py-3 text-on-surface focus:ring-1 ring-primary/30 outline-none appearance-none cursor-pointer">
-                <option>Compact (Default)</option>
-                <option>Standard</option>
-                <option>Comfortable</option>
-              </select>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-on-surface-variant">Focus Progress</span>
+                <span className="font-bold text-primary">84 / 120</span>
+              </div>
+              <div className="w-full bg-surface-variant h-1 rounded-full overflow-hidden">
+                <div className="bg-primary h-full w-[70%]"></div>
+              </div>
             </div>
-          </section>
+            <div className="pt-4 border-t border-outline-variant/30">
+              <p className="text-[11px] text-on-surface-variant uppercase tracking-widest font-bold mb-3">Recent Progress</p>
+              <ul className="space-y-3">
+                <li className="flex items-center gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
+                  <span className="text-xs">Profile Verification</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary/40"></div>
+                  <span className="text-xs text-on-surface-variant">Setup Complete</span>
+                </li>
+              </ul>
+            </div>
+          </div>
 
-          {/* Footer */}
-          <footer className="pt-10 flex items-center justify-end gap-4">
-            <button className="px-6 py-3 rounded-xl text-on-surface-variant font-medium hover:bg-surface-container transition-all">
-              Discard Changes
-            </button>
-            <button className="px-8 py-3 rounded-xl bg-primary text-on-primary font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
-              Save Preferences
-            </button>
-          </footer>
-        </div>
+          {/* Key Metrics Bento */}
+          <div className="space-y-4">
+            <h4 className="font-bold text-xs uppercase tracking-widest text-on-surface-variant px-1">Key Metrics</h4>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="bg-surface-container p-5 rounded-xl flex items-center justify-between border border-white/5">
+                <div>
+                  <p className="text-[10px] text-on-surface-variant uppercase font-bold tracking-tight">Vault Score</p>
+                  <p className="text-xl font-extrabold text-on-surface">{user?.targetScore || "N/A"}</p>
+                </div>
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                  ✨
+                </div>
+              </div>
+
+              <div className="bg-surface-container p-5 rounded-xl flex items-center justify-between border border-white/5">
+                <div>
+                  <p className="text-[10px] text-on-surface-variant uppercase font-bold tracking-tight">Active Streak</p>
+                  <p className="text-xl font-extrabold text-on-surface">{rank} Days</p>
+                </div>
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                  🔥
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-auto pt-8 flex items-center justify-center opacity-30">
+            <span className="text-[10px] font-black tracking-[0.3em] uppercase">Knowledge Vault</span>
+          </div>
+        </aside>
       </div>
     </DashboardLayout>
   );

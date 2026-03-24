@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Focus Room - Knowledge Vault</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container-high": "#192027",
+                        "surface-bright": "#222d37",
+                        "inverse-primary": "#494bd7",
+                        "on-surface": "#dde6f2",
+                        "surface-tint": "#c0c1ff",
+                        "on-secondary-fixed-variant": "#5c5b5f",
+                        "on-tertiary-fixed-variant": "#4b546d",
+                        "on-primary-fixed-variant": "#4647d3",
+                        "surface-dim": "#0b0e11",
+                        "outline": "#6d7680",
+                        "on-secondary-fixed": "#403f43",
+                        "tertiary-container": "#ced6f5",
+                        "on-tertiary": "#4a536c",
+                        "primary": "#c0c1ff",
+                        "primary-dim": "#b0b2ff",
+                        "surface": "#0b0e11",
+                        "secondary-container": "#3c3b3f",
+                        "secondary": "#9f9da1",
+                        "outline-variant": "#404952",
+                        "on-secondary-container": "#c1bec3",
+                        "on-primary": "#2724b8",
+                        "tertiary": "#dee5ff",
+                        "on-tertiary-fixed": "#2f384f",
+                        "on-surface-variant": "#a3acb7",
+                        "on-error": "#490013",
+                        "inverse-on-surface": "#535559",
+                        "error-container": "#7f2737",
+                        "surface-container": "#141a20",
+                        "primary-fixed-dim": "#d1d0ff",
+                        "surface-container-lowest": "#000000",
+                        "tertiary-dim": "#c0c9e6",
+                        "primary-container": "#2f2ebe",
+                        "on-tertiary-container": "#424a63",
+                        "on-secondary": "#202023",
+                        "surface-container-low": "#0f1418",
+                        "tertiary-fixed-dim": "#c0c9e6",
+                        "background": "#0b0e11",
+                        "error-dim": "#b95463",
+                        "on-primary-container": "#ccccff",
+                        "surface-container-highest": "#1e272f",
+                        "on-background": "#dde6f2",
+                        "secondary-fixed-dim": "#d6d3d8",
+                        "secondary-fixed": "#e5e1e6",
+                        "primary-fixed": "#e1e0ff",
+                        "tertiary-fixed": "#ced6f5",
+                        "on-error-container": "#ff97a3",
+                        "on-primary-fixed": "#2622b7",
+                        "surface-variant": "#1e272f",
+                        "secondary-dim": "#9f9da1",
+                        "inverse-surface": "#f8f9fe",
+                        "error": "#ec7c8a"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background-color: rgba(20, 26, 32, 0.85);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary/30">
+<!-- Top App Bar (From Shared Components) -->
+<header class="fixed top-0 w-full flex justify-between items-center px-6 h-16 w-full z-50 bg-[#0b0e11] dark:bg-[#0b0e11]">
+<div class="flex items-center gap-2">
+<span class="text-xl font-bold tracking-tighter text-indigo-500 dark:text-indigo-400 font-headline">The Focused Scholar</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-400 hover:bg-[#141a20] transition-colors duration-200 scale-95 active:duration-75 rounded-lg">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<button class="p-2 text-slate-400 hover:bg-[#141a20] transition-colors duration-200 scale-95 active:duration-75 rounded-lg">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</header>
+<div class="flex min-h-screen pt-16">
+<!-- Side Navigation Bar (From Shared Components) -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-[#0f1418] dark:bg-[#0f1418] flex flex-col h-full py-8 z-40">
+<div class="px-6 mb-10">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden">
+<img alt="Scholar Profile" class="w-full h-full object-cover" data-alt="close-up portrait of a professional academic scholar in a dimly lit library with soft bokeh lighting background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-kD8xgIgkZBmSuT5wxtcywU94xyMWwACQQz0eRtTrmr8qB1dgTk5R5OInmszmKcfXJS5FYbuGxuNemmVe-yfT7Pp2Jk7Rbj1FF82FCtNPZwHgasjIr0prjeqvsyBUq_hDwudCxk284xgr_oQkecpIPUFEXGz8D5yh9iPlzMKHvpk3qIgdFQW60rfEbg-7sxKo13naGnqD9tDV6LBBIEdC6NNfKDjO22QPox3qw5bYdQ3Q1IifXc0iD1txBgEPrgApA_bZjNxQPivg"/>
+</div>
+<div>
+<div class="text-indigo-500 font-bold font-headline text-sm">The Scholar</div>
+<div class="text-slate-500 text-xs font-label">Deep Work Mode</div>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-4 px-6 py-3 border-l-2 border-indigo-500 bg-[#141a20] text-indigo-400 transition-all duration-300 ease-in-out font-['Inter'] font-medium text-sm" href="#">
+<span class="material-symbols-outlined" data-icon="timer">timer</span>
+<span>Focus Room</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-3 text-slate-500 hover:text-slate-300 hover:bg-[#141a20] transition-all duration-300 ease-in-out font-['Inter'] font-medium text-sm" href="#">
+<span class="material-symbols-outlined" data-icon="bar_chart">bar_chart</span>
+<span>Statistics</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-3 text-slate-500 hover:text-slate-300 hover:bg-[#141a20] transition-all duration-300 ease-in-out font-['Inter'] font-medium text-sm" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span>Library</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-3 text-slate-500 hover:text-slate-300 hover:bg-[#141a20] transition-all duration-300 ease-in-out font-['Inter'] font-medium text-sm" href="#">
+<span class="material-symbols-outlined" data-icon="tune">tune</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 border-t border-outline-variant/10">
+<a class="flex items-center gap-4 px-6 py-3 text-slate-500 hover:text-slate-300 hover:bg-[#141a20] transition-all duration-300 ease-in-out font-['Inter'] font-medium text-sm" href="#">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+<span>Help</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-3 text-slate-500 hover:text-slate-300 hover:bg-[#141a20] transition-all duration-300 ease-in-out font-['Inter'] font-medium text-sm" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 flex-1 relative flex flex-col items-center justify-center p-12 overflow-hidden bg-surface">
+<!-- Ambient Background Element -->
+<div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px]"></div>
+</div>
+<!-- Central Focus Timer -->
+<div class="relative z-10 flex flex-col items-center gap-8 text-center">
+<h2 class="text-on-surface-variant font-headline text-lg tracking-[0.2em] uppercase font-bold">Deep Work Session</h2>
+<div class="font-headline font-extrabold text-[12rem] leading-none tracking-tighter text-on-surface opacity-90">
+                    25:00
+                </div>
+<div class="flex gap-6 mt-4">
+<button class="px-10 py-3 bg-primary-container text-on-primary-container rounded-xl font-bold font-headline tracking-wide transition-all hover:bg-primary-container/80 active:scale-95">
+                        START SESSION
+                    </button>
+<button class="px-10 py-3 bg-surface-container-highest text-on-surface-variant rounded-xl font-bold font-headline tracking-wide transition-all hover:bg-surface-bright active:scale-95">
+                        RESET
+                    </button>
+</div>
+</div>
+<!-- FLOATING SETTINGS MENU OVERLAY -->
+<div class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+<div class="glass-panel w-full max-w-md rounded-xl p-8 shadow-2xl shadow-black/50 animate-in fade-in zoom-in duration-300">
+<div class="flex items-center justify-between mb-8">
+<h3 class="font-headline font-bold text-xl text-primary">Focus Settings</h3>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+<div class="space-y-8">
+<!-- Focus Timer Setting -->
+<div class="space-y-4">
+<div class="flex items-center gap-2 text-on-surface-variant text-sm font-bold font-headline">
+<span class="material-symbols-outlined text-[18px]" data-icon="timer">timer</span>
+                                FOCUS TIMER
+                            </div>
+<div class="grid grid-cols-3 gap-3">
+<button class="py-2 bg-primary/10 text-primary border border-primary/30 rounded-lg text-sm font-medium">25:00</button>
+<button class="py-2 bg-surface-container-highest text-on-surface-variant hover:bg-surface-bright transition-colors rounded-lg text-sm font-medium">50:00</button>
+<div class="relative">
+<input class="w-full py-2 bg-surface-container-highest border-none text-on-surface text-sm rounded-lg placeholder:text-slate-600 focus:ring-1 focus:ring-primary/40" placeholder="Custom" type="text"/>
+</div>
+</div>
+</div>
+<!-- Ambient Sound Setting -->
+<div class="space-y-4">
+<div class="flex items-center gap-2 text-on-surface-variant text-sm font-bold font-headline">
+<span class="material-symbols-outlined text-[18px]" data-icon="graphic_eq">graphic_eq</span>
+                                AMBIENT SOUND
+                            </div>
+<div class="grid grid-cols-2 gap-3">
+<button class="py-2 flex items-center justify-center gap-2 bg-primary/10 text-primary border border-primary/30 rounded-lg text-sm font-medium">
+<span class="material-symbols-outlined text-[16px]" data-icon="rainy">rainy</span>
+                                    Rain
+                                </button>
+<button class="py-2 flex items-center justify-center gap-2 bg-surface-container-highest text-on-surface-variant hover:bg-surface-bright rounded-lg text-sm font-medium">
+<span class="material-symbols-outlined text-[16px]" data-icon="headphones">headphones</span>
+                                    Lo-Fi Beats
+                                </button>
+<button class="py-2 flex items-center justify-center gap-2 bg-surface-container-highest text-on-surface-variant hover:bg-surface-bright rounded-lg text-sm font-medium">
+<span class="material-symbols-outlined text-[16px]" data-icon="forest">forest</span>
+                                    Forest
+                                </button>
+<button class="py-2 flex items-center justify-center gap-2 bg-surface-container-highest text-on-surface-variant hover:bg-surface-bright rounded-lg text-sm font-medium">
+                                    Off
+                                </button>
+</div>
+<div class="pt-2 px-1">
+<input class="w-full h-1 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-primary" type="range"/>
+</div>
+</div>
+<!-- Break Settings -->
+<div class="space-y-4">
+<div class="flex items-center gap-2 text-on-surface-variant text-sm font-bold font-headline">
+<span class="material-symbols-outlined text-[18px]" data-icon="coffee">coffee</span>
+                                BREAK SETTINGS
+                            </div>
+<div class="flex items-center justify-between py-2">
+<span class="text-on-surface-variant text-sm">Auto-start next focus session</span>
+<button class="w-10 h-5 bg-primary/40 rounded-full relative transition-colors">
+<span class="absolute right-0.5 top-0.5 w-4 h-4 bg-primary rounded-full"></span>
+</button>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-on-surface-variant text-sm">Length:</span>
+<button class="px-4 py-1.5 bg-primary/10 text-primary border border-primary/30 rounded-lg text-xs font-bold">5M</button>
+<button class="px-4 py-1.5 bg-surface-container-highest text-on-surface-variant hover:bg-surface-bright rounded-lg text-xs font-bold transition-colors">15M</button>
+</div>
+</div>
+<!-- Notifications -->
+<div class="space-y-4">
+<div class="flex items-center gap-2 text-on-surface-variant text-sm font-bold font-headline">
+<span class="material-symbols-outlined text-[18px]" data-icon="notifications_active">notifications_active</span>
+                                NOTIFICATIONS
+                            </div>
+<select class="w-full bg-surface-container-highest border-none text-on-surface text-sm rounded-lg p-2.5 focus:ring-1 focus:ring-primary/40 appearance-none">
+<option>Crystal Chime</option>
+<option>Deep Gong</option>
+<option>Soft Digital</option>
+<option>None</option>
+</select>
+</div>
+</div>
+<div class="mt-10 flex gap-4">
+<button class="flex-1 py-3 bg-primary text-on-primary font-bold font-headline rounded-lg hover:bg-primary-dim transition-colors">SAVE CHANGES</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

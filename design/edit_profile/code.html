@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Edit Profile - Knowledge Vault</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-tint": "#c0c1ff",
+                        "on-primary-fixed": "#2622b7",
+                        "tertiary-container": "#ced6f5",
+                        "surface-container-high": "#192027",
+                        "on-tertiary": "#4a536c",
+                        "secondary-dim": "#9f9da1",
+                        "on-secondary-fixed-variant": "#5c5b5f",
+                        "secondary-fixed": "#e5e1e6",
+                        "error": "#ec7c8a",
+                        "secondary": "#9f9da1",
+                        "surface": "#0b0e11",
+                        "on-surface": "#dde6f2",
+                        "surface-dim": "#0b0e11",
+                        "primary-fixed": "#e1e0ff",
+                        "primary-container": "#2f2ebe",
+                        "on-tertiary-fixed": "#2f384f",
+                        "on-secondary-container": "#c1bec3",
+                        "on-error": "#490013",
+                        "inverse-primary": "#494bd7",
+                        "secondary-fixed-dim": "#d6d3d8",
+                        "error-dim": "#b95463",
+                        "surface-variant": "#1e272f",
+                        "on-secondary-fixed": "#403f43",
+                        "on-surface-variant": "#a3acb7",
+                        "primary-fixed-dim": "#d1d0ff",
+                        "background": "#0b0e11",
+                        "on-background": "#dde6f2",
+                        "on-error-container": "#ff97a3",
+                        "error-container": "#7f2737",
+                        "tertiary-dim": "#c0c9e6",
+                        "outline-variant": "#404952",
+                        "secondary-container": "#3c3b3f",
+                        "surface-bright": "#222d37",
+                        "surface-container-highest": "#1e272f",
+                        "on-tertiary-container": "#424a63",
+                        "surface-container": "#141a20",
+                        "tertiary-fixed-dim": "#c0c9e6",
+                        "on-primary": "#2724b8",
+                        "tertiary": "#dee5ff",
+                        "inverse-surface": "#f8f9fe",
+                        "on-tertiary-fixed-variant": "#4b546d",
+                        "surface-container-lowest": "#000000",
+                        "on-primary-fixed-variant": "#4647d3",
+                        "primary-dim": "#b0b2ff",
+                        "outline": "#6d7680",
+                        "surface-container-low": "#0f1418",
+                        "tertiary-fixed": "#ced6f5",
+                        "primary": "#c0c1ff",
+                        "on-secondary": "#202023",
+                        "on-primary-container": "#ccccff",
+                        "inverse-on-surface": "#535559"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #0b0e11;
+            color: #dde6f2;
+            font-family: 'Inter', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0e11;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e272f;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="overflow-hidden">
+<!-- Global Layout Shell -->
+<div class="flex h-screen w-full">
+<!-- 1. Left Sidebar (SideNavBar) -->
+<aside class="h-screen w-64 fixed left-0 top-0 flex flex-col h-full py-8 px-4 bg-[#0f1418] font-['Manrope'] tracking-tight text-sm no-border bg-[#0f1418] z-50">
+<!-- Brand Identity -->
+<div class="mb-10 px-2">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-indigo-500 rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-lg">school</span>
+</div>
+<div>
+<h1 class="text-xl font-bold text-indigo-500 dark:text-indigo-400">Scholar</h1>
+<p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Knowledge Vault</p>
+</div>
+</div>
+<div class="mt-6 p-3 bg-[#1e262f] rounded-xl">
+<p class="text-[11px] text-slate-400">STATUS</p>
+<p class="text-xs text-indigo-400 font-medium">Deep Focus Active</p>
+</div>
+</div>
+<!-- Primary Navigation -->
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-300 transition-colors hover:bg-[#141a20] transition-all duration-200 rounded-xl scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span>Vault</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-300 transition-colors hover:bg-[#141a20] transition-all duration-200 rounded-xl scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="timer">timer</span>
+<span>Focus Room</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-300 transition-colors hover:bg-[#141a20] transition-all duration-200 rounded-xl scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="quiz">quiz</span>
+<span>Flashcards</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-300 transition-colors hover:bg-[#141a20] transition-all duration-200 rounded-xl scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span>Analytics</span>
+</a>
+</nav>
+<!-- Footer Navigation -->
+<div class="pt-6 mt-6 border-t border-slate-800/50 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 border-l-2 border-indigo-500 bg-[#1e262f] text-indigo-400 font-semibold transition-all duration-200 rounded-r-xl scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-slate-300 transition-colors hover:bg-[#141a20] transition-all duration-200 rounded-xl scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+<span>Support</span>
+</a>
+</div>
+<!-- User Brief -->
+<div class="mt-8 flex items-center gap-3 px-2">
+<img alt="User profile photo" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkANfkPNMQfutvhj75iGT7CGHdLvdijWYdoPLcYNB5Z8wLTLUaDdG7gwMg-U53WFJsld_355lhwufk6XD3JsEp2jBlqsahIyEvx9JLBqcOxvu_pvmwPc5cTYndtD0vtfpiC5ZUSAM7WlfIWcVZWv1iGEyeoG2TdsJl8ZaFcLfWmpsIdDdOTppDFyY1lGEGFc11aqvCfksf3mWjoUXrS9Sej4PsxzTA_iah6DzUgR3ifqiMMbb32CQfOl08zN2dpbza1P49RZ_bURuk"/>
+<div class="overflow-hidden">
+<p class="text-xs font-bold truncate">Elena Rodriguez</p>
+<p class="text-[10px] text-slate-500 truncate text-indigo-400">Pro Researcher</p>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 flex-1 flex flex-row h-screen overflow-hidden">
+<!-- 2. Central Area: Edit Profile Form -->
+<section class="flex-1 overflow-y-auto px-12 py-10 bg-[#0b0e11]">
+<header class="mb-10">
+<h2 class="font-headline text-3xl font-extrabold tracking-tight text-on-surface mb-2">Edit Profile</h2>
+<p class="font-body text-on-surface-variant max-w-lg">Manage your identity and digital presence across the Knowledge Vault ecosystem.</p>
+</header>
+<div class="max-w-3xl space-y-8">
+<!-- Personal Details Form -->
+<div class="bg-surface-container p-8 rounded-xl space-y-8">
+<h3 class="font-headline text-lg font-bold">Account Information</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Full Name -->
+<div class="space-y-2">
+<label class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider" for="full-name">Full Name</label>
+<input class="w-full bg-surface-container-highest border-none text-on-surface rounded-lg px-4 py-3 focus:ring-1 focus:ring-indigo-500/50 transition-all font-body" id="full-name" placeholder="Your full name" type="text" value="Elena Rodriguez"/>
+</div>
+<!-- Email -->
+<div class="space-y-2">
+<label class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider" for="email">Email Address</label>
+<input class="w-full bg-surface-container-highest border-none text-on-surface rounded-lg px-4 py-3 focus:ring-1 focus:ring-indigo-500/50 transition-all font-body" id="email" placeholder="Email address" type="email" value="elena.r@vault.scholar"/>
+</div>
+<!-- Target Score -->
+<div class="space-y-2">
+<label class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider" for="target-score">Target Vault Score</label>
+<input class="w-full bg-surface-container-highest border-none text-on-surface rounded-lg px-4 py-3 focus:ring-1 focus:ring-indigo-500/50 transition-all font-body" id="target-score" placeholder="9.5" type="text" value="9.8"/>
+</div>
+</div>
+<!-- Bio -->
+<div class="space-y-2">
+<label class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider" for="bio">Bio</label>
+<textarea class="w-full bg-surface-container-highest border-none text-on-surface rounded-lg px-4 py-3 focus:ring-1 focus:ring-indigo-500/50 transition-all font-body resize-none" id="bio" placeholder="Write a short bio about yourself..." rows="4">Doctoral candidate in Cognitive Neuroscience. Focused on the intersection of deep work habits and long-term memory encoding. Building the ultimate study vault.</textarea>
+<p class="text-[11px] text-on-surface-variant text-right">164 / 300 characters</p>
+</div>
+</div>
+<!-- Change Password Section -->
+<div class="bg-surface-container p-8 rounded-xl space-y-6">
+<h3 class="font-headline text-lg font-bold">Change Password</h3>
+<div class="grid grid-cols-1 gap-6">
+<div class="space-y-2">
+<label class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider" for="old-password">Old Password</label>
+<input class="w-full bg-surface-container-highest border-none text-on-surface rounded-lg px-4 py-3 focus:ring-1 focus:ring-indigo-500/50 transition-all font-body" id="old-password" placeholder="••••••••" type="password"/>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider" for="new-password">New Password</label>
+<input class="w-full bg-surface-container-highest border-none text-on-surface rounded-lg px-4 py-3 focus:ring-1 focus:ring-indigo-500/50 transition-all font-body" id="new-password" placeholder="••••••••" type="password"/>
+</div>
+<div class="space-y-2">
+<label class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider" for="confirm-password">Confirm New Password</label>
+<input class="w-full bg-surface-container-highest border-none text-on-surface rounded-lg px-4 py-3 focus:ring-1 focus:ring-indigo-500/50 transition-all font-body" id="confirm-password" placeholder="••••••••" type="password"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex items-center justify-end gap-4 pt-4">
+<button class="px-8 py-3 rounded-xl font-headline font-bold text-on-surface-variant hover:text-white transition-colors tracking-tight">Cancel</button>
+<button class="bg-gradient-to-br from-primary to-primary-container px-10 py-3 rounded-xl font-headline font-extrabold text-on-primary shadow-lg shadow-indigo-900/20 active:scale-95 transition-transform tracking-tight">Save Changes</button>
+</div>
+</div>
+</section>
+<!-- 3. Right Column: Metrics & Goals -->
+<aside class="w-80 bg-surface-container-low p-8 hidden xl:flex flex-col gap-8 h-full overflow-y-auto">
+<!-- Target Goal Widget -->
+<div class="bg-surface-container p-6 rounded-xl space-y-6">
+<div class="flex items-center justify-between">
+<h4 class="font-headline font-bold text-sm">Monthly Goal</h4>
+<span class="material-symbols-outlined text-indigo-400 text-sm">flag</span>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-xs mb-1">
+<span class="text-on-surface-variant">Focus Hours</span>
+<span class="font-bold text-indigo-400">84 / 120</span>
+</div>
+<div class="w-full bg-surface-variant h-1 rounded-full overflow-hidden">
+<div class="bg-indigo-500 h-full w-[70%]"></div>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant/30">
+<p class="text-[11px] text-on-surface-variant uppercase tracking-widest font-bold mb-3">Recent Progress</p>
+<ul class="space-y-3">
+<li class="flex items-center gap-3">
+<div class="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
+<span class="text-xs">Neuroscience Paper Draft</span>
+</li>
+<li class="flex items-center gap-3">
+<div class="w-1.5 h-1.5 rounded-full bg-indigo-500/40"></div>
+<span class="text-xs text-on-surface-variant">Lab Report Archive</span>
+</li>
+</ul>
+</div>
+</div>
+<!-- Key Metrics Bento -->
+<div class="space-y-4">
+<h4 class="font-headline font-bold text-xs uppercase tracking-widest text-on-surface-variant px-1">Key Metrics</h4>
+<div class="grid grid-cols-1 gap-4">
+<!-- Metric Card 1 -->
+<div class="bg-surface-container-high p-5 rounded-xl flex items-center justify-between">
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tight">Vault Score</p>
+<p class="text-xl font-extrabold text-on-surface">9.4</p>
+</div>
+<div class="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-indigo-400">auto_awesome</span>
+</div>
+</div>
+<!-- Metric Card 2 -->
+<div class="bg-surface-container-high p-5 rounded-xl flex items-center justify-between">
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tight">Active Streak</p>
+<p class="text-xl font-extrabold text-on-surface">18 Days</p>
+</div>
+<div class="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-indigo-400">local_fire_department</span>
+</div>
+</div>
+<!-- Metric Card 3 -->
+<div class="bg-surface-container-high p-5 rounded-xl flex items-center justify-between">
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tight">Knowledge Units</p>
+<p class="text-xl font-extrabold text-on-surface">1,402</p>
+</div>
+<div class="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-indigo-400">database</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Branding Tag -->
+<div class="mt-auto pt-8 flex items-center justify-center opacity-30">
+<span class="text-[10px] font-headline font-black tracking-[0.3em] uppercase">Knowledge Vault</span>
+</div>
+</aside>
+</main>
+</div>
+</body></html>

@@ -35,9 +35,8 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
     targetExam: {
-      type: String,
-      enum: ['JEE', 'NEET', 'UGEE', 'BITSAT', 'Other'],
-      default: null,
+      type: [String],
+      default: [],
     },
     targetYear: {
       type: Number,
@@ -46,6 +45,14 @@ const userSchema = new mongoose.Schema(
     isOnboarded: {
       type: Boolean,
       default: false,
+    },
+    bio: {
+      type: String,
+      default: '',
+    },
+    targetScore: {
+      type: String,
+      default: '',
     },
   },
   { timestamps: true }

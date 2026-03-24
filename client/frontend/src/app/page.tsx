@@ -1,14 +1,19 @@
+"use client";
+
 import DashboardLayout from "@/components/DashboardLayout";
 import DashboardGrid from "@/components/DashboardGrid";
-import { progressData } from "@/lib/mockData";
 import {
   Timer,
   Lightbulb,
   Sparkles,
   Star,
+  BookOpen
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { useState, useEffect } from "react";
+import api from "@/lib/api";
 
-function ProgressWidget() {
+function ProgressWidget({ resourceCount }: { resourceCount: number }) {
   const heatmapOpacities: Record<number, string> = {
     0: "bg-surface-variant/50",
     20: "bg-primary/20",
@@ -18,21 +23,27 @@ function ProgressWidget() {
     100: "bg-primary",
   };
 
+  const streakDays = 0;
+  const heatmap = new Array(28).fill(0);
+
   return (
     <div className="bg-surface-container p-6 rounded-xl">
       <h3 className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-6">
         Focus & Progress
       </h3>
 
-      {/* Study Time */}
+      {/* Resources Saved */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <p className="text-[10px] text-on-surface-variant font-bold uppercase">
-            Study Time Today
+            Resources Saved
           </p>
-          <h4 className="text-2xl font-extrabold text-on-surface mt-1">
-            {progressData.studyTimeToday}
-          </h4>
+          <div className="flex items-center gap-2 mt-1">
+            <BookOpen className="w-6 h-6 text-primary" />
+            <h4 className="text-2xl font-extrabold text-on-surface">
+              {resourceCount}
+            </h4>
+          </div>
         </div>
         <div className="relative w-16 h-16">
           <svg className="w-full h-full" viewBox="0 0 36 36">
@@ -51,13 +62,13 @@ function ProgressWidget() {
               r="16"
               fill="none"
               strokeWidth="3"
-              strokeDasharray={`${progressData.percentage}, 100`}
+              strokeDasharray={`${Math.min((resourceCount / 10) * 100, 100)}, 100`}
               strokeLinecap="round"
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="text-[10px] font-bold text-on-surface">
-              {progressData.percentage}%
+              {resourceCount}/10
             </span>
           </div>
         </div>
@@ -70,11 +81,11 @@ function ProgressWidget() {
             Learning Streak
           </p>
           <span className="text-[10px] text-primary font-bold">
-            {progressData.streakDays} Days
+            {streakDays} Days
           </span>
         </div>
         <div className="grid grid-cols-7 gap-1.5">
-          {progressData.heatmap.map((level, i) => (
+          {heatmap.map((level, i) => (
             <div
               key={i}
               className={`aspect-square rounded-[2px] ${
@@ -112,6 +123,26 @@ function QuickTipCard() {
 }
 
 export default function HomePage() {
+  const { user } = useAuth();
+  const [resourceCount, setResourceCount] = useState(0);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const { data } = await api.get('/resources?page=1&limit=1');
+        setResourceCount(data.total || 0);
+      } catch (error) {
+        console.error("Failed to fetch aggregate stats:", error);
+      }
+    };
+    if (user) {
+      fetchStats();
+      const handleResourceAdded = () => fetchStats();
+      window.addEventListener("resourceAdded", handleResourceAdded);
+      return () => window.removeEventListener("resourceAdded", handleResourceAdded);
+    }
+  }, [user]);
+
   return (
     <DashboardLayout>
       <div className="max-w-[1400px] mx-auto flex gap-8">
@@ -120,15 +151,12 @@ export default function HomePage() {
           <div className="flex items-end justify-between">
             <div>
               <h2 className="text-2xl font-extrabold tracking-tight text-on-surface">
-                Recent Resources
+                Welcome back, {user?.name?.split(' ')[0] || 'Scholar'}
               </h2>
               <p className="text-sm text-on-surface-variant mt-1">
-                Your latest focused study materials.
+                Your Vault has {resourceCount} resources ready for review.
               </p>
             </div>
-            <button className="text-xs font-medium text-primary hover:underline">
-              View All
-            </button>
           </div>
 
           {/* Resource Cards */}
@@ -155,18 +183,18 @@ export default function HomePage() {
             {/* Weekly Goal */}
             <div className="bg-primary/5 p-6 rounded-xl aspect-[16/9] flex flex-col justify-center items-center text-center">
               <Star className="w-10 h-10 text-primary mb-3" />
-              <h3 className="font-bold text-lg text-primary">Weekly Goal</h3>
+              <h3 className="font-bold text-lg text-primary">Resource Goal</h3>
               <p className="text-sm text-on-surface-variant mt-1 max-w-[200px]">
-                Complete 25 Calculus problems by Sunday.
+                Save 10 high-yield resources for {user?.targetExam?.[0] || 'your exam'}.
               </p>
               <div className="w-full bg-surface-container rounded-full h-1 mt-6">
                 <div
-                  className="bg-primary h-full rounded-full"
-                  style={{ width: `${progressData.weeklyGoalPercent}%` }}
+                  className="bg-primary h-full rounded-full transition-all"
+                  style={{ width: `${Math.min((resourceCount / 10) * 100, 100)}%` }}
                 />
               </div>
               <span className="text-[10px] text-on-surface-variant mt-2">
-                {progressData.weeklyGoalPercent}% Achieved
+                {Math.min(Math.round((resourceCount / 10) * 100), 100)}% Achieved
               </span>
             </div>
           </div>
@@ -174,7 +202,7 @@ export default function HomePage() {
 
         {/* Right Column (30%) */}
         <aside className="w-[30%] space-y-6">
-          <ProgressWidget />
+          <ProgressWidget resourceCount={resourceCount} />
           <QuickTipCard />
         </aside>
       </div>

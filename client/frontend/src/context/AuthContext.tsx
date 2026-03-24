@@ -5,17 +5,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  role: string;
-  isVerifiedStudent: boolean;
-  targetExam: string | null;
-  targetYear: number | null;
-  isOnboarded: boolean;
-}
-
+import { User } from '@/types';
 interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -24,6 +14,7 @@ interface AuthContextType {
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   updateUser: (data: Partial<User>) => void;
+  fetchUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,26 +25,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  // Hydrate from localStorage on mount
-  useEffect(() => {
-    const storedToken = localStorage.getItem('kv_token');
-    const storedUser = localStorage.getItem('kv_user');
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch {
-        localStorage.removeItem('kv_user');
-      }
+  const fetchUser = useCallback(async () => {
+    try {
+      const { data } = await api.get('/auth/me');
+      setUser(data);
+    } catch {
+      localStorage.removeItem('kv_token');
+      setToken(null);
+      setUser(null);
+      router.push('/login');
     }
-    setIsLoading(false);
+  }, [router]);
+
+  // Hydrate from API on mount and add listeners
+  useEffect(() => {
+    const initAuth = async () => {
+      const storedToken = localStorage.getItem('kv_token');
+      if (storedToken) {
+        setToken(storedToken);
+        try {
+          const { data } = await api.get('/auth/me');
+          setUser(data);
+        } catch {
+          localStorage.removeItem('kv_token');
+          setToken(null);
+          setUser(null);
+        }
+      } else {
+        setToken(null);
+        setUser(null);
+      }
+      setIsLoading(false);
+    };
+
+    initAuth();
+
+    // Sync auth across tabs via storage event (token changes)
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'kv_token') {
+        initAuth();
+      }
+    };
+    
+    // Refresh user cache on window focus
+    const onFocus = () => {
+      if (localStorage.getItem('kv_token')) {
+        api.get('/auth/me')
+          .then(({ data }) => setUser(data))
+          .catch(() => {});
+      }
+    };
+
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('focus', onFocus);
+    
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('focus', onFocus);
+    };
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     const { data } = await api.post('/auth/login', { email, password });
     const { token: jwt, ...userData } = data;
     localStorage.setItem('kv_token', jwt);
-    localStorage.setItem('kv_user', JSON.stringify(userData));
     setToken(jwt);
     setUser(userData);
     toast.success('Welcome back!');
@@ -64,7 +99,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data } = await api.post('/auth/register', { name, email, password });
     const { token: jwt, ...userData } = data;
     localStorage.setItem('kv_token', jwt);
-    localStorage.setItem('kv_user', JSON.stringify(userData));
     setToken(jwt);
     setUser(userData);
     toast.success('Account created!');
@@ -73,7 +107,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     localStorage.removeItem('kv_token');
-    localStorage.removeItem('kv_user');
     setToken(null);
     setUser(null);
     router.push('/login');
@@ -82,14 +115,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const updateUser = useCallback((data: Partial<User>) => {
     setUser((prev) => {
       if (!prev) return prev;
-      const updated = { ...prev, ...data };
-      localStorage.setItem('kv_user', JSON.stringify(updated));
-      return updated;
+      return { ...prev, ...data };
     });
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout, updateUser, fetchUser }}>
       {children}
     </AuthContext.Provider>
   );

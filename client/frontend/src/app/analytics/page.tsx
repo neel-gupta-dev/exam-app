@@ -1,5 +1,11 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { analyticsStats, subjectMastery, recentSessions, analyticsHeatmap } from "@/lib/mockData";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
+import { useAuth } from "@/context/AuthContext";
+import api from "@/lib/api";
+import { Resource } from "@/types";
 import {
   Clock,
   Flame,
@@ -11,11 +17,13 @@ import {
   Zap,
   Lightbulb,
   Coffee,
+  BookOpen,
+  FolderOpen
 } from "lucide-react";
 
 const iconMap: Record<string, React.ReactNode> = {
-  clock: <Clock className="w-5 h-5" />,
-  flame: <Flame className="w-5 h-5" />,
+  clock: <BookOpen className="w-5 h-5" />,
+  flame: <FolderOpen className="w-5 h-5" />,
   "check-circle": <CheckCircle className="w-5 h-5" />,
   trophy: <Trophy className="w-5 h-5" />,
 };
@@ -32,6 +40,90 @@ function getHeatmapClass(level: number) {
 }
 
 export default function AnalyticsPage() {
+  const { user } = useAuth();
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAllResources = async () => {
+      try {
+        const { data } = await api.get('/resources?page=1&limit=1000');
+        setResources(data.resources || []);
+      } catch (error) {
+        console.error("Failed to fetch resources for analytics", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (user) {
+      fetchAllResources();
+    }
+  }, [user]);
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="p-8">
+          <LoadingSkeleton count={3} />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const totalResources = resources.length;
+  
+  // Calculate unique folders
+  const folders = Array.from(new Set(resources.map((r) => r.folderName).filter(Boolean))) as string[];
+  const uniqueFoldersCount = folders.length;
+
+  // Process folder distribution for "Subject Mastery"
+  const folderCounts: Record<string, number> = {};
+  resources.forEach(r => {
+    if (r.folderName) {
+      folderCounts[r.folderName] = (folderCounts[r.folderName] || 0) + 1;
+    }
+  });
+
+  const subjectMastery = Object.entries(folderCounts)
+    .sort((a, b) => b[1] - a[1]) // highest first
+    .slice(0, 5) // top 5
+    .map(([name, count], index) => {
+      const percent = totalResources > 0 ? Math.round((count / totalResources) * 100) : 0;
+      const colors = ["bg-blue-400", "bg-indigo-400", "bg-emerald-400", "bg-orange-400", "bg-purple-400"];
+      return { 
+        name, 
+        percent, 
+        count,
+        color: colors[index % colors.length] 
+      };
+    });
+
+  // Level Logic
+  let levelName = "Novice";
+  if (totalResources > 50) levelName = "Master";
+  else if (totalResources > 10) levelName = "Scholar";
+
+  const analyticsStats = [
+    { label: "Total Resources", value: totalResources.toString(), unit: "saved", icon: "clock", iconColor: "text-primary", iconBg: "bg-primary/10", change: "↑ Active", changeColor: "text-green-400", note: "Keep saving" },
+    { label: "Unique Folders", value: uniqueFoldersCount.toString(), unit: "topics", icon: "flame", iconColor: "text-orange-400", iconBg: "bg-orange-500/10", change: "★ Organized", changeColor: "text-primary", note: "Great categorization" },
+    { label: "Vault Usage", value: Math.min((totalResources / 100) * 100, 100).toFixed(1), unit: "%", icon: "check-circle", iconColor: "text-emerald-400", iconBg: "bg-emerald-500/10", change: "Growing", changeColor: "text-emerald-400", note: "of 100 goal" },
+    { label: "Scholar Level", value: levelName, unit: "", icon: "trophy", iconColor: "text-purple-400", iconBg: "bg-purple-500/10", change: user?.isVerifiedStudent ? "Verified" : "Unverified", changeColor: user?.isVerifiedStudent ? "text-primary" : "text-surface-variant", note: "Status" },
+  ];
+
+  const recentSessions = resources.slice(0, 3).map((r, i) => {
+    const colors = ["bg-blue-400", "bg-indigo-400", "bg-orange-400"];
+    const dates = ["Today", "Yesterday", "Recently"];
+    return {
+      title: r.title,
+      type: r.type,
+      folder: r.folderName || "Uncategorized",
+      dotColor: colors[i % colors.length],
+      time: new Date(r.createdAt).toLocaleDateString(),
+    };
+  });
+
+  const analyticsHeatmap = new Array(21).fill(0).map((_, i) => ({ day: i + 1, level: i > 15 ? 3 : i % 2 })); // mockup static heatmap still since we don't have historical progression yet
+
   return (
     <DashboardLayout>
       {/* Header */}
@@ -40,21 +132,17 @@ export default function AnalyticsPage() {
           <nav className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-4">
             <span>Dashboard</span>
             <ChevronRight className="w-3 h-3" />
-            <span className="text-primary">Performance Analytics</span>
+            <span className="text-primary">Vault Analytics</span>
           </nav>
           <h1 className="text-4xl font-extrabold tracking-tight text-on-surface mb-2">
-            Performance Analytics
+            Vault Analytics
           </h1>
           <p className="text-on-surface-variant max-w-2xl text-sm leading-relaxed">
-            Personalized intelligence based on your last <span className="text-white font-bold">28 days</span> of activity.
-            You&apos;re currently in the <span className="text-primary font-bold">top 4%</span> of learners this month.
+            Personalized intelligence based on your saved resources and topics.
+            You are a <span className="text-primary font-bold">{levelName}</span> level scholar.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex bg-surface-container p-1 rounded-lg">
-            <button className="px-4 py-1.5 text-[11px] font-bold rounded-md bg-surface-bright text-on-surface shadow-sm">WEEKLY</button>
-            <button className="px-4 py-1.5 text-[11px] font-bold rounded-md text-on-surface-variant hover:text-on-surface">MONTHLY</button>
-          </div>
           <button className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg text-xs font-bold transition-all hover:bg-primary-dim">
             <Download className="w-4 h-4" />
             EXPORT REPORT
@@ -73,7 +161,7 @@ export default function AnalyticsPage() {
               <span className="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest">{stat.label}</span>
             </div>
             <div className="flex items-end gap-2">
-              <span className="text-3xl font-extrabold text-on-surface">{stat.value}</span>
+              <span className={`font-extrabold text-on-surface ${stat.value.length > 5 ? 'text-xl' : 'text-3xl'}`}>{stat.value}</span>
               <span className="text-xs text-on-surface-variant mb-1.5">{stat.unit}</span>
             </div>
             <div className="mt-4 pt-4 border-t border-white/5 flex items-center gap-1.5 text-[10px]">
@@ -86,78 +174,40 @@ export default function AnalyticsPage() {
 
       {/* Analytics Grid */}
       <div className="grid grid-cols-12 gap-8">
-        {/* Focus Distribution Chart */}
-        <div className="col-span-12 lg:col-span-8 bg-surface-container rounded-2xl p-8 border border-white/5">
-          <div className="flex justify-between items-start mb-8">
-            <div>
-              <h3 className="text-lg font-bold tracking-tight">Focus Distribution</h3>
-              <p className="text-xs text-on-surface-variant mt-1">Average hourly concentration levels over 24 hours</p>
-            </div>
-            <div className="flex gap-4">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-primary" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Focus</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-white/10" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Fatigue</span>
-              </div>
-            </div>
-          </div>
-          <div className="h-64 relative mt-10">
-            <div className="absolute -left-8 inset-y-0 flex flex-col justify-between text-[10px] font-bold text-on-surface-variant opacity-50 py-1">
-              <span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span>
-            </div>
-            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-              {[0,1,2,3,4].map(i => <div key={i} className="border-t border-white/5 w-full" />)}
-            </div>
-            <svg className="absolute inset-0 w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 800 200" style={{ filter: "drop-shadow(0 0 8px rgba(192, 193, 255, 0.3))" }}>
-              <defs>
-                <linearGradient id="focusGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" style={{ stopColor: "#c0c1ff", stopOpacity: 1 }} />
-                  <stop offset="100%" style={{ stopColor: "#c0c1ff", stopOpacity: 0 }} />
-                </linearGradient>
-              </defs>
-              <path d="M 0 180 Q 80 160 150 120 T 250 140 T 350 40 T 450 80 T 550 30 T 650 60 T 800 40 V 200 H 0 Z" fill="url(#focusGradient)" opacity="0.15" />
-              <path d="M 0 180 Q 80 160 150 120 T 250 140 T 350 40 T 450 80 T 550 30 T 650 60 T 800 40" fill="none" stroke="#c0c1ff" strokeLinecap="round" strokeWidth="3" />
-              <circle cx="350" cy="40" fill="#c0c1ff" r="4" stroke="#0b0e11" strokeWidth="2" />
-              <circle cx="550" cy="30" fill="#c0c1ff" r="4" stroke="#0b0e11" strokeWidth="2" />
-            </svg>
-            <div className="absolute -bottom-8 w-full flex justify-between text-[10px] font-bold text-on-surface-variant uppercase tracking-widest px-1">
-              <span>06:00</span><span>09:00</span><span>12:00</span><span>15:00</span><span>18:00</span><span>21:00</span><span>00:00</span>
-            </div>
-            <div className="absolute top-[10%] left-[42%] transform -translate-x-1/2 -translate-y-full mb-4 px-3 py-1.5 bg-surface-bright border border-white/10 rounded-lg shadow-xl z-10">
-              <p className="text-[10px] font-bold text-primary mb-0.5">Peak Concentration</p>
-              <p className="text-xs font-bold">14:20 PM — 94%</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Subject Mastery */}
-        <div className="col-span-12 lg:col-span-4 bg-surface-container rounded-2xl p-8 border border-white/5 flex flex-col">
+        
+        {/* Subject Mastery / Folder Distribution */}
+        <div className="col-span-12 lg:col-span-8 bg-surface-container rounded-2xl p-8 border border-white/5 flex flex-col">
           <div className="mb-8">
-            <h3 className="text-lg font-bold tracking-tight">Subject Mastery</h3>
-            <p className="text-xs text-on-surface-variant mt-1">Syllabus completion & recall strength</p>
+            <h3 className="text-lg font-bold tracking-tight">Folder Distribution</h3>
+            <p className="text-xs text-on-surface-variant mt-1">Which subjects you are saving the most resources for</p>
           </div>
-          <div className="space-y-6 flex-1">
-            {subjectMastery.map((subject) => (
-              <div key={subject.name} className="group">
-                <div className="flex justify-between items-center mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className={`w-1.5 h-1.5 rounded-full ${subject.color}`} />
-                    <span className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors">{subject.name}</span>
+          
+          {subjectMastery.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-on-surface-variant italic text-sm">
+              <FolderOpen className="w-8 h-8 text-primary/30 mb-2" />
+              Not enough folders to calculate distribution.
+            </div>
+          ) : (
+            <div className="space-y-6 flex-1">
+              {subjectMastery.map((subject) => (
+                <div key={subject.name} className="group">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-1.5 h-1.5 rounded-full ${subject.color}`} />
+                      <span className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">{subject.name}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-[10px] font-bold text-on-surface-variant">{subject.count} resources</span>
+                      <span className="text-xs font-bold text-primary w-8 text-right">{subject.percent}%</span>
+                    </div>
                   </div>
-                  <span className="text-[10px] font-bold text-on-surface-variant">{subject.percent}%</span>
+                  <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div className={`h-full ${subject.color} rounded-full transition-all duration-1000`} style={{ width: `${subject.percent}%` }} />
+                  </div>
                 </div>
-                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                  <div className={`h-full ${subject.color} rounded-full transition-all duration-1000`} style={{ width: `${subject.percent}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-          <button className="w-full mt-8 py-2.5 border border-white/10 rounded-xl text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:bg-white/5 transition-all">
-            View Detailed Syllabus
-          </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Daily Streaks Heatmap */}
@@ -165,11 +215,7 @@ export default function AnalyticsPage() {
           <div className="flex justify-between items-start mb-6">
             <div>
               <h3 className="text-lg font-bold tracking-tight">Daily Streaks</h3>
-              <p className="text-xs text-on-surface-variant mt-1">Consistency heatmap for June</p>
-            </div>
-            <div className="text-right">
-              <p className="text-xl font-extrabold text-primary">18</p>
-              <p className="text-[8px] font-bold uppercase tracking-widest text-on-surface-variant">Current</p>
+              <p className="text-xs text-on-surface-variant mt-1">Vault activity consistency</p>
             </div>
           </div>
           <div className="grid grid-cols-7 gap-2">
@@ -194,95 +240,50 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Optimization Insight */}
-        <div className="col-span-12 lg:col-span-8 rounded-2xl p-8 relative overflow-hidden" style={{ background: "rgba(30, 39, 47, 0.4)", backdropFilter: "blur(24px)", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
-          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div>
-              <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center mb-6">
-                <Zap className="w-7 h-7 text-primary" />
-              </div>
-              <h3 className="text-2xl font-extrabold tracking-tight text-on-surface mb-3">Optimization Insight</h3>
-              <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
-                Your cognitive performance peaks between <span className="font-bold text-on-surface">08:30 AM — 11:15 AM</span>.
-                Sessions longer than <span className="text-primary font-bold">90 mins</span> show a 24% drop in retention.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-3 py-1 bg-white/5 rounded-full text-[10px] font-bold text-primary-dim uppercase tracking-wider">#MorningBird</span>
-                <span className="px-3 py-1 bg-white/5 rounded-full text-[10px] font-bold text-primary-dim uppercase tracking-wider">#DeepWork</span>
-              </div>
-            </div>
-            <div className="space-y-4 bg-surface/40 p-6 rounded-2xl border border-white/5">
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                  <Lightbulb className="w-4 h-4 text-emerald-400" />
-                </div>
-                <div>
-                  <p className="text-[11px] font-bold text-on-surface mb-0.5">Recommended Schedule</p>
-                  <p className="text-[10px] text-on-surface-variant">Move &quot;Organic Chemistry&quot; to your 08:30 AM slot for 1.4x faster learning.</p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Coffee className="w-4 h-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-[11px] font-bold text-on-surface mb-0.5">Break Interval</p>
-                  <p className="text-[10px] text-on-surface-variant">Insert a 12-min walk at 10:15 AM to reset cognitive load.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-primary/10 rounded-full blur-[100px]" />
-          <div className="absolute -left-10 -top-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-[80px]" />
-        </div>
       </div>
 
       {/* Recent Sessions Table */}
       <div className="mt-12">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold tracking-tight">Recent Focus Sessions</h3>
-          <button className="text-xs font-bold text-primary hover:underline uppercase tracking-widest">View History</button>
+          <h3 className="text-xl font-bold tracking-tight">Recent Additions</h3>
+          <button className="text-xs font-bold text-primary hover:underline uppercase tracking-widest">View Vault</button>
         </div>
         <div className="bg-surface-container/50 border border-white/5 rounded-2xl overflow-hidden">
           <table className="w-full text-left text-sm border-collapse">
             <thead>
               <tr className="bg-white/[0.02] text-on-surface-variant border-b border-white/5">
-                <th className="px-8 py-4 font-bold uppercase tracking-widest text-[10px]">Subject</th>
-                <th className="px-8 py-4 font-bold uppercase tracking-widest text-[10px]">Time Range</th>
-                <th className="px-8 py-4 font-bold uppercase tracking-widest text-[10px]">Intensity</th>
-                <th className="px-8 py-4 font-bold uppercase tracking-widest text-[10px]">Efficiency</th>
-                <th className="px-8 py-4 font-bold uppercase tracking-widest text-[10px] text-right">Action</th>
+                <th className="px-8 py-4 font-bold uppercase tracking-widest text-[10px]">Title</th>
+                <th className="px-8 py-4 font-bold uppercase tracking-widest text-[10px]">Folder</th>
+                <th className="px-8 py-4 font-bold uppercase tracking-widest text-[10px]">Type</th>
+                <th className="px-8 py-4 font-bold uppercase tracking-widest text-[10px]">Date Added</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.03]">
-              {recentSessions.map((session) => (
-                <tr key={session.subject} className="hover:bg-white/[0.02] transition-colors group">
-                  <td className="px-8 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-2 h-2 rounded-full ${session.dotColor}`} />
-                      <span className="font-bold text-on-surface">{session.subject}</span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-5 text-on-surface-variant text-xs">{session.time}</td>
-                  <td className="px-8 py-5">
-                    <div className="flex items-center gap-1.5">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < session.intensity ? "bg-primary" : "bg-white/10"}`} />
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-8 py-5">
-                    <span className={`px-2 py-1 rounded ${session.effBg} ${session.effColor} text-[10px] font-black uppercase`}>
-                      {session.efficiency}
-                    </span>
-                  </td>
-                  <td className="px-8 py-5 text-right">
-                    <button className="p-2 rounded-lg bg-surface-bright text-on-surface-variant group-hover:text-primary transition-colors">
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
+              {recentSessions.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-8 py-8 text-center text-on-surface-variant italic text-sm">
+                    No resources added yet. Check out the Quick Save feature!
                   </td>
                 </tr>
-              ))}
+              ) : (
+                recentSessions.map((session, j) => (
+                  <tr key={j} className="hover:bg-white/[0.02] transition-colors group">
+                    <td className="px-8 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-2 h-2 rounded-full ${session.dotColor}`} />
+                        <span className="font-bold text-on-surface line-clamp-1">{session.title}</span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5 text-on-surface-variant text-xs">{session.folder}</td>
+                    <td className="px-8 py-5">
+                      <span className="px-2 py-1 rounded bg-surface-bright text-[10px] font-black uppercase text-on-surface">
+                        {session.type}
+                      </span>
+                    </td>
+                    <td className="px-8 py-5 text-on-surface-variant text-xs">{session.time}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

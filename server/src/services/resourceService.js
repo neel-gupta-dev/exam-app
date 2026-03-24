@@ -11,12 +11,17 @@ export const createResource = async ({ userId, type, url, title, folderName }) =
 /**
  * Get resources for a user (paginated)
  */
-export const getUserResources = async ({ userId, page = 1, limit = 20 }) => {
+export const getUserResources = async ({ userId, page = 1, limit = 20, folder }) => {
   const skip = (page - 1) * limit;
 
+  const query = { userId };
+  if (folder) {
+    query.folderName = folder;
+  }
+
   const [resources, total] = await Promise.all([
-    Resource.find({ userId }).sort({ createdAt: -1 }).skip(skip).limit(limit),
-    Resource.countDocuments({ userId }),
+    Resource.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    Resource.countDocuments(query),
   ]);
 
   return {

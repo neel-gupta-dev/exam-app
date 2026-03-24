@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { register, login, sendOtp, verifyOtp, onboard } from '../controllers/authController.js';
+import { register, login, sendOtp, verifyOtp, onboard, getMe, updateProfile, updatePassword } from '../controllers/authController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
 const router = Router();
@@ -19,5 +19,8 @@ router.post('/login', login);
 router.post('/send-otp', otpLimiter, sendOtp);
 router.post('/verify-otp', verifyOtp);
 router.patch('/onboard', protect, onboard);
+router.get('/me', protect, getMe);
+router.patch('/profile', protect, updateProfile);
+router.patch('/password', protect, updatePassword);
 
 export default router;

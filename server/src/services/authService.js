@@ -143,3 +143,54 @@ export const onboardUser = async ({ userId, targetExam, targetYear }) => {
     isOnboarded: user.isOnboarded,
   };
 };
+
+/**
+ * Update user profile
+ */
+export const updateUserProfile = async ({ userId, name, email, bio, targetScore }) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    const error = new Error('User not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (name) user.name = name;
+  if (email && email !== user.email) {
+    const existing = await User.findOne({ email });
+    if (existing) {
+      const error = new Error('Email already in use');
+      error.statusCode = 400;
+      throw error;
+    }
+    user.email = email;
+  }
+  if (bio !== undefined) user.bio = bio;
+  if (targetScore !== undefined) user.targetScore = targetScore;
+
+  await user.save();
+  return user;
+};
+
+/**
+ * Update user password
+ */
+export const updateUserPassword = async ({ userId, oldPassword, newPassword }) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    const error = new Error('User not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (!(await user.matchPassword(oldPassword))) {
+    const error = new Error('Incorrect old password');
+    error.statusCode = 401;
+    throw error;
+  }
+
+  user.password = newPassword;
+  await user.save();
+  return { message: 'Password updated successfully' };
+};
+

@@ -69,3 +69,43 @@ export const onboard = asyncHandler(async (req, res) => {
   const data = await authService.onboardUser({ userId: req.user._id, targetExam, targetYear });
   res.json(data);
 });
+
+// @desc    Get current user profile
+// @route   GET /api/auth/me
+// @access  Private
+export const getMe = asyncHandler(async (req, res) => {
+  res.json(req.user);
+});
+
+// @desc    Update user profile
+// @route   PATCH /api/auth/profile
+// @access  Private
+export const updateProfile = asyncHandler(async (req, res) => {
+  const { name, email, bio, targetScore } = req.body;
+  const user = await authService.updateUserProfile({
+    userId: req.user._id,
+    name,
+    email,
+    bio,
+    targetScore,
+  });
+  res.json(user);
+});
+
+// @desc    Update user password
+// @route   PATCH /api/auth/password
+// @access  Private
+export const updatePassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  if (!oldPassword || !newPassword) {
+    res.status(400);
+    throw new Error('Please provide old and new passwords');
+  }
+  const result = await authService.updateUserPassword({
+    userId: req.user._id,
+    oldPassword,
+    newPassword,
+  });
+  res.json(result);
+});
+
