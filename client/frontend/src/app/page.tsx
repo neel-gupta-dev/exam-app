@@ -5,7 +5,6 @@ import DashboardGrid from "@/components/DashboardGrid";
 import {
   Timer,
   Lightbulb,
-  Sparkles,
   Star,
   BookOpen
 } from "lucide-react";
@@ -13,18 +12,19 @@ import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
 
-function ProgressWidget({ resourceCount }: { resourceCount: number }) {
-  const heatmapOpacities: Record<number, string> = {
-    0: "bg-surface-variant/50",
-    20: "bg-primary/20",
-    40: "bg-primary/40",
-    60: "bg-primary/60",
-    80: "bg-primary/80",
-    100: "bg-primary",
+function ProgressWidget({ resourceCount, heatmapData }: { resourceCount: number, heatmapData: number[] }) {
+  const getHeatmapClass = (count: number, maxCount: number) => {
+    if (count === 0) return "bg-surface-variant/50";
+    const ratio = count / (maxCount || 1);
+    if (ratio <= 0.25) return "bg-primary/20";
+    if (ratio <= 0.5) return "bg-primary/40";
+    if (ratio <= 0.75) return "bg-primary/60";
+    if (ratio < 1) return "bg-primary/80";
+    return "bg-primary";
   };
 
-  const streakDays = 0;
-  const heatmap = new Array(28).fill(0);
+  const streakDays = 0; // Could be computed similarly
+  const maxContributions = Math.max(...heatmapData, 4);
 
   return (
     <div className="bg-surface-container p-6 rounded-xl">
@@ -85,12 +85,11 @@ function ProgressWidget({ resourceCount }: { resourceCount: number }) {
           </span>
         </div>
         <div className="grid grid-cols-7 gap-1.5">
-          {heatmap.map((level, i) => (
+          {heatmapData.map((count, i) => (
             <div
               key={i}
-              className={`aspect-square rounded-[2px] ${
-                heatmapOpacities[level] || "bg-surface-variant/50"
-              }`}
+              title={`${count} resources`}
+              className={`aspect-square rounded-[2px] transition-colors ${getHeatmapClass(count, maxContributions)}`}
             />
           ))}
         </div>
@@ -125,12 +124,34 @@ function QuickTipCard() {
 export default function HomePage() {
   const { user } = useAuth();
   const [resourceCount, setResourceCount] = useState(0);
+  const [heatmapData, setHeatmapData] = useState<number[]>(new Array(28).fill(0));
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const { data } = await api.get('/resources?page=1&limit=1');
+        const { data } = await api.get('/resources?limit=200'); // fetch up to 200 to build heatmap
         setResourceCount(data.total || 0);
+
+        // Calculate heatmap for the last 28 days
+        const heatmapObj = new Array(28).fill(0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (data.resources && Array.isArray(data.resources)) {
+          data.resources.forEach((res: any) => {
+            const d = new Date(res.createdAt);
+            d.setHours(0, 0, 0, 0);
+            const diffTime = today.getTime() - d.getTime();
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays >= 0 && diffDays < 28) {
+              const index = 27 - diffDays;
+              heatmapObj[index]++;
+            }
+          });
+        }
+        setHeatmapData(heatmapObj);
+
       } catch (error) {
         console.error("Failed to fetch aggregate stats:", error);
       }
@@ -163,37 +184,21 @@ export default function HomePage() {
           <DashboardGrid />
 
           {/* Bento Section */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* AI Synthesis */}
-            <div className="bg-surface-container p-6 rounded-xl aspect-[16/9] flex flex-col justify-between">
-              <div>
-                <Sparkles className="w-5 h-5 text-primary mb-4" />
-                <h3 className="font-bold text-lg text-on-surface">
-                  AI Synthesis
-                </h3>
-                <p className="text-sm text-on-surface-variant mt-2">
-                  Generate summary cards from your handwritten Physics notes.
-                </p>
-              </div>
-              <button className="w-fit text-xs font-semibold px-4 py-2 border border-outline-variant rounded-lg hover:bg-surface-bright transition-colors">
-                Launch Assistant
-              </button>
-            </div>
-
+          <div className="grid grid-cols-1 gap-4">
             {/* Weekly Goal */}
-            <div className="bg-primary/5 p-6 rounded-xl aspect-[16/9] flex flex-col justify-center items-center text-center">
-              <Star className="w-10 h-10 text-primary mb-3" />
-              <h3 className="font-bold text-lg text-primary">Resource Goal</h3>
-              <p className="text-sm text-on-surface-variant mt-1 max-w-[200px]">
+            <div className="bg-primary/5 p-8 rounded-xl aspect-[21/9] flex flex-col justify-center items-center text-center">
+              <Star className="w-12 h-12 text-primary mb-4" />
+              <h3 className="font-bold text-xl text-primary">Resource Goal</h3>
+              <p className="text-sm text-on-surface-variant mt-2 max-w-sm">
                 Save 10 high-yield resources for {user?.targetExam?.[0] || 'your exam'}.
               </p>
-              <div className="w-full bg-surface-container rounded-full h-1 mt-6">
+              <div className="w-full max-w-md bg-surface-container rounded-full h-1.5 mt-8">
                 <div
                   className="bg-primary h-full rounded-full transition-all"
                   style={{ width: `${Math.min((resourceCount / 10) * 100, 100)}%` }}
                 />
               </div>
-              <span className="text-[10px] text-on-surface-variant mt-2">
+              <span className="text-xs text-on-surface-variant mt-3 font-medium">
                 {Math.min(Math.round((resourceCount / 10) * 100), 100)}% Achieved
               </span>
             </div>
@@ -202,7 +207,7 @@ export default function HomePage() {
 
         {/* Right Column (30%) */}
         <aside className="w-[30%] space-y-6">
-          <ProgressWidget resourceCount={resourceCount} />
+          <ProgressWidget resourceCount={resourceCount} heatmapData={heatmapData} />
           <QuickTipCard />
         </aside>
       </div>

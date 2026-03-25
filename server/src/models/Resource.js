@@ -10,7 +10,7 @@ const resourceSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['pdf', 'video'],
+      enum: ['pdf', 'video', 'link', 'other'],
       required: [true, 'Resource type is required'],
     },
     url: {

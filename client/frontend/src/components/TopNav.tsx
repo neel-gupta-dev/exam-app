@@ -9,19 +9,24 @@ import { toast } from "sonner";
 export default function TopNav() {
   const [isOpen, setIsOpen] = useState(false);
   const [url, setUrl] = useState("");
+  const [title, setTitle] = useState("");
+  const [type, setType] = useState<"video" | "pdf" | "link" | "other">("link");
   const [folderName, setFolderName] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleQuickSave = async (e: FormEvent) => {
     e.preventDefault();
     if (!url) return toast.error("URL is required");
+    if (!title) return toast.error("Title is required");
     
     setLoading(true);
     try {
-      await api.post('/resources', { url, folderName });
+      await api.post('/resources', { url, title, type, folderName: folderName || "General" });
       toast.success("Resource saved to vault!");
       setIsOpen(false);
       setUrl("");
+      setTitle("");
+      setType("link");
       setFolderName("");
       // Trigger a refresh event for Dashboard and Sidebar
       window.dispatchEvent(new Event("resourceAdded"));
@@ -90,25 +95,51 @@ export default function TopNav() {
             </div>
             <form onSubmit={handleQuickSave} className="p-5 space-y-4">
               <div className="space-y-1.5">
+                <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Title</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Calculus Lecture Notes"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full bg-surface-container-highest border border-outline-variant/30 rounded-xl py-2 px-3 text-sm text-on-surface focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all outline-none"
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
                 <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">URL</label>
                 <input
                   type="url"
                   placeholder="https://youtube.com/... or .pdf"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  className="w-full bg-surface-container-highest border border-outline-variant/30 rounded-xl py-2.5 px-3 text-sm text-on-surface focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all outline-none"
+                  className="w-full bg-surface-container-highest border border-outline-variant/30 rounded-xl py-2 px-3 text-sm text-on-surface focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all outline-none"
                   required
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Folder (Optional)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Physics"
-                  value={folderName}
-                  onChange={(e) => setFolderName(e.target.value)}
-                  className="w-full bg-surface-container-highest border border-outline-variant/30 rounded-xl py-2.5 px-3 text-sm text-on-surface focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all outline-none"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Type</label>
+                  <select
+                    value={type}
+                    onChange={(e) => setType(e.target.value as any)}
+                    className="w-full bg-surface-container-highest border border-outline-variant/30 rounded-xl py-2 px-3 text-sm text-on-surface focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all outline-none"
+                  >
+                    <option value="link">Link</option>
+                    <option value="video">Video</option>
+                    <option value="pdf">PDF</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Folder</label>
+                  <input
+                    type="text"
+                    placeholder="General"
+                    value={folderName}
+                    onChange={(e) => setFolderName(e.target.value)}
+                    className="w-full bg-surface-container-highest border border-outline-variant/30 rounded-xl py-2 px-3 text-sm text-on-surface focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all outline-none"
+                  />
+                </div>
               </div>
               <div className="pt-2">
                 <button
