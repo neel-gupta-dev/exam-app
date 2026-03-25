@@ -47,6 +47,14 @@ export default function FocusRoomPage() {
     setTimeLeft(initialTime);
   }, [initialTime]);
 
+  const skipBreak = useCallback(() => {
+    setIsBreak(false);
+    const newTime = focusLength * 60;
+    setTimeLeft(newTime);
+    setInitialTime(newTime);
+    setIsRunning(true);
+  }, [focusLength]);
+
   // Handle settings save
   const saveSettings = () => {
     // only apply immediately if not running
@@ -98,8 +106,17 @@ export default function FocusRoomPage() {
               onClick={toggleTimer}
               className={`px-8 py-2 ${isRunning ? "bg-surface-container-highest text-on-surface" : "bg-primary-container text-on-primary-container"} rounded-xl font-bold font-headline text-xs tracking-wide transition-all hover:scale-105 active:scale-95`}
             >
-              {isRunning ? "PAUSE" : "START SESSION"}
+              {isRunning ? "PAUSE" : isBreak ? "START BREAK" : "START SESSION"}
             </button>
+
+            {!isRunning && isBreak && (
+              <button 
+                onClick={skipBreak}
+                className="px-8 py-2 bg-primary/10 text-primary border border-primary/20 rounded-xl font-bold font-headline text-xs tracking-wide transition-all hover:bg-primary/20 active:scale-95 shadow-sm"
+              >
+                START SESSION
+              </button>
+            )}
             <button 
               onClick={resetTimer}
               className="px-8 py-2 bg-surface-container-highest text-on-surface-variant rounded-xl font-bold font-headline text-xs tracking-wide transition-all hover:bg-surface-bright active:scale-95"

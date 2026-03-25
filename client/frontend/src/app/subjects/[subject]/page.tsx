@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
+import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import api from "@/lib/api";
@@ -33,8 +34,10 @@ const unitIcons: Record<string, React.ReactNode> = {
   folder: <FolderOpen className="w-7 h-7 text-primary" />
 };
 
-export default function SubjectPage({ params }: { params: { subject: string } }) {
-  const decodedSubject = decodeURIComponent(params.subject);
+export default function SubjectPage({ params }: { params: Promise<{ subject: string }> }) {
+  const router = useRouter();
+  const { subject } = use(params);
+  const decodedSubject = decodeURIComponent(subject);
   
   // Capitalize first letter of subject for UI
   const subjectTitle = decodedSubject.charAt(0).toUpperCase() + decodedSubject.slice(1);
@@ -45,7 +48,7 @@ export default function SubjectPage({ params }: { params: { subject: string } })
   useEffect(() => {
     const fetchSubjectResources = async () => {
       try {
-        const { data } = await api.get(`/resources?folder=${decodedSubject}&limit=50`);
+        const { data } = await api.get(`/resources?folder=${encodeURIComponent(decodedSubject)}&limit=50`);
         setResources(data.resources || []);
       } catch (error) {
         console.error("Failed to fetch subject resources", error);
@@ -251,7 +254,7 @@ export default function SubjectPage({ params }: { params: { subject: string } })
                 const Icon = isPdf ? FileText : isVideo ? Video : ImageIcon;
 
                 return (
-                 <tr key={res._id} className="group hover:bg-surface-container-highest/30 transition-colors cursor-pointer">
+                 <tr key={res._id} onClick={() => router.push(`/resource/${res._id}`)} className="group hover:bg-surface-container-highest/30 transition-colors cursor-pointer">
                     <td className="px-6 py-5">
                        <div className="flex items-center gap-4">
                           <div className={`w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-400/20 flex items-center justify-center text-indigo-400`}>
@@ -278,10 +281,10 @@ export default function SubjectPage({ params }: { params: { subject: string } })
                     </td>
                     <td className="px-6 py-5">
                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <a href={res.url} target="_blank" rel="noreferrer" className="p-2 hover:bg-surface-variant rounded-lg transition-colors">
+                          <a href={res.url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="p-2 hover:bg-surface-variant rounded-lg transition-colors">
                              <Eye className="w-4 h-4 text-on-surface-variant hover:text-primary" />
                           </a>
-                          <button className="p-2 hover:bg-surface-variant rounded-lg transition-colors">
+                          <button onClick={(e) => e.stopPropagation()} className="p-2 hover:bg-surface-variant rounded-lg transition-colors">
                              <MoreVertical className="w-4 h-4" />
                           </button>
                        </div>

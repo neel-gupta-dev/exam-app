@@ -6,6 +6,7 @@ import { notFound, errorHandler } from './src/middlewares/errorMiddleware.js';
 import authRoutes from './src/routes/authRoutes.js';
 import resourceRoutes from './src/routes/resourceRoutes.js';
 import noteRoutes from './src/routes/noteRoutes.js';
+import { closeExpiredSessions } from './src/services/authService.js';
 
 dotenv.config();
 
@@ -13,6 +14,9 @@ dotenv.config();
 connectDB();
 
 const app = express();
+
+// Trust proxy for accurate IP detection (needed for Hostinger/Nginx)
+app.set('trust proxy', true);
 
 // --- CORS Configuration ---
 const allowedOrigins = ['http://localhost:3000'];
@@ -60,4 +64,7 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  
+  // Run Janitor every 30 minutes
+  setInterval(closeExpiredSessions, 30 * 60 * 1000);
 });

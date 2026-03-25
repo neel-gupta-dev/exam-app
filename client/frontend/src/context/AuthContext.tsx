@@ -9,6 +9,7 @@ import { User } from '@/types';
 interface AuthContextType {
   user: User | null;
   token: string | null;
+  sessionId: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
@@ -22,6 +23,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
@@ -31,7 +33,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(data);
     } catch {
       localStorage.removeItem('kv_token');
+      localStorage.removeItem('kv_sessionId');
       setToken(null);
+      setSessionId(null);
       setUser(null);
       router.push('/login');
     }
@@ -41,55 +45,73 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initAuth = async () => {
       const storedToken = localStorage.getItem('kv_token');
+      const storedSessionId = localStorage.getItem('kv_sessionId');
       if (storedToken) {
         setToken(storedToken);
+        if (storedSessionId) setSessionId(storedSessionId);
+        
         try {
           const { data } = await api.get('/auth/me');
           setUser(data);
         } catch {
           localStorage.removeItem('kv_token');
+          localStorage.removeItem('kv_sessionId');
           setToken(null);
+          setSessionId(null);
           setUser(null);
         }
       } else {
         setToken(null);
         setUser(null);
+        setSessionId(null);
       }
       setIsLoading(false);
     };
 
     initAuth();
 
-    // Sync auth across tabs via storage event (token changes)
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === 'kv_token') {
-        initAuth();
+    // Heartbeat Interval (10 minutes)
+    const heartbeatInterval = setInterval(() => {
+      const sId = localStorage.getItem('kv_sessionId');
+      const tk = localStorage.getItem('kv_token');
+      if (sId && tk) {
+        api.post('/auth/ping', { sessionId: sId }).catch(() => {});
       }
-    };
-    
-    // Refresh user cache on window focus
-    const onFocus = () => {
-      if (localStorage.getItem('kv_token')) {
-        api.get('/auth/me')
-          .then(({ data }) => setUser(data))
-          .catch(() => {});
+    }, 10 * 60 * 1000);
+
+    // Visibility Change Listener (Navigator Beacon for reliable closure + Anti-Distraction Title)
+    const originalTitle = document.title;
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        document.title = "Don't Get Distracted, Work Hard.";
+        const sId = localStorage.getItem('kv_sessionId');
+        const tk = localStorage.getItem('kv_token');
+        if (sId && tk) {
+          // Use beacon for reliable delivery on tab close/hide
+          const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/auth/ping`;
+          const data = JSON.stringify({ sessionId: sId });
+          navigator.sendBeacon(url, data);
+        }
+      } else {
+        document.title = originalTitle;
       }
     };
 
-    window.addEventListener('storage', onStorage);
-    window.addEventListener('focus', onFocus);
+    window.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
-      window.removeEventListener('storage', onStorage);
-      window.removeEventListener('focus', onFocus);
+      clearInterval(heartbeatInterval);
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     const { data } = await api.post('/auth/login', { email, password });
-    const { token: jwt, ...userData } = data;
+    const { token: jwt, sessionId: sId, ...userData } = data;
     localStorage.setItem('kv_token', jwt);
+    localStorage.setItem('kv_sessionId', sId || '');
     setToken(jwt);
+    setSessionId(sId || null);
     setUser(userData);
     toast.success('Welcome back!');
     router.push('/');
@@ -97,17 +119,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(async (name: string, email: string, password: string) => {
     const { data } = await api.post('/auth/register', { name, email, password });
-    const { token: jwt, ...userData } = data;
+    const { token: jwt, sessionId: sId, ...userData } = data;
     localStorage.setItem('kv_token', jwt);
+    localStorage.setItem('kv_sessionId', sId || '');
     setToken(jwt);
+    setSessionId(sId || null);
     setUser(userData);
     toast.success('Account created!');
     router.push('/');
   }, [router]);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    const sId = localStorage.getItem('kv_sessionId');
+    if (sId) {
+      try {
+        await api.post('/auth/logout', { sessionId: sId });
+      } catch (err) {
+        console.error("Logout session closure failed", err);
+      }
+    }
     localStorage.removeItem('kv_token');
+    localStorage.removeItem('kv_sessionId');
     setToken(null);
+    setSessionId(null);
     setUser(null);
     router.push('/login');
   }, [router]);
@@ -120,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout, updateUser, fetchUser }}>
+    <AuthContext.Provider value={{ user, token, sessionId, isLoading, login, register, logout, updateUser, fetchUser }}>
       {children}
     </AuthContext.Provider>
   );

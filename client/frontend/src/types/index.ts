@@ -9,6 +9,9 @@ export interface User {
   isOnboarded: boolean;
   bio?: string;
   targetScore?: string;
+  currentStreak?: number;
+  level?: number;
+  totalActiveSeconds?: number;
 }
 
 export interface Resource {

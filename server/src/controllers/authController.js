@@ -6,13 +6,14 @@ import * as authService from '../services/authService.js';
 // @access  Public
 export const register = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
+  const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
 
   if (!name || !email || !password) {
     res.status(400);
     throw new Error('Please provide name, email, and password');
   }
 
-  const data = await authService.registerUser({ name, email, password });
+  const data = await authService.registerUser({ name, email, password, ipAddress });
   res.status(201).json(data);
 });
 
@@ -21,14 +22,33 @@ export const register = asyncHandler(async (req, res) => {
 // @access  Public
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
+  const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
 
   if (!email || !password) {
     res.status(400);
     throw new Error('Please provide email and password');
   }
 
-  const data = await authService.loginUser({ email, password });
+  const data = await authService.loginUser({ email, password, ipAddress });
   res.json(data);
+});
+
+// @desc    Update last active time for session
+// @route   POST /api/auth/ping
+// @access  Private
+export const ping = asyncHandler(async (req, res) => {
+  const { sessionId } = req.body;
+  const result = await authService.pingUser({ sessionId });
+  res.json(result);
+});
+
+// @desc    Logout user and close session
+// @route   POST /api/auth/logout
+// @access  Private
+export const logout = asyncHandler(async (req, res) => {
+  const { sessionId } = req.body;
+  const result = await authService.logoutUser({ sessionId, userId: req.user._id });
+  res.json(result);
 });
 
 // @desc    Send OTP for student verification

@@ -12,7 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
 
-function ProgressWidget({ resourceCount, heatmapData }: { resourceCount: number, heatmapData: number[] }) {
+function ProgressWidget({ resourceCount, heatmapData, currentStreak }: { resourceCount: number, heatmapData: number[], currentStreak: number }) {
   const getHeatmapClass = (count: number, maxCount: number) => {
     if (count === 0) return "bg-surface-variant/50";
     const ratio = count / (maxCount || 1);
@@ -23,7 +23,7 @@ function ProgressWidget({ resourceCount, heatmapData }: { resourceCount: number,
     return "bg-primary";
   };
 
-  const streakDays = 0; // Could be computed similarly
+  const streakDays = currentStreak || 0;
   const maxContributions = Math.max(...heatmapData, 4);
 
   return (
@@ -207,7 +207,7 @@ export default function HomePage() {
 
         {/* Right Column (30%) */}
         <aside className="w-[30%] space-y-6">
-          <ProgressWidget resourceCount={resourceCount} heatmapData={heatmapData} />
+          <ProgressWidget resourceCount={resourceCount} heatmapData={heatmapData} currentStreak={user?.currentStreak || 0} />
           <QuickTipCard />
         </aside>
       </div>

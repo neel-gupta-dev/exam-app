@@ -56,18 +56,15 @@ export default function ProfilePage() {
     );
   }
 
-  // Calculate Level based on Resources
-  let level = 1;
+  // Level and Streak from AuthContext
+  const level = user?.level || 1;
+  const currentStreak = user?.currentStreak || 0;
+  
   let title = "Novice";
-  if (resourceCount > 50) {
-    level = 50 + Math.floor(resourceCount / 10);
-    title = "Master";
-  } else if (resourceCount > 10) {
-    level = 10 + Math.floor(resourceCount / 2);
-    title = "Scholar";
-  } else {
-    level = Math.max(1, resourceCount);
-  }
+  if (level >= 50) title = "Grandmaster";
+  else if (level >= 25) title = "Master";
+  else if (level >= 10) title = "Scholar";
+  else if (level >= 5) title = "Aspirant";
 
   const name = user?.name || "Student";
   const email = user?.email || "student@example.com";
@@ -110,8 +107,12 @@ export default function ProfilePage() {
                 </div>
               </div>
               <p className="text-on-surface-variant max-w-xl mb-8 leading-relaxed text-lg font-medium">
-                Dedicated <span className="text-white">{targetExam}</span> Aspirant. Maintaining a steady collection of{" "}
-                <span className="text-primary">{resourceCount} saved materials</span> in the Vault.
+                {user?.bio || (
+                  <>
+                    Dedicated <span className="text-white">{targetExam}</span> Aspirant. Maintaining a steady collection of{" "}
+                    <span className="text-primary">{resourceCount} saved materials</span> in the Vault.
+                  </>
+                )}
               </p>
               <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                 <Link href="/settings">

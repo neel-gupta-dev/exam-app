@@ -98,16 +98,28 @@ export default function AnalyticsPage() {
       };
     });
 
-  // Level Logic
+  // Real Level and Streak from AuthContext
+  const realLevel = user?.level || 1;
+  const currentStreak = user?.currentStreak || 0;
+  const totalActiveSeconds = user?.totalActiveSeconds || 0;
+  
+  const formatActiveTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    return `${h}h ${m}m`;
+  };
+
   let levelName = "Novice";
-  if (totalResources > 50) levelName = "Master";
-  else if (totalResources > 10) levelName = "Scholar";
+  if (realLevel >= 50) levelName = "Grandmaster";
+  else if (realLevel >= 25) levelName = "Master";
+  else if (realLevel >= 10) levelName = "Scholar";
+  else if (realLevel >= 5) levelName = "Aspirant";
 
   const analyticsStats = [
     { label: "Total Resources", value: totalResources.toString(), unit: "saved", icon: "clock", iconColor: "text-primary", iconBg: "bg-primary/10", change: "↑ Active", changeColor: "text-green-400", note: "Keep saving" },
-    { label: "Unique Folders", value: uniqueFoldersCount.toString(), unit: "topics", icon: "flame", iconColor: "text-orange-400", iconBg: "bg-orange-500/10", change: "★ Organized", changeColor: "text-primary", note: "Great categorization" },
+    { label: "Active Time", value: formatActiveTime(totalActiveSeconds), unit: "total", icon: "flame", iconColor: "text-orange-400", iconBg: "bg-orange-500/10", change: "★ Consistent", changeColor: "text-primary", note: `${currentStreak} day streak` },
     { label: "Vault Usage", value: Math.min((totalResources / 100) * 100, 100).toFixed(1), unit: "%", icon: "check-circle", iconColor: "text-emerald-400", iconBg: "bg-emerald-500/10", change: "Growing", changeColor: "text-emerald-400", note: "of 100 goal" },
-    { label: "Scholar Level", value: levelName, unit: "", icon: "trophy", iconColor: "text-purple-400", iconBg: "bg-purple-500/10", change: user?.isVerifiedStudent ? "Verified" : "Unverified", changeColor: user?.isVerifiedStudent ? "text-primary" : "text-surface-variant", note: "Status" },
+    { label: "Scholar Level", value: `Lvl ${realLevel}`, unit: levelName, icon: "trophy", iconColor: "text-purple-400", iconBg: "bg-purple-500/10", change: user?.isVerifiedStudent ? "Verified" : "Unverified", changeColor: user?.isVerifiedStudent ? "text-primary" : "text-surface-variant", note: "Status" },
   ];
 
   const recentSessions = resources.slice(0, 3).map((r, i) => {

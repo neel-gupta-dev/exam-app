@@ -16,7 +16,7 @@ export const getUserResources = async ({ userId, page = 1, limit = 20, folder })
 
   const query = { userId };
   if (folder) {
-    query.folderName = folder;
+    query.folderName = { $regex: new RegExp(`^${folder}$`, 'i') };
   }
 
   const [resources, total] = await Promise.all([
@@ -31,4 +31,11 @@ export const getUserResources = async ({ userId, page = 1, limit = 20, folder })
     total,
     totalPages: Math.ceil(total / limit),
   };
+};
+/**
+ * Get a single resource by ID and userId
+ */
+export const getResourceById = async ({ id, userId }) => {
+  const resource = await Resource.findOne({ _id: id, userId });
+  return resource;
 };

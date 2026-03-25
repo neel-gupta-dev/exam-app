@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Knowledge Vault - Resource Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#2f2ebe",
+                        "primary-dim": "#b0b2ff",
+                        "on-tertiary": "#4a536c",
+                        "surface-container-low": "#0f1418",
+                        "surface-container": "#141a20",
+                        "primary-fixed": "#e1e0ff",
+                        "background": "#0b0e11",
+                        "secondary-dim": "#9f9da1",
+                        "tertiary-fixed-dim": "#c0c9e6",
+                        "surface-tint": "#c0c1ff",
+                        "on-surface-variant": "#a3acb7",
+                        "inverse-primary": "#494bd7",
+                        "error": "#ec7c8a",
+                        "error-container": "#7f2737",
+                        "surface-dim": "#0b0e11",
+                        "on-tertiary-fixed-variant": "#4b546d",
+                        "surface-bright": "#222d37",
+                        "on-surface": "#dde6f2",
+                        "secondary-fixed-dim": "#d6d3d8",
+                        "surface-variant": "#1e272f",
+                        "on-secondary-fixed": "#403f43",
+                        "on-primary-fixed": "#2622b7",
+                        "tertiary-dim": "#c0c9e6",
+                        "on-background": "#dde6f2",
+                        "inverse-on-surface": "#535559",
+                        "inverse-surface": "#f8f9fe",
+                        "on-tertiary-fixed": "#2f384f",
+                        "surface": "#0b0e11",
+                        "surface-container-high": "#192027",
+                        "error-dim": "#b95463",
+                        "on-primary-container": "#ccccff",
+                        "surface-container-lowest": "#000000",
+                        "secondary-container": "#3c3b3f",
+                        "secondary-fixed": "#e5e1e6",
+                        "surface-container-highest": "#1e272f",
+                        "tertiary": "#dee5ff",
+                        "secondary": "#9f9da1",
+                        "on-error": "#490013",
+                        "on-tertiary-container": "#424a63",
+                        "outline": "#6d7680",
+                        "on-primary": "#2724b8",
+                        "outline-variant": "#404952",
+                        "primary": "#c0c1ff",
+                        "tertiary-container": "#ced6f5",
+                        "on-error-container": "#ff97a3",
+                        "on-secondary": "#202023",
+                        "on-secondary-fixed-variant": "#5c5b5f",
+                        "tertiary-fixed": "#ced6f5",
+                        "primary-fixed-dim": "#d1d0ff",
+                        "on-primary-fixed-variant": "#4647d3",
+                        "on-secondary-container": "#c1bec3"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .font-headline { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .no-line { border: none !important; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0b0e11; }
+        ::-webkit-scrollbar-thumb { background: #1e272f; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #2f2ebe; }
+    </style>
+</head>
+<body class="bg-background text-on-surface selection:bg-primary/30">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#0b0e11] flex justify-between items-center h-16 px-6 w-full no-line">
+<div class="flex items-center gap-8">
+<span class="text-xl font-extrabold tracking-tighter text-indigo-500 font-['Manrope']">Knowledge Vault</span>
+<div class="hidden md:flex items-center bg-surface-bright rounded-xl px-4 py-1.5 w-96 group">
+<span class="material-symbols-outlined text-outline text-sm mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-full text-on-surface placeholder:text-outline-variant" placeholder="Search your archive... (⌘ K)" type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-400 hover:bg-[#141a20] transition-colors rounded-full relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span>
+</button>
+<button class="p-2 text-slate-400 hover:bg-[#141a20] transition-colors rounded-full">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="h-8 w-8 rounded-full overflow-hidden bg-surface-container-highest ml-2">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="close-up portrait of a professional male academic with spectacles against a neutral studio background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGn7jq46cm2ki3LNdezOBWneqk6dipUOG6P1fk3JOmaA50ZaSzqWoGTPbbbefq2SoQQX7BOWfZe7q0NXyKuW1Oi2DhqAOUkHr-xbS5w_n9ufQGzCrOuj4gdQBQG1xBoB8I3JiCSa_5o3uHzVH2UiZUJlpcHgXNdrlcTdaYPD--nKbBhi-7Y5Mrc3CeS8p941FqtooAgybp5A3UPx5d7sGwiKnOq0wYSBag61bIRve33UMn_nb37fEoPoe4IaWaPBg2-s7hUb8Arlm9"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-full w-64 z-40 bg-[#0f1418] flex flex-col pt-20 pb-6 h-screen no-line hidden md:flex">
+<div class="px-6 mb-8">
+<p class="text-xs uppercase tracking-widest text-outline-variant font-bold mb-1">Knowledge Vault</p>
+<p class="text-[10px] text-indigo-400 font-medium">Deep Focus Mode</p>
+</div>
+<div class="flex-1 flex flex-col gap-1">
+<a class="flex items-center gap-3 bg-[#1e252e] text-indigo-400 border-l-2 border-indigo-500 py-3 px-4 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span class="font-['Inter'] text-sm font-medium">Vault</span>
+</a>
+<a class="flex items-center gap-3 text-slate-400 py-3 px-4 hover:bg-[#141a20] hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="center_focus_strong">center_focus_strong</span>
+<span class="font-['Inter'] text-sm font-medium">Focus Room</span>
+</a>
+<a class="flex items-center gap-3 text-slate-400 py-3 px-4 hover:bg-[#141a20] hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="style">style</span>
+<span class="font-['Inter'] text-sm font-medium">Flashcards</span>
+</a>
+<a class="flex items-center gap-3 text-slate-400 py-3 px-4 hover:bg-[#141a20] hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-['Inter'] text-sm font-medium">Analytics</span>
+</a>
+</div>
+<div class="mt-auto flex flex-col gap-1">
+<a class="flex items-center gap-3 text-slate-400 py-3 px-4 hover:bg-[#141a20] hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-['Inter'] text-sm font-medium">Help</span>
+</a>
+<a class="flex items-center gap-3 text-slate-400 py-3 px-4 hover:bg-[#141a20] hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-['Inter'] text-sm font-medium">Logout</span>
+</a>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="md:ml-64 pt-20 px-6 pb-12 min-h-screen">
+<div class="max-w-[1400px] mx-auto">
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-2 mb-6 text-sm">
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Vault</a>
+<span class="material-symbols-outlined text-outline-variant text-base">chevron_right</span>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Physics</a>
+<span class="material-symbols-outlined text-outline-variant text-base">chevron_right</span>
+<span class="text-on-surface font-semibold">Quantum Mechanics</span>
+</nav>
+<!-- Three Column Layout Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+<!-- Center Column: Viewer & Notes (Main Content Area) -->
+<div class="xl:col-span-8 space-y-8">
+<!-- Embedded Viewer -->
+<div class="relative aspect-video rounded-xl overflow-hidden bg-surface-container-highest group">
+<img alt="Resource Preview" class="w-full h-full object-cover opacity-60 transition-transform duration-700 group-hover:scale-105" data-alt="abstract visualization of quantum particles as glowing white points and mathematical equations floating in a deep dark blue space" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEGFtmsW7MctRPPvUIuD7DuL9vUzqQRWldbA6R3TS2q53-mGdqXf49Sw2_yqFHttAAjyBMwvbCAvPqvVMXuHsBJDlPPA6Yw1rMbW3R8HbpTpuFxggxFgda40_xoY33cI7mT9YuKX_GlFgJxb137dUkHE3TczxovDDvQtgputClpt6LRWSCxoS8142-16rF-1Vjx2qrWtjZaWHarqcvZpBkuLEE82fEx55XSOxCKoVH5UFH_HMnqi2DLHGhsfmqFoSphjryGZUK3KdC"/>
+<div class="absolute inset-0 flex items-center justify-center bg-black/40">
+<button class="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-on-primary hover:scale-110 transition-transform shadow-2xl">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+</div>
+<div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+<div class="flex items-center justify-between">
+<h1 class="text-2xl font-bold font-headline tracking-tight text-white">Introduction to Wave Function Collapse</h1>
+<div class="flex gap-3">
+<button class="bg-surface-bright/20 backdrop-blur-md p-2 rounded-lg hover:bg-surface-bright/40 transition-colors">
+<span class="material-symbols-outlined text-white">fullscreen</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Notes Section -->
+<section class="bg-surface-container p-8 rounded-xl">
+<div class="flex items-center justify-between mb-8">
+<h2 class="text-xl font-bold font-headline flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">notes</span>
+                                Active Study Notes
+                            </h2>
+<div class="flex gap-2">
+<button class="text-xs bg-surface-variant text-on-surface-variant px-3 py-1.5 rounded-lg hover:bg-primary-container hover:text-white transition-colors">Export PDF</button>
+<button class="text-xs bg-surface-variant text-on-surface-variant px-3 py-1.5 rounded-lg hover:bg-primary-container hover:text-white transition-colors">Sync to Obsidian</button>
+</div>
+</div>
+<!-- Rich Text Simulation -->
+<div class="space-y-6 mb-8">
+<div class="flex gap-4 group">
+<span class="text-xs font-mono text-primary bg-primary/10 px-2 py-1 rounded h-fit mt-1">12:45</span>
+<div>
+<p class="text-on-surface leading-relaxed">Key takeaway about wave functions: The probability density is given by the square of the magnitude of the wave function |ψ|². This transition from probability to certainty happens upon measurement.</p>
+<div class="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-[10px] text-outline hover:text-primary">Edit</button>
+<button class="text-[10px] text-outline hover:text-error">Delete</button>
+</div>
+</div>
+</div>
+<div class="flex gap-4 group">
+<span class="text-xs font-mono text-primary bg-primary/10 px-2 py-1 rounded h-fit mt-1">24:12</span>
+<div>
+<p class="text-on-surface leading-relaxed">Compare this with Schrödinger's cat paradox. The superposition of states exists as long as the box is not opened (no external measurement). </p>
+<ul class="list-disc list-inside mt-2 text-on-surface-variant text-sm space-y-1">
+<li>Superposition: state A + state B</li>
+<li>Measurement: forces a collapse to state A XOR state B</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- Quick Note Input -->
+<div class="bg-surface-container-highest p-4 rounded-xl">
+<textarea class="w-full bg-transparent border-none focus:ring-0 text-sm resize-none h-24 text-on-surface placeholder:text-outline-variant" placeholder="Capture a quick note or key insight..."></textarea>
+<div class="flex items-center justify-between mt-2 pt-4 border-t border-outline-variant/10">
+<div class="flex gap-2">
+<button class="p-1.5 text-outline-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-lg">format_bold</span></button>
+<button class="p-1.5 text-outline-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-lg">format_italic</span></button>
+<button class="p-1.5 text-outline-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-lg">link</span></button>
+<button class="p-1.5 text-outline-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-lg">image</span></button>
+</div>
+<button class="bg-primary text-on-primary px-6 py-2 rounded-lg text-sm font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-transform">Save Note</button>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Metadata & Details -->
+<aside class="xl:col-span-4 space-y-6">
+<!-- Metadata Card -->
+<div class="bg-surface-container-low p-6 rounded-xl space-y-6">
+<h3 class="text-sm font-bold text-outline-variant uppercase tracking-widest">Resource Metadata</h3>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<span class="text-sm text-on-surface-variant">Subject</span>
+<span class="text-sm font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">Physics</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-sm text-on-surface-variant">Type</span>
+<span class="text-sm font-semibold">Video Lecture</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-sm text-on-surface-variant">Date Added</span>
+<span class="text-sm font-semibold">Oct 12, 2023</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-sm text-on-surface-variant">Last Viewed</span>
+<span class="text-sm font-semibold">2 hours ago</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-sm text-on-surface-variant">Study Time</span>
+<span class="text-sm font-semibold">4h 22m</span>
+</div>
+</div>
+<div class="pt-6 border-t border-outline-variant/10">
+<p class="text-xs font-bold text-outline-variant uppercase tracking-widest mb-4">Tags</p>
+<div class="flex flex-wrap gap-2">
+<span class="text-xs bg-surface-bright text-on-surface px-3 py-1.5 rounded-lg">#quantum</span>
+<span class="text-xs bg-surface-bright text-on-surface px-3 py-1.5 rounded-lg">#wave-function</span>
+<span class="text-xs bg-surface-bright text-on-surface px-3 py-1.5 rounded-lg">#theoretical</span>
+<span class="text-xs bg-surface-bright text-on-surface px-3 py-1.5 rounded-lg">#advanced</span>
+</div>
+</div>
+<div class="pt-4">
+<button class="w-full flex items-center justify-center gap-2 bg-surface-container-highest py-3 rounded-xl text-on-surface hover:bg-surface-bright transition-colors">
+<span class="material-symbols-outlined text-lg">share</span>
+<span class="text-sm font-medium">Collaborate</span>
+</button>
+</div>
+</div>
+<!-- Quick Actions -->
+<div class="bg-surface-container p-6 rounded-xl">
+<h3 class="text-sm font-bold text-outline-variant uppercase tracking-widest mb-4">Focus Assistant</h3>
+<p class="text-xs text-on-surface-variant leading-relaxed mb-4">AI-generated summary: This lecture covers the fundamental transition from classical deterministic physics to quantum probabilistic systems.</p>
+<button class="w-full flex items-center justify-center gap-2 border border-primary/20 bg-primary/5 py-3 rounded-xl text-primary hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined text-lg" data-weight="fill">bolt</span>
+<span class="text-sm font-bold">Generate Quiz</span>
+</button>
+</div>
+</aside>
+</div>
+<!-- Related Resources Grid -->
+<section class="mt-12 pt-12 border-t border-outline-variant/10">
+<div class="flex items-center justify-between mb-8">
+<h2 class="text-xl font-bold font-headline">Related Resources</h2>
+<button class="text-sm text-primary font-medium hover:underline">View Subject Vault</button>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Related Item 1 -->
+<div class="group bg-surface-container rounded-xl overflow-hidden cursor-pointer hover:bg-surface-container-high transition-all">
+<div class="h-32 bg-surface-container-highest overflow-hidden relative">
+<img alt="Heisenberg Principle" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="close-up of complex mathematical equations written in white chalk on a dark blackboard with soft lens flare" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAThMFaNVLCBY4R-l84-8Sx_GphMZ0QfL0hYJVVmlzbeJiiL3SD3Wic2fK6BmFai4g9xNREGU2MsBC98ommff0-koL9tZOY7AijD5-bQnwyQE3udAF7EJ04cZBvXKmDYplaT3zrCpIMi2rBbWkr_XhDnaNm-RY0lXOa_5PYTnLS4fXbaCJEbPEoFrvJGVAVAGkdDhV-9fGQFwlabJN0oMcau_AzBk-l4F47QZ1zHjQiTxanPlawRA8ucN-xINJeDQFa_uHP4PVWjq-5"/>
+<span class="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-[10px] text-white px-2 py-1 rounded">12m</span>
+</div>
+<div class="p-4">
+<h4 class="text-sm font-bold text-on-surface mb-1 group-hover:text-primary transition-colors">The Heisenberg Uncertainty Principle</h4>
+<p class="text-xs text-on-surface-variant">Article • 5 min read</p>
+</div>
+</div>
+<!-- Related Item 2 -->
+<div class="group bg-surface-container rounded-xl overflow-hidden cursor-pointer hover:bg-surface-container-high transition-all">
+<div class="h-32 bg-surface-container-highest overflow-hidden relative">
+<img alt="Double Slit Experiment" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="modern laboratory equipment with laser beams and mirrors reflecting light in a dark controlled environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXckqCe43AFxzWUBi9mODmpwShqzUsGTXlXLT8uRJ_erAawZbKKWO6aJHJUq8CLiRef9uvr7wBPl62xlPNcbt2ALbYBpgviRuAulIXQtmgE3Ce1aZCp5xt0mC6dF2-U5AEGHEZzGVMZazRyVGoS5POa8Ie04lBV7OB1M9thFFwQ6Ckrs7rZRnh0Dv5U8Xv0VuL7Ezs9OtAL-K6YZWtyac2tr3smxTwHadf41w4I8V6uKIC67dh2CuLjs9ZOIFbiK2hrRYbmW55orJ5"/>
+<span class="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-[10px] text-white px-2 py-1 rounded">24m</span>
+</div>
+<div class="p-4">
+<h4 class="text-sm font-bold text-on-surface mb-1 group-hover:text-primary transition-colors">Double-Slit Experiment Revisited</h4>
+<p class="text-xs text-on-surface-variant">Video • 24 min</p>
+</div>
+</div>
+<!-- Related Item 3 -->
+<div class="group bg-surface-container rounded-xl overflow-hidden cursor-pointer hover:bg-surface-container-high transition-all">
+<div class="h-32 bg-surface-container-highest overflow-hidden relative">
+<img alt="Schrödinger's Cat" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="artistic interpretation of a cat silhouette merging with a wave pattern in shades of purple and black" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgYYN96Lo_w_uoiLpkYSh4R1Sq0JyCagCvEUgrSrTPruFVwbgGTUXJASRrYiQZDzxgSKKE6ACIMhNMbhLs_ljgRnM_ylLJlEmXbaBzoc4-yQ8S_0NF8yWMisJdED_5fpRWHcDumHXY805nRVQSt9H42ntqkKM_ntcVQ3EbsEQHtOtOex9jSMP3FFGz-ihv-8a7FhqnGNQKIYIJHiPo6aqZjnpjHA7hO8vOMneyEskY11QbdTXp6Yu_dPFxI-kRNjgypyxbD8Ugg5mK"/>
+<span class="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-[10px] text-white px-2 py-1 rounded">PDF</span>
+</div>
+<div class="p-4">
+<h4 class="text-sm font-bold text-on-surface mb-1 group-hover:text-primary transition-colors">Quantum Superposition Paradoxes</h4>
+<p class="text-xs text-on-surface-variant">Lecture Notes • PDF</p>
+</div>
+</div>
+<!-- Related Item 4 -->
+<div class="group bg-surface-container rounded-xl overflow-hidden cursor-pointer hover:bg-surface-container-high transition-all">
+<div class="h-32 bg-surface-container-highest overflow-hidden relative">
+<img alt="Quantum Computing" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="digital representation of a complex neural network or global data connection map with glowing blue nodes and lines on black background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMsKX_XN5XKY4ACCyIYZ4YCFlxsw8jl2a5kmIHpOU3MYmr7-WR1gmLKfVqeXk2UzzLVOCr65Wo79uyioS6utdqg9yz9UZKeLFjySETPXOdnL9y3DVnRMkA9TyvpYVfDbllHWGcRNc-Ji9SWESzN66X820LjQnt1YtGXNq4ju4NP-Ummto80n7uEnFEpkR1AtNZ5zJ42RY4owdlnhBuphx13ENQXkAmmk4t-Ib04cZme-WXi6A0ehFe7pKwPoupwEjEWDOAxOXD2Xux"/>
+<span class="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-[10px] text-white px-2 py-1 rounded">Flashcards</span>
+</div>
+<div class="p-4">
+<h4 class="text-sm font-bold text-on-surface mb-1 group-hover:text-primary transition-colors">Quantum Computation Basics</h4>
+<p class="text-xs text-on-surface-variant">Flashcard Set • 45 cards</p>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- FAB (Suppressed based on context rules, but present in shared components logic if needed for creation - here we prioritize focal area) -->
+</body></html>

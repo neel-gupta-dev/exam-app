@@ -54,6 +54,22 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    totalActiveSeconds: {
+      type: Number,
+      default: 0,
+    },
+    currentStreak: {
+      type: Number,
+      default: 0,
+    },
+    lastLoginDate: {
+      type: String,
+      default: null,
+    },
+    level: {
+      type: Number,
+      default: 1,
+    },
   },
   { timestamps: true }
 );

@@ -1,11 +1,13 @@
 import User from '../models/User.js';
+import Session from '../models/Session.js';
+import Resource from '../models/Resource.js';
 import OtpCode from '../models/OtpCode.js';
 import generateToken from '../utils/generateToken.js';
 
 /**
  * Register a new user
  */
-export const registerUser = async ({ name, email, password }) => {
+export const registerUser = async ({ name, email, password, ipAddress }) => {
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     const error = new Error('User already exists');
@@ -13,7 +15,21 @@ export const registerUser = async ({ name, email, password }) => {
     throw error;
   }
 
-  const user = await User.create({ name, email, password });
+  const user = await User.create({ 
+    name, 
+    email, 
+    password,
+    lastLoginDate: new Date().toISOString().split('T')[0],
+    currentStreak: 1,
+    level: 1
+  });
+
+  const session = await Session.create({
+    userId: user._id,
+    loginAt: new Date(),
+    lastActiveAt: new Date(),
+    ipAddress: ipAddress || 'unknown',
+  });
 
   return {
     _id: user._id,
@@ -23,13 +39,15 @@ export const registerUser = async ({ name, email, password }) => {
     isVerifiedStudent: user.isVerifiedStudent,
     isOnboarded: user.isOnboarded,
     token: generateToken(user._id),
+    sessionId: session._id,
   };
 };
 
 /**
  * Login an existing user
  */
-export const loginUser = async ({ email, password }) => {
+export const loginUser = async ({ email, password, ipAddress }) => {
+  console.log(`[loginUser] Attempting login for ${email} with IP: ${ipAddress}`);
   const user = await User.findOne({ email });
 
   if (!user || !(await user.matchPassword(password))) {
@@ -37,6 +55,37 @@ export const loginUser = async ({ email, password }) => {
     error.statusCode = 401;
     throw error;
   }
+
+  // Session & Streak Logic
+  const todayDateStr = new Date().toISOString().split('T')[0];
+  if (user.lastLoginDate) {
+    const today = new Date(todayDateStr);
+    const lastLogin = new Date(user.lastLoginDate);
+    const diffTime = today.getTime() - lastLogin.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 1) {
+      user.currentStreak += 1;
+    } else if (diffDays > 1) {
+      user.currentStreak = 1;
+    }
+  } else {
+    user.currentStreak = 1;
+  }
+  user.lastLoginDate = todayDateStr;
+
+  const resourceCount = await Resource.countDocuments({ userId: user._id });
+  const hours = user.totalActiveSeconds / 3600;
+  user.level = Math.floor(1 + Math.sqrt(hours + (resourceCount * 2)));
+
+  await user.save();
+
+  const session = await Session.create({
+    userId: user._id,
+    loginAt: new Date(),
+    lastActiveAt: new Date(),
+    ipAddress: ipAddress || 'unknown',
+  });
 
   return {
     _id: user._id,
@@ -47,8 +96,73 @@ export const loginUser = async ({ email, password }) => {
     targetExam: user.targetExam,
     targetYear: user.targetYear,
     isOnboarded: user.isOnboarded,
+    currentStreak: user.currentStreak,
+    totalActiveSeconds: user.totalActiveSeconds,
+    level: user.level,
     token: generateToken(user._id),
+    sessionId: session._id,
   };
+};
+
+export const pingUser = async ({ sessionId }) => {
+  if (!sessionId) return { success: false };
+  await Session.findByIdAndUpdate(sessionId, { lastActiveAt: new Date() });
+  return { success: true };
+};
+
+export const logoutUser = async ({ sessionId, userId }) => {
+  if (!sessionId) return { success: false };
+  const session = await Session.findById(sessionId);
+  if (!session || session.logoutAt) return { success: false };
+
+  session.logoutAt = new Date();
+  session.lastActiveAt = session.logoutAt;
+  const duration = Math.floor((session.logoutAt.getTime() - session.loginAt.getTime()) / 1000);
+  
+  await session.save();
+
+  const user = await User.findById(userId);
+  if (user) {
+    user.totalActiveSeconds += duration;
+    const resourceCount = await Resource.countDocuments({ userId });
+    const hours = user.totalActiveSeconds / 3600;
+    user.level = Math.floor(1 + Math.sqrt(hours + (resourceCount * 2)));
+    await user.save();
+  }
+  return { success: true };
+};
+
+/**
+ * Janitor function: close sessions expired > 15 mins ago
+ */
+export const closeExpiredSessions = async () => {
+  try {
+    const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000);
+    
+    const expiredSessions = await Session.find({
+      logoutAt: null,
+      lastActiveAt: { $lt: fifteenMinsAgo },
+    });
+
+    for (const session of expiredSessions) {
+      session.logoutAt = session.lastActiveAt;
+      const duration = Math.floor((session.logoutAt.getTime() - session.loginAt.getTime()) / 1000);
+      session.activeDuration = duration > 0 ? duration : 0;
+      await session.save();
+
+      const user = await User.findById(session.userId);
+      if (user) {
+        user.totalActiveSeconds += session.activeDuration;
+        const resourceCount = await Resource.countDocuments({ userId: user._id });
+        const hours = user.totalActiveSeconds / 3600;
+        user.level = Math.floor(1 + Math.sqrt(hours + (resourceCount * 2)));
+        await user.save();
+      }
+    }
+    console.log(`[Janitor] Closed ${expiredSessions.length} expired sessions.`);
+  } catch (error) {
+    console.error("[Janitor] Error closing expired sessions:", error);
+  }
 };
 
 /**

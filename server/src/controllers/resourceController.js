@@ -40,3 +40,19 @@ export const getResources = asyncHandler(async (req, res) => {
 
   res.json(data);
 });
+// @desc    Get a single resource
+// @route   GET /api/resources/:id
+// @access  Private
+export const getResourceById = asyncHandler(async (req, res) => {
+  const resource = await resourceService.getResourceById({
+    id: req.params.id,
+    userId: req.user._id,
+  });
+
+  if (resource) {
+    res.json(resource);
+  } else {
+    res.status(404);
+    throw new Error('Resource not found');
+  }
+});
