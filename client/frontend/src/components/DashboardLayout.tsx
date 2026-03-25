@@ -3,6 +3,7 @@ import TopNav from "@/components/TopNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DreamerModal from "@/components/DreamerModal";
 import ConfidencePopup from "@/components/ConfidencePopup";
+import FocusAudioPlayer from "@/components/FocusAudioPlayer";
 import packageInfo from '../../package.json';
 const version = packageInfo.version;
 export default function DashboardLayout({
@@ -17,13 +18,14 @@ export default function DashboardLayout({
         <TopNav />
         <DreamerModal />
         <ConfidencePopup />
-        <main className="pt-24 pb-20 ml-64 px-8 min-h-screen relative flex flex-col">
+        <FocusAudioPlayer />
+        <main className="pt-24 pb-8 ml-64 px-8 min-h-screen relative flex flex-col">
           <div className="flex-1">
             {children}
           </div>
 
           {/* Global Footer Branded Text */}
-          <footer className="mt-auto py-12 border-t border-gray-900 bg-black/50 backdrop-blur-sm">
+          <footer className="mt-12 mx-6 py-12 border border-gray-900 bg-black/50 backdrop-blur-sm rounded-3xl shadow-2xl shadow-black/40">
             <div className="max-w-7xl mx-auto px-4 text-center">
 
               {/* Line 1: The Meta ID (Senior Move: Uses mono font) */}

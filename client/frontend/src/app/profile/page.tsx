@@ -61,7 +61,7 @@ export default function ProfilePage() {
   // Level and Streak from AuthContext
   const level = user?.level || 1;
   const currentStreak = user?.currentStreak || 0;
-  
+
   let title = "Novice";
   if (level >= 50) title = "Grandmaster";
   else if (level >= 25) title = "Master";
@@ -103,20 +103,20 @@ export default function ProfilePage() {
                   )}
                 </div>
               </div>
-              
+
               {user?.levelData && (
                 <div className="mb-8 max-w-md">
-                  <LevelProgressBar 
-                    progress={user.levelData.progressToNext} 
-                    xpRemaining={user.levelData.xpRemaining} 
+                  <LevelProgressBar
+                    progress={user.levelData.progressToNext}
+                    xpRemaining={user.levelData.xpRemaining}
                     currentLevel={user.levelData.currentLevel}
                   />
                   <div className="mt-4 flex items-center gap-3">
                     <div className="bg-primary/10 px-4 py-1.5 rounded-full border border-primary/20 flex items-center gap-2">
-                       <Zap className="w-3 h-3 text-primary" />
-                       <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                         {user.levelData.totalXP} Total XP
-                       </span>
+                      <Zap className="w-3 h-3 text-primary" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                        {user.levelData.totalXP} Total XP
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -159,44 +159,44 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 <div className="bg-primary shadow-lg shadow-primary/20 p-2.5 rounded-2xl">
-                   <ShieldCheck className="w-5 h-5 text-white" />
+                  <ShieldCheck className="w-5 h-5 text-white" />
                 </div>
               </div>
 
               <div className="mt-auto space-y-6">
                 <div className="flex items-center gap-4">
-                   <div className="w-14 h-14 rounded-2xl bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center font-black text-xl text-white shadow-inner">
-                      {user?.name?.charAt(0)}
-                   </div>
-                   <div>
-                      <h4 className="text-xl font-bold text-white tracking-tight">{user?.name}</h4>
-                      <p className="text-[10px] font-black text-primary uppercase tracking-widest">{targetExam} Aspirant</p>
-                   </div>
+                  <div className="w-14 h-14 rounded-2xl bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center font-black text-xl text-white shadow-inner">
+                    {user?.name?.charAt(0)}
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-bold text-white tracking-tight">{user?.name}</h4>
+                    <p className="text-[10px] font-black text-primary uppercase tracking-widest">{targetExam} Aspirant</p>
+                  </div>
                 </div>
 
                 <div className="pt-6 border-t border-outline-variant/10 flex justify-between items-end">
-                   <div className="space-y-4">
-                      <div>
-                        <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.15em] block mb-1">Mastery Progress</span>
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-3xl font-black text-white">{Math.min(resourceCount * 10, 100)}</span>
-                          <span className="text-xs font-bold text-on-surface-variant">%</span>
-                        </div>
+                  <div className="space-y-4">
+                    <div>
+                      <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.15em] block mb-1">Mastery Progress</span>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-black text-white">{Math.min(resourceCount * 10, 100)}</span>
+                        <span className="text-xs font-bold text-on-surface-variant">%</span>
                       </div>
-                      <div className="w-32 h-1.5 bg-surface-variant/30 rounded-full overflow-hidden">
-                        <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${Math.min(resourceCount * 10, 100)}%` }} />
-                      </div>
-                   </div>
-                   <div className="bg-white p-1 rounded-xl shadow-xl shadow-black/40 rotate-1 flex flex-col gap-0.5 w-16 h-16 shrink-0 opacity-80 overflow-hidden">
-                      <div className="h-1.5 bg-black/10 w-full mb-1" />
-                      <div className="flex flex-col gap-1 p-1">
-                        <div className="h-0.5 bg-black/20 w-full" />
-                        <div className="h-0.5 bg-black/20 w-[70%]" />
-                        <div className="h-0.5 bg-black/20 w-[90%]" />
-                        <div className="h-0.5 bg-black/20 w-[60%]" />
-                      </div>
-                      <div className="mt-auto h-2 bg-black/30 w-full" />
-                   </div>
+                    </div>
+                    <div className="w-32 h-1.5 bg-surface-variant/30 rounded-full overflow-hidden">
+                      <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${Math.min(resourceCount * 10, 100)}%` }} />
+                    </div>
+                  </div>
+                  <div className="bg-white p-1 rounded-xl shadow-xl shadow-black/40 rotate-1 flex flex-col gap-0.5 w-16 h-16 shrink-0 opacity-80 overflow-hidden">
+                    <div className="h-1.5 bg-black/10 w-full mb-1" />
+                    <div className="flex flex-col gap-1 p-1">
+                      <div className="h-0.5 bg-black/20 w-full" />
+                      <div className="h-0.5 bg-black/20 w-[70%]" />
+                      <div className="h-0.5 bg-black/20 w-[90%]" />
+                      <div className="h-0.5 bg-black/20 w-[60%]" />
+                    </div>
+                    <div className="mt-auto h-2 bg-black/30 w-full" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -334,13 +334,13 @@ export default function ProfilePage() {
         </div>
 
         {/* Footer */}
-        <div className="pt-10 pb-16 flex flex-col items-center gap-4">
+        {/* <div className="pt-10 pb-16 flex flex-col items-center gap-4">
           <div className="w-12 h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent rounded-full" />
           <div className="text-center">
             <p className="text-on-surface-variant text-[11px] font-black tracking-[0.3em] uppercase opacity-60">Knowledge Vault · Version 1.0.0</p>
             <p className="text-[10px] text-on-surface-variant/40 mt-2 font-medium">© {new Date().getFullYear()} Academic Excellence Built on Discipline</p>
           </div>
-        </div>
+        </div> */}
       </div>
     </DashboardLayout>
   );
