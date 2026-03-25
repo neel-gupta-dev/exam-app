@@ -47,6 +47,10 @@ function extractYouTubeId(url: string): string | null {
   return m ? m[1] : null;
 }
 
+function isPdf(url: string): boolean {
+  return url.toLowerCase().split(/[?#]/)[0].endsWith(".pdf");
+}
+
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
@@ -67,6 +71,7 @@ export default function ResourceViewerPage() {
   const [loading, setLoading] = useState(true);
   const [newNote, setNewNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [videoTitle, setVideoTitle] = useState<string | null>(null);
 
   // ── Track session duration for confidence prompt ──────────────────────
   useEffect(() => {
@@ -92,8 +97,23 @@ export default function ResourceViewerPage() {
           api.get(`/resources/${id}`),
           api.get(`/notes/${id}`),
         ]);
-        setResource(resResp.data);
+        
+        const resData = resResp.data;
+        setResource(resData);
         setNotes(Array.isArray(notesResp.data) ? notesResp.data : []);
+
+        // Fetch YouTube Title if applicable
+        if (resData?.url && extractYouTubeId(resData.url)) {
+          try {
+            const ytResp = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(resData.url)}&format=json`);
+            if (ytResp.ok) {
+              const ytData = await ytResp.json();
+              setVideoTitle(ytData.title);
+            }
+          } catch (ytErr) {
+            console.error("Failed to fetch YouTube title during main load:", ytErr);
+          }
+        }
       } catch (err: any) {
         console.error("Failed to fetch resource data:", err);
         toast.error(
@@ -174,6 +194,31 @@ export default function ResourceViewerPage() {
               className="bg-surface-bright/20 backdrop-blur-md p-2 rounded-lg hover:bg-surface-bright/40 transition-colors"
             >
               <ExternalLink className="w-5 h-5 text-white" />
+            </a>
+          </div>
+        </div>
+      );
+    }
+
+    // PDF Reader
+    if (isPdf(resource.url)) {
+      return (
+        <div className="relative w-full h-[110vh] rounded-2xl overflow-hidden bg-surface-container-highest border border-outline-variant/10 shadow-2xl">
+          <iframe
+            src={`${resource.url}#view=FitH`}
+            className="w-full h-full"
+            title={resource.title || "PDF Resource"}
+          />
+          {/* Floating Actions for PDF */}
+          <div className="absolute top-4 right-4 flex gap-2">
+            <a
+              href={resource.url}
+              target="_blank"
+              rel="noreferrer"
+              className="bg-primary text-on-primary text-xs font-bold px-4 py-2 rounded-lg shadow-lg shadow-primary/20 hover:scale-105 transition-transform flex items-center gap-2"
+            >
+              <Maximize2 className="w-4 h-4" />
+              Full Screen
             </a>
           </div>
         </div>
@@ -396,9 +441,19 @@ export default function ResourceViewerPage() {
                     <span className="text-sm font-semibold capitalize">
                       {resource.type === "video"
                         ? "Video Lecture"
-                        : "Web Link"}
+                        : isPdf(resource.url) ? "PDF Document" : "Web Link"}
                     </span>
                   </div>
+                  {videoTitle && (
+                    <div className="flex flex-col gap-1 pt-2 border-t border-outline-variant/10">
+                      <span className="text-xs text-on-surface-variant uppercase font-bold tracking-wider">
+                        Source Title
+                      </span>
+                      <p className="text-sm font-medium leading-normal text-on-surface line-clamp-2">
+                        {videoTitle}
+                      </p>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-on-surface-variant">
                       Date Added
