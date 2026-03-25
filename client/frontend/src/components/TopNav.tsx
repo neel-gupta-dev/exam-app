@@ -13,6 +13,20 @@ export default function TopNav() {
   const [type, setType] = useState<"video" | "pdf" | "link" | "other">("link");
   const [folderName, setFolderName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      try {
+        await api.post('/users/search-log', { term: searchQuery.trim() });
+        // After logging, we could also trigger a local search filtering event
+        // but for now we just satisfy the "passive logger" requirement.
+        console.log("Search behavior logged passively.");
+      } catch (err) {
+        console.error("Failed to log search behavior", err);
+      }
+    }
+  };
 
   const handleQuickSave = async (e: FormEvent) => {
     e.preventDefault();
@@ -47,6 +61,9 @@ export default function TopNav() {
             <input
               type="text"
               placeholder="Command + K to search notes"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearch}
               className="w-full bg-surface-container-highest border-none rounded-xl pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-primary/50 placeholder:text-outline text-on-surface transition-all outline-none"
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1">

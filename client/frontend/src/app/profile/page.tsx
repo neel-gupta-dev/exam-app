@@ -22,6 +22,8 @@ import {
   GraduationCap,
   BadgeCheck
 } from "lucide-react";
+import LevelBadge from "@/components/LevelBadge";
+import LevelProgressBar from "@/components/LevelProgressBar";
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
@@ -81,11 +83,7 @@ export default function ProfilePage() {
             <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-[100px]" />
             <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-tertiary/5 rounded-full blur-[80px]" />
             <div className="relative group">
-              <div className="w-40 h-40 rounded-[2.5rem] p-1 bg-gradient-to-br from-primary via-outline-variant to-tertiary shadow-2xl overflow-hidden group-hover:rotate-2 transition-transform duration-500">
-                <div className="w-full h-full bg-surface-container-highest rounded-[2.25rem] flex items-center justify-center text-4xl font-black text-on-surface">
-                  {initials}
-                </div>
-              </div>
+              <LevelBadge level={user?.levelData?.currentLevel || 1} className="w-40 h-40" />
               <div className="absolute -bottom-3 -right-3 bg-primary text-on-primary w-12 h-12 rounded-2xl flex items-center justify-center border-4 border-surface-container shadow-xl animate-pulse">
                 <Zap className="w-5 h-5" />
               </div>
@@ -94,7 +92,6 @@ export default function ProfilePage() {
               <div className="flex flex-col md:flex-row md:items-baseline gap-4 mb-4">
                 <h2 className="text-5xl font-extrabold tracking-tight text-white">{name}</h2>
                 <div className="flex items-center gap-2">
-                  <span className="text-primary font-black text-2xl uppercase">Level {level}</span>
                   <span className="bg-primary/20 text-primary text-[10px] font-black px-2.5 py-1 rounded-lg border border-primary/30 uppercase tracking-widest">
                     {title}
                   </span>
@@ -106,6 +103,24 @@ export default function ProfilePage() {
                   )}
                 </div>
               </div>
+              
+              {user?.levelData && (
+                <div className="mb-8 max-w-md">
+                  <LevelProgressBar 
+                    progress={user.levelData.progressToNext} 
+                    xpRemaining={user.levelData.xpRemaining} 
+                    currentLevel={user.levelData.currentLevel}
+                  />
+                  <div className="mt-4 flex items-center gap-3">
+                    <div className="bg-primary/10 px-4 py-1.5 rounded-full border border-primary/20 flex items-center gap-2">
+                       <Zap className="w-3 h-3 text-primary" />
+                       <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                         {user.levelData.totalXP} Total XP
+                       </span>
+                    </div>
+                  </div>
+                </div>
+              )}
               <p className="text-on-surface-variant max-w-xl mb-8 leading-relaxed text-lg font-medium">
                 {user?.bio || (
                   <>

@@ -12,6 +12,28 @@ export interface User {
   currentStreak?: number;
   level?: number;
   totalActiveSeconds?: number;
+  profile?: {
+    dreamColleges: string[];
+    currentCoaching: string;
+    academicLevel: string;
+  };
+  analytics?: {
+    subjectDistribution: Record<string, number>;
+    searchHistory: { term: string; timestamp: string }[];
+    studyConfidence: number;
+    studyConfidenceCount: number;
+    resourceCount: number;
+  };
+  level: number;
+  levelData?: {
+    currentLevel: number;
+    totalXP: number;
+    progressToNext: number;
+    xpRemaining: number;
+  };
+  preferences?: {
+    preferredResourceType: string;
+  };
 }
 
 export interface Resource {

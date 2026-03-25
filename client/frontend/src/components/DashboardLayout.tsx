@@ -1,6 +1,8 @@
 import Sidebar from "@/components/Sidebar";
 import TopNav from "@/components/TopNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import DreamerModal from "@/components/DreamerModal";
+import ConfidencePopup from "@/components/ConfidencePopup";
 
 export default function DashboardLayout({
   children,
@@ -12,6 +14,8 @@ export default function DashboardLayout({
       <div className="min-h-screen bg-surface text-on-surface">
         <Sidebar />
         <TopNav />
+        <DreamerModal />
+        <ConfidencePopup />
         <main className="pt-24 pb-20 ml-64 px-8 min-h-screen relative flex flex-col">
           <div className="flex-1">
             {children}

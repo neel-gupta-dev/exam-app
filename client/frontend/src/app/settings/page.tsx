@@ -5,7 +5,8 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
 import { toast } from "sonner";
-import { AutoAwesome, LocalFireDepartment, Database, Flag } from "@mui/icons-material"; // using basic mappings for the material icons used in HTML
+import { Sparkles, Database, Flag } from "lucide-react";
+import StreakIcon from "@/components/StreakIcon";
 
 export default function SettingsPage() {
   const { user, fetchUser } = useAuth();
@@ -78,8 +79,8 @@ export default function SettingsPage() {
     }
   };
 
-  // derived metrics for the right panel
-  const rank = Math.min((user?.targetExam?.length || 0) * 4, 10);
+  // real metrics for the right panel
+  const rank = user?.currentStreak || 0;
   const bioLength = profileForm.bio.length;
 
   return (
@@ -216,7 +217,7 @@ export default function SettingsPage() {
           <div className="bg-surface-container p-6 rounded-xl space-y-6 border border-white/5">
             <div className="flex items-center justify-between">
               <h4 className="font-bold text-sm">Monthly Goal</h4>
-              <span className="text-primary text-sm">⛳</span>
+              <Flag className="w-4 h-4 text-primary" />
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-xs mb-1">
@@ -252,7 +253,7 @@ export default function SettingsPage() {
                   <p className="text-xl font-extrabold text-on-surface">{user?.targetScore || "N/A"}</p>
                 </div>
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                  ✨
+                  <Sparkles className="w-5 h-5" />
                 </div>
               </div>
 
@@ -261,8 +262,8 @@ export default function SettingsPage() {
                   <p className="text-[10px] text-on-surface-variant uppercase font-bold tracking-tight">Active Streak</p>
                   <p className="text-xl font-extrabold text-on-surface">{rank} Days</p>
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                  🔥
+                <div className="w-10 h-10 rounded-lg bg-orange-600/10 flex items-center justify-center text-primary">
+                  <StreakIcon className="w-8 h-8" />
                 </div>
               </div>
             </div>

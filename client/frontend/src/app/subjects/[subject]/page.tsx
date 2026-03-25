@@ -21,10 +21,10 @@ import {
   ImageIcon,
   Eye,
   Download,
-  MoreVertical,
   Grid3X3,
   List,
-  FolderOpen
+  FolderOpen,
+  Trash2
 } from "lucide-react";
 
 const unitIcons: Record<string, React.ReactNode> = {
@@ -59,9 +59,24 @@ export default function SubjectPage({ params }: { params: Promise<{ subject: str
     fetchSubjectResources();
     
     const handleResourceAdded = () => fetchSubjectResources();
+    const handleResourceDeleted = () => fetchSubjectResources();
     window.addEventListener("resourceAdded", handleResourceAdded);
-    return () => window.removeEventListener("resourceAdded", handleResourceAdded);
+    window.addEventListener("resourceDeleted", handleResourceDeleted);
+    return () => {
+      window.removeEventListener("resourceAdded", handleResourceAdded);
+      window.removeEventListener("resourceDeleted", handleResourceDeleted);
+    };
   }, [decodedSubject]);
+
+  const handleDeleteResource = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this resource?")) return;
+    try {
+      await api.delete(`/resources/${id}`);
+      window.dispatchEvent(new Event("resourceDeleted"));
+    } catch (error) {
+      console.error("Failed to delete resource", error);
+    }
+  };
 
   if (loading) {
     return (
@@ -284,8 +299,14 @@ export default function SubjectPage({ params }: { params: Promise<{ subject: str
                           <a href={res.url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="p-2 hover:bg-surface-variant rounded-lg transition-colors">
                              <Eye className="w-4 h-4 text-on-surface-variant hover:text-primary" />
                           </a>
-                          <button onClick={(e) => e.stopPropagation()} className="p-2 hover:bg-surface-variant rounded-lg transition-colors">
-                             <MoreVertical className="w-4 h-4" />
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteResource(res._id);
+                            }} 
+                            className="p-2 hover:bg-error/10 rounded-lg transition-colors"
+                          >
+                             <Trash2 className="w-4 h-4 text-error/70 hover:text-error" />
                           </button>
                        </div>
                     </td>

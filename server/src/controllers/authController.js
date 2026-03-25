@@ -1,12 +1,20 @@
 import asyncHandler from 'express-async-handler';
 import * as authService from '../services/authService.js';
 
+const normalizeIp = (ip) => {
+  if (!ip) return 'unknown';
+  if (ip === '::1') return '127.0.0.1';
+  if (ip.startsWith('::ffff:')) return ip.replace('::ffff:', '');
+  return ip;
+};
+
 // @desc    Register a new user
 // @route   POST /api/auth/register
 // @access  Public
 export const register = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
-  const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  const { name, email, password, publicIp } = req.body;
+  let ipAddress = publicIp || req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  ipAddress = normalizeIp(ipAddress);
 
   if (!name || !email || !password) {
     res.status(400);
@@ -21,8 +29,9 @@ export const register = asyncHandler(async (req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 export const login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
-  const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  const { email, password, publicIp } = req.body;
+  let ipAddress = publicIp || req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  ipAddress = normalizeIp(ipAddress);
 
   if (!email || !password) {
     res.status(400);

@@ -70,8 +70,44 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
+    profile: {
+      dreamColleges: { type: [String], default: [] },
+      currentCoaching: { type: String, default: '' },
+      academicLevel: { 
+        type: String, 
+        enum: ['', '11th', '12th', 'Dropper'], 
+        default: '' 
+      },
+    },
+    analytics: {
+      subjectDistribution: {
+        type: Map,
+        of: Number,
+        default: {},
+      },
+      searchHistory: [
+        {
+          term: String,
+          timestamp: { type: Date, default: Date.now },
+        },
+      ],
+      studyConfidence: { type: Number, default: 0 },
+      studyConfidenceCount: { type: Number, default: 0 },
+      resourceCount: { type: Number, default: 0 },
+    },
+    preferences: {
+      preferredResourceType: {
+        type: String,
+        enum: ['video', 'pdf', 'mixed', ''],
+        default: '',
+      },
+    },
   },
-  { timestamps: true }
+  { 
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
 );
 
 // Hash password before saving
@@ -85,6 +121,36 @@ userSchema.pre('save', async function () {
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
+
+userSchema.virtual('levelData').get(function() {
+  const hours = (this.totalActiveSeconds || 0) / 3600;
+  const streak = this.currentStreak || 0;
+  const resources = this.analytics?.resourceCount || 0;
+  const totalXP = (hours * 50) + (streak * 3) + (resources * 10);
+  
+  if (totalXP === 0) {
+    return {
+      currentLevel: 1,
+      totalXP: 0,
+      progressToNext: 0,
+      xpRemaining: 50
+    };
+  }
+
+  const currentLevel = Math.max(1, Math.floor(Math.pow(totalXP / 50, 0.7)));
+  
+  const nextLevelXP = Math.pow(currentLevel + 1, 1 / 0.7) * 50;
+  const currentLevelXP = Math.pow(currentLevel, 1 / 0.7) * 50;
+  
+  const progressToNext = (totalXP - currentLevelXP) / (nextLevelXP - currentLevelXP) * 100;
+  
+  return {
+    currentLevel,
+    totalXP: Math.round(totalXP),
+    progressToNext: Math.max(0, Math.min(100, progressToNext)),
+    xpRemaining: Math.max(0, Math.round(nextLevelXP - totalXP))
+  };
+});
 
 const User = mongoose.model('User', userSchema);
 export default User;

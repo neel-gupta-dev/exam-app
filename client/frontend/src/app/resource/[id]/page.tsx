@@ -67,6 +67,20 @@ export default function ResourceViewerPage() {
   const [newNote, setNewNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // ── Track session duration for confidence prompt ──────────────────────
+  useEffect(() => {
+    const startTime = Date.now();
+    
+    return () => {
+      const duration = Date.now() - startTime;
+      const fiveMinutes = 5 * 60 * 1000;
+      
+      if (duration >= fiveMinutes && id) {
+        localStorage.setItem("pendingConfidenceRating", id);
+      }
+    };
+  }, [id]);
+
   // ── Fetch data on mount ──────────────────────────────────────────────
   useEffect(() => {
     if (!id) return;

@@ -56,3 +56,20 @@ export const getResourceById = asyncHandler(async (req, res) => {
     throw new Error('Resource not found');
   }
 });
+
+// @desc    Delete a resource
+// @route   DELETE /api/resources/:id
+// @access  Private
+export const deleteResource = asyncHandler(async (req, res) => {
+  const resource = await resourceService.deleteResource({
+    id: req.params.id,
+    userId: req.user._id,
+  });
+
+  if (resource) {
+    res.json({ message: 'Resource removed' });
+  } else {
+    res.status(404);
+    throw new Error('Resource not found');
+  }
+});

@@ -5,6 +5,7 @@ import connectDB from './src/config/db.js';
 import { notFound, errorHandler } from './src/middlewares/errorMiddleware.js';
 import authRoutes from './src/routes/authRoutes.js';
 import resourceRoutes from './src/routes/resourceRoutes.js';
+import userRoutes from './src/routes/userRoutes.js';
 import noteRoutes from './src/routes/noteRoutes.js';
 import { closeExpiredSessions } from './src/services/authService.js';
 
@@ -54,6 +55,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/resources', resourceRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/notes', noteRoutes);
 
 // --- Error Handling ---

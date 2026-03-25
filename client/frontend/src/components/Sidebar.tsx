@@ -65,7 +65,7 @@ export default function Sidebar() {
               Knowledge Vault
             </h1></Link>
             <p className="text-[10px] text-on-surface-variant uppercase tracking-widest mt-1">
-              {user?.targetExam?.[0] || 'Preparation'} • Level {user?.level || 1}
+              {user?.targetExam?.[0] || 'Preparation'} • Level {user?.levelData?.currentLevel || 1}
             </p>
           </div>
         </div>

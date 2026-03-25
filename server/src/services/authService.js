@@ -74,11 +74,14 @@ export const loginUser = async ({ email, password, ipAddress }) => {
   }
   user.lastLoginDate = todayDateStr;
 
-  const resourceCount = await Resource.countDocuments({ userId: user._id });
-  const hours = user.totalActiveSeconds / 3600;
-  user.level = Math.floor(1 + Math.sqrt(hours + (resourceCount * 2)));
-
-  await user.save();
+  // Migration check: ensure resourceCount is synced for legacy users
+  if (!user.analytics.resourceCount || user.analytics.resourceCount === 0) {
+    const actualCount = await Resource.countDocuments({ userId: user._id });
+    if (actualCount > 0) {
+      user.analytics.resourceCount = actualCount;
+      await user.save();
+    }
+  }
 
   const session = await Session.create({
     userId: user._id,
@@ -98,7 +101,7 @@ export const loginUser = async ({ email, password, ipAddress }) => {
     isOnboarded: user.isOnboarded,
     currentStreak: user.currentStreak,
     totalActiveSeconds: user.totalActiveSeconds,
-    level: user.level,
+    levelData: user.levelData,
     token: generateToken(user._id),
     sessionId: session._id,
   };
@@ -124,9 +127,6 @@ export const logoutUser = async ({ sessionId, userId }) => {
   const user = await User.findById(userId);
   if (user) {
     user.totalActiveSeconds += duration;
-    const resourceCount = await Resource.countDocuments({ userId });
-    const hours = user.totalActiveSeconds / 3600;
-    user.level = Math.floor(1 + Math.sqrt(hours + (resourceCount * 2)));
     await user.save();
   }
   return { success: true };
@@ -153,9 +153,6 @@ export const closeExpiredSessions = async () => {
       const user = await User.findById(session.userId);
       if (user) {
         user.totalActiveSeconds += session.activeDuration;
-        const resourceCount = await Resource.countDocuments({ userId: user._id });
-        const hours = user.totalActiveSeconds / 3600;
-        user.level = Math.floor(1 + Math.sqrt(hours + (resourceCount * 2)));
         await user.save();
       }
     }

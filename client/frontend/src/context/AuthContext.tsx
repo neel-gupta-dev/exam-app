@@ -98,15 +98,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     window.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('resourceAdded', fetchUser);
+    window.addEventListener('resourceDeleted', fetchUser);
     
     return () => {
       clearInterval(heartbeatInterval);
       window.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('resourceAdded', fetchUser);
+      window.removeEventListener('resourceDeleted', fetchUser);
     };
   }, []);
 
+  const fetchPublicIp = async () => {
+    try {
+      const res = await fetch('https://api.ipify.org?format=json');
+      const data = await res.json();
+      return data.ip;
+    } catch (e) {
+      console.error("Public IP fetch failed", e);
+      return 'unknown';
+    }
+  };
+
   const login = useCallback(async (email: string, password: string) => {
-    const { data } = await api.post('/auth/login', { email, password });
+    const publicIp = await fetchPublicIp();
+    const { data } = await api.post('/auth/login', { email, password, publicIp });
     const { token: jwt, sessionId: sId, ...userData } = data;
     localStorage.setItem('kv_token', jwt);
     localStorage.setItem('kv_sessionId', sId || '');
@@ -118,7 +134,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
-    const { data } = await api.post('/auth/register', { name, email, password });
+    const publicIp = await fetchPublicIp();
+    const { data } = await api.post('/auth/register', { name, email, password, publicIp });
     const { token: jwt, sessionId: sId, ...userData } = data;
     localStorage.setItem('kv_token', jwt);
     localStorage.setItem('kv_sessionId', sId || '');

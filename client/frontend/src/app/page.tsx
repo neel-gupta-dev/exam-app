@@ -11,8 +11,10 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
+import LevelProgressBar from "@/components/LevelProgressBar";
+import { User } from "@/types";
 
-function ProgressWidget({ resourceCount, heatmapData, currentStreak }: { resourceCount: number, heatmapData: number[], currentStreak: number }) {
+function ProgressWidget({ resourceCount, heatmapData, currentStreak, user }: { resourceCount: number, heatmapData: number[], currentStreak: number, user: User | null }) {
   const getHeatmapClass = (count: number, maxCount: number) => {
     if (count === 0) return "bg-surface-variant/50";
     const ratio = count / (maxCount || 1);
@@ -31,6 +33,16 @@ function ProgressWidget({ resourceCount, heatmapData, currentStreak }: { resourc
       <h3 className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-6">
         Focus & Progress
       </h3>
+
+      {user?.levelData && (
+        <div className="mb-8 p-4 bg-surface-container-highest/30 rounded-xl border border-white/5">
+          <LevelProgressBar 
+            currentLevel={user.levelData.currentLevel}
+            progress={user.levelData.progressToNext}
+            xpRemaining={user.levelData.xpRemaining}
+          />
+        </div>
+      )}
 
       {/* Resources Saved */}
       <div className="flex items-center justify-between mb-8">
@@ -207,7 +219,12 @@ export default function HomePage() {
 
         {/* Right Column (30%) */}
         <aside className="w-[30%] space-y-6">
-          <ProgressWidget resourceCount={resourceCount} heatmapData={heatmapData} currentStreak={user?.currentStreak || 0} />
+          <ProgressWidget 
+            resourceCount={resourceCount} 
+            heatmapData={heatmapData} 
+            currentStreak={user?.currentStreak || 0} 
+            user={user}
+          />
           <QuickTipCard />
         </aside>
       </div>
