@@ -16,6 +16,8 @@ interface AuthContextType {
   logout: () => void;
   updateUser: (data: Partial<User>) => void;
   fetchUser: () => Promise<void>;
+  hapticsEnabled: boolean;
+  setHapticsEnabled: (enabled: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -172,8 +174,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const [hapticsEnabled, setHapticsEnabledState] = useState(true);
+
+  useEffect(() => {
+    const storedHaptics = localStorage.getItem('kv_hapticsEnabled');
+    if (storedHaptics !== null) {
+      setHapticsEnabledState(storedHaptics === 'true');
+    }
+  }, []);
+
+  const setHapticsEnabled = useCallback((enabled: boolean) => {
+    setHapticsEnabledState(enabled);
+    localStorage.setItem('kv_hapticsEnabled', String(enabled));
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, token, sessionId, isLoading, login, register, logout, updateUser, fetchUser }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      token, 
+      sessionId, 
+      isLoading, 
+      login, 
+      register, 
+      logout, 
+      updateUser, 
+      fetchUser,
+      hapticsEnabled,
+      setHapticsEnabled,
+    }}>
       {children}
     </AuthContext.Provider>
   );

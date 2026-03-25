@@ -5,12 +5,30 @@ import DreamerModal from "@/components/DreamerModal";
 import ConfidencePopup from "@/components/ConfidencePopup";
 import FocusAudioPlayer from "@/components/FocusAudioPlayer";
 import packageInfo from '../../package.json';
+import { useAuth } from "@/context/AuthContext";
+import { useHaptics } from "@/hooks/useHaptics";
+import { useEffect, useRef } from "react";
+
 const version = packageInfo.version;
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { user } = useAuth();
+  const { vibrateClick } = useHaptics();
+  const prevLevelRef = useRef<number | undefined>(user?.levelData?.currentLevel);
+
+  useEffect(() => {
+    if (user?.levelData?.currentLevel !== undefined) {
+      if (prevLevelRef.current !== undefined && user.levelData.currentLevel > prevLevelRef.current) {
+        vibrateClick();
+      }
+      prevLevelRef.current = user.levelData.currentLevel;
+    }
+  }, [user?.levelData?.currentLevel]);
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-surface text-on-surface">

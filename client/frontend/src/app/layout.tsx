@@ -18,6 +18,11 @@ const manrope = Manrope({
 export const metadata: Metadata = {
   title: "The Focused Scholar - Knowledge Vault",
   description: "Your personal study dashboard for JEE preparation",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Knowledge Vault",
+  },
 };
 
 export default function RootLayout({

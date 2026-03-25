@@ -9,7 +9,7 @@ import { Sparkles, Database, Flag } from "lucide-react";
 import StreakIcon from "@/components/StreakIcon";
 
 export default function SettingsPage() {
-  const { user, fetchUser } = useAuth();
+  const { user, fetchUser, hapticsEnabled, setHapticsEnabled } = useAuth();
 
   const [profileForm, setProfileForm] = useState({
     name: "",
@@ -154,6 +154,23 @@ export default function SettingsPage() {
                   rows={4}
                 />
                 <p className="text-[11px] text-on-surface-variant text-right">{bioLength} / 300 characters</p>
+              </div>
+            </div>
+
+            {/* App Preferences */}
+            <div className="bg-surface-container p-8 rounded-xl space-y-6 border border-white/5">
+              <h3 className="text-lg font-bold">App Preferences</h3>
+              <div className="flex items-center justify-between py-2">
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-on-surface">Haptic Feedback</p>
+                  <p className="text-xs text-on-surface-variant max-w-xs">Provide physical confirmation for key actions like timer completion and saving resources.</p>
+                </div>
+                <button
+                  onClick={() => setHapticsEnabled(!hapticsEnabled)}
+                  className={`w-12 h-6 rounded-full relative transition-all duration-300 ${hapticsEnabled ? 'bg-primary/40' : 'bg-surface-container-highest border border-white/5'}`}
+                >
+                  <span className={`absolute top-1 w-4 h-4 rounded-full transition-all duration-300 shadow-sm ${hapticsEnabled ? 'right-1 bg-primary' : 'left-1 bg-on-surface-variant'}`}></span>
+                </button>
               </div>
             </div>
 

@@ -7,6 +7,7 @@ import { BookOpen, Droplets, AudioLines, Volume2, Timer, Mic2, CloudRain, Headph
 import api from "@/lib/api";
 import { toast } from "sonner";
 import { useAudio } from "@/context/AudioContext";
+import { useHaptics } from "@/hooks/useHaptics";
 
 export default function FocusRoomPage() {
   const [timeLeft, setTimeLeft] = useState(25 * 60);
@@ -14,6 +15,7 @@ export default function FocusRoomPage() {
   const [isRunning, setIsRunning] = useState(false);
   const [isBreak, setIsBreak] = useState(false);
   const audio = useAudio();
+  const { vibrateSuccess, vibrateWarning } = useHaptics();
 
   // Settings State
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -81,6 +83,7 @@ export default function FocusRoomPage() {
       });
       if (status === 'completed' && !isBreak) {
         toast.success(`Session complete! +${data.xpEarned} XP earned.`);
+        vibrateSuccess();
         // Refresh user context to show new level/XP
         window.dispatchEvent(new Event("focusSessionCompleted"));
       }
@@ -136,6 +139,7 @@ export default function FocusRoomPage() {
 
   const resetTimer = useCallback(() => {
     if (isRunning) {
+      vibrateWarning();
       endSession('abandoned');
     }
     setIsRunning(false);
@@ -144,6 +148,7 @@ export default function FocusRoomPage() {
 
   const skipBreak = useCallback(() => {
     if (isRunning && isBreak) {
+      vibrateWarning();
       endSession('abandoned');
     }
     setIsBreak(false);

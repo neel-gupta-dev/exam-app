@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Search, Plus, Bell, Settings, X, Loader2 } from "lucide-react";
 import api from "@/lib/api";
 import { toast } from "sonner";
+import { useSearch } from "@/context/SearchContext";
+import { useModifierKey } from "@/hooks/useModifierKey";
+import { useHaptics } from "@/hooks/useHaptics";
 
 export default function TopNav() {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,7 +16,29 @@ export default function TopNav() {
   const [type, setType] = useState<"video" | "pdf" | "link" | "other">("link");
   const [folderName, setFolderName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const { searchQuery, setSearchQuery } = useSearch();
+  const { modifierSymbol } = useModifierKey();
+  const { vibrateClick } = useHaptics();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Keyboard Shortcuts ──────────────────────────────────────────────
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // ⌘/Ctrl + K (Search)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+      
+      // ⌘/Ctrl + S (Quick Save Modal)
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        setIsOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleSearch = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim()) {
@@ -37,6 +62,7 @@ export default function TopNav() {
     try {
       await api.post('/resources', { url, title, type, folderName: folderName || "General" });
       toast.success("Resource saved to vault!");
+      vibrateClick();
       setIsOpen(false);
       setUrl("");
       setTitle("");
@@ -59,16 +85,17 @@ export default function TopNav() {
           <div className="relative w-full max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" />
             <input
+              ref={searchInputRef}
               type="text"
-              placeholder="Command + K to search notes"
+              placeholder={`Search resources... (${modifierSymbol} + K)`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleSearch}
               className="w-full bg-surface-container-highest border-none rounded-xl pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-primary/50 placeholder:text-outline text-on-surface transition-all outline-none"
             />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1 pointer-events-none">
               <span className="bg-surface-container rounded px-1.5 py-0.5 text-[10px] text-on-surface-variant font-mono border border-outline-variant/20">
-                ⌘
+                {modifierSymbol}
               </span>
               <span className="bg-surface-container rounded px-1.5 py-0.5 text-[10px] text-on-surface-variant font-mono border border-outline-variant/20">
                 K

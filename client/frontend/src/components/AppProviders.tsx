@@ -2,6 +2,7 @@
 
 import { AuthProvider } from '@/context/AuthContext';
 import { AudioProvider } from '@/context/AudioContext';
+import { SearchProvider } from '@/context/SearchContext';
 import { Toaster } from 'sonner';
 import OnboardingModal from '@/components/OnboardingModal';
 
@@ -9,9 +10,11 @@ export default function AppProviders({ children }: { children: React.ReactNode }
   return (
     <AuthProvider>
       <AudioProvider>
-        {children}
-        <OnboardingModal />
-        <Toaster position="top-right" richColors closeButton />
+        <SearchProvider>
+          {children}
+          <OnboardingModal />
+          <Toaster position="top-right" richColors closeButton />
+        </SearchProvider>
       </AudioProvider>
     </AuthProvider>
   );

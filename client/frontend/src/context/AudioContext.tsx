@@ -24,7 +24,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isLooping, setIsLooping] = useState(true);
   const [isBlocked, setIsBlocked] = useState(false);
   const [currentTrack, setCurrentTrack] = useState<'rain' | 'forest'>('rain');
-  
+
   // Singleton Audio Instance
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const fadeIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -49,6 +49,55 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current);
     };
   }, []);
+
+  // ── Media Session (Control Center Integration) ──────────────────
+  useEffect(() => {
+    if (typeof window !== "undefined" && "mediaSession" in navigator) {
+      const trackMetadata: Record<string, { title: string; artist: string }> = {
+        rain: { title: "Steady Rain", artist: "DRAGON-STUDIO" },
+        forest: { title: "Peaceful Forest", artist: "AudioPapkin" },
+      };
+
+      const info = trackMetadata[currentTrack] || { title: "Focus Track", artist: "Knowledge Vault" };
+
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: info.title,
+        artist: info.artist,
+        album: "Knowledge Vault",
+        artwork: [
+          { src: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
+          { src: "/icon-512x512.png", sizes: "512x512", type: "image/png" },
+        ],
+      });
+
+      const handlers = [
+        ['play', togglePlay],
+        ['pause', togglePlay],
+        ['previoustrack', () => setTrack(currentTrack === 'rain' ? 'forest' : 'rain')],
+        ['nexttrack', () => setTrack(currentTrack === 'rain' ? 'forest' : 'rain')],
+        ['seekbackward', (details: any) => {
+          if (audioRef.current) audioRef.current.currentTime -= (details.seekOffset || 10);
+        }],
+        ['seekforward', (details: any) => {
+          if (audioRef.current) audioRef.current.currentTime += (details.seekOffset || 10);
+        }],
+      ];
+
+      for (const [action, handler] of handlers) {
+        try {
+          navigator.mediaSession.setActionHandler(action as any, handler as any);
+        } catch (error) {
+          console.log(`Media session action "${action}" not supported.`);
+        }
+      }
+    }
+  }, [currentTrack, isPlaying]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "mediaSession" in navigator) {
+      navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
+    }
+  }, [isPlaying]);
 
   const togglePlay = async () => {
     if (!audioRef.current) return;
@@ -98,12 +147,12 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     let currentVolume = startVolume;
     audioRef.current.volume = currentVolume;
-    
+
     // Attempt play
     audioRef.current.play().then(() => {
       setIsPlaying(true);
       setIsBlocked(false);
-      
+
       fadeIntervalRef.current = setInterval(() => {
         currentVolume += volumeStep;
         if (currentVolume >= targetVolume) {
@@ -131,14 +180,14 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const setTrack = (track: 'rain' | 'forest') => {
     if (!audioRef.current) return;
-    
+
     const wasPlaying = isPlaying;
     if (wasPlaying) audioRef.current.pause();
-    
+
     setCurrentTrack(track);
     audioRef.current.src = `/audio/${track}.mp3`;
     audioRef.current.load();
-    
+
     if (wasPlaying) {
       audioRef.current.play().catch(e => {
         console.error("Playback failed after track change:", e);

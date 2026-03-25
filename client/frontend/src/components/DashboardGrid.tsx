@@ -3,7 +3,15 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { Resource } from '@/types';
-import { FileText, Play, Clock, ChevronRight, FolderOpen } from 'lucide-react';
+import { 
+  FileText, 
+  Play, 
+  Clock, 
+  ChevronRight, 
+  ChevronLeft,
+  FolderOpen,
+  Search
+} from 'lucide-react';
 import Link from 'next/link';
 import LoadingSkeleton from './LoadingSkeleton';
 
@@ -93,19 +101,20 @@ function NoMatchesState({ onClear }: { onClear: () => void }) {
 // ----------------------------------------------------------------------------
 // Main Grid
 // ----------------------------------------------------------------------------
-import { Search } from 'lucide-react';
+
+import { useSearch } from '@/context/SearchContext';
 
 export default function DashboardGrid({ 
-  search, 
-  onClearSearch, 
   onLoadingChange 
 }: { 
-  search?: string, 
-  onClearSearch?: () => void,
   onLoadingChange?: (loading: boolean) => void
 }) {
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const { searchQuery, setSearchQuery } = useSearch();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 4;
 
   useEffect(() => {
     const fetchResources = async () => {
@@ -115,15 +124,17 @@ export default function DashboardGrid({
         const { data } = await api.get('/resources', {
           params: {
             page: 1,
-            limit: 20,
-            search: search || undefined
+            limit: 100, // Fetch more for client-side pagination slider
+            search: searchQuery || undefined
           }
         });
         setResources(data.resources || []);
+        setCurrentPage(1); // Reset to first page on search
       } catch (error) {
         console.error('Failed to fetch resources:', error);
       } finally {
         setLoading(false);
+        setIsInitialLoad(false);
         onLoadingChange?.(false);
       }
     };
@@ -133,19 +144,66 @@ export default function DashboardGrid({
     const handleResourceAdded = () => fetchResources();
     window.addEventListener("resourceAdded", handleResourceAdded);
     return () => window.removeEventListener("resourceAdded", handleResourceAdded);
-  }, [search]);
+  }, [searchQuery]);
 
-  if (loading) return <LoadingSkeleton count={3} />;
+  if (loading && isInitialLoad) return <LoadingSkeleton count={3} />;
   
   if (resources.length === 0) {
-    return search ? <NoMatchesState onClear={onClearSearch || (() => {})} /> : <EmptyState />;
+    return searchQuery ? <NoMatchesState onClear={() => setSearchQuery("")} /> : <EmptyState />;
   }
 
+  // Pagination Logic
+  const totalItems = resources.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+  const currentItems = resources.slice(startIndex, endIndex);
+
   return (
-    <div className="grid grid-cols-1 gap-4">
-      {resources.map((resource) => (
-        <ResourceCard key={resource._id} resource={resource} />
-      ))}
+    <div className="space-y-4">
+      {/* Gmail-style Pagination Header */}
+      <div className="flex items-center justify-between pb-2 border-b border-outline-variant/10">
+        <h3 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
+          Recent Vault Items
+        </h3>
+        
+        <div className="flex items-center gap-4">
+          <span className="text-[11px] font-medium text-on-surface-variant tabular-nums">
+            {startIndex + 1} – {endIndex} of {totalItems}
+          </span>
+          
+          <div className="flex items-center">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className={`p-1 rounded-md transition-colors ${
+                currentPage === 1 
+                  ? 'text-outline-variant cursor-not-allowed' 
+                  : 'text-on-surface hover:bg-surface-variant'
+              }`}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className={`p-1 rounded-md transition-colors ${
+                currentPage === totalPages 
+                  ? 'text-outline-variant cursor-not-allowed' 
+                  : 'text-on-surface hover:bg-surface-variant'
+              }`}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4">
+        {currentItems.map((resource) => (
+          <ResourceCard key={resource._id} resource={resource} />
+        ))}
+      </div>
     </div>
   );
 }
