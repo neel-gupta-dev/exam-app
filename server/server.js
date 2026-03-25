@@ -7,6 +7,7 @@ import authRoutes from './src/routes/authRoutes.js';
 import resourceRoutes from './src/routes/resourceRoutes.js';
 import userRoutes from './src/routes/userRoutes.js';
 import noteRoutes from './src/routes/noteRoutes.js';
+import focusRoutes from './src/routes/focusRoutes.js';
 import { closeExpiredSessions } from './src/services/authService.js';
 
 dotenv.config();
@@ -57,6 +58,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/notes', noteRoutes);
+app.use('/api/focus', focusRoutes);
 
 // --- Error Handling ---
 app.use(notFound);

@@ -42,6 +42,11 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: null,
     },
+    vaultId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
     isOnboarded: {
       type: Boolean,
       default: false,

@@ -7,8 +7,8 @@ import { FileText, Play, Clock, ChevronRight, FolderOpen } from 'lucide-react';
 import Link from 'next/link';
 import LoadingSkeleton from './LoadingSkeleton';
 
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
+function timeAgo(date: string | Date): string {
+  const diff = Date.now() - new Date(date).getTime();
   const hours = Math.floor(diff / 3600000);
   if (hours < 1) return 'Just now';
   if (hours < 24) return `${hours}h ago`;
@@ -54,7 +54,7 @@ function ResourceCard({ resource }: { resource: Resource }) {
 
 
 // ----------------------------------------------------------------------------
-// Empty State
+// Empty States
 // ----------------------------------------------------------------------------
 function EmptyState() {
   return (
@@ -70,39 +70,76 @@ function EmptyState() {
   );
 }
 
+function NoMatchesState({ onClear }: { onClear: () => void }) {
+  return (
+    <div className="bg-surface-container/30 border border-outline-variant/10 rounded-2xl p-10 flex flex-col items-center justify-center text-center backdrop-blur-sm">
+      <div className="w-16 h-16 bg-surface-variant/30 rounded-2xl flex items-center justify-center mb-4">
+        <Search className="w-8 h-8 text-on-surface-variant" />
+      </div>
+      <h3 className="text-lg font-bold text-on-surface mb-2">No resources found</h3>
+      <p className="text-sm text-on-surface-variant max-w-xs mb-6">
+        We couldn't find any resources matching your search. Try different keywords.
+      </p>
+      <button 
+        onClick={onClear}
+        className="px-6 py-2 bg-primary/10 border border-primary/20 text-primary rounded-lg text-xs font-bold hover:bg-primary/20 transition-colors"
+      >
+        Clear Search
+      </button>
+    </div>
+  );
+}
+
 // ----------------------------------------------------------------------------
 // Main Grid
 // ----------------------------------------------------------------------------
-export default function DashboardGrid() {
+import { Search } from 'lucide-react';
+
+export default function DashboardGrid({ 
+  search, 
+  onClearSearch, 
+  onLoadingChange 
+}: { 
+  search?: string, 
+  onClearSearch?: () => void,
+  onLoadingChange?: (loading: boolean) => void
+}) {
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchResources = async () => {
+      setLoading(true);
+      onLoadingChange?.(true);
       try {
-        const { data } = await api.get('/resources?page=1&limit=20');
+        const { data } = await api.get('/resources', {
+          params: {
+            page: 1,
+            limit: 20,
+            search: search || undefined
+          }
+        });
         setResources(data.resources || []);
       } catch (error) {
         console.error('Failed to fetch resources:', error);
       } finally {
         setLoading(false);
+        onLoadingChange?.(false);
       }
     };
     
     fetchResources();
 
-    const handleResourceAdded = () => {
-      setLoading(true);
-      fetchResources();
-    };
-    
+    const handleResourceAdded = () => fetchResources();
     window.addEventListener("resourceAdded", handleResourceAdded);
     return () => window.removeEventListener("resourceAdded", handleResourceAdded);
-  }, []);
+  }, [search]);
 
   if (loading) return <LoadingSkeleton count={3} />;
   
-  if (resources.length === 0) return <EmptyState />;
+  if (resources.length === 0) {
+    return search ? <NoMatchesState onClear={onClearSearch || (() => {})} /> : <EmptyState />;
+  }
 
   return (
     <div className="grid grid-cols-1 gap-4">

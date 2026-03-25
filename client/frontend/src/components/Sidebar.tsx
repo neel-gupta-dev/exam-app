@@ -137,6 +137,11 @@ export default function Sidebar() {
                 <p className="text-[10px] text-on-surface-variant truncate">
                   {user.email}
                 </p>
+                {user.vaultId && (
+                  <p className="text-[9px] font-mono text-primary/80 mt-1 uppercase tracking-tighter">
+                    ID: {user.vaultId}
+                  </p>
+                )}
               </div>
             </div>
           </div>

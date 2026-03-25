@@ -21,12 +21,16 @@ export const createResource = async ({ userId, type, url, title, folderName }) =
 /**
  * Get resources for a user (paginated)
  */
-export const getUserResources = async ({ userId, page = 1, limit = 20, folder }) => {
+export const getUserResources = async ({ userId, page = 1, limit = 20, folder, search }) => {
   const skip = (page - 1) * limit;
 
   const query = { userId };
   if (folder) {
     query.folderName = { $regex: new RegExp(`^${folder}$`, 'i') };
+  }
+  
+  if (search) {
+    query.title = { $regex: search, $options: 'i' };
   }
 
   const [resources, total] = await Promise.all([

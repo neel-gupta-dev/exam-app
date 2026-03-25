@@ -5,12 +5,13 @@ import * as userService from '../services/userService.js';
 // @route   PATCH /api/users/profile
 // @access  Private
 export const updateProfile = asyncHandler(async (req, res) => {
-  const { dreamColleges, currentCoaching, academicLevel } = req.body;
+  const { dreamColleges, currentCoaching, academicLevel, targetYear } = req.body;
   const user = await userService.updateUserProfile({
     userId: req.user._id,
     dreamColleges,
     currentCoaching,
     academicLevel,
+    targetYear,
   });
   res.json(user);
 });

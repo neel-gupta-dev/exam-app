@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import TopNav from "@/components/TopNav";
 import api from "@/lib/api";
+import Link from "next/link";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import { toast } from "sonner";
 import {
@@ -70,11 +71,11 @@ export default function ResourceViewerPage() {
   // ── Track session duration for confidence prompt ──────────────────────
   useEffect(() => {
     const startTime = Date.now();
-    
+
     return () => {
       const duration = Date.now() - startTime;
       const fiveMinutes = 5 * 60 * 1000;
-      
+
       if (duration >= fiveMinutes && id) {
         localStorage.setItem("pendingConfidenceRating", id);
       }
@@ -262,22 +263,22 @@ export default function ResourceViewerPage() {
         <div className="max-w-[1400px] mx-auto">
           {/* Breadcrumbs */}
           <nav className="flex items-center gap-2 mb-6 text-sm">
-            <a
+            <Link
               href="/"
               className="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1"
             >
               <Home className="w-3 h-3" />
               Vault
-            </a>
+            </Link>
             <ChevronRight className="w-3 h-3 text-outline-variant" />
             {resource.folderName && (
               <>
-                <a
+                <Link
                   href={`/subjects/${resource.folderName}`}
                   className="text-on-surface-variant hover:text-primary transition-colors"
                 >
                   {resource.folderName}
-                </a>
+                </Link>
                 <ChevronRight className="w-3 h-3 text-outline-variant" />
               </>
             )}
@@ -405,13 +406,13 @@ export default function ResourceViewerPage() {
                     <span className="text-sm font-semibold">
                       {resource.createdAt
                         ? new Date(resource.createdAt).toLocaleDateString(
-                            "en-US",
-                            {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            }
-                          )
+                          "en-US",
+                          {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          }
+                        )
                         : "N/A"}
                     </span>
                   </div>

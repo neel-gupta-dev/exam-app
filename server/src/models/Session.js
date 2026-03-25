@@ -23,6 +23,11 @@ const sessionSchema = new mongoose.Schema(
     ipAddress: {
       type: String,
     },
+    location: {
+      city: String,
+      region: String,
+      country: String,
+    },
   },
   { timestamps: true }
 );

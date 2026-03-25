@@ -24,8 +24,10 @@ import {
   Grid3X3,
   List,
   FolderOpen,
-  Trash2
+  Trash2,
+  Search
 } from "lucide-react";
+import SearchBar from "@/components/SearchBar";
 
 const unitIcons: Record<string, React.ReactNode> = {
   cog: <Cog className="w-7 h-7 text-primary" />,
@@ -44,16 +46,26 @@ export default function SubjectPage({ params }: { params: Promise<{ subject: str
 
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
 
   useEffect(() => {
     const fetchSubjectResources = async () => {
+      setIsSearchLoading(true);
       try {
-        const { data } = await api.get(`/resources?folder=${encodeURIComponent(decodedSubject)}&limit=50`);
+        const { data } = await api.get(`/resources`, {
+          params: {
+            folder: decodedSubject,
+            limit: 50,
+            search: searchQuery || undefined
+          }
+        });
         setResources(data.resources || []);
       } catch (error) {
         console.error("Failed to fetch subject resources", error);
       } finally {
         setLoading(false);
+        setIsSearchLoading(false);
       }
     };
     fetchSubjectResources();
@@ -66,7 +78,7 @@ export default function SubjectPage({ params }: { params: Promise<{ subject: str
       window.removeEventListener("resourceAdded", handleResourceAdded);
       window.removeEventListener("resourceDeleted", handleResourceDeleted);
     };
-  }, [decodedSubject]);
+  }, [decodedSubject, searchQuery]);
 
   const handleDeleteResource = async (id: string) => {
     if (!confirm("Are you sure you want to delete this resource?")) return;
@@ -245,6 +257,14 @@ export default function SubjectPage({ params }: { params: Promise<{ subject: str
              </button>
           </div>
         </div>
+
+        <div className="mb-6 flex justify-start">
+          <SearchBar 
+            onSearch={(q) => setSearchQuery(q)} 
+            isLoading={isSearchLoading}
+            placeholder={`Search in ${subjectTitle}...`}
+          />
+        </div>
         <div className="bg-surface-container-low rounded-2xl border border-outline-variant/10 overflow-hidden">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -259,8 +279,23 @@ export default function SubjectPage({ params }: { params: Promise<{ subject: str
             <tbody className="divide-y divide-outline-variant/10">
               {resources.length === 0 ? (
                  <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-on-surface-variant italic text-sm">
-                       No resources found. Click Quick Save to add some.
+                    <td colSpan={5} className="px-6 py-12 text-center text-on-surface-variant">
+                       <div className="flex flex-col items-center gap-3">
+                         <div className="w-12 h-12 bg-surface-variant/30 rounded-xl flex items-center justify-center">
+                            <Search className="w-6 h-6 opacity-30" />
+                         </div>
+                         <p className="italic text-sm">
+                           {searchQuery ? `No resources matching "${searchQuery}"` : `No resources found in ${subjectTitle}. Click Quick Save to add some.`}
+                         </p>
+                         {searchQuery && (
+                           <button 
+                            onClick={() => setSearchQuery("")}
+                            className="text-xs font-bold text-primary hover:underline"
+                           >
+                             Clear Search
+                           </button>
+                         )}
+                       </div>
                     </td>
                  </tr>
               ) : resources.map((res) => {

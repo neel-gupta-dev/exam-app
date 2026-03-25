@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 import TopNav from "@/components/TopNav";
 import { BookOpen, Droplets, AudioLines, Volume2, Timer, Mic2, CloudRain, Headphones, Trees, X, Bell } from "lucide-react";
+import api from "@/lib/api";
+import { toast } from "sonner";
 
 export default function FocusRoomPage() {
   const [timeLeft, setTimeLeft] = useState(25 * 60);
@@ -17,6 +19,75 @@ export default function FocusRoomPage() {
   const [breakLength, setBreakLength] = useState(5);
   const [autoStart, setAutoStart] = useState(false);
 
+  // Session Tracking Refs
+  const sessionIdRef = useRef<string | null>(null);
+  const interruptionCountRef = useRef(0);
+
+  // Distraction Tracking Effect
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && isRunning && !isBreak) {
+        interruptionCountRef.current += 1;
+        console.log("Distraction detected! Interruption count:", interruptionCountRef.current);
+      }
+    };
+    window.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => window.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [isRunning, isBreak]);
+
+  // Beacon Fail-safe for Tab Closure
+  useEffect(() => {
+    const handleUnload = () => {
+      if (sessionIdRef.current) {
+        const url = `${process.env.NEXT_PUBLIC_API_URL}/focus/end/${sessionIdRef.current}?token=${localStorage.getItem('kv_token')}`;
+        const actualDuration = initialTime - timeLeft;
+        const data = JSON.stringify({
+          status: 'abandoned',
+          interruptionCount: interruptionCountRef.current,
+          actualDuration: Math.max(0, actualDuration)
+        });
+        const blob = new Blob([data], { type: 'application/json' });
+        navigator.sendBeacon(url, blob);
+      }
+    };
+    window.addEventListener("beforeunload", handleUnload);
+    return () => window.removeEventListener("beforeunload", handleUnload);
+  }, []);
+
+  const startSession = async (type: 'focus' | 'short-break' | 'long-break') => {
+    try {
+      const { data } = await api.post('/focus/start', {
+        type,
+        plannedDuration: type === 'focus' ? focusLength * 60 : breakLength * 60
+      });
+      sessionIdRef.current = data.sessionId;
+      interruptionCountRef.current = 0;
+    } catch (error) {
+      console.error("Failed to start focus session", error);
+    }
+  };
+
+  const endSession = async (status: 'completed' | 'abandoned') => {
+    if (!sessionIdRef.current) return;
+    try {
+      const actualDuration = status === 'completed' ? initialTime : (initialTime - timeLeft);
+      
+      const { data } = await api.patch(`/focus/end/${sessionIdRef.current}`, {
+        status,
+        interruptionCount: interruptionCountRef.current,
+        actualDuration: Math.max(0, actualDuration)
+      });
+      if (status === 'completed' && !isBreak) {
+        toast.success(`Session complete! +${data.xpEarned} XP earned.`);
+        // Refresh user context to show new level/XP
+        window.dispatchEvent(new Event("focusSessionCompleted"));
+      }
+      sessionIdRef.current = null;
+    } catch (error) {
+      console.error("Failed to end focus session", error);
+    }
+  };
+
   // Timer Engine
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -24,36 +95,61 @@ export default function FocusRoomPage() {
       interval = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
-    } else if (timeLeft === 0) {
+    } else if (timeLeft === 0 && isRunning) {
+      // Session Completed
+      endSession('completed');
+      
       // Switch modes
       if (!isBreak) {
         setIsBreak(true);
-        setTimeLeft(breakLength * 60);
-        setInitialTime(breakLength * 60);
+        const newTime = breakLength * 60;
+        setTimeLeft(newTime);
+        setInitialTime(newTime);
+        if (autoStart) startSession('short-break');
       } else {
         setIsBreak(false);
-        setTimeLeft(focusLength * 60);
-        setInitialTime(focusLength * 60);
+        const newTime = focusLength * 60;
+        setTimeLeft(newTime);
+        setInitialTime(newTime);
+        if (autoStart) startSession('focus');
       }
       setIsRunning(autoStart);
     }
     return () => clearInterval(interval);
   }, [isRunning, timeLeft, isBreak, breakLength, focusLength, autoStart]);
 
-  const toggleTimer = () => setIsRunning(!isRunning);
+  const toggleTimer = () => {
+    const nextRunning = !isRunning;
+    setIsRunning(nextRunning);
+    
+    if (nextRunning) {
+      startSession(isBreak ? 'short-break' : 'focus');
+    } else {
+      // Manual pause - for simplicity here, we don't 'end' it yet.
+      // If they resume, the same session continues.
+      // If they RESET, we abandon it.
+    }
+  };
   
   const resetTimer = useCallback(() => {
+    if (isRunning) {
+      endSession('abandoned');
+    }
     setIsRunning(false);
     setTimeLeft(initialTime);
-  }, [initialTime]);
+  }, [isRunning, initialTime]);
 
   const skipBreak = useCallback(() => {
+    if (isRunning && isBreak) {
+      endSession('abandoned');
+    }
     setIsBreak(false);
     const newTime = focusLength * 60;
     setTimeLeft(newTime);
     setInitialTime(newTime);
     setIsRunning(true);
-  }, [focusLength]);
+    startSession('focus');
+  }, [isRunning, isBreak, focusLength]);
 
   // Handle settings save
   const saveSettings = () => {

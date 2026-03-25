@@ -147,40 +147,57 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Exam Target */}
-          <div className="col-span-12 lg:col-span-4 bg-gradient-to-br from-surface-container-low to-surface-container rounded-[2rem] p-10 flex flex-col justify-between border border-primary/20 relative group overflow-hidden">
-            <div className="absolute top-0 left-0 w-1 h-full bg-primary group-hover:w-2 transition-all duration-300" />
-            <div>
-              <div className="flex items-center justify-between mb-8">
-                <h3 className="font-bold text-on-surface-variant text-xs tracking-[0.2em] uppercase">Target Goal</h3>
-                <div className="flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1.5 rounded-full border border-primary/20">
-                  <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Active</span>
+          {/* Digital ID Card (Passport Style) */}
+          <div className="col-span-12 lg:col-span-4 bg-gradient-to-br from-indigo-900/20 to-surface-container rounded-[2rem] p-10 flex flex-col justify-between border border-primary/20 relative group overflow-hidden shadow-2xl shadow-primary/5">
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-700" />
+            <div className="z-10 h-full flex flex-col">
+              <div className="flex justify-between items-start mb-10">
+                <div className="space-y-1.5">
+                  <h3 className="font-bold text-primary text-[10px] tracking-[0.25em] uppercase">Student Passport</h3>
+                  <div className="font-mono text-[11px] text-on-surface-variant tracking-tighter bg-surface-container-highest/50 px-3 py-1.5 rounded-lg border border-outline-variant/10">
+                    ID: {user?.vaultId || "PROTOCOL_PENDING"}
+                  </div>
+                </div>
+                <div className="bg-primary shadow-lg shadow-primary/20 p-2.5 rounded-2xl">
+                   <ShieldCheck className="w-5 h-5 text-white" />
                 </div>
               </div>
-              <div className="mb-10">
-                <div className="text-5xl font-black text-white mb-2 tracking-tight">{targetExam}</div>
-                <p className="text-on-surface-variant text-sm font-medium">Examination Cycle Target</p>
-              </div>
-            </div>
-            <div className="space-y-6">
-              <div className="flex justify-between items-end">
-                <div>
-                  <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.15em] block mb-1">Vault Collection</span>
-                  <span className="text-3xl font-black text-primary">{Math.min(resourceCount, 100)}<span className="text-xl">%</span></span>
+
+              <div className="mt-auto space-y-6">
+                <div className="flex items-center gap-4">
+                   <div className="w-14 h-14 rounded-2xl bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center font-black text-xl text-white shadow-inner">
+                      {user?.name?.charAt(0)}
+                   </div>
+                   <div>
+                      <h4 className="text-xl font-bold text-white tracking-tight">{user?.name}</h4>
+                      <p className="text-[10px] font-black text-primary uppercase tracking-widest">{targetExam} Aspirant</p>
+                   </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.15em] block mb-1">Target Score</span>
-                  <span className="text-xl font-bold text-white">{user?.targetScore || "99.5+"}</span>
+
+                <div className="pt-6 border-t border-outline-variant/10 flex justify-between items-end">
+                   <div className="space-y-4">
+                      <div>
+                        <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.15em] block mb-1">Mastery Progress</span>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-3xl font-black text-white">{Math.min(resourceCount * 10, 100)}</span>
+                          <span className="text-xs font-bold text-on-surface-variant">%</span>
+                        </div>
+                      </div>
+                      <div className="w-32 h-1.5 bg-surface-variant/30 rounded-full overflow-hidden">
+                        <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${Math.min(resourceCount * 10, 100)}%` }} />
+                      </div>
+                   </div>
+                   <div className="bg-white p-1 rounded-xl shadow-xl shadow-black/40 rotate-1 flex flex-col gap-0.5 w-16 h-16 shrink-0 opacity-80 overflow-hidden">
+                      <div className="h-1.5 bg-black/10 w-full mb-1" />
+                      <div className="flex flex-col gap-1 p-1">
+                        <div className="h-0.5 bg-black/20 w-full" />
+                        <div className="h-0.5 bg-black/20 w-[70%]" />
+                        <div className="h-0.5 bg-black/20 w-[90%]" />
+                        <div className="h-0.5 bg-black/20 w-[60%]" />
+                      </div>
+                      <div className="mt-auto h-2 bg-black/30 w-full" />
+                   </div>
                 </div>
-              </div>
-              <div className="w-full h-2.5 bg-surface-variant/50 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-primary-container to-primary rounded-full" style={{ width: `${Math.min(resourceCount, 100)}%`, boxShadow: "0 0 15px rgba(192,193,255,0.4)" }} />
-              </div>
-              <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
-                <p className="text-xs text-on-surface-variant/90 leading-relaxed font-medium">
-                  <span className="text-primary font-bold">Tip:</span> Save at least 10 resources to unlock Scholar status.
-                </p>
               </div>
             </div>
           </div>

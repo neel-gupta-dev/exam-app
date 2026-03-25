@@ -12,6 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import LevelProgressBar from "@/components/LevelProgressBar";
+import SearchBar from "@/components/SearchBar";
 import { User } from "@/types";
 
 function ProgressWidget({ resourceCount, heatmapData, currentStreak, user }: { resourceCount: number, heatmapData: number[], currentStreak: number, user: User | null }) {
@@ -137,6 +138,8 @@ export default function HomePage() {
   const { user } = useAuth();
   const [resourceCount, setResourceCount] = useState(0);
   const [heatmapData, setHeatmapData] = useState<number[]>(new Array(28).fill(0));
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -192,8 +195,18 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Resource Cards */}
-          <DashboardGrid />
+          {/* Resource Search & Cards */}
+          <div className="space-y-6">
+            <SearchBar 
+              onSearch={(q) => setSearchQuery(q)} 
+              isLoading={isSearchLoading}
+            />
+            <DashboardGrid 
+              search={searchQuery} 
+              onClearSearch={() => setSearchQuery("")}
+              onLoadingChange={(l) => setIsSearchLoading(l)}
+            />
+          </div>
 
           {/* Bento Section */}
           <div className="grid grid-cols-1 gap-4">

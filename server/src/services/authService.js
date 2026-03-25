@@ -3,6 +3,28 @@ import Session from '../models/Session.js';
 import Resource from '../models/Resource.js';
 import OtpCode from '../models/OtpCode.js';
 import generateToken from '../utils/generateToken.js';
+import geoip from 'geoip-lite';
+
+/**
+ * Helper to get location from IP (skips localhost)
+ */
+const getLocationInfo = (ip) => {
+  if (!ip || ip === '::1' || ip === '127.0.0.1' || ip === 'unknown') {
+    return null;
+  }
+  try {
+    const geo = geoip.lookup(ip);
+    if (!geo) return { city: 'Unknown', region: 'Unknown', country: 'Unknown' };
+    return {
+      city: geo.city || 'Unknown',
+      region: geo.region || 'Unknown',
+      country: geo.country || 'Unknown'
+    };
+  } catch (error) {
+    console.error(`[GeoIP] Lookup failed for ${ip}:`, error.message);
+    return null;
+  }
+};
 
 /**
  * Register a new user
@@ -24,11 +46,13 @@ export const registerUser = async ({ name, email, password, ipAddress }) => {
     level: 1
   });
 
+  const location = getLocationInfo(ipAddress);
   const session = await Session.create({
     userId: user._id,
     loginAt: new Date(),
     lastActiveAt: new Date(),
     ipAddress: ipAddress || 'unknown',
+    location: location || undefined
   });
 
   return {
@@ -83,11 +107,13 @@ export const loginUser = async ({ email, password, ipAddress }) => {
     }
   }
 
+  const location = getLocationInfo(ipAddress);
   const session = await Session.create({
     userId: user._id,
     loginAt: new Date(),
     lastActiveAt: new Date(),
     ipAddress: ipAddress || 'unknown',
+    location: location || undefined
   });
 
   return {

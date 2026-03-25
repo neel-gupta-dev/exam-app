@@ -30,12 +30,14 @@ export const getResources = asyncHandler(async (req, res) => {
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 20;
   const folder = req.query.folder;
+  const search = req.query.search;
 
   const data = await resourceService.getUserResources({
     userId: req.user._id,
     page,
     limit,
     folder,
+    search,
   });
 
   res.json(data);

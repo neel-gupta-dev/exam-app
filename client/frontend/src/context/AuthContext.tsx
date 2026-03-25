@@ -100,12 +100,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('resourceAdded', fetchUser);
     window.addEventListener('resourceDeleted', fetchUser);
+    window.addEventListener('focusSessionCompleted', fetchUser);
     
     return () => {
       clearInterval(heartbeatInterval);
       window.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('resourceAdded', fetchUser);
       window.removeEventListener('resourceDeleted', fetchUser);
+      window.removeEventListener('focusSessionCompleted', fetchUser);
     };
   }, []);
 

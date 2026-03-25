@@ -1,18 +1,37 @@
 import User from '../models/User.js';
+import { generateVaultId } from '../utils/generateVaultId.js';
 
 /**
  * Update user academic profile
  */
-export const updateUserProfile = async ({ userId, dreamColleges, currentCoaching, academicLevel }) => {
+export const updateUserProfile = async ({ userId, dreamColleges, currentCoaching, academicLevel, targetYear }) => {
   const user = await User.findById(userId);
   if (!user) throw new Error('User not found');
 
   if (dreamColleges) user.profile.dreamColleges = dreamColleges;
   if (currentCoaching) user.profile.currentCoaching = currentCoaching;
   if (academicLevel) user.profile.academicLevel = academicLevel;
+  if (targetYear) user.targetYear = targetYear;
 
-  user.isOnboarded = true; // Mark as onboarded once they fill this
-  await user.save();
+  // Generate Vault ID if it doesn't exist AND student has set their dream colleges (onboarding phase 2)
+  if (!user.vaultId && user.profile.dreamColleges?.length > 0) {
+    try {
+      user.vaultId = generateVaultId(user);
+      await user.save();
+    } catch (error) {
+      if (error.code === 11000) {
+        // Retry once with a new random suffix if collision occurs
+        user.vaultId = generateVaultId(user);
+        await user.save();
+      } else {
+        throw error;
+      }
+    }
+  } else {
+    user.isOnboarded = true; // Mark as onboarded once they fill this
+    await user.save();
+  }
+
   return user;
 };
 
