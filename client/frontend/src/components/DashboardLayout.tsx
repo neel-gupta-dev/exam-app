@@ -3,7 +3,8 @@ import TopNav from "@/components/TopNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DreamerModal from "@/components/DreamerModal";
 import ConfidencePopup from "@/components/ConfidencePopup";
-
+import packageInfo from '../../package.json';
+const version = packageInfo.version;
 export default function DashboardLayout({
   children,
 }: {
@@ -22,13 +23,33 @@ export default function DashboardLayout({
           </div>
 
           {/* Global Footer Branded Text */}
-          <footer className="mt-20 pb-10 border-t border-white/[0.03] pt-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-on-surface opacity-90 max-w-2xl leading-tight">
-              Made with <span className="text-rose-400 animate-heart-beat">❤️</span> by Vault team, for aspirants like you.
-            </h2>
-            <p className="mt-4 text-lg font-medium text-on-surface-variant/50 italic tracking-wide">
-              {/* # */}
-            </p>
+          <footer className="mt-auto py-12 border-t border-gray-900 bg-black/50 backdrop-blur-sm">
+            <div className="max-w-7xl mx-auto px-4 text-center">
+
+              {/* Line 1: The Meta ID (Senior Move: Uses mono font) */}
+              <p className="text-xs md:text-sm text-gray-500 font-mono tracking-wider uppercase">
+                Vault ID: <span className="text-gray-400">#SYSTEM-ORIGIN</span>
+                <span className="mx-3 text-gray-800">|</span>
+                Crafted with precision in the <span className="text-blue-400/80">City of Lakes</span>
+              </p>
+
+              {/* Line 2: The Personal Signature */}
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <div className="h-px w-8 bg-gray-800" />
+                <p className="text-sm text-gray-400 font-medium">
+                  Made with <span className="text-rose-400 animate-heart-beat">❤️</span> by
+                  <span className="ml-1 bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent hover:to-white transition-all duration-300 cursor-default">
+                    Neel Gupta
+                  </span>
+                </p>
+                <div className="h-px w-8 bg-gray-800" />
+              </div>
+
+              {/* Optional: Version tag for your Coolify deployments */}
+              <p className="mt-6 text-[10px] text-gray-700 uppercase tracking-[0.2em]">
+                Knowledge Vault v{version} • Academic Integrity Guaranteed
+              </p>
+            </div>
           </footer>
         </main>
       </div>
