@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Knowledge Vault | Test Profile</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-fixed-dim": "#d1d0ff",
+                        "error-container": "#7f2737",
+                        "secondary-container": "#3c3b3f",
+                        "on-secondary": "#202023",
+                        "on-secondary-container": "#c1bec3",
+                        "secondary-fixed-dim": "#d6d3d8",
+                        "on-background": "#dde6f2",
+                        "on-surface-variant": "#a3acb7",
+                        "surface-dim": "#0b0e11",
+                        "primary-fixed": "#e1e0ff",
+                        "error-dim": "#b95463",
+                        "primary": "#c0c1ff",
+                        "tertiary-dim": "#c0c9e6",
+                        "surface-variant": "#1e272f",
+                        "on-error": "#490013",
+                        "tertiary-fixed-dim": "#c0c9e6",
+                        "surface-container-low": "#0f1418",
+                        "surface-container": "#141a20",
+                        "tertiary-fixed": "#ced6f5",
+                        "surface-tint": "#c0c1ff",
+                        "on-primary-container": "#ccccff",
+                        "surface": "#0b0e11",
+                        "outline-variant": "#404952",
+                        "outline": "#6d7680",
+                        "on-tertiary-container": "#424a63",
+                        "surface-container-high": "#192027",
+                        "inverse-surface": "#f8f9fe",
+                        "on-secondary-fixed": "#403f43",
+                        "surface-bright": "#222d37",
+                        "secondary": "#9f9da1",
+                        "inverse-primary": "#494bd7",
+                        "tertiary-container": "#ced6f5",
+                        "on-tertiary-fixed-variant": "#4b546d",
+                        "surface-container-lowest": "#000000",
+                        "on-primary-fixed": "#2622b7",
+                        "on-error-container": "#ff97a3",
+                        "surface-container-highest": "#1e272f",
+                        "inverse-on-surface": "#535559",
+                        "tertiary": "#dee5ff",
+                        "on-tertiary": "#4a536c",
+                        "on-tertiary-fixed": "#2f384f",
+                        "primary-container": "#2f2ebe",
+                        "primary-dim": "#b0b2ff",
+                        "error": "#ec7c8a",
+                        "on-primary": "#2724b8",
+                        "on-surface": "#dde6f2",
+                        "on-primary-fixed-variant": "#4647d3",
+                        "secondary-fixed": "#e5e1e6",
+                        "on-secondary-fixed-variant": "#5c5b5f",
+                        "background": "#0b0e11",
+                        "secondary-dim": "#9f9da1"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body {
+            background-color: #0b0e11;
+            color: #dde6f2;
+        }
+        .id-card-glow {
+            box-shadow: 0 0 40px rgba(192, 193, 255, 0.03);
+        }
+    </style>
+</head>
+<body class="font-body selection:bg-primary selection:text-on-primary">
+<!-- Top Navigation Shell -->
+<header class="fixed top-0 w-full z-50 bg-[#0f1418]">
+<nav class="flex justify-between items-center w-full px-8 h-16 max-w-7xl mx-auto">
+<div class="flex items-center gap-8">
+<span class="text-xl font-bold tracking-tighter text-indigo-500 dark:text-indigo-400 font-headline">Knowledge Vault</span>
+<div class="hidden md:flex gap-6 items-center">
+<a class="text-slate-400 dark:text-slate-500 hover:text-indigo-400 dark:hover:text-indigo-300 transition-colors font-manrope tracking-tight font-bold" href="#">Vaults</a>
+<a class="text-slate-400 dark:text-slate-500 hover:text-indigo-400 dark:hover:text-indigo-300 transition-colors font-manrope tracking-tight font-bold" href="#">Achievements</a>
+<a class="text-slate-400 dark:text-slate-500 hover:text-indigo-400 dark:hover:text-indigo-300 transition-colors font-manrope tracking-tight font-bold" href="#">Metrics</a>
+<a class="text-slate-400 dark:text-slate-500 hover:text-indigo-400 dark:hover:text-indigo-300 transition-colors font-manrope tracking-tight font-bold" href="#">Community</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant/20">
+<img alt="Student Profile Avatar" class="w-full h-full object-cover" data-alt="Minimalist professional portrait of a young student with neutral background and soft cinematic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGM1LQOtgeB55YiNgY_TZC_clVJd-sLB5kvBvIcj1KAFclVoF0hsjax7l6qS2oouon5aMOyTMbD_6ldazdJrZ-lFWyRfWxhFsUSlcp4KrnTD0bqDfdgUbjp-OvNBAkS6l0NspfapWQznXoTnNI-FCsuXYSs6SmKX-ED39-Pp-Y1oKpC6ctDDuGb1i6BXwiJFMWj3yqMUeNl31p5kn799sinwhW2kQ7H0cIPOdxwKpqFvFFQUMOhRCbBtoUTxTkN-uyq2g5uiaqLMr4"/>
+</div>
+</div>
+</nav>
+</header>
+<main class="pt-24 pb-20 max-w-5xl mx-auto px-6 space-y-16">
+<!-- Hero Section: Virtual ID Card Style -->
+<section class="flex flex-col items-center justify-center text-center space-y-10">
+<div class="w-full max-w-2xl bg-surface-container-low rounded-xl p-1 id-card-glow relative overflow-hidden group">
+<!-- ID Card Aesthetic Background -->
+<div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+<div class="absolute bottom-0 left-0 w-48 h-48 bg-primary/5 rounded-full -ml-24 -mb-24 blur-3xl"></div>
+<div class="relative bg-surface-container border border-outline-variant/10 rounded-lg p-8 md:p-12 flex flex-col md:flex-row items-center gap-10">
+<!-- Profile Picture with Level Badge -->
+<div class="relative">
+<div class="w-32 h-32 md:w-40 md:h-40 rounded-lg overflow-hidden border-2 border-primary/20 p-1">
+<img alt="Student Profile Avatar" class="w-full h-full object-cover rounded" data-alt="Close up portrait of a young male student in a dark hoodie with focused expression, soft studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuPgXiiRJAwQv7yOob07nlESBWW-ValWI4Fcc9ts_eOsgThzUpwbM2x2_UkwIso1V9wKpDHDcXLvJHvCQbhoUurJsLr8pTEo1fm4awrMiGdTIM1G7LkG57al02WogKsfQr84U7GH9VIG0-dFP1iej87CMFlAKF21H53rlfckSNnQIdW62yKYzQWTYOuSDbbyOsXdCfcZHvjS0-v2m-Zv8ngOICf6CwO6nGpHWrqpCQuVRbnuZynwLBF0r2yV1SDwPS49iWdy3RUbDh"/>
+</div>
+<div class="absolute -bottom-3 -right-3 bg-primary text-on-primary font-headline font-extrabold px-3 py-1 rounded text-sm shadow-lg">
+                            LVL 42
+                        </div>
+</div>
+<!-- User Info Details -->
+<div class="flex-1 text-center md:text-left">
+<div class="space-y-1 mb-6">
+<h1 class="text-4xl md:text-5xl font-headline font-extrabold tracking-tighter text-on-surface">Test</h1>
+<p class="text-primary font-medium tracking-wide uppercase text-xs">JEE Aspirant</p>
+</div>
+<div class="flex flex-wrap justify-center md:justify-start gap-4 mb-8">
+<div class="flex items-center gap-2 px-3 py-1.5 bg-surface-container-highest rounded-full text-xs font-medium text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]" data-icon="verified_user">verified_user</span>
+<span>Verified Architect</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1.5 bg-surface-container-highest rounded-full text-xs font-medium text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]" data-icon="location_on">location_on</span>
+<span>Kota Hub</span>
+</div>
+</div>
+<button class="w-full md:w-auto px-8 py-3 bg-gradient-to-br from-primary to-primary-container text-on-primary font-headline font-bold rounded-xl active:scale-95 transition-all shadow-xl shadow-primary/10">
+                            Create Your Own Vault
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Activity Summary: Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-surface-container-low p-8 rounded-xl flex flex-col items-center justify-center text-center space-y-3">
+<span class="text-on-surface-variant text-sm font-medium tracking-tight">Total Study Hours</span>
+<span class="text-4xl font-headline font-extrabold text-on-surface tracking-tighter">450h</span>
+<div class="w-full h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="w-3/4 h-full bg-primary"></div>
+</div>
+</div>
+<div class="bg-surface-container-low p-8 rounded-xl flex flex-col items-center justify-center text-center space-y-3">
+<span class="text-on-surface-variant text-sm font-medium tracking-tight">Learning Streak</span>
+<div class="flex items-end gap-1">
+<span class="text-4xl font-headline font-extrabold text-on-surface tracking-tighter">12</span>
+<span class="text-primary font-bold mb-1">days</span>
+</div>
+<div class="flex gap-1">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<div class="w-2 h-2 rounded-full bg-surface-variant"></div>
+</div>
+</div>
+<div class="bg-surface-container-low p-8 rounded-xl flex flex-col items-center justify-center text-center space-y-3">
+<span class="text-on-surface-variant text-sm font-medium tracking-tight">Resources Saved</span>
+<span class="text-4xl font-headline font-extrabold text-on-surface tracking-tighter">142</span>
+<span class="text-xs text-on-surface-variant">+8 this week</span>
+</div>
+</section>
+<!-- Achievement Badges Section -->
+<section class="space-y-8">
+<div class="flex items-center gap-4">
+<h2 class="text-xl font-headline font-bold text-on-surface tracking-tight">Achievement Badges</h2>
+<div class="h-px flex-1 bg-surface-variant"></div>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+<!-- Early Adopter -->
+<div class="group bg-surface-container p-6 rounded-xl text-center space-y-4 hover:bg-surface-container-high transition-colors">
+<div class="w-16 h-16 mx-auto bg-primary-container/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="rocket_launch">rocket_launch</span>
+</div>
+<div>
+<p class="font-headline font-bold text-on-surface text-sm">Early Adopter</p>
+<p class="text-xs text-on-surface-variant mt-1">Founding Student</p>
+</div>
+</div>
+<!-- Vault Builder -->
+<div class="group bg-surface-container p-6 rounded-xl text-center space-y-4 hover:bg-surface-container-high transition-colors">
+<div class="w-16 h-16 mx-auto bg-primary-container/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="architecture">architecture</span>
+</div>
+<div>
+<p class="font-headline font-bold text-on-surface text-sm">Vault Builder</p>
+<p class="text-xs text-on-surface-variant mt-1">Created 5+ Vaults</p>
+</div>
+</div>
+<!-- Master Mind -->
+<div class="group bg-surface-container p-6 rounded-xl text-center space-y-4 hover:bg-surface-container-high transition-colors">
+<div class="w-16 h-16 mx-auto bg-primary-container/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="psychology">psychology</span>
+</div>
+<div>
+<p class="font-headline font-bold text-on-surface text-sm">Master Mind</p>
+<p class="text-xs text-on-surface-variant mt-1">Quiz Perfectionist</p>
+</div>
+</div>
+<!-- Focused -->
+<div class="group bg-surface-container p-6 rounded-xl text-center space-y-4 hover:bg-surface-container-high transition-colors">
+<div class="w-16 h-16 mx-auto bg-primary-container/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="center_focus_strong">center_focus_strong</span>
+</div>
+<div>
+<p class="font-headline font-bold text-on-surface text-sm">Focused</p>
+<p class="text-xs text-on-surface-variant mt-1">100+ Deep Sessions</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Secondary Section: Recent Activity / Vaults -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="space-y-6">
+<h3 class="text-lg font-headline font-bold text-on-surface">Active Vaults</h3>
+<div class="space-y-4">
+<div class="bg-surface-container p-4 rounded-lg flex items-center justify-between group cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+</div>
+<div>
+<p class="font-medium text-on-surface text-sm">Advanced Calculus</p>
+<p class="text-xs text-on-surface-variant">42 resources • Updated 2h ago</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="arrow_forward">arrow_forward</span>
+</div>
+<div class="bg-surface-container p-4 rounded-lg flex items-center justify-between group cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+<span class="material-symbols-outlined" data-icon="science">science</span>
+</div>
+<div>
+<p class="font-medium text-on-surface text-sm">Organic Chemistry II</p>
+<p class="text-xs text-on-surface-variant">28 resources • Updated 1d ago</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+</div>
+<div class="space-y-6">
+<h3 class="text-lg font-headline font-bold text-on-surface">Journal Progress</h3>
+<div class="bg-surface-container rounded-xl p-6 h-[180px] flex items-center justify-center border border-outline-variant/10 relative overflow-hidden">
+<!-- Minimalist Graph Representation -->
+<div class="absolute bottom-0 left-0 w-full flex items-end justify-between px-6 h-24">
+<div class="w-8 bg-primary/20 rounded-t-sm h-[40%]"></div>
+<div class="w-8 bg-primary/30 rounded-t-sm h-[60%]"></div>
+<div class="w-8 bg-primary/40 rounded-t-sm h-[30%]"></div>
+<div class="w-8 bg-primary/50 rounded-t-sm h-[80%]"></div>
+<div class="w-8 bg-primary/60 rounded-t-sm h-[50%]"></div>
+<div class="w-8 bg-primary/80 rounded-t-sm h-[95%]"></div>
+<div class="w-8 bg-primary rounded-t-sm h-[70%]"></div>
+</div>
+<div class="text-center z-10">
+<p class="text-3xl font-headline font-extrabold text-on-surface">Peak Focus</p>
+<p class="text-sm text-on-surface-variant">Consistently high since Monday</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer Shell -->
+<footer class="w-full py-12 border-t border-[#141a20] bg-[#0b0e11] dark:bg-[#0b0e11]">
+<div class="flex flex-col items-center justify-center space-y-4 w-full">
+<span class="text-lg font-bold text-slate-200 font-headline">Knowledge Vault</span>
+<div class="flex gap-6 text-slate-500 text-sm font-inter">
+<a class="hover:text-slate-300 transition-colors opacity-80 hover:opacity-100" href="#">Privacy</a>
+<a class="hover:text-slate-300 transition-colors opacity-80 hover:opacity-100" href="#">Terms</a>
+<a class="hover:text-slate-300 transition-colors opacity-80 hover:opacity-100" href="#">Support</a>
+<a class="hover:text-slate-300 transition-colors opacity-80 hover:opacity-100" href="#">API</a>
+</div>
+<p class="text-slate-500 text-sm font-inter">© 2024 Knowledge Vault. The Silent Architect.</p>
+</div>
+</footer>
+</body></html>

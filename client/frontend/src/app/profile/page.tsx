@@ -20,7 +20,9 @@ import {
   Flame,
   ShieldCheck,
   GraduationCap,
-  BadgeCheck
+  BadgeCheck,
+  ExternalLink,
+  Share2
 } from "lucide-react";
 import LevelBadge from "@/components/LevelBadge";
 import LevelProgressBar from "@/components/LevelProgressBar";
@@ -29,6 +31,11 @@ export default function ProfilePage() {
   const { user, logout } = useAuth();
   const [resourceCount, setResourceCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [origin, setOrigin] = useState("");
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -154,8 +161,20 @@ export default function ProfilePage() {
               <div className="flex justify-between items-start mb-10">
                 <div className="space-y-1.5">
                   <h3 className="font-bold text-primary text-[10px] tracking-[0.25em] uppercase">Student Passport</h3>
-                  <div className="font-mono text-[11px] text-on-surface-variant tracking-tighter bg-surface-container-highest/50 px-3 py-1.5 rounded-lg border border-outline-variant/10">
-                    ID: {user?.vaultId || "PROTOCOL_PENDING"}
+                  <div className="flex items-center gap-2 group/id">
+                    <div className="font-mono text-[11px] text-on-surface-variant tracking-tighter bg-surface-container-highest/50 px-3 py-1.5 rounded-lg border border-outline-variant/10">
+                      ID: #{user?.vaultId?.replace('#', '') || "PROTOCOL_PENDING"}
+                    </div>
+                    {user?.vaultId && (
+                      <Link 
+                        href={`/p/${user.vaultId.replace('#', '')}`} 
+                        target="_blank"
+                        className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all border border-primary/20"
+                        title="View Public Profile"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </Link>
+                    )}
                   </div>
                 </div>
                 <div className="bg-primary shadow-lg shadow-primary/20 p-2.5 rounded-2xl">
@@ -187,15 +206,28 @@ export default function ProfilePage() {
                       <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${Math.min(resourceCount * 10, 100)}%` }} />
                     </div>
                   </div>
-                  <div className="bg-white p-1 rounded-xl shadow-xl shadow-black/40 rotate-1 flex flex-col gap-0.5 w-16 h-16 shrink-0 opacity-80 overflow-hidden">
-                    <div className="h-1.5 bg-black/10 w-full mb-1" />
-                    <div className="flex flex-col gap-1 p-1">
-                      <div className="h-0.5 bg-black/20 w-full" />
-                      <div className="h-0.5 bg-black/20 w-[70%]" />
-                      <div className="h-0.5 bg-black/20 w-[90%]" />
-                      <div className="h-0.5 bg-black/20 w-[60%]" />
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="bg-white p-1.5 rounded-xl shadow-xl shadow-black/40 rotate-1 flex items-center justify-center w-16 h-16 shrink-0 opacity-90 overflow-hidden">
+                      {user?.vaultId && origin ? (
+                        <img 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${origin}/p/${user.vaultId.replace('#', '')}`)}`}
+                          alt="ID QR"
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-surface-variant/20 animate-pulse rounded" />
+                      )}
                     </div>
-                    <div className="mt-auto h-2 bg-black/30 w-full" />
+                    {user?.vaultId && (
+                      <Link 
+                        href={`/p/${user.vaultId.replace('#', '')}`}
+                        target="_blank"
+                        className="p-2 rounded-2xl bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-white transition-all shadow-lg shadow-primary/5 active:scale-95 group/share"
+                        title="Share Public Card"
+                      >
+                        <Share2 className="w-4 h-4 group-hover/share:rotate-12 transition-transform" />
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>

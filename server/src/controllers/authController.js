@@ -1,5 +1,6 @@
 import asyncHandler from 'express-async-handler';
 import * as authService from '../services/authService.js';
+import { generateVaultId } from '../utils/generateVaultId.js';
 
 const normalizeIp = (ip) => {
   if (!ip) return 'unknown';
@@ -103,7 +104,21 @@ export const onboard = asyncHandler(async (req, res) => {
 // @route   GET /api/auth/me
 // @access  Private
 export const getMe = asyncHandler(async (req, res) => {
-  res.json(req.user);
+  const user = req.user;
+  
+  // Catch-up logic for users who onboarded but haven't received a Vault ID yet
+  if (user.isOnboarded && !user.vaultId) {
+    try {
+      user.vaultId = generateVaultId(user);
+      await user.save();
+    } catch (e) {
+      // Suffix collision is rare but possible
+      user.vaultId = generateVaultId(user);
+      await user.save();
+    }
+  }
+
+  res.json(user);
 });
 
 // @desc    Update user profile

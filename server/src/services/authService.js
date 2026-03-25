@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import Session from '../models/Session.js';
 import Resource from '../models/Resource.js';
 import OtpCode from '../models/OtpCode.js';
+import { generateVaultId } from '../utils/generateVaultId.js';
 import generateToken from '../utils/generateToken.js';
 import geoip from 'geoip-lite';
 
@@ -62,6 +63,7 @@ export const registerUser = async ({ name, email, password, ipAddress }) => {
     role: user.role,
     isVerifiedStudent: user.isVerifiedStudent,
     isOnboarded: user.isOnboarded,
+    vaultId: user.vaultId,
     token: generateToken(user._id),
     sessionId: session._id,
   };
@@ -128,6 +130,7 @@ export const loginUser = async ({ email, password, ipAddress }) => {
     currentStreak: user.currentStreak,
     totalActiveSeconds: user.totalActiveSeconds,
     levelData: user.levelData,
+    vaultId: user.vaultId,
     token: generateToken(user._id),
     sessionId: session._id,
   };
@@ -266,6 +269,17 @@ export const onboardUser = async ({ userId, targetExam, targetYear }) => {
 
   if (targetExam) user.targetExam = targetExam;
   if (targetYear) user.targetYear = targetYear;
+  
+  // Generate Vault ID if it doesn't exist yet
+  if (!user.vaultId) {
+    try {
+      user.vaultId = generateVaultId(user);
+    } catch (e) {
+      // Suffix collision is rare but possible
+      user.vaultId = generateVaultId(user);
+    }
+  }
+
   user.isOnboarded = true;
   await user.save();
 
@@ -278,6 +292,7 @@ export const onboardUser = async ({ userId, targetExam, targetYear }) => {
     targetExam: user.targetExam,
     targetYear: user.targetYear,
     isOnboarded: user.isOnboarded,
+    vaultId: user.vaultId,
   };
 };
 

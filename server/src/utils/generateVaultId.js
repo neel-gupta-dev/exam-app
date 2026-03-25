@@ -37,5 +37,5 @@ export const generateVaultId = (user) => {
   // 4. Random Suffix (3-digit alphanumeric)
   const randomSuffix = Math.random().toString(36).substring(2, 5).toUpperCase();
 
-  return `#V${regPart}${examCode}${targetYear}-${randomSuffix}`;
+  return `V${regPart}${examCode}${targetYear}-${randomSuffix}`;
 };
