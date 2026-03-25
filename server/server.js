@@ -21,7 +21,9 @@ const app = express();
 app.set('trust proxy', true);
 
 // --- CORS Configuration ---
-const allowedOrigins = ['http://localhost:3000'];
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : ['http://localhost:3000'];
 
 app.use(
   cors({
@@ -35,7 +37,7 @@ app.use(
       }
 
       // Allow whitelisted origins
-      if (allowedOrigins.includes(origin)) {
+      if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
         return callback(null, true);
       }
 

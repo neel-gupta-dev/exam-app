@@ -59,7 +59,7 @@ export default function ProfilePage() {
   }
 
   // Level and Streak from AuthContext
-  const level = user?.level || 1;
+  const level = user?.levelData?.currentLevel || 1;
   const currentStreak = user?.currentStreak || 0;
 
   let title = "Novice";
@@ -148,7 +148,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Digital ID Card (Passport Style) */}
-          <div className="col-span-12 lg:col-span-4 bg-gradient-to-br from-indigo-900/20 to-surface-container rounded-[2rem] p-10 flex flex-col justify-between border border-primary/20 relative group overflow-hidden shadow-2xl shadow-primary/5">
+          <div className="col-span-12 lg:col-span-4 mx-auto w-full max-w-sm aspect-[2.125/3.37] bg-gradient-to-br from-indigo-900/20 to-surface-container rounded-[2rem] p-8 flex flex-col justify-between border border-primary/20 relative group overflow-hidden shadow-2xl shadow-primary/5">
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-700" />
             <div className="z-10 h-full flex flex-col">
               <div className="flex justify-between items-start mb-10">

@@ -72,6 +72,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     initAuth();
 
+    // Safety Timeout: Force disable loader after 10 seconds if network/CORS fails silently
+    const safetyTimer = setTimeout(() => {
+      setIsLoading(prev => {
+        if (prev) {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+          console.error("[Auth] Initial auth check timed out after 10s.", {
+            configuredApiUrl: apiUrl,
+            message: !apiUrl ? "NEXT_PUBLIC_API_URL is NOT SET! API calls will fail on production." : "Network or CORS issue detected."
+          });
+          toast.error(
+            !apiUrl 
+              ? "System Configuration Error: API URL is missing." 
+              : "Connection is taking longer than expected. Please check your network.", 
+            {
+              id: 'network-timeout-warning',
+              duration: 10000
+            }
+          );
+          return false;
+        }
+        return prev;
+      });
+    }, 10000);
+
     // Heartbeat Interval (10 minutes)
     const heartbeatInterval = setInterval(() => {
       const sId = localStorage.getItem('kv_sessionId');
@@ -90,7 +114,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const tk = localStorage.getItem('kv_token');
         if (sId && tk) {
           // Use beacon for reliable delivery on tab close/hide
-          const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/auth/ping`;
+          const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+          const url = `${baseUrl}/auth/ping`;
           const data = JSON.stringify({ sessionId: sId });
           navigator.sendBeacon(url, data);
         }
@@ -115,11 +140,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchPublicIp = async () => {
     try {
-      const res = await fetch('https://api.ipify.org?format=json');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000); // 2s timeout
+
+      const res = await fetch('https://api.ipify.org?format=json', { signal: controller.signal });
+      clearTimeout(timeoutId);
       const data = await res.json();
       return data.ip;
     } catch (e) {
-      console.error("Public IP fetch failed", e);
+      console.warn("[Auth] Public IP fetch failed or timed out", e);
       return 'unknown';
     }
   };

@@ -1,7 +1,27 @@
 import axios from 'axios';
 
+const getBaseURL = () => {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (envUrl) return envUrl;
+
+  if (typeof window !== 'undefined') {
+    // Fallback for development if env is missing
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isLocal) return 'http://localhost:5000/api';
+  }
+  
+  return ''; // Relative path fallback (will likely fail on production if not configured)
+};
+
+const baseURL = getBaseURL();
+
+if (typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_API_URL) {
+  console.error("[API] NEXT_PUBLIC_API_URL is NOT defined! API calls may fail.");
+}
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL,
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
