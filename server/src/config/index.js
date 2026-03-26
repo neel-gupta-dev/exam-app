@@ -10,12 +10,12 @@ if (process.env.NODE_ENV !== 'production') {
   dotenv.config({ path: path.join(__dirname, '../../../.env') });
 }
 
-export const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/vayl';
+export const MONGO_URI = process.env.MONGO_URI;
 export const PORT = process.env.PORT || 5000;
-export const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+export const FRONTEND_URL = process.env.FRONTEND_URL;
 export const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
-  : ['http://localhost:3000'];
+  : []; // Default to empty if not provided, CORS will block by default
 
 export default {
   MONGO_URI,
