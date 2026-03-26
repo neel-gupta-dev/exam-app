@@ -9,6 +9,7 @@ import userRoutes from './src/routes/userRoutes.js';
 import noteRoutes from './src/routes/noteRoutes.js';
 import focusRoutes from './src/routes/focusRoutes.js';
 import publicRoutes from './src/routes/publicRoutes.js';
+import { getHealth } from './src/controllers/healthController.js';
 import { closeExpiredSessions } from './src/services/authService.js';
 
 dotenv.config();
@@ -53,9 +54,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // --- API Routes ---
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+app.get('/api/health', getHealth);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/resources', resourceRoutes);
