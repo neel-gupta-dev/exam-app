@@ -2,10 +2,10 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
-    "dev": "tsx watch server.js",
-    "start": "node server.js"
+    "dev": "tsx watch index.js",
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",

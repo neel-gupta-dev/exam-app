@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { API_BASE_URL } from '@/config/env';
 
 export default function SignupPage() {
   const { user, isLoading, register } = useAuth();
@@ -59,8 +60,7 @@ export default function SignupPage() {
   };
 
   const handleGoogleLogin = () => {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-    window.location.href = `${backendUrl}/auth/google`;
+    window.location.href = `${API_BASE_URL}/auth/google`;
   };
 
   return (
@@ -90,8 +90,7 @@ export default function SignupPage() {
             {/* Google Login Handler */}
             {(() => {
               const handleGoogleLogin = () => {
-                const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-                window.location.href = `${backendUrl}/auth/google`;
+                window.location.href = `${API_BASE_URL}/auth/google`;
               };
               return null;
             })()}

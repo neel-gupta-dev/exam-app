@@ -1,0 +1,15 @@
+{
+  "name": "vayl-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:client": "cd client/frontend && npm run dev",
+    "dev:server": "cd server && npm run dev",
+    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
+    "build": "cd client/frontend && npm install && npm run build",
+    "install-all": "npm install && cd client/frontend && npm install && cd ../../server && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

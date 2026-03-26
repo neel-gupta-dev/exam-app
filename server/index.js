@@ -14,6 +14,7 @@ import { getHealth } from './src/controllers/healthController.js';
 import { closeExpiredSessions } from './src/services/authService.js';
 import passport from 'passport';
 import configurePassport from './src/config/passport.js';
+import { MONGO_URI, PORT, ALLOWED_ORIGINS } from './src/config/index.js';
 
 dotenv.config();
 
@@ -29,10 +30,6 @@ const app = express();
 app.set('trust proxy', true);
 
 // --- CORS Configuration ---
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
-  : ['http://localhost:3000'];
-
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -45,7 +42,7 @@ app.use(
       }
 
       // Allow whitelisted origins
-      if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      if (ALLOWED_ORIGINS.includes(origin) || ALLOWED_ORIGINS.includes('*')) {
         return callback(null, true);
       }
 
@@ -78,10 +75,14 @@ app.use(notFound);
 app.use(errorHandler);
 
 // --- Start Server ---
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  
-  // Run Janitor every 30 minutes
-  setInterval(closeExpiredSessions, 30 * 60 * 1000);
-});
+if (process.env.NODE_ENV !== 'production') {
+  const port = PORT || 5000;
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+    
+    // Run Janitor every 30 minutes
+    setInterval(closeExpiredSessions, 30 * 60 * 1000);
+  });
+}
+
+export default app;

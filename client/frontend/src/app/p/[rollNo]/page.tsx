@@ -2,11 +2,11 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ShieldAlert, UserPlus, ArrowRight } from 'lucide-react';
 import ProtocolRetry from '@/components/ProtocolRetry';
+import { API_BASE_URL } from '@/config/env';
 
 async function getProfile(rollNo: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
   try {
-    const res = await fetch(`${baseUrl}/public/profile/${rollNo}`, {
+    const res = await fetch(`${API_BASE_URL}/public/profile/${rollNo}`, {
       next: { revalidate: 10 },
       headers: { 'Content-Type': 'application/json' }
     });

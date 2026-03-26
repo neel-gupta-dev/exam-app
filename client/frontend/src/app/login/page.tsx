@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { API_BASE_URL } from '@/config/env';
 
 export default function LoginPage() {
   return (
@@ -54,8 +55,7 @@ function LoginContent() {
   if (!mounted) return null;
 
   const handleGoogleLogin = () => {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-    window.location.href = `${backendUrl}/auth/google`;
+    window.location.href = `${API_BASE_URL}/auth/google`;
   };
 
   const handleSubmit = async (e: FormEvent) => {

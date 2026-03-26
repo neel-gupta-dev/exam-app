@@ -16,6 +16,7 @@ import {
   StickyNote
 } from 'lucide-react';
 import Link from 'next/link';
+import { API_BASE_URL } from '@/config/env';
 
 interface HealthData {
   status: string;
@@ -62,7 +63,7 @@ export default function HealthPage() {
     setIsRefreshing(true);
     const start = performance.now();
     try {
-      const response = await fetch('http://localhost:5000/api/health');
+      const response = await fetch(`${API_BASE_URL}/health`);
       const end = performance.now();
       const currentLatency = Math.round(end - start);
       setLatency(prev => [...prev.slice(-9), currentLatency]);
