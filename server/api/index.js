@@ -19,7 +19,9 @@ import { MONGO_URI, PORT, ALLOWED_ORIGINS } from '../src/config/index.js';
 dotenv.config();
 
 // Connect to MongoDB
-connectDB();
+connectDB().catch(err => {
+  console.error('CRITICAL: MongoDB Connection Failed:', err.message);
+});
 
 // Configure Passport
 configurePassport();
