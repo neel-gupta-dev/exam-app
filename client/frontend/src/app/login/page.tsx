@@ -1,15 +1,44 @@
 'use client';
 
-import React, { useState, FormEvent } from 'react';
+import React, { useState, FormEvent, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-surface flex items-center justify-center text-primary font-black uppercase tracking-widest animate-pulse">Initializing Vault...</div>}>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginContent() {
+  const { login, loginWithToken } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = searchParams.get('token');
+    if (token) {
+      setGoogleLoading(true);
+      loginWithToken(token).then(() => {
+        router.replace('/dashboard');
+      }).catch(() => {
+        setGoogleLoading(false);
+      });
+    }
+  }, [searchParams, loginWithToken, router]);
+
+  const handleGoogleLogin = () => {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+    window.location.href = `${backendUrl}/auth/google`;
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -122,7 +151,10 @@ export default function LoginPage() {
 
           {/* Social Logins */}
           <div className="grid grid-cols-2 gap-4">
-            <button className="flex items-center justify-center gap-3 py-3 px-4 bg-surface-container-low/40 border border-outline-variant/20 rounded-xl hover:bg-surface-bright/60 hover:border-outline-variant/40 transition-all text-on-surface text-sm font-medium">
+            <button 
+              onClick={handleGoogleLogin}
+              className="flex items-center justify-center gap-3 py-3 px-4 bg-surface-container-low/40 border border-outline-variant/20 rounded-xl hover:bg-surface-bright/60 hover:border-outline-variant/40 transition-all text-on-surface text-sm font-medium"
+            >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
@@ -139,6 +171,29 @@ export default function LoginPage() {
             </button>
           </div>
         </section>
+
+        {/* Global Loading Overlay (City of Lakes theme) */}
+        {googleLoading && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-xl">
+             <div className="flex flex-col items-center gap-6 p-10 rounded-3xl bg-surface-container/30 border border-white/10 shadow-2xl relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent"></div>
+                <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center animate-pulse">
+                   <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                </div>
+                <div className="text-center relative z-10">
+                   <h3 className="font-headline text-xl font-bold text-white mb-2">Verifying Vault Credentials...</h3>
+                   <div className="flex items-center justify-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce"></span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:-0.15s]"></span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:-0.3s]"></span>
+                   </div>
+                   <p className="mt-4 text-[10px] text-outline uppercase tracking-[0.2em] font-bold">
+                      City of Lakes Security Node
+                   </p>
+                </div>
+             </div>
+          </div>
+        )}
 
         {/* Footer / Redirect */}
         <div className="mt-10 text-center">

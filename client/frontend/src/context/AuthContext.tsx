@@ -12,6 +12,7 @@ interface AuthContextType {
   sessionId: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithToken: (token: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   updateUser: (data: Partial<User>) => void;
@@ -166,6 +167,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/');
   }, [router]);
 
+  const loginWithToken = useCallback(async (jwt: string) => {
+    localStorage.setItem('kv_token', jwt);
+    setToken(jwt);
+    try {
+      const { data } = await api.get('/auth/me');
+      setUser(data);
+      toast.success('Logged in with Google!');
+    } catch (err) {
+      console.error("[Auth] loginWithToken failed:", err);
+      localStorage.removeItem('kv_token');
+      setToken(null);
+      toast.error('Session initialization failed');
+    }
+  }, []);
+
   const register = useCallback(async (name: string, email: string, password: string) => {
     const publicIp = await fetchPublicIp();
     const { data } = await api.post('/auth/register', { name, email, password, publicIp });
@@ -224,6 +240,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sessionId, 
       isLoading, 
       login, 
+      loginWithToken,
       register, 
       logout, 
       updateUser, 

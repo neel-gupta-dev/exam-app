@@ -38,6 +38,11 @@ export default function SignupPage() {
     }
   };
 
+  const handleGoogleLogin = () => {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+    window.location.href = `${backendUrl}/auth/google`;
+  };
+
   return (
     <div className="font-body selection:bg-primary/30 selection:text-primary min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
       {/* Ambient Background Elements */}
@@ -62,6 +67,14 @@ export default function SignupPage() {
             <p className="text-on-surface-variant text-sm">Secure your knowledge in the digital age.</p>
           </div>
           <form className="space-y-5" onSubmit={handleSubmit}>
+            {/* Google Login Handler */}
+            {(() => {
+              const handleGoogleLogin = () => {
+                const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+                window.location.href = `${backendUrl}/auth/google`;
+              };
+              return null;
+            })()}
             {/* Name Field */}
             <div className="space-y-1.5">
               <label className="font-label text-xs font-semibold uppercase tracking-wider text-on-surface-variant" htmlFor="name">Full Name</label>
@@ -135,7 +148,11 @@ export default function SignupPage() {
 
             {/* Social Options */}
             <div className="grid grid-cols-2 gap-4">
-              <button className="flex items-center justify-center gap-2.5 bg-white/5 hover:bg-white/10 transition-colors py-3 rounded-xl border border-white/5" type="button">
+              <button 
+                onClick={handleGoogleLogin}
+                className="flex items-center justify-center gap-2.5 bg-white/5 hover:bg-white/10 transition-colors py-3 rounded-xl border border-white/5" 
+                type="button"
+              >
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
                   <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>

@@ -99,9 +99,11 @@ export default function AnalyticsPage() {
     });
 
   // Real Level and Streak from AuthContext
-  const realLevel = user?.level || 1;
+  const realLevel = user?.levelData?.currentLevel || user?.level || 1;
   const currentStreak = user?.currentStreak || 0;
   const totalActiveSeconds = user?.totalActiveSeconds || 0;
+  const xpRemaining = user?.levelData?.xpRemaining || 0;
+  const progressToNext = user?.levelData?.progressToNext || 0;
   
   const formatActiveTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -176,7 +178,18 @@ export default function AnalyticsPage() {
               <span className={`font-extrabold text-on-surface ${stat.value.length > 5 ? 'text-xl' : 'text-3xl'}`}>{stat.value}</span>
               <span className="text-xs text-on-surface-variant mb-1.5">{stat.unit}</span>
             </div>
-            <div className="mt-4 pt-4 border-t border-white/5 flex items-center gap-1.5 text-[10px]">
+            {stat.label === "Scholar Level" && (
+              <div className="mt-3 space-y-1.5">
+                <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${progressToNext}%` }} />
+                </div>
+                <div className="flex justify-between text-[8px] font-bold text-on-surface-variant uppercase tracking-wider">
+                  <span>{Math.round(progressToNext)}% Complete</span>
+                  <span>{Math.round(xpRemaining)} XP Left</span>
+                </div>
+              </div>
+            )}
+            <div className={`mt-4 pt-4 border-t border-white/5 flex items-center gap-1.5 text-[10px] ${stat.label === "Scholar Level" ? 'mt-2' : ''}`}>
               <span className={`${stat.changeColor} font-bold`}>{stat.change}</span>
               <span className="text-on-surface-variant font-medium">{stat.note}</span>
             </div>

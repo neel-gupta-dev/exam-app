@@ -11,11 +11,16 @@ import focusRoutes from './src/routes/focusRoutes.js';
 import publicRoutes from './src/routes/publicRoutes.js';
 import { getHealth } from './src/controllers/healthController.js';
 import { closeExpiredSessions } from './src/services/authService.js';
+import passport from 'passport';
+import configurePassport from './src/config/passport.js';
 
 dotenv.config();
 
 // Connect to MongoDB
 connectDB();
+
+// Configure Passport
+configurePassport();
 
 const app = express();
 
@@ -52,6 +57,9 @@ app.use(
 // Body parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Passport initialization
+app.use(passport.initialize());
 
 // --- API Routes ---
 app.get('/api/health', getHealth);

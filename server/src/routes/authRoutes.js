@@ -2,8 +2,22 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { register, login, ping, logout, sendOtp, verifyOtp, onboard, getMe, updateProfile, updatePassword } from '../controllers/authController.js';
 import { protect } from '../middlewares/authMiddleware.js';
+import passport from 'passport';
+import generateToken from '../utils/generateToken.js';
 
 const router = Router();
+
+// --- Google OAuth ---
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+router.get('/google/callback', 
+  passport.authenticate('google', { session: false, failureRedirect: '/login' }),
+  (req, res) => {
+    const token = generateToken(req.user._id);
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    res.redirect(`${frontendUrl}/login?token=${token}`);
+  }
+);
 
 // Rate limiter for OTP endpoint: 3 requests per IP per 15 minutes
 const otpLimiter = rateLimit({

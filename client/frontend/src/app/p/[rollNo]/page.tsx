@@ -6,7 +6,7 @@ import ProtocolRetry from '@/components/ProtocolRetry';
 async function getProfile(rollNo: string) {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
   try {
-    const res = await fetch(`${baseUrl}/public/profile/${rollNo}`, { 
+    const res = await fetch(`${baseUrl}/public/profile/${rollNo}`, {
       next: { revalidate: 10 },
       headers: { 'Content-Type': 'application/json' }
     });
@@ -52,8 +52,8 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
         </p>
         <div className="flex flex-col gap-4 w-full max-w-xs mx-auto">
           <ProtocolRetry />
-          <Link 
-            href="/register" 
+          <Link
+            href="/signup"
             className="px-8 py-3.5 bg-gradient-to-br from-primary to-primary-container text-on-primary font-headline font-bold rounded-xl active:scale-95 transition-all shadow-xl shadow-primary/20 flex items-center gap-2 group justify-center text-sm"
           >
             Create New Vault
@@ -74,8 +74,8 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             </Link>
           </div>
           <div className="flex items-center gap-4">
-            <Link 
-              href="/register"
+            <Link
+              href="/signup"
               className="px-5 py-2 bg-primary/10 text-primary border border-primary/20 rounded-xl font-headline font-bold text-xs hover:bg-primary hover:text-white transition-all active:scale-95"
             >
               Join the Hub
@@ -91,7 +91,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             {/* Ambient Glows */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/5 rounded-full -ml-24 -mb-24 blur-3xl"></div>
-            
+
             <div className="relative bg-surface-container border border-outline-variant/10 rounded-lg p-8 md:p-12 flex flex-col md:flex-row items-center gap-10">
               {/* Profile Image with Level Badge */}
               <div className="relative">
@@ -127,8 +127,8 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
                     <span>Knowledge Hub</span>
                   </div>
                 </div>
-                <Link 
-                  href="/register"
+                <Link
+                  href="/signup"
                   className="w-full md:w-auto px-8 py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-headline font-bold rounded-xl active:scale-95 transition-all shadow-xl shadow-primary/10 flex items-center justify-center gap-2 group"
                 >
                   <UserPlus className="w-4 h-4" />
@@ -177,13 +177,19 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {profile.badges.map((badge: any) => (
-              <div key={badge.id} className="group bg-surface-container p-6 rounded-xl text-center space-y-4 hover:bg-surface-container-high transition-colors border border-white/5">
-                <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined text-primary text-3xl">{badge.icon}</span>
+              <div key={badge.id} className={`group bg-surface-container p-6 rounded-xl text-center space-y-4 hover:bg-surface-container-high transition-all border border-white/5 ${badge.locked ? 'opacity-40' : ''}`}>
+                <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center transition-transform ${badge.locked ? 'bg-surface-variant/30 grayscale' : 'bg-primary/10 group-hover:scale-110'}`}>
+                  <span className={`material-symbols-outlined text-3xl ${badge.locked ? 'text-on-surface-variant' : 'text-primary'}`}>
+                    {badge.icon}
+                  </span>
                 </div>
                 <div>
-                  <p className="font-headline font-bold text-on-surface text-sm">{badge.name}</p>
-                  <p className="text-xs text-on-surface-variant mt-1 opacity-60">{badge.desc}</p>
+                  <p className={`font-headline font-bold text-sm ${badge.locked ? 'text-on-surface-variant' : 'text-on-surface'}`}>
+                    {badge.name}
+                  </p>
+                  <p className="text-xs text-on-surface-variant mt-1 opacity-60">
+                    {badge.desc}
+                  </p>
                 </div>
               </div>
             ))}

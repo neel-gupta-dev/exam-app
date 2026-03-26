@@ -23,14 +23,37 @@ export const getPublicProfile = asyncHandler(async (req, res) => {
   const totalStudyHours = Math.round(user.totalActiveSeconds / 3600);
   const resourceCount = user.analytics?.resourceCount || 0;
 
-  // Generate dynamic badges
-  const badges = [];
-  if (user.createdAt < new Date('2024-12-31')) badges.push({ id: 'early', name: 'Early Adopter', icon: 'rocket_launch', desc: 'Founding Student' });
-  if (totalStudyHours > 100) badges.push({ id: 'focused', name: 'Deep Focus', icon: 'center_focus_strong', desc: '100+ Study Hours' });
-  if (user.currentStreak > 7) badges.push({ id: 'consistent', name: 'Unstoppable', icon: 'bolt', desc: '7+ Day Streak' });
-  if (resourceCount > 50) badges.push({ id: 'architect', name: 'Vault Architect', icon: 'architecture', desc: '50+ Resources Saved' });
-  
-  if (badges.length === 0) badges.push({ id: 'scholar', name: 'Knowledge Seeker', icon: 'school', desc: 'Active Learner' });
+  // Generate dynamic badges (Synchronized with private profile)
+  const badges = [
+    { 
+      id: 'early', 
+      name: 'Early Adopter', 
+      icon: 'award_star', 
+      desc: 'Joined Beta', 
+      locked: false 
+    },
+    { 
+      id: 'builder', 
+      name: 'Vault Builder', 
+      icon: 'menu_book', 
+      desc: `${resourceCount} Files`, 
+      locked: resourceCount === 0 
+    },
+    { 
+      id: 'master', 
+      name: 'Master Mind', 
+      icon: 'psychology', 
+      desc: levelData.currentLevel >= 25 ? 'Scholar Guru' : 'Locked', 
+      locked: levelData.currentLevel < 25 
+    },
+    { 
+      id: 'focused', 
+      name: 'Focused', 
+      icon: 'local_fire_department', 
+      desc: user.isOnboarded ? 'Onboarded' : 'Locked', 
+      locked: !user.isOnboarded 
+    }
+  ];
 
   res.json({
     name: user.name,
