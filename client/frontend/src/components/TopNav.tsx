@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { useSearch } from "@/context/SearchContext";
 import { useModifierKey } from "@/hooks/useModifierKey";
 import { useHaptics } from "@/hooks/useHaptics";
+import SearchDropdown, { ResourceSearchResult } from "./SearchDropdown";
+import { useRouter } from "next/navigation";
 
 export default function TopNav() {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,6 +22,13 @@ export default function TopNav() {
   const { modifierSymbol } = useModifierKey();
   const { vibrateClick } = useHaptics();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  // ── Search Dropdown State ───────────────────────────────────────────
+  const [results, setResults] = useState<ResourceSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
 
   // ── Keyboard Shortcuts ──────────────────────────────────────────────
   useEffect(() => {
@@ -35,22 +44,72 @@ export default function TopNav() {
         e.preventDefault();
         setIsOpen(true);
       }
+
+      // ESC to close results
+      if (e.key === 'Escape') {
+        setShowResults(false);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleSearch = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+  // ── Click Outside Search ────────────────────────────────────────────
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current && 
+        !dropdownRef.current.contains(event.target as Node) &&
+        searchInputRef.current &&
+        !searchInputRef.current.contains(event.target as Node)
+      ) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // ── Debounced Search Fetch ──────────────────────────────────────────
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setResults([]);
+      setShowResults(false);
+      return;
+    }
+
+    const fetchResults = async () => {
+      setIsSearching(true);
+      setShowResults(true);
+      try {
+        const { data } = await api.get(`/resources?search=${searchQuery}&limit=5`);
+        setResults(data.resources || []);
+      } catch (err) {
+        console.error("Search fetch error:", err);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    const timer = setTimeout(fetchResults, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleSearchKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim()) {
       try {
         await api.post('/users/search-log', { term: searchQuery.trim() });
-        // After logging, we could also trigger a local search filtering event
-        // but for now we just satisfy the "passive logger" requirement.
         console.log("Search behavior logged passively.");
       } catch (err) {
         console.error("Failed to log search behavior", err);
       }
     }
+  };
+
+  const handleResultSelect = (result: ResourceSearchResult) => {
+    setShowResults(false);
+    // Open external URL in new tab or navigate to internal viewer
+    window.open(result.url, '_blank');
   };
 
   const handleQuickSave = async (e: FormEvent) => {
@@ -83,23 +142,39 @@ export default function TopNav() {
         {/* Search */}
         <div className="flex items-center gap-4 w-1/2">
           <div className="relative w-full max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" />
+            <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors z-10 ${showResults ? 'text-primary' : 'text-on-surface-variant'}`} />
             <input
               ref={searchInputRef}
               type="text"
               placeholder={`Search resources... (${modifierSymbol} + K)`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleSearch}
-              className="w-full bg-surface-container-highest border-none rounded-xl pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-primary/50 placeholder:text-outline text-on-surface transition-all outline-none"
+              onKeyDown={handleSearchKeyDown}
+              onFocus={() => searchQuery && setShowResults(true)}
+              className="w-full bg-surface-container-highest border-none rounded-xl pl-10 pr-4 py-2.5 text-sm focus:ring-1 focus:ring-primary/50 placeholder:text-outline text-on-surface transition-all outline-none z-10 relative"
             />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1 pointer-events-none">
-              <span className="bg-surface-container rounded px-1.5 py-0.5 text-[10px] text-on-surface-variant font-mono border border-outline-variant/20">
-                {modifierSymbol}
-              </span>
-              <span className="bg-surface-container rounded px-1.5 py-0.5 text-[10px] text-on-surface-variant font-mono border border-outline-variant/20">
-                K
-              </span>
+            {!searchQuery && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1 pointer-events-none z-10">
+                <span className="bg-surface-container rounded px-1.5 py-0.5 text-[10px] text-on-surface-variant font-mono border border-outline-variant/20">
+                  {modifierSymbol}
+                </span>
+                <span className="bg-surface-container rounded px-1.5 py-0.5 text-[10px] text-on-surface-variant font-mono border border-outline-variant/20">
+                  K
+                </span>
+              </div>
+            )}
+
+            {/* Results Dropdown Container */}
+            <div ref={dropdownRef}>
+              {showResults && (
+                <SearchDropdown 
+                  results={results} 
+                  isLoading={isSearching} 
+                  query={searchQuery}
+                  onClose={() => setShowResults(false)}
+                  onSelect={handleResultSelect}
+                />
+              )}
             </div>
           </div>
         </div>
