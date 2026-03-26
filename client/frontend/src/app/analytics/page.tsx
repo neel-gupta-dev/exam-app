@@ -99,7 +99,7 @@ export default function AnalyticsPage() {
     });
 
   // Real Level and Streak from AuthContext
-  const realLevel = user?.levelData?.currentLevel || user?.level || 1;
+  const realLevel = user?.levelData?.currentLevel || 1;
   const currentStreak = user?.currentStreak || 0;
   const totalActiveSeconds = user?.totalActiveSeconds || 0;
   const xpRemaining = user?.levelData?.xpRemaining || 0;
