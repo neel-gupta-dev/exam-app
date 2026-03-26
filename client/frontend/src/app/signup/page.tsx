@@ -4,14 +4,34 @@ import React, { useState, FormEvent } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 export default function SignupPage() {
-  const { register } = useAuth();
+  const { user, isLoading, register } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const router = useRouter();
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (mounted && !isLoading && !initialCheckDone) {
+      if (user) {
+        toast.info('You are already logged in.');
+        router.replace('/');
+      }
+      setInitialCheckDone(true);
+    }
+  }, [user, isLoading, initialCheckDone, router, mounted]);
+
+  if (!mounted) return null;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

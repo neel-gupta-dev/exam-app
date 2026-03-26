@@ -15,13 +15,29 @@ export default function LoginPage() {
 }
 
 function LoginContent() {
-  const { login, loginWithToken } = useAuth();
+  const { user, isLoading, login, loginWithToken } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && !isLoading && !initialCheckDone) {
+      if (user) {
+        toast.info('You are already logged in.');
+        router.replace('/');
+      }
+      setInitialCheckDone(true);
+    }
+  }, [user, isLoading, initialCheckDone, router, mounted]);
 
   useEffect(() => {
     const token = searchParams.get('token');
@@ -34,6 +50,8 @@ function LoginContent() {
       });
     }
   }, [searchParams, loginWithToken, router]);
+
+  if (!mounted) return null;
 
   const handleGoogleLogin = () => {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
