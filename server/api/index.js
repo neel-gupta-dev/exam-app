@@ -1,20 +1,20 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import connectDB from './src/config/db.js';
-import { notFound, errorHandler } from './src/middlewares/errorMiddleware.js';
-import authRoutes from './src/routes/authRoutes.js';
-import resourceRoutes from './src/routes/resourceRoutes.js';
-import userRoutes from './src/routes/userRoutes.js';
-import noteRoutes from './src/routes/noteRoutes.js';
-import focusRoutes from './src/routes/focusRoutes.js';
-import publicRoutes from './src/routes/publicRoutes.js';
-import studyRoutes from './src/routes/study.js';
-import { getHealth } from './src/controllers/healthController.js';
-import { closeExpiredSessions } from './src/services/authService.js';
+import connectDB from '../src/config/db.js';
+import { notFound, errorHandler } from '../src/middlewares/errorMiddleware.js';
+import authRoutes from '../src/routes/authRoutes.js';
+import resourceRoutes from '../src/routes/resourceRoutes.js';
+import userRoutes from '../src/routes/userRoutes.js';
+import noteRoutes from '../src/routes/noteRoutes.js';
+import focusRoutes from '../src/routes/focusRoutes.js';
+import publicRoutes from '../src/routes/publicRoutes.js';
+import studyRoutes from '../src/routes/study.js';
+import { getHealth } from '../src/controllers/healthController.js';
+import { closeExpiredSessions } from '../src/services/authService.js';
 import passport from 'passport';
-import configurePassport from './src/config/passport.js';
-import { MONGO_URI, PORT, ALLOWED_ORIGINS } from './src/config/index.js';
+import configurePassport from '../src/config/passport.js';
+import { MONGO_URI, PORT, ALLOWED_ORIGINS } from '../src/config/index.js';
 
 dotenv.config();
 
