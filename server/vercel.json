@@ -1,6 +1,11 @@
 {
   "version": 2,
+  "functions": {
+    "index.js": {
+      "runtime": "vercel-node@latest"
+    }
+  },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "index.js" }
+    { "source": "/(.*)", "destination": "index.js" }
   ]
 }
