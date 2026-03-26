@@ -53,18 +53,18 @@ export default function Sidebar() {
   }, [user]);
 
   return (
-    <aside className="h-screen w-64 fixed left-0 top-0 bg-surface-container-low font-[family-name:var(--font-headline)] antialiased tracking-tight flex flex-col overflow-y-auto z-50">
+    <aside className="h-screen w-64 fixed left-0 top-0 bg-surface-container-low font-interface antialiased tracking-tight flex flex-col overflow-y-auto z-50">
       <div className="px-6 py-8 flex-1">
         {/* Brand */}
         <div className="flex items-center gap-3 mb-10">
-          <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
-            <Terminal className="w-4 h-4 text-on-primary" />
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+            <Terminal className="w-5 h-5 text-on-primary" />
           </div>
           <div>
-            <Link href="/"><h1 className="text-lg font-bold text-indigo-400 leading-none">
-              Knowledge Vault
+            <Link href="/"><h1 className="text-2xl font-extrabold text-primary font-heading leading-tight tracking-tighter">
+              Vayl
             </h1></Link>
-            <p className="text-[10px] text-on-surface-variant uppercase tracking-widest mt-1">
+            <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-[0.2em] mt-0.5">
               {user?.targetExam?.[0] || 'Preparation'} • Level {user?.levelData?.currentLevel || 1}
             </p>
           </div>

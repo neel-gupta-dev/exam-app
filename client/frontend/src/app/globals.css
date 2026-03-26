@@ -55,16 +55,30 @@
   --color-surface-tint: #c0c1ff;
   --color-inverse-surface: #f8f9fe;
   --color-inverse-on-surface: #535559;
-  --font-headline: 'Manrope', -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
-  --font-label: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+  
+  /* Modern 3-font system */
+  --font-heading: var(--font-montserrat), sans-serif;
+  --font-interface: var(--font-poppins), sans-serif;
+  --font-body: var(--font-hanken), sans-serif;
 }
 
 html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  overscroll-behavior: none; /* Disable elastic overscroll */
+  overscroll-behavior: none;
+  font-family: var(--font-body);
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+
+button, a, nav {
+  font-family: var(--font-interface);
+  font-weight: 500;
 }
 
 /* Custom Mac-style Scrollbar */

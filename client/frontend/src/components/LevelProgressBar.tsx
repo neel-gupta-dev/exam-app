@@ -25,14 +25,14 @@ const LevelProgressBar: React.FC<LevelProgressBarProps> = ({
 
   return (
     <div className={`space-y-3 w-full ${className}`}>
-      <div className="flex items-end justify-between px-1">
+      <div className="flex items-end justify-between px-1 font-heading">
         <div>
           <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">Level Progression</span>
-          <h5 className="text-2xl font-black text-on-surface leading-none mt-1">Level {currentLevel}</h5>
+          <h5 className="text-3xl font-extrabold text-on-surface leading-none mt-1">Level {currentLevel}</h5>
         </div>
         <div className="text-right">
           <span className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant block mb-1">Effort Reward</span>
-          <span className="text-sm font-bold text-primary">{Math.round(xpRemaining)} XP to level up</span>
+          <span className="text-sm font-extrabold text-primary">{Math.round(xpRemaining)} XP to level up</span>
         </div>
       </div>
       

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, RotateCcw, CheckCircle, Flame } from "lucide-react";
 import api from "@/lib/api";
+import MathText from "../UI/MathText";
 
 interface Card {
   _id: string;
@@ -182,13 +183,13 @@ export default function FlashcardRunner({ deckId, onClose }: FlashcardRunnerProp
           >
             {/* Front */}
             <div className="flashcard-face bg-surface-container border border-white/10 glass-card">
-              <span className="absolute top-6 left-6 text-[10px] font-bold text-primary uppercase tracking-widest opacity-50">
+              <span className="absolute top-6 left-6 text-[10px] font-bold text-primary uppercase tracking-widest opacity-50 font-interface">
                 Question
               </span>
-              <div className="text-2xl md:text-3xl font-bold text-on-surface leading-tight px-4 lg:px-12">
-                {currentCard.frontText}
+              <div className="text-2xl md:text-3xl font-medium text-on-surface leading-tight px-4 lg:px-12 font-body">
+                <MathText text={currentCard.frontText} />
               </div>
-              <div className="absolute bottom-10 flex items-center gap-2 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest opacity-50">
+              <div className="absolute bottom-10 flex items-center gap-2 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest opacity-50 font-interface">
                 <RotateCcw className="w-3 h-3" />
                 Tap to flip
               </div>
@@ -196,11 +197,11 @@ export default function FlashcardRunner({ deckId, onClose }: FlashcardRunnerProp
 
             {/* Back */}
             <div className="flashcard-face flashcard-back bg-surface-container-highest border border-primary/20 glass-card">
-              <span className="absolute top-6 left-6 text-[10px] font-bold text-secondary uppercase tracking-widest opacity-50">
+              <span className="absolute top-6 left-6 text-[10px] font-bold text-secondary uppercase tracking-widest opacity-50 font-interface">
                 Retention Solution
               </span>
-              <div className="text-xl md:text-2xl font-medium text-on-surface leading-relaxed px-4 lg:px-12 overflow-y-auto max-h-[80%] custom-scrollbar">
-                {currentCard.backText}
+              <div className="text-xl md:text-2xl font-medium text-on-surface leading-relaxed px-4 lg:px-12 overflow-y-auto max-h-[80%] custom-scrollbar font-body">
+                <MathText text={currentCard.backText} />
               </div>
             </div>
           </div>
