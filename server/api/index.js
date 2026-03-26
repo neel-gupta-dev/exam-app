@@ -77,14 +77,12 @@ app.use(notFound);
 app.use(errorHandler);
 
 // --- Start Server ---
-if (process.env.NODE_ENV !== 'production') {
-  const port = PORT || 5000;
-  app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-    
-    // Run Janitor every 30 minutes
-    setInterval(closeExpiredSessions, 30 * 60 * 1000);
-  });
-}
+const port = process.env.PORT || 5000;
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+
+  // Run Janitor every 30 minutes
+  setInterval(closeExpiredSessions, 30 * 60 * 1000);
+});
 
 export default app;
