@@ -221,7 +221,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
         <div className="flex flex-col items-center justify-center space-y-4 w-full">
           <span className="text-lg font-bold text-on-surface font-headline opacity-80">Vayl</span>
           <div className="flex gap-6 text-on-surface-variant text-sm font-body opacity-60">
-            <Link className="hover:text-primary transition-colors" href="#">Privacy</Link>
+            <Link className="hover:text-primary transition-colors" href="/privacy">Privacy</Link>
             <Link className="hover:text-primary transition-colors" href="#">Terms</Link>
             <Link className="hover:text-primary transition-colors" href="#">Support</Link>
           </div>

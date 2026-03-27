@@ -358,7 +358,7 @@ export default function ProfilePage() {
                   <button className="text-error-dim text-sm font-bold hover:text-error hover:bg-error-container/20 px-6 py-3 rounded-2xl transition-all border border-transparent hover:border-error/20">
                     Deactivate Account
                   </button>
-                  <button className="text-on-surface-variant text-xs font-bold hover:text-white transition-colors">Privacy Policy</button>
+                  <Link href="/privacy" className="text-on-surface-variant text-xs font-bold hover:text-white transition-colors">Privacy Policy</Link>
                 </div>
               </div>
             </div>

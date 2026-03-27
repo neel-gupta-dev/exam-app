@@ -212,7 +212,7 @@ export default function SignupPage() {
         </div>
         <div className="flex gap-8">
           <Link className="font-inter text-[10px] uppercase tracking-widest text-slate-600 hover:text-indigo-400 transition-colors" href="#">Terms</Link>
-          <Link className="font-inter text-[10px] uppercase tracking-widest text-slate-600 hover:text-indigo-400 transition-colors" href="#">Privacy</Link>
+          <Link className="font-inter text-[10px] uppercase tracking-widest text-slate-600 hover:text-indigo-400 transition-colors" href="/privacy">Privacy</Link>
           <Link className="font-inter text-[10px] uppercase tracking-widest text-slate-600 hover:text-indigo-400 transition-colors" href="#">Support</Link>
         </div>
       </footer>
