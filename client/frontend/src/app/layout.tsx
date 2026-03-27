@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Montserrat, Poppins, Hanken_Grotesk } from "next/font/google";
 import AppProviders from "@/components/AppProviders";
 import { GoogleAnalytics } from '@next/third-parties/google';
+import { WebVitals } from "@/components/WebVitals";
 import { MathJaxContext } from "better-react-mathjax";
 import "./globals.css";
 
@@ -100,6 +101,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full bg-surface text-on-surface font-body">
         <GoogleAnalytics gaId="G-ZDWW48QNX7" />
+        <WebVitals />
         <MathJaxContext>
           <AppProviders>{children}</AppProviders>
         </MathJaxContext>
