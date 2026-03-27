@@ -16,6 +16,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/terms',
     '/login',
     '/signup',
+    '/blogs',
+    '/blogs/the-jee-2026-roadmap',
+    '/blogs/deep-work-for-aspirants',
+    '/blogs/mastering-organic-chemistry',
+    '/blogs/physics-high-yield-mechanics',
+    '/blogs/exam-anxiety-protocol',
   ].map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date().toISOString(),

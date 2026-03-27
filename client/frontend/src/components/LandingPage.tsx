@@ -27,14 +27,20 @@ export default function LandingPage() {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-surface/50 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+          <Link href="/" className="flex items-center gap-3 group relative">
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
               <Zap className="w-6 h-6 text-on-primary" />
             </div>
-            <span className="text-2xl font-heading font-black tracking-tighter text-white uppercase italic">Vayl</span>
-          </div>
+            <div className="flex flex-col">
+              <span className="text-xl font-heading font-black tracking-widest text-white uppercase italic">Vayl</span>
+              <span className="absolute left-14 top-full mt-2 w-max px-3 py-1 bg-white text-black text-[8px] font-black uppercase tracking-[0.2em] rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl z-50">
+                Vayl: Dweller in the Valley
+              </span>
+            </div>
+          </Link>
           <div className="flex items-center gap-8">
             <div className="hidden md:flex items-center gap-8 text-xs font-interface font-black uppercase tracking-widest text-on-surface-variant">
+              <Link href="/blogs" className="hover:text-primary transition-colors">Blogs</Link>
               <Link href="/about" className="hover:text-primary transition-colors">About</Link>
               <Link href="/contact" className="hover:text-primary transition-colors">Contact</Link>
             </div>
@@ -315,6 +321,7 @@ export default function LandingPage() {
           <div className="space-y-6">
             <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-white">Platform</h4>
             <ul className="space-y-4 text-xs font-interface font-medium text-on-surface-variant">
+              <li><Link href="/blogs" className="hover:text-primary transition-colors">Blog Hub</Link></li>
               <li><Link href="/about" className="hover:text-primary transition-colors">Mission</Link></li>
               <li><Link href="/contact" className="hover:text-primary transition-colors">Support</Link></li>
               <li><Link href="/login" className="hover:text-primary transition-colors">Access Portal</Link></li>
