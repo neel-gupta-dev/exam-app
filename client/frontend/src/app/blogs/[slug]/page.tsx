@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { BookOpen, Zap, Target, Brain, ArrowLeft, ShieldCheck, Timer, Share2, Info } from 'lucide-react';
 import { sendGAEvent } from '@next/third-parties/google';
@@ -241,7 +242,7 @@ export default function ArticlePage({ params }: { params: Promise<{ slug: string
       <footer className="mt-32 border-t border-white/5 pt-16 px-6">
         <div className="max-w-4xl mx-auto flex flex-col items-center gap-8">
           <div className="flex items-center gap-3">
-            <Zap className="w-6 h-6 text-primary" />
+            <Image src="/vayl-logo.png" alt="Vayl Logo" width={24} height={24} className="object-contain" />
             <span className="text-xl font-heading font-black tracking-widest text-white uppercase italic">Vayl</span>
           </div>
           <p className="text-xs text-on-surface-variant font-medium opacity-40 max-w-sm text-center italic">

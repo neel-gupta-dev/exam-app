@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
+import Image from "next/image";
 import { 
   Trophy, 
   MapPin, 
@@ -97,8 +98,8 @@ export default function DreamerModal() {
           {step === 1 ? (
             <div className="animate-in slide-in-from-right-4 duration-300">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                  <Trophy className="w-6 h-6" />
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Image src="/vayl-logo.png" alt="Vayl Logo" width={24} height={24} className="object-contain" />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-on-surface">The Dreamer Layer</h2>

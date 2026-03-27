@@ -7,11 +7,11 @@ import {
   Brain,
   Layers,
   BarChart3,
-  Terminal,
   Settings,
   User as UserIcon,
   FolderLock
 } from "lucide-react";
+import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
 
@@ -57,8 +57,8 @@ export default function Sidebar() {
       <div className="px-6 py-8 flex-1">
         {/* Brand */}
         <div className="flex items-center gap-3 mb-10">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-            <Terminal className="w-5 h-5 text-on-primary" />
+          <div className="w-10 h-10 flex items-center justify-center">
+            <Image src="/vayl-logo.png" alt="Vayl Logo" width={32} height={32} className="object-contain" />
           </div>
           <div>
             <Link href="/"><h1 className="text-2xl font-extrabold text-primary font-heading leading-tight tracking-tighter">

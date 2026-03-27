@@ -2,6 +2,7 @@
 
 import React, { useState, FormEvent } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -80,7 +81,7 @@ export default function SignupPage() {
       {/* Header / Brand */}
       <header className="fixed top-0 w-full z-50 flex justify-between items-center px-8 h-16">
         <div className="flex items-center gap-2 text-xl font-headline font-bold tracking-tight text-white">
-          <span className="material-symbols-outlined text-indigo-500 text-2xl">account_balance_wallet</span>
+          <Image src="/vayl-logo.png" alt="Vayl Logo" width={32} height={32} className="object-contain" />
           Vayl
         </div>
       </header>

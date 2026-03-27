@@ -2,7 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { BookOpen, Zap, Target, Brain, ArrowRight, ShieldCheck, Timer } from 'lucide-react';
+import { BookOpen, Target, Brain, ArrowRight, ShieldCheck, Timer } from 'lucide-react';
+import Image from 'next/image';
 import { sendGAEvent } from '@next/third-parties/google';
 
 const ARTICLES = [
@@ -12,7 +13,7 @@ const ARTICLES = [
     description: 'A month-by-month structural breakdown of how to dominate the JEE 2026 syllabus with surgical precision.',
     category: 'Strategy',
     readTime: '12 min',
-    icon: <Zap className="w-5 h-5 text-primary" />,
+    icon: <Image src="/vayl-logo.png" alt="Vayl Logo" width={20} height={20} className="object-contain" />,
     color: 'border-primary/20 bg-primary/5',
   },
   {
@@ -65,8 +66,8 @@ export default function BlogHub() {
 
       <nav className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group relative">
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
-            <Zap className="w-6 h-6 text-on-primary" />
+          <div className="w-10 h-10 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <Image src="/vayl-logo.png" alt="Vayl Logo" width={32} height={32} className="object-contain" />
           </div>
           <div className="flex flex-col">
             <span className="text-xl font-heading font-black tracking-widest text-white uppercase italic">Vayl</span>

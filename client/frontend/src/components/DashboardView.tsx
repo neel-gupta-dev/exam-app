@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import DashboardGrid from "@/components/DashboardGrid";
 import { Timer, Lightbulb, Star, BookOpen } from "lucide-react";
+import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
 import LevelProgressBar from "@/components/LevelProgressBar";
@@ -205,7 +206,9 @@ export default function DashboardView() {
           <div className="grid grid-cols-1 gap-4">
             {/* Weekly Goal */}
             <div className="bg-primary/5 p-8 rounded-xl aspect-[21/9] flex flex-col justify-center items-center text-center">
-              <Star className="w-12 h-12 text-primary mb-4" />
+            <div className="mb-4">
+              <Image src="/vayl-logo.png" alt="Vayl Logo" width={48} height={48} className="object-contain" />
+            </div>
               <h3 className="font-bold text-xl text-primary">Resource Goal</h3>
               <p className="text-sm text-on-surface-variant mt-2 max-w-sm">
                 Save 10 high-yield resources for {user?.targetExam?.[0] || 'your exam'}.

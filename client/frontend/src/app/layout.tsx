@@ -39,6 +39,10 @@ export const metadata: Metadata = {
   authors: [{ name: "Neel Gupta" }],
   creator: "Neel Gupta",
   publisher: "Vayl Systems",
+  icons: {
+    icon: "/vayl-logo.png",
+    apple: "/vayl-logo.png",
+  },
   formatDetection: {
     email: false,
     address: false,
@@ -50,6 +54,12 @@ export const metadata: Metadata = {
     url: 'https://vayl-app.vercel.app',
     siteName: 'Vayl',
     images: [
+      {
+        url: '/vayl-logo.png',
+        width: 800,
+        height: 800,
+        alt: 'Vayl | The Silent Architect of JEE Success',
+      },
       {
         url: '/screenshots/dashboard.png',
         width: 1200,

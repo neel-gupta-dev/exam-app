@@ -8,7 +8,6 @@ import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
 import {
-  Zap,
   Pen,
   LogOut,
   Clock,
@@ -91,8 +90,8 @@ export default function ProfilePage() {
             <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-tertiary/5 rounded-full blur-[80px]" />
             <div className="relative group">
               <LevelBadge level={user?.levelData?.currentLevel || 1} className="w-40 h-40" />
-              <div className="absolute -bottom-3 -right-3 bg-primary text-on-primary w-12 h-12 rounded-2xl flex items-center justify-center border-4 border-surface-container shadow-xl animate-pulse">
-                <Zap className="w-5 h-5" />
+              <div className="absolute -bottom-3 -right-3 bg-white text-on-primary w-12 h-12 rounded-2xl flex items-center justify-center border-4 border-surface-container shadow-xl animate-pulse p-1.5">
+                <Image src="/vayl-logo.png" alt="Vayl Logo" width={24} height={24} className="object-contain" />
               </div>
             </div>
             <div className="flex-1 text-center md:text-left z-10">
@@ -120,7 +119,9 @@ export default function ProfilePage() {
                   />
                   <div className="mt-4 flex items-center gap-3">
                     <div className="bg-primary/10 px-4 py-1.5 rounded-full border border-primary/20 flex items-center gap-2">
-                      <Zap className="w-3 h-3 text-primary" />
+                      <div className="w-3 h-3 flex items-center justify-center">
+                        <Image src="/vayl-logo.png" alt="Vayl Logo" width={12} height={12} className="object-contain" />
+                      </div>
                       <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
                         {user.levelData.totalXP} Total XP
                       </span>

@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Share2, Info, Zap } from 'lucide-react';
+import { ArrowLeft, Share2, Info } from 'lucide-react';
+import Image from 'next/image';
 import { sendGAEvent } from '@next/third-parties/google';
 
 interface BlogArticleProps {
@@ -132,7 +133,7 @@ export default function BlogArticle({
       <footer className="mt-32 border-t border-white/5 pt-16 px-6">
         <div className="max-w-4xl mx-auto flex flex-col items-center gap-8">
           <div className="flex items-center gap-3 group relative cursor-help">
-            <Zap className="w-6 h-6 text-primary group-hover:scale-110 transition-transform" />
+            <Image src="/vayl-logo.png" alt="Vayl Logo" width={32} height={32} className="object-contain group-hover:scale-110 transition-transform" />
             <div className="flex flex-col">
               <span className="text-xl font-heading font-black tracking-widest text-white uppercase italic">Vayl</span>
               <span className="absolute left-0 bottom-full mb-2 w-max px-3 py-1 bg-white text-black text-[8px] font-black uppercase tracking-[0.2em] rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl z-50">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import Image from "next/image";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
@@ -208,7 +209,7 @@ export default function FlashcardsPage() {
           <div className="mt-12 bg-gradient-to-r from-surface-container to-surface-container-high rounded-2xl p-8 flex flex-col md:flex-row items-center gap-10 border border-white/5">
             <div className="flex-1 space-y-6">
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full">
-                <Sparkles className="w-3 h-3 text-primary" />
+                <Image src="/vayl-logo.png" alt="Vayl Logo" width={12} height={12} className="object-contain" />
                 <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Efficiency Insight</span>
               </div>
               <h3 className="text-3xl font-extrabold text-on-surface tracking-tight">

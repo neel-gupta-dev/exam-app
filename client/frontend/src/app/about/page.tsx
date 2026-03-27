@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function AboutPage() {
   return (
@@ -19,7 +20,7 @@ export default function AboutPage() {
             href="/" 
             className="inline-flex items-center gap-2 text-primary hover:text-white transition-all group mb-8 bg-surface-variant/50 px-5 py-2.5 rounded-full border border-white/5 shadow-xl shadow-black/20"
           >
-            <span className="material-symbols-outlined text-sm">home</span>
+            <Image src="/vayl-logo.png" alt="Vayl Logo" width={20} height={20} className="object-contain" />
             <span className="text-xs font-interface uppercase tracking-[0.2em] font-bold">Back to Vayl</span>
           </Link>
           <h1 className="text-6xl md:text-8xl font-heading font-black tracking-tighter mb-6 bg-gradient-to-br from-white via-white to-primary/30 bg-clip-text text-transparent">

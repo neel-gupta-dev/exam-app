@@ -2,6 +2,7 @@
 
 import React, { useState, FormEvent, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -86,8 +87,8 @@ function LoginContent() {
       <main className="relative z-10 w-full max-w-[440px] px-6 flex-grow flex flex-col items-center justify-center py-20">
         {/* Header / Logo Area */}
         <div className="mb-12 text-center">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-primary-container to-on-primary-fixed-variant mb-6 shadow-xl shadow-primary-container/20">
-            <span className="material-symbols-outlined text-3xl text-primary-fixed">auto_stories</span>
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white/5 border border-white/10 mb-6 shadow-xl shadow-black/20 p-2">
+            <Image src="/vayl-logo.png" alt="Vayl Logo" width={64} height={64} className="object-contain" />
           </div>
           <h1 className="font-headline text-4xl font-extrabold tracking-tight text-white mb-3">
             Vayl

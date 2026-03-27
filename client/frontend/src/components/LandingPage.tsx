@@ -168,11 +168,17 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group relative">
             <motion.div 
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-              className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform"
+              animate={{ rotate: [0, 5, -5, 0] }}
+              transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+              className="w-12 h-12 flex items-center justify-center group-hover:scale-110 transition-transform relative"
             >
-              <Zap className="w-6 h-6 text-on-primary" />
+              <Image 
+                src="/vayl-logo.png" 
+                alt="Vayl Logo" 
+                width={48} 
+                height={48} 
+                className="object-contain"
+              />
             </motion.div>
             <div className="flex flex-col">
               <span className="text-xl font-heading font-black tracking-widest text-white uppercase italic">Vayl</span>
@@ -272,7 +278,7 @@ export default function LandingPage() {
           { label: "Daily Focus Minutes", value: "480+", icon: <Timer className="w-5 h-5 text-primary" /> },
           { label: "Resources Tracked", value: "5k+", icon: <BookOpen className="w-5 h-5 text-tertiary" /> },
           { label: "Aspirants Joined", value: "1k+", icon: <Brain className="w-5 h-5 text-error" /> },
-          { label: "Efficiency Boost", value: "35%", icon: <Zap className="w-5 h-5 text-primary" /> }
+          { label: "Efficiency Boost", value: "35%", icon: <Image src="/vayl-logo.png" alt="Vayl Logo" width={20} height={20} className="object-contain" /> }
         ].map((stat, i) => (
           <motion.div 
             key={i} 
@@ -309,7 +315,7 @@ export default function LandingPage() {
             </div>
             <div className="space-y-4">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <Zap className="w-5 h-5 text-tertiary" />
+                <Image src="/vayl-logo.png" alt="Vayl Logo" width={20} height={20} className="object-contain" />
                 Elite Workflow
               </h3>
               <p className="text-on-surface-variant leading-relaxed opacity-70 font-interface">
@@ -350,7 +356,7 @@ export default function LandingPage() {
                   animate={{ y: [0, -5, 0] }}
                   transition={{ repeat: Infinity, duration: 2, delay: 0.5, ease: "easeInOut" }}
                 >
-                  <Zap className="w-5 h-5 text-error" />
+                  <Image src="/vayl-logo.png" alt="Vayl Logo" width={20} height={20} className="object-contain" />
                 </motion.div>
                 <span>Ambient High-Yield Audio</span>
               </li>
@@ -409,7 +415,7 @@ export default function LandingPage() {
         <div className="grid md:grid-cols-2 gap-16 items-center">
           <div className="space-y-8">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20">
-              <Zap className="w-4 h-4 text-primary" />
+              <Image src="/vayl-logo.png" alt="Vayl Logo" width={16} height={16} className="object-contain" />
               <span className="text-[10px] font-black uppercase tracking-widest text-primary">Academic Identity</span>
             </div>
             <h2 className="text-4xl md:text-6xl font-heading font-black tracking-tight text-white leading-tight">
@@ -522,7 +528,7 @@ export default function LandingPage() {
         >
           <div className="col-span-2 space-y-6">
             <div className="flex items-center gap-3">
-              <Zap className="w-6 h-6 text-primary" />
+              <Image src="/vayl-logo.png" alt="Vayl Logo" width={32} height={32} className="object-contain" />
               <span className="text-xl font-heading font-black tracking-widest text-white uppercase italic">Vayl</span>
             </div>
             <p className="text-sm text-on-surface-variant max-w-sm leading-relaxed font-medium">

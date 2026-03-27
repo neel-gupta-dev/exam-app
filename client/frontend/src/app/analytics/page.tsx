@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import Image from "next/image";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
@@ -25,7 +26,7 @@ const iconMap: Record<string, React.ReactNode> = {
   clock: <BookOpen className="w-5 h-5" />,
   flame: <FolderOpen className="w-5 h-5" />,
   "check-circle": <CheckCircle className="w-5 h-5" />,
-  trophy: <Trophy className="w-5 h-5" />,
+  trophy: <Image src="/vayl-logo.png" alt="Vayl Logo" width={20} height={20} className="object-contain" />,
 };
 
 function getHeatmapClass(level: number) {
@@ -148,7 +149,8 @@ export default function AnalyticsPage() {
             <ChevronRight className="w-3 h-3" />
             <span className="text-primary">Vault Analytics</span>
           </nav>
-          <h1 className="text-4xl font-extrabold tracking-tight text-on-surface mb-2">
+          <h1 className="text-4xl font-extrabold tracking-tight text-on-surface mb-2 flex items-center gap-3">
+            <Image src="/vayl-logo.png" alt="Vayl Logo" width={32} height={32} className="object-contain" />
             Vault Analytics
           </h1>
           <p className="text-on-surface-variant max-w-2xl text-sm leading-relaxed">
