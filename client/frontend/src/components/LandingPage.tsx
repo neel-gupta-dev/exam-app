@@ -12,6 +12,7 @@ import {
   Timer,
   LayoutDashboard
 } from "lucide-react";
+import { sendGAEvent } from '@next/third-parties/google';
 
 export default function LandingPage() {
   return (
@@ -41,6 +42,7 @@ export default function LandingPage() {
               <Link href="/login" className="text-xs font-interface font-black uppercase tracking-widest text-white hover:text-primary transition-colors">Login</Link>
               <Link
                 href="/signup"
+                onClick={() => sendGAEvent({ event: 'cta_click', value: 'nav_join_now' })}
                 className="bg-primary text-on-primary px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest hover:scale-105 transition-transform shadow-lg shadow-primary/20"
               >
                 Join Now
@@ -84,12 +86,14 @@ export default function LandingPage() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-24">
           <Link 
             href="/signup" 
+            onClick={() => sendGAEvent({ event: 'cta_click', value: 'hero_deploy_vault' })}
             className="w-full sm:w-auto px-10 py-5 bg-white text-black rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-2xl hover:scale-105"
           >
             Deploy Your Vault
           </Link>
           <Link 
             href="/about" 
+            onClick={() => sendGAEvent({ event: 'cta_click', value: 'hero_explore_system' })}
             className="w-full sm:w-auto px-10 py-5 bg-surface-container-highest border border-white/5 rounded-2xl font-black text-sm uppercase tracking-widest text-white hover:bg-white hover:text-black transition-all"
           >
             Explore System
@@ -211,6 +215,7 @@ export default function LandingPage() {
             </p>
             <Link 
               href="/signup" 
+              onClick={() => sendGAEvent({ event: 'cta_click', value: 'analytics_preview_analyze' })}
               className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-tertiary hover:underline"
             >
               Analyze Your Potential <ArrowRight className="w-4 h-4" />
@@ -286,7 +291,11 @@ export default function LandingPage() {
           <p className="text-on-surface-variant leading-relaxed opacity-80">
             Vayl follows strict data isolation protocols. We provide a space for learning where academic integrity and user privacy are prioritized above all else.
           </p>
-          <Link href="/privacy-policy" className="text-xs font-interface font-black uppercase tracking-widest text-primary hover:underline">
+          <Link 
+            href="/privacy-policy" 
+            onClick={() => sendGAEvent({ event: 'cta_click', value: 'trust_read_protocol' })}
+            className="text-xs font-interface font-black uppercase tracking-widest text-primary hover:underline"
+          >
             Read our Protocol
           </Link>
         </div>

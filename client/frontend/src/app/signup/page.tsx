@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { API_BASE_URL } from '@/config/env';
+import { sendGAEvent } from '@next/third-parties/google';
 
 export default function SignupPage() {
   const { user, isLoading, register } = useAuth();
@@ -53,7 +54,9 @@ export default function SignupPage() {
     setLoading(true);
     try {
       await register(name, email, password);
+      sendGAEvent({ event: 'signup_success', value: 'email' });
     } catch (err: unknown) {
+      sendGAEvent({ event: 'signup_error', value: 'email' });
       const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Registration failed. Please try again.';
       toast.error(message);
     } finally {
@@ -62,6 +65,7 @@ export default function SignupPage() {
   };
 
   const handleGoogleLogin = () => {
+    sendGAEvent({ event: 'login_attempt', value: 'google' });
     window.location.href = `${API_BASE_URL}/auth/google`;
   };
 

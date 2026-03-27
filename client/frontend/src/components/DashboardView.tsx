@@ -9,6 +9,7 @@ import api from "@/lib/api";
 import LevelProgressBar from "@/components/LevelProgressBar";
 import { User } from "@/types";
 import { useSearch } from "@/context/SearchContext";
+import { sendGAEvent } from '@next/third-parties/google';
 
 function ProgressWidget({ resourceCount, heatmapData, currentStreak, user }: { resourceCount: number, heatmapData: number[], currentStreak: number, user: User | null }) {
   const getHeatmapClass = (count: number, maxCount: number) => {
@@ -104,7 +105,10 @@ function ProgressWidget({ resourceCount, heatmapData, currentStreak, user }: { r
       </div>
 
       {/* Start Focus Button */}
-      <button className="w-full mt-8 py-3 bg-primary text-on-primary rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+      <button 
+        onClick={() => sendGAEvent({ event: 'focus_session_start', value: 'dashboard' })}
+        className="w-full mt-8 py-3 bg-primary text-on-primary rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+      >
         <Timer className="w-4 h-4" />
         Start Focus Session
       </button>
@@ -147,6 +151,9 @@ export default function DashboardView() {
         today.setHours(0, 0, 0, 0);
 
         if (data.resources && Array.isArray(data.resources)) {
+          if (data.total > resourceCount && resourceCount !== 0) {
+            sendGAEvent({ event: 'resource_added', value: data.total - resourceCount });
+          }
           data.resources.forEach((res: any) => {
             const d = new Date(res.createdAt);
             d.setHours(0, 0, 0, 0);
