@@ -4,6 +4,7 @@ import AppProviders from "@/components/AppProviders";
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { WebVitals } from "@/components/WebVitals";
 import CookieConsent from "@/components/CookieConsent";
+import GoogleSchema from "@/components/GoogleSchema";
 import { MathJaxContext } from "better-react-mathjax";
 import "./globals.css";
 
@@ -71,7 +72,7 @@ export const metadata: Metadata = {
     type: 'website',
   },
   verification: {
-    google: "YOUR_GOOGLE_VERIFICATION_CODE", // REPLACE WITH YOUR CODE FROM GOOGLE SEARCH CONSOLE
+    google: "5b0b67dc10dff08d", // Synced with your public/google...html file
   },
   twitter: {
     card: 'summary_large_image',
@@ -116,6 +117,7 @@ export default function RootLayout({
       <body className="min-h-full bg-surface text-on-surface font-body">
         <GoogleAnalytics gaId="G-ZDWW48QNX7" />
         <WebVitals />
+        <GoogleSchema />
         <CookieConsent />
         <MathJaxContext>
           <AppProviders>{children}</AppProviders>
