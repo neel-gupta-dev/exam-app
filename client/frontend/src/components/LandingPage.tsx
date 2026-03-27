@@ -2,6 +2,7 @@
 
 import React, { useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { 
   Zap, 
   Target, 
@@ -252,12 +253,15 @@ export default function LandingPage() {
         >
           <TiltCard className="relative glass-card rounded-[2.5rem] border-white/10 overflow-hidden shadow-2xl shadow-black/50">
             <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-tertiary/20 rounded-[2.5rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-            <img 
+            <Image 
               src="/screenshots/dashboard.png" 
               alt="Vayl Dashboard" 
-              className="w-full h-auto object-cover transform transition duration-700 group-hover:scale-[1.01]"
+              width={1200}
+              height={700}
+              priority
+              className="w-full h-auto object-contain transform transition duration-700 group-hover:scale-[1.01]"
             />
-            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-surface to-transparent opacity-60 pointer-events-none" />
+            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-surface to-transparent opacity-20 pointer-events-none" />
           </TiltCard>
         </motion.div>
       </section>
@@ -355,7 +359,13 @@ export default function LandingPage() {
           <TiltCard className="relative group">
             <div className="absolute -inset-4 bg-error/10 rounded-[3rem] blur-2xl opacity-0 group-hover:opacity-100 transition duration-700"></div>
             <div className="relative glass-card rounded-[2.5rem] border-white/5 overflow-hidden shadow-2xl">
-              <img src="/screenshots/focus-room.png" alt="Focus Room" className="w-full h-auto hover:scale-105 transition-transform duration-700" />
+              <Image 
+                src="/screenshots/focus-room.png" 
+                alt="Focus Room" 
+                width={800}
+                height={450}
+                className="w-full h-auto hover:scale-105 transition-transform duration-700" 
+              />
             </div>
           </TiltCard>
         </div>
@@ -365,7 +375,13 @@ export default function LandingPage() {
           <TiltCard className="relative group order-2 md:order-1">
             <div className="absolute -inset-4 bg-tertiary/10 rounded-[3rem] blur-2xl opacity-0 group-hover:opacity-100 transition duration-700"></div>
             <div className="relative glass-card rounded-[2.5rem] border-white/5 overflow-hidden shadow-2xl">
-              <img src="/screenshots/analytics.png" alt="Vault Analytics" className="w-full h-auto hover:scale-105 transition-transform duration-700" />
+              <Image 
+                src="/screenshots/analytics.png" 
+                alt="Vault Analytics" 
+                width={800}
+                height={450}
+                className="w-full h-auto hover:scale-105 transition-transform duration-700" 
+              />
             </div>
           </TiltCard>
           <div className="space-y-8 order-1 md:order-2">
@@ -406,7 +422,13 @@ export default function LandingPage() {
           <TiltCard className="relative group">
             <div className="absolute -inset-4 bg-primary/10 rounded-[3rem] blur-2xl opacity-0 group-hover:opacity-100 transition duration-700"></div>
             <div className="relative glass-card rounded-[2.5rem] border-white/5 overflow-hidden shadow-2xl">
-              <img src="/screenshots/public-profile.png" alt="Public Profile" className="w-full h-auto hover:scale-105 transition-transform duration-700" />
+              <Image 
+                src="/screenshots/public-profile.png" 
+                alt="Public Profile" 
+                width={800}
+                height={500}
+                className="w-full h-auto object-contain hover:scale-105 transition-transform duration-700" 
+              />
             </div>
           </TiltCard>
         </div>
