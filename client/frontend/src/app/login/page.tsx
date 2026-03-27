@@ -93,7 +93,7 @@ function LoginContent() {
             Vayl
           </h1>
           <p className="text-on-surface-variant text-sm font-medium tracking-wide uppercase">
-            Access your digital library
+            If you do not have account, Sign up <Link href="/signup" className='text-blue-500'>Here</Link >
           </p>
         </div>
 
@@ -169,7 +169,7 @@ function LoginContent() {
 
           {/* Social Logins */}
           <div className="grid grid-cols-2 gap-4">
-            <button 
+            <button
               onClick={handleGoogleLogin}
               className="flex items-center justify-center gap-3 py-3 px-4 bg-surface-container-low/40 border border-outline-variant/20 rounded-xl hover:bg-surface-bright/60 hover:border-outline-variant/40 transition-all text-on-surface text-sm font-medium"
             >
@@ -193,23 +193,23 @@ function LoginContent() {
         {/* Global Loading Overlay (City of Lakes theme) */}
         {googleLoading && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-xl">
-             <div className="flex flex-col items-center gap-6 p-10 rounded-3xl bg-surface-container/30 border border-white/10 shadow-2xl relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent"></div>
-                <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center animate-pulse">
-                   <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <div className="flex flex-col items-center gap-6 p-10 rounded-3xl bg-surface-container/30 border border-white/10 shadow-2xl relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent"></div>
+              <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center animate-pulse">
+                <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              </div>
+              <div className="text-center relative z-10">
+                <h3 className="font-headline text-xl font-bold text-white mb-2">Verifying Vault Credentials...</h3>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:-0.15s]"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:-0.3s]"></span>
                 </div>
-                <div className="text-center relative z-10">
-                   <h3 className="font-headline text-xl font-bold text-white mb-2">Verifying Vault Credentials...</h3>
-                   <div className="flex items-center justify-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce"></span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:-0.15s]"></span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:-0.3s]"></span>
-                   </div>
-                   <p className="mt-4 text-[10px] text-outline uppercase tracking-[0.2em] font-bold">
-                      City of Lakes Security Node
-                   </p>
-                </div>
-             </div>
+                <p className="mt-4 text-[10px] text-outline uppercase tracking-[0.2em] font-bold">
+                  City of Lakes Security Node
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
