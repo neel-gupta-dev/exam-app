@@ -3,6 +3,7 @@ import { Montserrat, Poppins, Hanken_Grotesk } from "next/font/google";
 import AppProviders from "@/components/AppProviders";
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { WebVitals } from "@/components/WebVitals";
+import CookieConsent from "@/components/CookieConsent";
 import { MathJaxContext } from "better-react-mathjax";
 import "./globals.css";
 
@@ -59,6 +60,9 @@ export const metadata: Metadata = {
     locale: 'en_US',
     type: 'website',
   },
+  verification: {
+    google: "YOUR_GOOGLE_VERIFICATION_CODE", // REPLACE WITH YOUR CODE FROM GOOGLE SEARCH CONSOLE
+  },
   twitter: {
     card: 'summary_large_image',
     title: 'Vayl | The Silent Architect of JEE Success',
@@ -102,6 +106,7 @@ export default function RootLayout({
       <body className="min-h-full bg-surface text-on-surface font-body">
         <GoogleAnalytics gaId="G-ZDWW48QNX7" />
         <WebVitals />
+        <CookieConsent />
         <MathJaxContext>
           <AppProviders>{children}</AppProviders>
         </MathJaxContext>
