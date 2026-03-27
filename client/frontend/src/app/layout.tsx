@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Montserrat, Poppins, Hanken_Grotesk } from "next/font/google";
 import AppProviders from "@/components/AppProviders";
+import Script from "next/script";
 import { MathJaxContext } from "better-react-mathjax";
 import "./globals.css";
 
@@ -52,6 +53,16 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
       <body className="min-h-full bg-surface text-on-surface font-body">
+        <Script async src="https://www.googletagmanager.com/gtag/js?id=G-ZDWW48QNX7" strategy="afterInteractive" />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-ZDWW48QNX7');
+          `}
+        </Script>
         <MathJaxContext>
           <AppProviders>{children}</AppProviders>
         </MathJaxContext>

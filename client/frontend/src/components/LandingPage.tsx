@@ -63,19 +63,32 @@ export default function LandingPage() {
         <p className="text-on-surface-variant max-w-2xl mx-auto text-lg md:text-xl leading-relaxed mb-12 opacity-80 font-medium font-interface">
           Stop managing files. Start mastering concepts. Vayl is the ultimate command center for high-yield JEE resource management and focused study.
         </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-          <Link
-            href="/signup"
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-24">
+          <Link 
+            href="/signup" 
             className="w-full sm:w-auto px-10 py-5 bg-white text-black rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-2xl hover:scale-105"
           >
             Deploy Your Vault
           </Link>
-          <Link
-            href="/about"
+          <Link 
+            href="/about" 
             className="w-full sm:w-auto px-10 py-5 bg-surface-container-highest border border-white/5 rounded-2xl font-black text-sm uppercase tracking-widest text-white hover:bg-white hover:text-black transition-all"
           >
             Explore System
           </Link>
+        </div>
+
+        {/* Dashboard Preview */}
+        <div className="relative max-w-5xl mx-auto group">
+          <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-tertiary/20 rounded-[2.5rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+          <div className="relative glass-card rounded-[2.5rem] border-white/10 overflow-hidden shadow-2xl shadow-black/50">
+            <img 
+              src="/screenshots/dashboard.png" 
+              alt="Vayl Dashboard" 
+              className="w-full h-auto object-cover transform transition duration-700 group-hover:scale-[1.01]"
+            />
+            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-surface to-transparent opacity-60 pointer-events-none" />
+          </div>
         </div>
       </section>
 
@@ -95,27 +108,112 @@ export default function LandingPage() {
         ))}
       </section>
 
+      {/* Interface Showcase Grid */}
+      <section className="py-32 px-6 max-w-7xl mx-auto space-y-32">
+        {/* Focus Room Section */}
+        <div className="grid md:grid-cols-2 gap-16 items-center">
+          <div className="space-y-8">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-error/10 border border-error/20">
+              <Timer className="w-4 h-4 text-error" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-error">Cognitive Protocol</span>
+            </div>
+            <h2 className="text-4xl md:text-6xl font-heading font-black tracking-tight text-white leading-tight">
+              Deep Work <br /><span className="text-error italic">Standardized.</span>
+            </h2>
+            <p className="text-on-surface-variant text-lg leading-relaxed opacity-70 font-medium font-interface">
+              Eliminate peripheral noise with our integrated Focus Room. Real-time timer, atmospheric audio controls, and a distraction-free environment engineered for peak performance.
+            </p>
+            <ul className="space-y-4 text-sm font-bold text-white/80 font-interface">
+              <li className="flex items-center gap-3">
+                <Target className="w-5 h-5 text-error" />
+                <span>25:00 Focus Intervals</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <Zap className="w-5 h-5 text-error" />
+                <span>Ambient High-Yield Audio</span>
+              </li>
+            </ul>
+          </div>
+          <div className="relative group">
+            <div className="absolute -inset-4 bg-error/10 rounded-[3rem] blur-2xl opacity-0 group-hover:opacity-100 transition duration-700"></div>
+            <div className="relative glass-card rounded-[2.5rem] border-white/5 overflow-hidden shadow-2xl">
+              <img src="/screenshots/focus-room.png" alt="Focus Room" className="w-full h-auto hover:scale-105 transition-transform duration-700" />
+            </div>
+          </div>
+        </div>
+
+        {/* Analytics Section */}
+        <div className="grid md:grid-cols-2 gap-16 items-center">
+          <div className="relative group order-2 md:order-1">
+            <div className="absolute -inset-4 bg-tertiary/10 rounded-[3rem] blur-2xl opacity-0 group-hover:opacity-100 transition duration-700"></div>
+            <div className="relative glass-card rounded-[2.5rem] border-white/5 overflow-hidden shadow-2xl">
+              <img src="/screenshots/analytics.png" alt="Vault Analytics" className="w-full h-auto hover:scale-105 transition-transform duration-700" />
+            </div>
+          </div>
+          <div className="space-y-8 order-1 md:order-2">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-tertiary/10 border border-tertiary/20">
+              <Brain className="w-4 h-4 text-tertiary" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-tertiary">Performance Intelligence</span>
+            </div>
+            <h2 className="text-4xl md:text-6xl font-heading font-black tracking-tight text-white leading-tight">
+              Mastery <br /><span className="text-tertiary italic">Visualized.</span>
+            </h2>
+            <p className="text-on-surface-variant text-lg leading-relaxed opacity-70 font-medium font-interface">
+              Understand your coverage and streaks with surgical precision. Our analytics suite tracks progress so you can focus on the gaps.
+            </p>
+            <Link 
+              href="/signup" 
+              className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-tertiary hover:underline"
+            >
+              Analyze Your Potential <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Public Profile Section */}
+        <div className="grid md:grid-cols-2 gap-16 items-center">
+          <div className="space-y-8">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+              <Zap className="w-4 h-4 text-primary" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Academic Identity</span>
+            </div>
+            <h2 className="text-4xl md:text-6xl font-heading font-black tracking-tight text-white leading-tight">
+              Share Your <br /><span className="text-primary italic">Scholarship.</span>
+            </h2>
+            <p className="text-on-surface-variant text-lg leading-relaxed opacity-70 font-medium font-interface">
+              Every aspirant gets a unique Vault ID and a public profile. Show off your streaks, study hours, and academic credentials to the network.
+            </p>
+          </div>
+          <div className="relative group">
+            <div className="absolute -inset-4 bg-primary/10 rounded-[3rem] blur-2xl opacity-0 group-hover:opacity-100 transition duration-700"></div>
+            <div className="relative glass-card rounded-[2.5rem] border-white/5 overflow-hidden shadow-2xl">
+              <img src="/screenshots/public-profile.png" alt="Public Profile" className="w-full h-auto hover:scale-105 transition-transform duration-700" />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Grid */}
       <section className="py-32 px-6 max-w-7xl mx-auto">
         <h2 className="text-4xl md:text-6xl font-heading font-black tracking-tight text-white mb-20 text-center">
-          Engineered for <br /><span className="text-primary italic">Deep Execution.</span>
+          Engineered for <br /><span className="text-primary italic">Extreme Efficiency.</span>
         </h2>
         <div className="grid md:grid-cols-3 gap-8">
           {[
-            {
-              title: "Smart Resource Vault",
-              desc: "Upload, categorize, and recall high-yield JEE materials with zero friction. Your personal academic repository.",
-              icon: <LayoutDashboard className="w-8 h-8" />
+            { 
+              title: "Smart Resource Vault", 
+              desc: "Upload, categorize, and recall high-yield JEE materials with zero friction. Your personal academic repository.", 
+              icon: <LayoutDashboard className="w-8 h-8 text-primary" /> 
             },
-            {
-              title: "Focus Protocols",
-              desc: "Integrated Deep Work sessions with tailored audio environments to maximize your cognitive output.",
-              icon: <Target className="w-8 h-8 text-error" />
+            { 
+              title: "Focus Protocols", 
+              desc: "Integrated Deep Work sessions with tailored audio environments to maximize your cognitive output.", 
+              icon: <Target className="w-8 h-8 text-error" /> 
             },
-            {
-              title: "Mastery Insights",
-              desc: "Data-driven analytics that track your coverage, streaks, and focus metrics in real-time.",
-              icon: <Brain className="w-8 h-8 text-tertiary" />
+            { 
+              title: "Mastery Insights", 
+              desc: "Data-driven analytics that track your coverage, streaks, and focus metrics in real-time.", 
+              icon: <Brain className="w-8 h-8 text-tertiary" /> 
             }
           ].map((feature, i) => (
             <div key={i} className="glass-card p-10 rounded-[3rem] border-white/5 space-y-6 hover:translate-y-[-8px] transition-transform duration-500">
@@ -123,7 +221,7 @@ export default function LandingPage() {
                 {feature.icon}
               </div>
               <h3 className="text-2xl font-heading font-bold text-white">{feature.title}</h3>
-              <p className="text-on-surface-variant leading-relaxed opacity-70">
+              <p className="text-on-surface-variant leading-relaxed opacity-70 font-interface">
                 {feature.desc}
               </p>
             </div>
