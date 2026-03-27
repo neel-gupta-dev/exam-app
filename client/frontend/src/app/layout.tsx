@@ -26,7 +26,7 @@ const hanken = Hanken_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Vayl - Knowledge Vault",
+  title: "Vayl",
   description: "Your personal study dashboard for JEE preparation",
   appleWebApp: {
     capable: true,

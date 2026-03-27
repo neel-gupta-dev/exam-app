@@ -33,7 +33,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
         {showRetry && (
           <div className="flex flex-col items-center gap-4 animate-fade-in text-center max-w-sm">
             <p className="text-on-surface-variant text-sm">
-              Connecting to the Knowledge Vault is taking longer than usual...
+              Connecting to Vayl is taking longer than usual...
             </p>
             <div className="flex gap-4">
               <button 

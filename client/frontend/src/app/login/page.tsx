@@ -90,7 +90,7 @@ function LoginContent() {
             <span className="material-symbols-outlined text-3xl text-primary-fixed">auto_stories</span>
           </div>
           <h1 className="font-headline text-4xl font-extrabold tracking-tight text-white mb-3">
-            Knowledge Vault
+            Vayl
           </h1>
           <p className="text-on-surface-variant text-sm font-medium tracking-wide uppercase">
             Access your digital library
@@ -226,7 +226,7 @@ function LoginContent() {
       <footer className="mt-auto w-full py-8 px-12 flex flex-col md:flex-row justify-between items-center gap-6 z-20">
         <div className="text-[10px] font-headline font-bold text-outline uppercase tracking-[0.2em] flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-primary/40"></div>
-          Knowledge Vault Secure Node
+          Vayl Secure Node
         </div>
         <div className="flex gap-8">
           <Link className="font-inter text-xs text-slate-500 hover:text-primary transition-colors" href="#">Privacy</Link>
@@ -234,7 +234,7 @@ function LoginContent() {
           <Link className="font-inter text-xs text-slate-500 hover:text-primary transition-colors" href="#">Support</Link>
         </div>
         <div className="font-inter text-[10px] text-slate-600 font-medium">
-          © 2024 Knowledge Vault. Encrypted Protocol.
+          © 2024 Vayl. Encrypted Protocol.
         </div>
       </footer>
     </div>

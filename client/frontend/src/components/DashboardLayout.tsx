@@ -67,7 +67,7 @@ export default function DashboardLayout({
 
               {/* Optional: Version tag for your Coolify deployments */}
               <p className="mt-6 text-[10px] text-gray-700 uppercase tracking-[0.2em]">
-                Knowledge Vault v{version} • Academic Integrity Guaranteed
+                Vayl v{version} • Academic Integrity Guaranteed
               </p>
             </div>
           </footer>

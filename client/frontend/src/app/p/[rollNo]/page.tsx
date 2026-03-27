@@ -20,10 +20,10 @@ async function getProfile(rollNo: string) {
 export async function generateMetadata({ params }: { params: Promise<{ rollNo: string }> }): Promise<Metadata> {
   const { rollNo } = await params;
   const profile = await getProfile(rollNo);
-  if (!profile) return { title: 'Vault Not Found | Knowledge Vault' };
+  if (!profile) return { title: 'Vault Not Found | Vayl' };
 
   return {
-    title: `${profile.name}'s Academic Vault | Knowledge Vault`,
+    title: `${profile.name}'s Academic Vault | Vayl`,
     description: `Level ${profile.level} Scholar with ${profile.streak} day streak. Explore their academic journey.`,
     openGraph: {
       title: `${profile.name} - ${profile.targetExam} Aspirant`,
@@ -70,7 +70,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
         <nav className="flex justify-between items-center w-full px-8 h-16 max-w-7xl mx-auto">
           <div className="flex items-center gap-8">
             <Link href="/" className="text-xl font-bold tracking-tighter text-indigo-400 font-headline">
-              Knowledge Vault
+              Vayl
             </Link>
           </div>
           <div className="flex items-center gap-4">
@@ -219,13 +219,13 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
       <footer className="w-full py-12 border-t border-white/5 bg-surface-container-low">
         <div className="flex flex-col items-center justify-center space-y-4 w-full">
-          <span className="text-lg font-bold text-on-surface font-headline opacity-80">Knowledge Vault</span>
+          <span className="text-lg font-bold text-on-surface font-headline opacity-80">Vayl</span>
           <div className="flex gap-6 text-on-surface-variant text-sm font-body opacity-60">
             <Link className="hover:text-primary transition-colors" href="#">Privacy</Link>
             <Link className="hover:text-primary transition-colors" href="#">Terms</Link>
             <Link className="hover:text-primary transition-colors" href="#">Support</Link>
           </div>
-          <p className="text-on-surface-variant text-xs font-body opacity-40">© 2024 Knowledge Vault. The Silent Architect.</p>
+          <p className="text-on-surface-variant text-xs font-body opacity-40">© 2024 Vayl. The Silent Architect.</p>
         </div>
       </footer>
     </div>

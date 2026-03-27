@@ -318,7 +318,7 @@ export default function ProfilePage() {
               <div>
                 <label className="text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-3">Membership Plan</label>
                 <div className="flex items-center gap-4">
-                  <div className="text-white font-bold text-lg">Knowledge Vault Initial</div>
+                  <div className="text-white font-bold text-lg">Vayl Initial</div>
                   <span className="bg-gradient-to-r from-tertiary/20 to-tertiary/10 text-tertiary text-[10px] font-black px-3 py-1.5 rounded-lg border border-tertiary/20 uppercase tracking-widest">Active</span>
                 </div>
                 <p className="text-xs text-on-surface-variant mt-2 font-medium italic">Your account is active since {new Date().getFullYear()}.</p>
@@ -369,7 +369,7 @@ export default function ProfilePage() {
         {/* <div className="pt-10 pb-16 flex flex-col items-center gap-4">
           <div className="w-12 h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent rounded-full" />
           <div className="text-center">
-            <p className="text-on-surface-variant text-[11px] font-black tracking-[0.3em] uppercase opacity-60">Knowledge Vault · Version 1.0.0</p>
+            <p className="text-on-surface-variant text-[11px] font-black tracking-[0.3em] uppercase opacity-60">Vayl · Version 1.0.0</p>
             <p className="text-[10px] text-on-surface-variant/40 mt-2 font-medium">© {new Date().getFullYear()} Academic Excellence Built on Discipline</p>
           </div>
         </div> */}

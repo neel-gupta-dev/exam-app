@@ -75,7 +75,7 @@ export default function SignupPage() {
       <header className="fixed top-0 w-full z-50 flex justify-between items-center px-8 h-16">
         <div className="flex items-center gap-2 text-xl font-headline font-bold tracking-tight text-white">
           <span className="material-symbols-outlined text-indigo-500 text-2xl">account_balance_wallet</span>
-          Knowledge Vault
+          Vayl
         </div>
       </header>
 
@@ -208,7 +208,7 @@ export default function SignupPage() {
       {/* Footer */}
       <footer className="mt-auto w-full py-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center px-12 gap-4 z-10">
         <div className="text-xs font-headline font-bold text-slate-500 uppercase tracking-widest">
-          © 2024 Knowledge Vault Systems.
+          © 2024 Vayl Systems.
         </div>
         <div className="flex gap-8">
           <Link className="font-inter text-[10px] uppercase tracking-widest text-slate-600 hover:text-indigo-400 transition-colors" href="#">Terms</Link>

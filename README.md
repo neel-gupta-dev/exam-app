@@ -1,6 +1,6 @@
-# Knowledge Vault Setup Guide
+# Vayl Setup Guide
 
-This guide will help you set up and run the Knowledge Vault project on a new system.
+This guide will help you set up and run the Vayl project on a new system.
 
 ## Prerequisites
 

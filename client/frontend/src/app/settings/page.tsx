@@ -90,7 +90,7 @@ export default function SettingsPage() {
         <section className="flex-1 overflow-y-auto px-12 py-10">
           <header className="mb-10">
             <h2 className="text-3xl font-extrabold tracking-tight text-on-surface mb-2">Edit Profile</h2>
-            <p className="text-on-surface-variant max-w-lg">Manage your identity and digital presence across the Knowledge Vault ecosystem.</p>
+            <p className="text-on-surface-variant max-w-lg">Manage your identity and digital presence across the Vayl ecosystem.</p>
           </header>
 
           <div className="max-w-3xl space-y-8 pb-10">
@@ -287,7 +287,7 @@ export default function SettingsPage() {
           </div>
 
           <div className="mt-auto pt-8 flex items-center justify-center opacity-30">
-            <span className="text-[10px] font-black tracking-[0.3em] uppercase">Knowledge Vault</span>
+            <span className="text-[10px] font-black tracking-[0.3em] uppercase">Vayl</span>
           </div>
         </aside>
       </div>

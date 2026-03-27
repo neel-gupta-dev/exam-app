@@ -1,5 +1,5 @@
 /**
- * Centralized Configuration for Knowledge Vault
+ * Centralized Configuration for Vayl
  * Shared between Frontend and Backend
  */
 

@@ -58,12 +58,12 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         forest: { title: "Peaceful Forest", artist: "AudioPapkin" },
       };
 
-      const info = trackMetadata[currentTrack] || { title: "Focus Track", artist: "Knowledge Vault" };
+      const info = trackMetadata[currentTrack] || { title: "Focus Track", artist: "Vayl" };
 
       navigator.mediaSession.metadata = new MediaMetadata({
         title: info.title,
         artist: info.artist,
-        album: "Knowledge Vault",
+        album: "Vayl",
         artwork: [
           { src: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
           { src: "/icon-512x512.png", sizes: "512x512", type: "image/png" },
