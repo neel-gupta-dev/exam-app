@@ -17,8 +17,8 @@ export default function PrivacyPolicy() {
       <div className="max-w-4xl mx-auto px-6 py-20 relative z-10">
         {/* Header */}
         <header className="mb-16 text-center">
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="inline-flex items-center gap-2 text-primary hover:text-white transition-all group mb-8 bg-surface-variant/50 px-4 py-2 rounded-full border border-white/5 hover:border-primary/20"
           >
             <span className="material-symbols-outlined text-sm group-hover:-translate-x-1 transition-transform">arrow_back</span>
@@ -35,7 +35,7 @@ export default function PrivacyPolicy() {
         {/* Content */}
         <div className="glass-card rounded-[2.5rem] p-8 md:p-12 space-y-12 leading-relaxed border-white/10 shadow-2xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-primary/10 transition-colors duration-700" />
-          
+
           <section className="space-y-4">
             <p className="text-lg text-on-surface/90 italic">
               Welcome to Vayl ("we," "our," or "us"). We are committed to protecting your privacy and ensuring that your personal information is handled in a safe and responsible manner. This Privacy Policy outlines how we collect, use, and safeguard your data when you use our platform.
@@ -146,12 +146,12 @@ export default function PrivacyPolicy() {
             <p className="text-on-surface-variant mb-6 text-sm">
               Questions? Reach out to our dedicated support team.
             </p>
-            <a 
-              href="mailto:support@vayl.app" 
+            <a
+              href="mailto:support@vayl.app"
               className="inline-flex items-center gap-3 bg-primary text-on-primary px-8 py-3 rounded-2xl font-bold hover:scale-105 transition-transform duration-300 shadow-lg shadow-primary/20"
             >
               <span className="material-symbols-outlined">mail</span>
-              support@vayl.app
+              neelgupta30@zohomail.in
             </a>
           </footer>
         </div>

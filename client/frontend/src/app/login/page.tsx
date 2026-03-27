@@ -229,7 +229,7 @@ function LoginContent() {
           Vayl Secure Node
         </div>
         <div className="flex gap-8">
-          <Link className="font-inter text-xs text-slate-500 hover:text-primary transition-colors" href="/privacy">Privacy</Link>
+          <Link className="font-inter text-xs text-slate-500 hover:text-primary transition-colors" href="/privacy-policy">Privacy</Link>
           <Link className="font-inter text-xs text-slate-500 hover:text-primary transition-colors" href="#">Terms</Link>
           <Link className="font-inter text-xs text-slate-500 hover:text-primary transition-colors" href="#">Support</Link>
         </div>
