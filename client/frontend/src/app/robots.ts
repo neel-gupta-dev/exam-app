@@ -5,7 +5,7 @@ import { MetadataRoute } from 'next'
  * Configures crawler access and points to the sitemap.
  */
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://vayl.in';
+  const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://vayl-app.vercel.app';
   
   return {
     rules: {

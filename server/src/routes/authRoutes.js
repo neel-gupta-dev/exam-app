@@ -14,7 +14,7 @@ router.get('/google/callback',
   passport.authenticate('google', { session: false, failureRedirect: '/login' }),
   (req, res) => {
     const token = generateToken(req.user._id);
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://vayl-app.vercel.app';
     res.redirect(`${frontendUrl}/login?token=${token}`);
   }
 );

@@ -5,7 +5,7 @@ import { MetadataRoute } from 'next'
  * Automatically generates sitemap.xml for SEO and Adsense crawlers.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://vayl.in';
+  const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://vayl-app.vercel.app';
 
   // List of public-facing routes that should be indexed
   const routes = [

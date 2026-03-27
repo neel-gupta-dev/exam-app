@@ -27,8 +27,54 @@ const hanken = Hanken_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Vayl",
-  description: "Your personal study dashboard for JEE preparation",
+  metadataBase: new URL('https://vayl-app.vercel.app'),
+  title: {
+    default: "Vayl | The Silent Architect of JEE Success",
+    template: "%s | Vayl"
+  },
+  description: "Vayl is the premium study operating system designed for JEE aspirants. Manage high-yield resources, master concepts with deep focus, and track your academic journey with precision.",
+  keywords: ["JEE Preparation", "Study Dashboard", "Academic Vault", "Deep Work", "JEE Resources", "Focus Timer", "Scholar Identity"],
+  authors: [{ name: "Neel Gupta" }],
+  creator: "Neel Gupta",
+  publisher: "Vayl Systems",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    title: "Vayl | The Silent Architect of JEE Success",
+    description: "The premium study operating system for JEE aspirants. Simplify your vault, amplify your focus.",
+    url: 'https://vayl-app.vercel.app',
+    siteName: 'Vayl',
+    images: [
+      {
+        url: '/screenshots/dashboard.png',
+        width: 1200,
+        height: 630,
+        alt: 'Vayl Dashboard Preview',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Vayl | The Silent Architect of JEE Success',
+    description: 'The premium study operating system for JEE aspirants.',
+    images: ['/screenshots/dashboard.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

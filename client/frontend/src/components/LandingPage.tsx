@@ -52,6 +52,24 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="pt-40 pb-20 px-6 max-w-7xl mx-auto text-center relative">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              "name": "Vayl",
+              "operatingSystem": "Web",
+              "applicationCategory": "EducationalApplication",
+              "description": "Vayl is the premium study operating system designed for JEE aspirants to manage high-yield resources and master concepts with deep focus.",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "INR"
+              }
+            })
+          }}
+        />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[600px] bg-primary/5 rounded-full blur-[150px] -z-10" />
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-8 animate-fade-in">
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
@@ -106,6 +124,36 @@ export default function LandingPage() {
             <div className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60 line-clamp-1">{stat.label}</div>
           </div>
         ))}
+      </section>
+
+      {/* Mission Section (Content Depth for SEO) */}
+      <section className="py-24 px-6 max-w-5xl mx-auto border-y border-white/5 relative overflow-hidden">
+        <div className="absolute top-1/2 left-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px] -translate-x-1/2" />
+        <div className="relative z-10 text-center space-y-12">
+          <h2 className="text-3xl md:text-5xl font-heading font-black text-white tracking-tight">
+            The Mission of <span className="text-primary italic">The Silent Architect.</span>
+          </h2>
+          <div className="grid md:grid-cols-2 gap-12 text-left">
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-primary" />
+                Surgical Precision
+              </h3>
+              <p className="text-on-surface-variant leading-relaxed opacity-70 font-interface">
+                JEE preparation isn't about how much you study, but how effectively you manage what you know. Vayl provides the infrastructure for high-retention learning, taking the cognitive load off your organization and placing it purely on execution.
+              </p>
+            </div>
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <Zap className="w-5 h-5 text-tertiary" />
+                Elite Workflow
+              </h3>
+              <p className="text-on-surface-variant leading-relaxed opacity-70 font-interface">
+                From the way resources are categorized to the atmospheric audio in the Focus Room, every pixel is designed to induce a flow state. We don't just provide tools; we provide a standardized protocol for excellence.
+              </p>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Interface Showcase Grid */}
