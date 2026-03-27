@@ -125,8 +125,9 @@ const ARTICLES = {
   }
 };
 
-export default function ArticlePage({ params }: { params: { slug: string } }) {
-  const article = ARTICLES[params.slug as keyof typeof ARTICLES];
+export default function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = React.use(params);
+  const article = ARTICLES[slug as keyof typeof ARTICLES];
   const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
@@ -170,7 +171,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
         <button 
           onClick={() => {
             navigator.clipboard.writeText(window.location.href);
-            sendGAEvent({ event: 'blog_share', value: params.slug });
+            sendGAEvent({ event: 'blog_share', value: slug });
           }}
           className="p-2.5 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all text-on-surface-variant hover:text-white"
         >
