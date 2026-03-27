@@ -230,8 +230,8 @@ function LoginContent() {
         </div>
         <div className="flex gap-8">
           <Link className="font-inter text-xs text-slate-500 hover:text-primary transition-colors" href="/privacy-policy">Privacy</Link>
-          <Link className="font-inter text-xs text-slate-500 hover:text-primary transition-colors" href="#">Terms</Link>
-          <Link className="font-inter text-xs text-slate-500 hover:text-primary transition-colors" href="#">Support</Link>
+          <Link className="font-inter text-xs text-slate-500 hover:text-primary transition-colors" href="/terms">Terms</Link>
+          <Link className="font-inter text-xs text-slate-500 hover:text-primary transition-colors" href="/contact">Support</Link>
         </div>
         <div className="font-inter text-[10px] text-slate-600 font-medium">
           © 2024 Vayl. Encrypted Protocol.

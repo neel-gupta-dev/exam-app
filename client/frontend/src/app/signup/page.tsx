@@ -14,6 +14,8 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
@@ -142,11 +144,45 @@ export default function SignupPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
             </div>
+
+            {/* Compliance Checkboxes */}
+            <div className="space-y-3 pt-2">
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <div className="relative flex items-center mt-1">
+                  <input 
+                    type="checkbox" 
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    className="peer appearance-none w-5 h-5 border-2 border-white/10 rounded-lg bg-white/5 checked:bg-indigo-600 checked:border-indigo-600 transition-all cursor-pointer"
+                  />
+                  <span className="material-symbols-outlined absolute text-[14px] text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold">check</span>
+                </div>
+                <span className="text-xs text-on-surface-variant leading-relaxed group-hover:text-on-surface transition-colors">
+                  I agree to the <Link href="/terms" className="text-indigo-400 hover:underline">Terms of Service</Link>
+                </span>
+              </label>
+
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <div className="relative flex items-center mt-1">
+                  <input 
+                    type="checkbox" 
+                    checked={privacyAccepted}
+                    onChange={(e) => setPrivacyAccepted(e.target.checked)}
+                    className="peer appearance-none w-5 h-5 border-2 border-white/10 rounded-lg bg-white/5 checked:bg-indigo-600 checked:border-indigo-600 transition-all cursor-pointer"
+                  />
+                  <span className="material-symbols-outlined absolute text-[14px] text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold">check</span>
+                </div>
+                <span className="text-xs text-on-surface-variant leading-relaxed group-hover:text-on-surface transition-colors">
+                  I have read and accept the <Link href="/privacy-policy" className="text-indigo-400 hover:underline">Privacy Policy</Link>
+                </span>
+              </label>
+            </div>
+
             {/* Action Button */}
             <button
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-headline font-bold py-4 rounded-xl transition-all transform active:scale-[0.98] shadow-xl shadow-indigo-600/20 mt-4 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-headline font-bold py-4 rounded-xl transition-all transform active:scale-[0.98] shadow-xl shadow-indigo-600/20 mt-4 disabled:opacity-40 disabled:grayscale disabled:cursor-not-allowed"
               type="submit"
-              disabled={loading}
+              disabled={loading || !termsAccepted || !privacyAccepted}
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
@@ -211,9 +247,9 @@ export default function SignupPage() {
           © 2024 Vayl Systems.
         </div>
         <div className="flex gap-8">
-          <Link className="font-inter text-[10px] uppercase tracking-widest text-slate-600 hover:text-indigo-400 transition-colors" href="#">Terms</Link>
+          <Link className="font-inter text-[10px] uppercase tracking-widest text-slate-600 hover:text-indigo-400 transition-colors" href="/terms">Terms</Link>
           <Link className="font-inter text-[10px] uppercase tracking-widest text-slate-600 hover:text-indigo-400 transition-colors" href="/privacy-policy">Privacy</Link>
-          <Link className="font-inter text-[10px] uppercase tracking-widest text-slate-600 hover:text-indigo-400 transition-colors" href="#">Support</Link>
+          <Link className="font-inter text-[10px] uppercase tracking-widest text-slate-600 hover:text-indigo-400 transition-colors" href="/contact">Support</Link>
         </div>
       </footer>
     </div>

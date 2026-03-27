@@ -222,8 +222,8 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
           <span className="text-lg font-bold text-on-surface font-headline opacity-80">Vayl</span>
           <div className="flex gap-6 text-on-surface-variant text-sm font-body opacity-60">
             <Link className="hover:text-primary transition-colors" href="/privacy-policy">Privacy</Link>
-            <Link className="hover:text-primary transition-colors" href="#">Terms</Link>
-            <Link className="hover:text-primary transition-colors" href="#">Support</Link>
+            <Link className="hover:text-primary transition-colors" href="/terms">Terms</Link>
+            <Link className="hover:text-primary transition-colors" href="/contact">Support</Link>
           </div>
           <p className="text-on-surface-variant text-xs font-body opacity-40">© 2024 Vayl. The Silent Architect.</p>
         </div>

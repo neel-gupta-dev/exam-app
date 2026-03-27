@@ -8,6 +8,7 @@ import packageInfo from '../../package.json';
 import { useAuth } from "@/context/AuthContext";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useEffect, useRef } from "react";
+import Link from "next/link";
 
 const version = packageInfo.version;
 
@@ -69,6 +70,13 @@ export default function DashboardLayout({
               <p className="mt-6 text-[10px] text-gray-700 uppercase tracking-[0.2em]">
                 Vayl v{version} • Academic Integrity Guaranteed
               </p>
+
+              <div className="mt-8 flex justify-center gap-6 text-[10px] uppercase tracking-widest font-bold text-gray-600">
+                <Link href="/about" className="hover:text-primary transition-colors">About</Link>
+                <Link href="/contact" className="hover:text-primary transition-colors">Contact</Link>
+                <Link href="/terms" className="hover:text-primary transition-colors">Terms</Link>
+                <Link href="/privacy-policy" className="hover:text-primary transition-colors">Privacy</Link>
+              </div>
             </div>
           </footer>
         </main>
