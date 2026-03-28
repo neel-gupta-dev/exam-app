@@ -6,6 +6,7 @@ import { WebVitals } from "@/components/WebVitals";
 import CookieConsent from "@/components/CookieConsent";
 import GoogleSchema from "@/components/GoogleSchema";
 import { MathJaxContext } from "better-react-mathjax";
+import { Analytics } from "@vercel/analytics/next"
 import "./globals.css";
 
 const montserrat = Montserrat({
