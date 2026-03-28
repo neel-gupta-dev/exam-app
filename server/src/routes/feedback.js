@@ -19,7 +19,7 @@ router.get('/submit', async (req, res) => {
     });
 
     // 3. Redirect to your Vercel frontend Success Page
-    res.redirect('https://vayl-app.vercel.app/feedback-success');
+    res.redirect('https://vayl-app.vercel.app/');
 
   } catch (error) {
     console.error("Feedback API error:", error);
