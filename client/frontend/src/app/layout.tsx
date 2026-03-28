@@ -118,6 +118,7 @@ export default function RootLayout({
       <body className="min-h-full bg-surface text-on-surface font-body">
         <GoogleAnalytics gaId="G-ZDWW48QNX7" />
         <WebVitals />
+	<Analytics/>
         <GoogleSchema />
         <CookieConsent />
         <MathJaxContext>
