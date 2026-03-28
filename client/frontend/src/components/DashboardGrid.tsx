@@ -71,8 +71,9 @@ function EmptyState() {
         <FolderOpen className="w-8 h-8 text-primary" />
       </div>
       <h3 className="text-lg font-bold text-on-surface mb-2">Your Vault is Empty</h3>
+      <h3 className="text-lg font-bold text-on-surface mb-2">Press Ctrl+S</h3>
       <p className="text-sm text-on-surface-variant max-w-xs mb-6">
-        Click Quick Save in the top right to start adding your study materials, PDFs, or YouTube links.
+        Click <strong>Quick Save in the top right</strong> to start adding your study materials, PDFs, or YouTube links.
       </p>
     </div>
   );
