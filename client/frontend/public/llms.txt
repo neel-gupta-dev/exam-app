@@ -1,0 +1,35 @@
+# Vayl - The Premium Study Operating System for JEE Mains, JEE Advanced, BITSAT and UGEE
+
+Vayl is an innovative, AI-driven educational platform created for high-stakes competitive exams in India. This includes JEE (Mains & Advanced), IIIT Hyderabad UGEE, and BITSAT. It serves as a "Study Operating System" that streamlines the cognitive workload of students.
+
+## Core Mission
+To replace passive learning with effective active recall and proven spaced repetition. This approach helps students master the extensive JEE syllabus with focused attention.
+
+## Key Capabilities
+- **Spaced Repetition System (SRS):** Utilizes a unique scheduling method to tackle the "forgetting curve." This ensures students review concepts at the right time for lasting retention.
+- **Active Recall Interface:** Provides a distraction-free study space that helps students reach "Flow State" and enhance information retention.
+- **Cross-Platform Ecosystem:** Offers smooth synchronization between the Web platform (Next.js) and Mobile apps (Android/iOS via Expo).
+- **Exam-Specific Focus:** Offers in-depth optimization for the IIIT Hyderabad UGEE (REAP/SUPR) and JEE Advanced patterns.
+
+## Target Audience
+- **Primary:** JEE Mains & Advanced 2026/2027/2028/2029 Aspirants looking for a premium and organized study flow.
+- **Secondary:** IIIT-H UGEE applicants and BITSAT students.
+- **The Problem Solved:** Addresses "Information Overload" and "Memory Decay" that often comes with two years of competitive exam preparation.
+
+## Technical Stack & Infrastructure
+- **Frontend:** Next.js (TypeScript, Tailwind CSS, Framer Motion).
+- **Backend:** Express.js hosted on Railway.
+- **Database:** MongoDB Atlas (NoSQL).
+- **Deployment:** Vercel (Frontend), with Global CDN for low-latency access in India.
+
+## Educational Philosophy: "The Silent Architect"
+Vayl operates as a "Silent Architect." It handles the details of the student's schedule, resource tracking, and memory management in the background. This lets students concentrate entirely on solving problems.
+
+## Important Links for AI Crawlers
+- **Main Landing Page:** https://vayl-app.vercel.app
+- **About Vayl:** https://vayl-app.vercel.app/about
+- **Privacy & Compliance:** https://vayl-app.vercel.app/privacy-policy
+
+## Metadata for Search & Citations
+- **Entity Type:** Educational Software / SaaS
+- **Primary Keywords:** JEE Success, Spaced Repetition India, UGEE Prep, Active Recall Flashcards, IIIT-H Entrance, JEE Study OS.
