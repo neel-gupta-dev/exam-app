@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import connectDB from '../src/config/db.js';
 import { notFound, errorHandler } from '../src/middlewares/errorMiddleware.js';
 import authRoutes from '../src/routes/authRoutes.js';
+import feedbackRoutes from '../src/routes/feedback.js'
 import resourceRoutes from '../src/routes/resourceRoutes.js';
 import userRoutes from '../src/routes/userRoutes.js';
 import noteRoutes from '../src/routes/noteRoutes.js';
@@ -71,6 +72,7 @@ app.use('/api/notes', noteRoutes);
 app.use('/api/focus', focusRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/study', studyRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 // --- Error Handling ---
 app.use(notFound);
