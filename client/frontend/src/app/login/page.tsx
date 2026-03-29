@@ -46,7 +46,7 @@ function LoginContent() {
     if (token) {
       setGoogleLoading(true);
       loginWithToken(token).then(() => {
-        router.replace('/dashboard');
+        router.replace('/');
       }).catch(() => {
         setGoogleLoading(false);
       });
