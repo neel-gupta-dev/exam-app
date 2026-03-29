@@ -6,10 +6,7 @@ import { WebVitals } from "@/components/WebVitals";
 import CookieConsent from "@/components/CookieConsent";
 import GoogleSchema from "@/components/GoogleSchema";
 import { Analytics } from "@vercel/analytics/next"
-import dynamic from "next/dynamic";
 import "./globals.css";
-
-const MathProvider = dynamic(() => import('@/components/MathProvider'), { ssr: false });
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -129,9 +126,7 @@ export default function RootLayout({
 	<Analytics/>
         <GoogleSchema />
         <CookieConsent />
-        <MathProvider>
-          <AppProviders>{children}</AppProviders>
-        </MathProvider>
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );
