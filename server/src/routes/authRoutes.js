@@ -10,14 +10,16 @@ const router = Router();
 // --- Google OAuth ---
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
+import { FRONTEND_URL } from '../config/index.js';
+
 router.get('/google/callback', 
   passport.authenticate('google', { session: false, failureRedirect: '/login' }),
   (req, res) => {
     const token = generateToken(req.user._id);
-    const frontendUrl = process.env.FRONTEND_URL || 'https://vayl-app.vercel.app';
-    res.redirect(`${frontendUrl}/login?token=${token}`);
+    res.redirect(`${FRONTEND_URL}/login?token=${token}`);
   }
 );
+
 
 // Rate limiter for OTP endpoint: 3 requests per IP per 15 minutes
 const otpLimiter = rateLimit({

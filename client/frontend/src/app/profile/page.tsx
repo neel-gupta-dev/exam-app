@@ -76,7 +76,8 @@ export default function ProfilePage() {
 
   const name = user?.name || "Student";
   const email = user?.email || "student@example.com";
-  const targetExam = user?.targetExam?.[0] || "Preparation";
+  const targetExams = (user?.targetExam && user.targetExam.length > 0) ? user.targetExam.join(', ') : "Preparation";
+
   const initials = name.substring(0, 2).toUpperCase();
 
   return (
@@ -132,7 +133,7 @@ export default function ProfilePage() {
               <p className="text-on-surface-variant max-w-xl mb-8 leading-relaxed text-lg font-medium">
                 {user?.bio || (
                   <>
-                    Dedicated <span className="text-white">{targetExam}</span> Aspirant. Maintaining a steady collection of{" "}
+                    Dedicated <span className="text-white">{targetExams}</span> Aspirant. Maintaining a steady collection of{" "}
                     <span className="text-primary">{resourceCount} saved materials</span> in the Vault.
                   </>
                 )}
@@ -190,7 +191,7 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <h4 className="text-xl font-bold text-white tracking-tight">{user?.name}</h4>
-                    <p className="text-[10px] font-black text-primary uppercase tracking-widest">{targetExam} Aspirant</p>
+                    <p className="text-[10px] font-black text-primary uppercase tracking-widest">{targetExams} Aspirant</p>
                   </div>
                 </div>
 
@@ -331,7 +332,7 @@ export default function ProfilePage() {
                     <GraduationCap className="w-5 h-5 text-black" />
                   </div>
                   <div>
-                    <span className="text-white font-bold text-sm block">{targetExam} Preparation</span>
+                    <span className="text-white font-bold text-sm block">{targetExams} Preparation</span>
                     <span className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Independent Learner</span>
                   </div>
                 </div>

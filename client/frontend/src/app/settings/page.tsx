@@ -7,8 +7,10 @@ import api from "@/lib/api";
 import { toast } from "sonner";
 import { Sparkles, Database, Flag } from "lucide-react";
 import StreakIcon from "@/components/StreakIcon";
+import { TARGET_EXAMS } from "@shared/constants";
 
 export default function SettingsPage() {
+
   const { user, fetchUser, hapticsEnabled, setHapticsEnabled } = useAuth();
 
   const [profileForm, setProfileForm] = useState({
@@ -16,7 +18,10 @@ export default function SettingsPage() {
     email: "",
     targetScore: "",
     bio: "",
+    targetExam: [] as string[],
   });
+
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const [passwordForm, setPasswordForm] = useState({
     oldPassword: "",
@@ -34,9 +39,21 @@ export default function SettingsPage() {
         email: user.email || "",
         targetScore: user.targetScore || "",
         bio: user.bio || "",
+        targetExam: user.targetExam || [],
       });
     }
   }, [user]);
+
+  // Handle click outside for dropdown
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (isDropdownOpen && !(e.target as HTMLElement).closest('.exam-dropdown')) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isDropdownOpen]);
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setProfileForm({ ...profileForm, [e.target.name]: e.target.value });
@@ -130,7 +147,7 @@ export default function SettingsPage() {
                   />
                 </div>
 
-                <div className="space-y-2 md:col-span-2 max-w-xs">
+                <div className="space-y-2 md:col-span-1">
                   <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Target Score</label>
                   <input
                     name="targetScore"
@@ -141,6 +158,68 @@ export default function SettingsPage() {
                     type="text"
                   />
                 </div>
+
+                <div className="space-y-2 md:col-span-1">
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Target Exams</label>
+                  <div className="relative exam-dropdown">
+                    <button
+                      type="button"
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      className={`w-full bg-surface-container-highest/50 border rounded-xl py-3.5 px-4 text-sm flex items-center justify-between transition-all outline-none min-h-[56px] ${
+                        isDropdownOpen 
+                          ? 'border-primary ring-2 ring-primary/20' 
+                          : 'border-outline-variant/30 hover:border-outline-variant/60'
+                      }`}
+                    >
+                      <span className={`flex-1 text-left ${profileForm.targetExam.length === 0 ? 'text-outline-variant' : 'text-on-surface'}`}>
+                        {profileForm.targetExam.length === 0 
+                          ? 'Select Target Exams' 
+                          : profileForm.targetExam.join(', ')}
+                      </span>
+                      <span className={`material-symbols-outlined shrink-0 ml-2 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}>
+                        expand_more
+                      </span>
+                    </button>
+
+                    {isDropdownOpen && (
+                      <div className="absolute z-50 top-[calc(100%+8px)] left-0 w-full bg-surface-container border border-outline-variant/30 rounded-xl shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-1 ring-1 ring-white/5">
+                        <div className="max-h-80 overflow-y-auto p-2 pb-8 space-y-1 custom-scrollbar">
+                          {(TARGET_EXAMS as readonly string[]).map((exam: string) => {
+                            const isSelected = profileForm.targetExam.includes(exam);
+                            return (
+                              <button
+                                key={exam}
+                                type="button"
+                                onClick={() => {
+                                  const alreadySelected = profileForm.targetExam.includes(exam);
+                                  const updated = alreadySelected
+                                    ? profileForm.targetExam.filter(e => e !== exam)
+                                    : [...profileForm.targetExam, exam];
+                                  setProfileForm({ ...profileForm, targetExam: updated });
+                                }}
+                                className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors group ${
+                                  isSelected 
+                                    ? 'bg-primary/10 text-primary' 
+                                    : 'text-on-surface-variant hover:bg-surface-container-highest'
+                                }`}
+                              >
+                                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
+                                  isSelected 
+                                    ? 'bg-primary border-primary shadow-lg shadow-primary/20' 
+                                    : 'border-outline-variant/60 group-hover:border-primary/50'
+                                }`}>
+                                  {isSelected && <span className="material-symbols-outlined text-white text-[12px] font-bold">check</span>}
+                                </div>
+                                <span className="text-sm font-medium">{exam}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
               </div>
 
               <div className="space-y-2">

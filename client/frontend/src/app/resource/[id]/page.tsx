@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
-import Image from "next/image";
+
+
 import Sidebar from "@/components/Sidebar";
 import TopNav from "@/components/TopNav";
 import api from "@/lib/api";
@@ -492,20 +493,8 @@ export default function ResourceViewerPage() {
                 </div>
               </div>
 
-              {/* Focus Assistant */}
-              <div className="bg-surface-container p-6 rounded-xl">
-                <h3 className="text-sm font-bold text-outline-variant uppercase tracking-widest mb-4">
-                  Focus Assistant
-                </h3>
-                <p className="text-xs text-on-surface-variant leading-relaxed mb-4">
-                  AI-generated summary: Review your study notes alongside
-                  this resource to boost retention by up to 60%.
-                </p>
-                <button className="w-full flex items-center justify-center gap-2 border border-primary/20 bg-primary/5 py-3 rounded-xl text-primary hover:bg-primary/10 transition-colors">
-                  <Image src="/vayl-logo.png" alt="Vayl Logo" width={16} height={16} className="object-contain" />
-                  <span className="text-sm font-bold">Generate Quiz</span>
-                </button>
-              </div>
+
+
 
               {/* Open Original Link (prominent fallback) */}
               <a
