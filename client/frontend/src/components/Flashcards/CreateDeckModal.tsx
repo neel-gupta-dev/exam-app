@@ -10,6 +10,11 @@ interface CreateDeckModalProps {
   onSuccess: (deck: any) => void;
 }
 
+/**
+ * Create Deck Modal
+ * A popup overlay for creating a new spaced-repetition flashcard deck.
+ * Captures title, description, and category.
+ */
 export default function CreateDeckModal({ isOpen, onClose, onSuccess }: CreateDeckModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");

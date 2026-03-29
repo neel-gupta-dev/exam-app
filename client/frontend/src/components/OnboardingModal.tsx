@@ -13,6 +13,13 @@ const YEARS = Array.from({ length: 5 }, (_, i) => currentYear + i);
 
 type Step = 'profile' | 'otp-send' | 'otp-verify' | 'done';
 
+/**
+ * Global Onboarding Modal
+ * Forces new users to complete their profile (Target Exams & Year) before
+ * interacting with the app. Also includes a flow for student email verification
+ * (.ac.in or .edu.in) to unlock premium backend features or statuses.
+ * Rendered globally by AppProviders.
+ */
 export default function OnboardingModal() {
   const { user, updateUser } = useAuth();
   const [mounted, setMounted] = useState(false);
@@ -60,6 +67,12 @@ export default function OnboardingModal() {
   // Don't show if not mounted, already onboarded, or no user
   if (!mounted || !user || user.isOnboarded) return null;
 
+  /**
+   * Profile Setup Step
+   * Submits the chosen exams and graduation year to the backend.
+   * If the user is already academically verified, onboarding completes.
+   * Otherwise, it moves to the OTP step.
+   */
   const handleProfileSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (targetExams.length === 0) {

@@ -9,6 +9,11 @@ interface SearchBarProps {
   placeholder?: string;
 }
 
+/**
+ * Reusable Search Input
+ * Features a '/' keyboard shortcut to auto-focus, and debounces the input
+ * before triggering the `onSearch` callback.
+ */
 export default function SearchBar({ onSearch, isLoading, placeholder = "Search resources..." }: SearchBarProps) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);

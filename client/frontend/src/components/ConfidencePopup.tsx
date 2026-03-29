@@ -24,6 +24,12 @@ const RATINGS = [
   { value: 5, label: "Mastered", icon: Zap, color: "text-emerald-400", bg: "bg-emerald-500/10" },
 ];
 
+/**
+ * Confidence Rating Popup
+ * A post-session reflection prompt that appears after a user spends
+ * > 5 minutes on a single resource (tracked via localStorage flag set in ResourceViewerPage).
+ * Collecting this feedback adjusts their Cognitive Growth metrics.
+ */
 export default function ConfidencePopup() {
   const { user, updateUser } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -31,6 +37,11 @@ export default function ConfidencePopup() {
   const [rating, setRating] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
 
+  /**
+   * Pending Rating Check
+   * On mount, checks if the `pendingConfidenceRating` flag exists in localStorage.
+   * If found, the popup renders and immediately clears the flag so it only shows once.
+   */
   useEffect(() => {
     // Check for pending rating flag on mount
     const pendingId = localStorage.getItem("pendingConfidenceRating");

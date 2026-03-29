@@ -117,6 +117,12 @@ const CharacterReveal = ({ text, className }: { text: string, className?: string
   );
 };
 
+/**
+ * Public Landing Page
+ * The unauthenticated entry point of the Vayl platform.
+ * Features extensive Framer Motion animations (Magnetic Buttons, Tilt Cards,
+ * Scroll-Linked Parallax) to create a premium, high-conversion marketing presence.
+ */
 export default function LandingPage() {
   const { scrollY } = useScroll();
   const orb1Y = useTransform(scrollY, [0, 1000], [0, 200]);

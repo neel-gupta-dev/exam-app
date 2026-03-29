@@ -84,6 +84,11 @@ const COACHING = [
 
 
 
+/**
+ * Dream College/Goal Modal
+ * A personalized onboarding step that appears *after* initial signup (if dreamColleges are empty).
+ * Dynamically renders options based on the user's selected `targetExams` (e.g., IITs for JEE, AIIMS for NEET).
+ */
 export default function DreamerModal() {
   const { user, updateUser } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -102,6 +107,11 @@ export default function DreamerModal() {
   let categoryLabel = "Dream Destinations";
   let CategoryIcon = Trophy;
 
+  /**
+   * Dynamic Destination Mapping
+   * Determines which colleges/destinations to show based on the user's
+   * first chosen target exam. Collects options into `availableDestinations`.
+   */
   targetExams.forEach((exam, index) => {
     const mapping = DESTINATION_MAPPING[exam];
     if (mapping) {

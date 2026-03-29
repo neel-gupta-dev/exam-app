@@ -19,6 +19,11 @@ export interface MonthlyStats {
   milestones: Milestone[];
 }
 
+/**
+ * Monthly Goal Widget
+ * Displays the user's progress towards a monthly focus time target and recent milestones.
+ * Listens for `focusSessionCompleted` and `resourceAdded` window events to refresh its data live.
+ */
 export default function MonthlyGoalWidget({ className = "" }: { className?: string }) {
   const [stats, setStats] = useState<MonthlyStats | null>(null);
   const [loading, setLoading] = useState(true);

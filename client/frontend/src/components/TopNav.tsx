@@ -11,6 +11,12 @@ import { useHaptics } from "@/hooks/useHaptics";
 import SearchDropdown, { ResourceSearchResult } from "./SearchDropdown";
 import { useRouter } from "next/navigation";
 
+/**
+ * Global Top Navigation Bar
+ * Handles global state controls like universal search, notifications, and settings.
+ * Includes the "Quick Save" modal for adding new resources from anywhere in the app.
+ * Listens for keyboard shortcuts (Cmd/Ctrl+K for search, Cmd/Ctrl+S for save).
+ */
 export default function TopNav() {
   const [isOpen, setIsOpen] = useState(false);
   const [url, setUrl] = useState("");
@@ -77,6 +83,11 @@ export default function TopNav() {
   }, []);
 
   // ── Debounced Search Fetch ──────────────────────────────────────────
+  /**
+   * Debounced Search Effect
+   * Waits 400ms after the user stops typing before hitting the backend API
+   * to fetch search results. This prevents rate-limiting and reduces load.
+   */
   useEffect(() => {
     if (!searchQuery.trim()) {
       setResults([]);
@@ -118,6 +129,12 @@ export default function TopNav() {
     window.open(result.url, '_blank');
   };
 
+  /**
+   * Quick Save Handler
+   * Submits the modal form data to save a new resource globally.
+   * Dispatches a custom 'resourceAdded' event so the Sidebar and Dashboard
+   * can refresh their state instantly.
+   */
   const handleQuickSave = async (e: FormEvent) => {
     e.preventDefault();
     if (!url) return toast.error("URL is required");

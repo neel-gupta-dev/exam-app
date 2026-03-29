@@ -117,6 +117,12 @@ function NoMatchesState({ onClear }: { onClear: () => void }) {
 
 import { useSearch } from '@/context/SearchContext';
 
+/**
+ * Dashboard Flow & Resource Grid
+ * Renders the main feed of recently saved resources.
+ * Includes client-side pagination and special empty state components when
+ * the vault is empty or no search results are found.
+ */
 export default function DashboardGrid({ 
   onLoadingChange 
 }: { 
@@ -129,6 +135,12 @@ export default function DashboardGrid({
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4;
 
+  /**
+   * Resource Fetcher
+   * Fetches the first 100 resources to power the client-side pagination block.
+   * Listens to the global `resourceAdded` event to instantly refetch when the
+   * user uses the Quick Save feature.
+   */
   useEffect(() => {
     const fetchResources = async () => {
       setLoading(true);

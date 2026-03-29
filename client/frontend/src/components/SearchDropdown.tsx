@@ -29,6 +29,11 @@ interface SearchDropdownProps {
   onSelect: (result: ResourceSearchResult) => void;
 }
 
+/**
+ * Global Search Results Dropdown
+ * Displays a list of resources matching the current search query in the TopNav.
+ * Renders icons based on resource type (PDF, Video, Link) and provides quick navigation.
+ */
 export default function SearchDropdown({ results, isLoading, query, onClose, onSelect }: SearchDropdownProps) {
   if (!query) return null;
 

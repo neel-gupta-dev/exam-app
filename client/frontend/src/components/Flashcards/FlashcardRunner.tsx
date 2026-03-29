@@ -19,6 +19,12 @@ interface FlashcardRunnerProps {
   onClose: () => void;
 }
 
+/**
+ * Flashcard Test Runner
+ * The core spaced-repetition testing interface. Fetches a batch of cards (Session or Cram mode),
+ * handles UI flipping (Front/Back) and records the user's self-graded retention (0-3).
+ * When complete, it displays a success/summary screen.
+ */
 export default function FlashcardRunner({ deckId, onClose }: FlashcardRunnerProps) {
   const [cards, setCards] = useState<Card[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -27,6 +33,11 @@ export default function FlashcardRunner({ deckId, onClose }: FlashcardRunnerProp
   const [completing, setCompleting] = useState(false);
   const [isCramMode, setIsCramMode] = useState(false);
 
+  /**
+   * Session Initialization
+   * Pulls the appropriate study batch based on the mode.
+   * `cram` mode ignores spaced-repetition math and pulls all cards.
+   */
   const fetchSession = async (cram = false) => {
     setLoading(true);
     try {
@@ -48,6 +59,11 @@ export default function FlashcardRunner({ deckId, onClose }: FlashcardRunnerProp
     fetchSession();
   }, [deckId]);
 
+  /**
+   * Handle Review Submission
+   * Submits the self-assessed grade (0=Again, 1=Hard, 2=Good, 3=Easy) to the
+   * SuperMemo-2 algorithm endpoint to calculate the next interval.
+   */
   const handleReview = async (grade: number) => {
     if (currentIndex >= cards.length) return;
     

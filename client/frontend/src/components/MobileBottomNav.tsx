@@ -11,6 +11,11 @@ const navItems = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
+/**
+ * Mobile Bottom Navigation
+ * Replaces the Sidebar on devices with smaller screens (e.g., phones)
+ * to provide easy thumb-level access to core routes.
+ */
 export default function MobileBottomNav() {
   const pathname = usePathname();
 

@@ -4,6 +4,12 @@ import React, { useState } from "react";
 import { Play, Pause, Volume2, RotateCcw, AlertCircle } from "lucide-react";
 import { useAudio } from "@/context/AudioContext";
 
+/**
+ * Global Focus Audio Player
+ * A floating widget that controls the background ambient noise for deep work.
+ * Connects directly to the `AudioContext` to manage playback, volume, and looping.
+ * Includes a visualizer animation and a blocked-audio recovery prompt.
+ */
 export default function FocusAudioPlayer() {
   const { 
     isPlaying, 

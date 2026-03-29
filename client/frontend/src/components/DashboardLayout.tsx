@@ -13,6 +13,12 @@ import Link from "next/link";
 
 const version = packageInfo.version;
 
+/**
+ * Main Dashboard Layout
+ * Wraps authenticated routes with the primary application shell.
+ * Includes the Sidebar, TopNav, MobileBottomNav, and global overlays
+ * like the Focus Audio Player and Dreamer Modal.
+ */
 export default function DashboardLayout({
   children,
 }: {
@@ -22,6 +28,11 @@ export default function DashboardLayout({
   const { vibrateClick } = useHaptics();
   const prevLevelRef = useRef<number | undefined>(user?.levelData?.currentLevel);
 
+  /**
+   * Level Up Haptic Feedback
+   * Listens for changes in the user's currentLevel. If the level increases,
+   * it triggers a haptic vibration to celebrate the milestone.
+   */
   useEffect(() => {
     if (user?.levelData?.currentLevel !== undefined) {
       if (prevLevelRef.current !== undefined && user.levelData.currentLevel > prevLevelRef.current) {
@@ -29,7 +40,7 @@ export default function DashboardLayout({
       }
       prevLevelRef.current = user.levelData.currentLevel;
     }
-  }, [user?.levelData?.currentLevel]);
+  }, [user?.levelData?.currentLevel, vibrateClick]);
 
   return (
     <ProtectedRoute>

@@ -27,6 +27,12 @@ const CHEAT_SHEET = [
   { label: "Infinity", code: "\\infty" },
 ];
 
+/**
+ * Add Card Modal
+ * An overlay for adding a new flashcard to a specific deck.
+ * Features a split-view design with a live LaTeX preview rendering via KaTeX.
+ * Also includes a toggleable LaTeX cheat sheet for quick reference.
+ */
 export default function AddCardModal({ isOpen, onClose, deckId, onSuccess }: AddCardModalProps) {
   const [frontText, setFrontText] = useState("");
   const [backText, setBackText] = useState("");

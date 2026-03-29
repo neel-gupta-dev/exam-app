@@ -24,11 +24,22 @@ const navItems = [
   { href: "/profile", label: "Profile", icon: UserIcon },
 ];
 
+/**
+ * Main Application Sidebar
+ * Primary navigation menu for authenticated routes.
+ * Dynamically fetches and displays user-created resource folders.
+ */
 export default function Sidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
   const [folders, setFolders] = useState<string[]>([]);
 
+  /**
+   * Dynamic Folder Fetching
+   * Fetches unique folder names from the user's saved resources.
+   * Listens to the global `resourceAdded` event to refresh the folder
+   * list immediately after a new Quick Save.
+   */
   useEffect(() => {
     const fetchFolders = async () => {
       try {

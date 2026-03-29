@@ -13,6 +13,11 @@ import { useSearch } from "@/context/SearchContext";
 import { sendGAEvent } from '@next/third-parties/google';
 import MonthlyGoalWidget from "@/components/MonthlyGoalWidget";
 
+/**
+ * Progress Widget Component
+ * Displays the user's current level, remaining XP, total resources saved,
+ * and a GitHub-style heatmap showing the last 28 days of activity.
+ */
 function ProgressWidget({ resourceCount, heatmapData, currentStreak, user }: { resourceCount: number, heatmapData: number[], currentStreak: number, user: User | null }) {
   const getHeatmapClass = (count: number, maxCount: number) => {
     if (count === 0) return "bg-surface-variant/50";
@@ -135,12 +140,24 @@ function QuickTipCard() {
   );
 }
 
+/**
+ * Main Dashboard View
+ * The primary authenticated landing page. Aggregates data from various 
+ * endpoints to display recent resources, progress widgets, and learning streaks.
+ */
 export default function DashboardView() {
   const { user } = useAuth();
   const [resourceCount, setResourceCount] = useState(0);
   const [heatmapData, setHeatmapData] = useState<number[]>(new Array(28).fill(0));
   const { searchQuery, setSearchQuery } = useSearch();
 
+  /**
+   * Aggregate Stats Fetcher
+   * Fetches up to 200 recent resources to calculate:
+   * 1. Total resource count
+   * 2. A 28-day activity heatmap
+   * Also listens to 'resourceAdded' to dynamically refresh the heatmap.
+   */
   useEffect(() => {
     const fetchStats = async () => {
       try {
