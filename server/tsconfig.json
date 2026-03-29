@@ -5,9 +5,9 @@
     "moduleResolution": "node",
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["../shared/*"],
       "@/*": ["./src/*"]
     },
+
     "allowJs": true,
     "checkJs": false,
     "noEmit": true,
@@ -15,5 +15,6 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*", "../shared/**/*"]
+  "include": ["src/**/*"]
+
 }
