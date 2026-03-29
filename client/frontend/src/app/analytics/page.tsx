@@ -40,12 +40,25 @@ function getHeatmapClass(level: number) {
   return "bg-primary border-2 border-white ring-2 ring-primary/30 scale-110";
 }
 
+/**
+ * Analytics Dashboard Page
+ * Displays personalized metrics and visualizations based on the user's 
+ * vault activity, focus sessions, and saved resources.
+ */
 export default function AnalyticsPage() {
+  // Global user state and authentication token access
   const { user } = useAuth();
+  
+  // Local state for fetched analytics data
   const [resources, setResources] = useState<Resource[]>([]);
   const [heatmapData, setHeatmapData] = useState<{date: string, displayDay: number, units: number, level: number}[]>([]);
   const [loading, setLoading] = useState(true);
 
+  /**
+   * Data Fetching Effect
+   * Parallelizes network requests to fetch all resources for calculation
+   * and pre-aggregated heatmap data from the backend.
+   */
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
@@ -82,7 +95,11 @@ export default function AnalyticsPage() {
   const folders = Array.from(new Set(resources.map((r) => r.folderName).filter(Boolean))) as string[];
   const uniqueFoldersCount = folders.length;
 
-  // Process folder distribution for "Subject Mastery"
+  /**
+   * Data Processing: Subject Mastery
+   * Calculates the distribution of resources across the user's custom folders.
+   * Finds the top 5 most populated folders to display in the UI.
+   */
   const folderCounts: Record<string, number> = {};
   resources.forEach(r => {
     if (r.folderName) {
@@ -142,6 +159,10 @@ export default function AnalyticsPage() {
     };
   });
 
+  /**
+   * Data Processing: Daily Streaks Heatmap
+   * Formats the trailing 21-day heatmap array. If no data exists, creates an empty skeleton.
+   */
   const analyticsHeatmap = heatmapData.length > 0 
     ? heatmapData 
     : new Array(21).fill(0).map((_, i) => ({ displayDay: i + 1, level: 0 })); 

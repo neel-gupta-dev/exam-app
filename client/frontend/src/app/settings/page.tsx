@@ -10,8 +10,14 @@ import StreakIcon from "@/components/StreakIcon";
 import { TARGET_EXAMS as EXAMS } from '@shared/constants';
 import MonthlyGoalWidget from "@/components/MonthlyGoalWidget";
 
+/**
+ * Settings Page
+ * Allows users to update their personal information, target exams, app preferences (haptics),
+ * and change their password.
+ */
 export default function SettingsPage() {
 
+  // Global authentication state and refresh function
   const { user, fetchUser, hapticsEnabled, setHapticsEnabled } = useAuth();
 
   const [profileForm, setProfileForm] = useState({
@@ -56,6 +62,10 @@ export default function SettingsPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isDropdownOpen]);
 
+  /**
+   * Input Change Handlers
+   * Standard controlled component handlers for form updates.
+   */
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setProfileForm({ ...profileForm, [e.target.name]: e.target.value });
   };
@@ -77,6 +87,10 @@ export default function SettingsPage() {
     }
   };
 
+  /**
+   * Password Update Logic
+   * Validates matching passwords before submitting to the security endpoint.
+   */
   const submitPassword = async () => {
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       return toast.error("New passwords do not match");

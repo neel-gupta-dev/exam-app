@@ -46,6 +46,11 @@ interface HealthData {
   environment: string;
 }
 
+/**
+ * API Health Dashboard
+ * An admin/diagnostic interface to monitor the Express backend and MongoDB status.
+ * Implements real-time polling to calculate API latency and server load.
+ */
 export default function HealthPage() {
   const [data, setData] = useState<HealthData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,6 +64,11 @@ export default function HealthPage() {
     setMounted(true);
   }, []);
 
+  /**
+   * Health Fetcher & Latency Calculator
+   * Wraps the API call in a performance timer to continuously measure
+   * and store frontend-to-backend ping latency.
+   */
   const fetchHealth = useCallback(async () => {
     setIsRefreshing(true);
     const start = performance.now();

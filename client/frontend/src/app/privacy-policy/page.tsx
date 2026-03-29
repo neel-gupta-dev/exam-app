@@ -4,6 +4,10 @@ import React from "react";
 import Link from "next/link";
 import { Montserrat, Poppins, Hanken_Grotesk } from "next/font/google";
 
+/**
+ * Privacy Policy Page
+ * Static legal page detailing data collection, usage, and user rights.
+ */
 export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-surface text-on-surface font-body selection:bg-primary/20">

@@ -9,13 +9,23 @@ import { useRouter } from 'next/navigation';
 import { API_BASE_URL } from '@/config/env';
 import { sendGAEvent } from '@next/third-parties/google';
 
+/**
+ * Signup Page Component
+ * Handles new user registration, validation (password matching rules),
+ * and redirects already authenticated users back to the dashboard.
+ */
 export default function SignupPage() {
+  // Global auth state
   const { user, isLoading, register } = useAuth();
+  
+  // Local form state
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // Compliance and hydration
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
@@ -26,6 +36,11 @@ export default function SignupPage() {
     setMounted(true);
   }, []);
 
+  /**
+   * Post-Mount Authentication Check
+   * If the user arrives at the signup page but is already logged in,
+   * alert them and automatically redirect them to the dashboard.
+   */
   React.useEffect(() => {
     if (mounted && !isLoading && !initialCheckDone) {
       if (user) {
@@ -38,6 +53,11 @@ export default function SignupPage() {
 
   if (!mounted) return null;
 
+  /**
+   * Form Submission Handler
+   * Validates passwords, sends data to API via AuthContext `register`,
+   * and triggers a success/failure Google Analytics event.
+   */
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!name || !email || !password || !confirmPassword) {

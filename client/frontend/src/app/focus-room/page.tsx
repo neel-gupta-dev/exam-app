@@ -10,7 +10,13 @@ import { toast } from "sonner";
 import { useAudio } from "@/context/AudioContext";
 import { useHaptics } from "@/hooks/useHaptics";
 
+/**
+ * Focus Room Page
+ * The core "Deep Work" environment for Vayl. Features a customizable Pomodoro
+ * timer, ambient soundscapes, haptic feedback, and distraction tracking.
+ */
 export default function FocusRoomPage() {
+  // Timer Core State
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [initialTime, setInitialTime] = useState(25 * 60);
   const [isRunning, setIsRunning] = useState(false);
@@ -28,7 +34,11 @@ export default function FocusRoomPage() {
   const sessionIdRef = useRef<string | null>(null);
   const interruptionCountRef = useRef(0);
 
-  // Distraction Tracking Effect
+  /**
+   * Distraction Tracking Effect
+   * Listens for tab/window visibility changes. If the user leaves the tab
+   * while a focus session is active, it increments an interruption counter.
+   */
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden && isRunning && !isBreak) {
@@ -40,7 +50,12 @@ export default function FocusRoomPage() {
     return () => window.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [isRunning, isBreak]);
 
-  // Beacon Fail-safe for Tab Closure
+  /**
+   * Beacon Fail-safe for Tab Closure
+   * If the user closes the browser or tab while a session is active,
+   * we use navigator.sendBeacon to ensure the backend receives the 'abandoned'
+   * status and partial duration before the window unloads.
+   */
   useEffect(() => {
     const handleUnload = () => {
       if (sessionIdRef.current) {
@@ -59,6 +74,10 @@ export default function FocusRoomPage() {
     return () => window.removeEventListener("beforeunload", handleUnload);
   }, []);
 
+  /**
+   * Start Session Handler
+   * Notifies the backend that a new timer has started, capturing the planned duration.
+   */
   const startSession = async (type: 'focus' | 'short-break' | 'long-break') => {
     try {
       const { data } = await api.post('/focus/start', {
@@ -72,6 +91,11 @@ export default function FocusRoomPage() {
     }
   };
 
+  /**
+   * End Session Handler
+   * Finalizes the session on the backend, calculates XP earned if completed,
+   * and triggers global events to update the user's level and streak.
+   */
   const endSession = async (status: 'completed' | 'abandoned') => {
     if (!sessionIdRef.current) return;
     try {
@@ -94,7 +118,11 @@ export default function FocusRoomPage() {
     }
   };
 
-  // Timer Engine
+  /**
+   * Main Timer Engine
+   * Ticks every second when `isRunning` is true. Handles phase transitions 
+   * (Focus -> Break -> Focus) automatically when `timeLeft` reaches 0.
+   */
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isRunning && timeLeft > 0) {

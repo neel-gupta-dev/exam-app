@@ -6,6 +6,11 @@ import { BookOpen, Target, Brain, ArrowRight, ShieldCheck, Timer } from 'lucide-
 import Image from 'next/image';
 import { sendGAEvent } from '@next/third-parties/google';
 
+/**
+ * Static Article Definitions
+ * Defines the core blog posts available on the platform and their metadata.
+ * In a fully dynamic system, this would be fetched from a headless CMS.
+ */
 const ARTICLES = [
   {
     slug: 'the-jee-2026-roadmap',
@@ -54,6 +59,11 @@ const ARTICLES = [
   }
 ];
 
+/**
+ * Blog Hub Page
+ * Public-facing page displaying educational content and strategies.
+ * Also acts as an SEO landing page to drive organic traffic to the app.
+ */
 export default function BlogHub() {
   return (
     <div className="min-h-screen bg-surface text-on-surface font-body selection:bg-primary/20 pb-20">

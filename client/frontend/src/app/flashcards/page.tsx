@@ -59,6 +59,11 @@ function EmptyState({ onCreateDeck }: { onCreateDeck: () => void }) {
   );
 }
 
+/**
+ * Flashcards Sub-System
+ * The main container for creating, managing, and studying spaced-repetition flashcards.
+ * Hosts multiple specialized modals (CreateDeck, AddCard) and the FlashcardRunner.
+ */
 export default function FlashcardsPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -70,6 +75,11 @@ export default function FlashcardsPage() {
   const [isRunnerOpen, setIsRunnerOpen] = useState(false);
   const [selectedDeckId, setSelectedDeckId] = useState<string | null>(null);
 
+  /**
+   * Data Loading
+   * Retrieves all flashcard decks associated with the user, including metadata
+   * like `totalCards` and `dueCards` calculation from the backend.
+   */
   const fetchDecks = async () => {
     try {
       const response = await api.get('/study/decks');

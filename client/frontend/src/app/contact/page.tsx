@@ -4,6 +4,11 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 
+/**
+ * Contact Page
+ * A static page providing support email and technical assistance information.
+ * Uses consistent glassmorphic styling and ambient orbs for the background.
+ */
 export default function ContactPage() {
   return (
     <div className="min-h-screen bg-surface text-on-surface font-body selection:bg-primary/20">

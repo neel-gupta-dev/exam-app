@@ -8,6 +8,11 @@ import { toast } from 'sonner';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { API_BASE_URL } from '@/config/env';
 
+/**
+ * Login Page Wrapper
+ * Wraps the main login content in a Suspense boundary because we use
+ * `useSearchParams` to capture tokens from OAuth redirects.
+ */
 export default function LoginPage() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-surface flex items-center justify-center text-primary font-black uppercase tracking-widest animate-pulse">Initializing Vault...</div>}>
@@ -16,14 +21,26 @@ export default function LoginPage() {
   );
 }
 
+/**
+ * Main Login Component
+ * Handles traditional email/password login, Google OAuth redirects,
+ * and automatically diverts authenticated users to the dashboard.
+ */
 function LoginContent() {
+  // Global auth state
   const { user, isLoading, login, loginWithToken } = useAuth();
+  
+  // Local form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  
+  // Hydration and redirect state
   const [initialCheckDone, setInitialCheckDone] = useState(false);
   const [mounted, setMounted] = useState(false);
+  
+  // URL and Navigation
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -31,6 +48,11 @@ function LoginContent() {
     setMounted(true);
   }, []);
 
+  /**
+   * Post-Mount Authentication Check
+   * If the user is already perfectly authenticated (token exists and verified),
+   * instantly push them to the dashboard preventing manual re-login.
+   */
   useEffect(() => {
     if (mounted && !isLoading && !initialCheckDone) {
       if (user) {
@@ -41,6 +63,11 @@ function LoginContent() {
     }
   }, [user, isLoading, initialCheckDone, router, mounted]);
 
+  /**
+   * OAuth Token Interceptor
+   * When Google auth redirects back to this page, it appends a `?token=XYZ` query.
+   * We intercept this, save the token, and finish the login sequence via AuthContext.
+   */
   useEffect(() => {
     const token = searchParams.get('token');
     if (token) {
@@ -55,10 +82,18 @@ function LoginContent() {
 
   if (!mounted) return null;
 
+  /**
+   * Google OAuth Trigger
+   * Redirects the user to the Express backend OAuth endpoint.
+   */
   const handleGoogleLogin = () => {
     window.location.href = `${API_BASE_URL}/auth/google`;
   };
 
+  /**
+   * Email/Password Submission
+   * Logs in a traditional account using the global `login` method.
+   */
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!email || !password) {

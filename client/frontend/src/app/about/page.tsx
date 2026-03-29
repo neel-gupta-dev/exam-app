@@ -4,6 +4,11 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 
+/**
+ * About Page
+ * A static marketing page explaining the mission and vision of the Vayl platform.
+ * Utilizes a responsive, glassmorphic UI design to match the app's aesthetic.
+ */
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-surface text-on-surface font-body selection:bg-primary/20">

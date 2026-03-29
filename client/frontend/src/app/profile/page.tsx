@@ -26,7 +26,13 @@ import {
 import LevelBadge from "@/components/LevelBadge";
 import LevelProgressBar from "@/components/LevelProgressBar";
 
+/**
+ * Personal Profile Page
+ * Displays the user's level, XP progress, study statistics, and recent activity.
+ * Also generates the shareable "Student Passport".
+ */
 export default function ProfilePage() {
+  // Access global user context and logout function
   const { user, logout } = useAuth();
   const [resourceCount, setResourceCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -36,6 +42,11 @@ export default function ProfilePage() {
     setOrigin(window.location.origin);
   }, []);
 
+  /**
+   * Data Aggregation Effect
+   * Fetches the total number of resources saved by the user to populate
+   * the profile statistics.
+   */
   useEffect(() => {
     const fetchStats = async () => {
       try {

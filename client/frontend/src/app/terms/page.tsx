@@ -3,6 +3,10 @@
 import React from "react";
 import Link from "next/link";
 
+/**
+ * Terms Of Service Page
+ * Static legal page outlining user conduct, privacy agreements, and intellectual property.
+ */
 export default function TermsOfService() {
   return (
     <div className="min-h-screen bg-surface text-on-surface font-body selection:bg-primary/20">

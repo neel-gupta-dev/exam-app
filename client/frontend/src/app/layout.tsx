@@ -8,6 +8,11 @@ import GoogleSchema from "@/components/GoogleSchema";
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css";
 
+/**
+ * Font Configurations
+ * We use next/font/google to optimize and load fonts at build time.
+ * This prevents layout shift and improves performance.
+ */
 const montserrat = Montserrat({
   subsets: ["latin"],
   weight: ["700", "800"],
@@ -29,6 +34,11 @@ const hanken = Hanken_Grotesk({
   display: "swap",
 });
 
+/**
+ * Global Metadata Configuration
+ * This object defines the SEO, OpenGraph data, Twitter cards, and other head tags
+ * that apply globally across the Vayl application. Individual pages can override these.
+ */
 export const metadata: Metadata = {
   metadataBase: new URL('https://vayl-app.vercel.app'),
   title: {
@@ -104,6 +114,13 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * Root Layout Component
+ * This is the top-level wrapper for the entire Next.js application.
+ * It injects essential providers (like Auth Context), global styling (Tailwind/CSS),
+ * and analytics scripts (Vercel Analytics, Google Analytics) into the DOM.
+ * All nested pages are rendered inside the `children` prop.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{

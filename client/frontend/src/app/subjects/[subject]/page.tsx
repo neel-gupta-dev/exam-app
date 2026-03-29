@@ -36,8 +36,15 @@ const unitIcons: Record<string, React.ReactNode> = {
   folder: <FolderOpen className="w-7 h-7 text-primary" />
 };
 
+/**
+ * Subject Detailed View
+ * Dynamic route to display all resources saved under a specific subject folder (e.g. /subjects/physics).
+ * Parses the subject name from the URL, fetches matching resources, and calculates progress.
+ */
 export default function SubjectPage({ params }: { params: Promise<{ subject: string }> }) {
   const router = useRouter();
+  
+  // Unpack dynamic route parameter
   const { subject } = use(params);
   const decodedSubject = decodeURIComponent(subject);
   
@@ -49,6 +56,11 @@ export default function SubjectPage({ params }: { params: Promise<{ subject: str
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchLoading, setIsSearchLoading] = useState(false);
 
+  /**
+   * Data Fetching
+   * Queries the backend for resources strictly belonging to the active `decodedSubject`.
+   * Also applies the current `searchQuery` if one exists.
+   */
   useEffect(() => {
     const fetchSubjectResources = async () => {
       setIsSearchLoading(true);

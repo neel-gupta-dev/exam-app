@@ -64,6 +64,12 @@ function timeAgo(dateStr: string): string {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/**
+ * Resource Viewer Page
+ * Central hub for consuming saved content. Provides specialized viewers for 
+ * YouTube videos, PDFs, and generic external links, along with a synchronized
+ * note-taking interface.
+ */
 export default function ResourceViewerPage() {
   const params = useParams();
   const id = params?.id as string;
@@ -76,6 +82,12 @@ export default function ResourceViewerPage() {
   const [videoTitle, setVideoTitle] = useState<string | null>(null);
 
   // ── Track session duration for confidence prompt ──────────────────────
+  /**
+   * Session Duration Tracker
+   * Checks if the user spends more than 5 minutes on a single resource.
+   * If true, it saves a flag to localStorage to trigger a "confidence rating"
+   * modal later in the user flow.
+   */
   useEffect(() => {
     const startTime = Date.now();
 
@@ -162,6 +174,13 @@ export default function ResourceViewerPage() {
   };
 
   // ── Media Viewer ─────────────────────────────────────────────────────
+  /**
+   * Primary Media Viewer Renderer
+   * Dynamically selects the best rendering method based on the resource URL:
+   * 1. YouTube embeds without cookies.
+   * 2. Direct PDF iframes.
+   * 3. Generic sandboxed iframes for arbitrary web links.
+   */
   const renderViewer = () => {
     if (!resource) return null;
 
