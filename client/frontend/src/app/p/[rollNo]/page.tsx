@@ -84,7 +84,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
         </nav>
       </header>
 
-      <main className="pt-32 pb-20 max-w-5xl mx-auto px-6 space-y-16">
+      <main className="pt-24 pb-20 max-w-5xl mx-auto px-4 md:px-6 space-y-10 md:space-y-16">
         {/* Hero Section: Virtual ID Card Style */}
         <section className="flex flex-col items-center justify-center text-center space-y-10">
           <div className="w-full max-w-2xl bg-surface-container-low rounded-xl p-1 shadow-2xl shadow-primary/5 relative overflow-hidden group border border-white/5">
@@ -92,7 +92,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/5 rounded-full -ml-24 -mb-24 blur-3xl"></div>
 
-            <div className="relative bg-surface-container border border-outline-variant/10 rounded-lg p-8 md:p-12 flex flex-col md:flex-row items-center gap-10">
+            <div className="relative bg-surface-container border border-outline-variant/10 rounded-lg p-6 md:p-12 flex flex-col md:flex-row items-center gap-6 md:gap-10">
               {/* Profile Image with Level Badge */}
               <div className="relative">
                 <div className="w-32 h-32 md:w-40 md:h-40 rounded-lg overflow-hidden border-2 border-primary/20 p-1 bg-surface-container-highest/30">
@@ -140,8 +140,8 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
         </section>
 
         {/* Activity Summary: Bento Grid */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-surface-container-low p-8 rounded-xl flex flex-col items-center justify-center text-center space-y-3 border border-white/5">
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+          <div className="bg-surface-container-low p-6 md:p-8 rounded-xl flex flex-col items-center justify-center text-center space-y-3 border border-white/5">
             <span className="text-on-surface-variant text-sm font-medium tracking-tight opacity-60">Total Study Hours</span>
             <span className="text-4xl font-headline font-extrabold text-on-surface tracking-tighter">{profile.totalStudyHours}h</span>
             <div className="w-full h-1 bg-surface-variant rounded-full overflow-hidden">
@@ -149,7 +149,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             </div>
           </div>
 
-          <div className="bg-surface-container-low p-8 rounded-xl flex flex-col items-center justify-center text-center space-y-3 border border-white/5">
+          <div className="bg-surface-container-low p-6 md:p-8 rounded-xl flex flex-col items-center justify-center text-center space-y-3 border border-white/5">
             <span className="text-on-surface-variant text-sm font-medium tracking-tight opacity-60">Learning Streak</span>
             <div className="flex items-end gap-1">
               <span className="text-4xl font-headline font-extrabold text-on-surface tracking-tighter">{profile.streak}</span>
@@ -162,7 +162,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             </div>
           </div>
 
-          <div className="bg-surface-container-low p-8 rounded-xl flex flex-col items-center justify-center text-center space-y-3 border border-white/5">
+          <div className="bg-surface-container-low p-6 md:p-8 rounded-xl flex flex-col items-center justify-center text-center space-y-3 border border-white/5">
             <span className="text-on-surface-variant text-sm font-medium tracking-tight opacity-60">Resources Saved</span>
             <span className="text-4xl font-headline font-extrabold text-on-surface tracking-tighter">{profile.resourceCount}</span>
             <span className="text-xs text-on-surface-variant font-bold text-primary">+8 this week</span>
@@ -197,7 +197,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
         </section>
 
         {/* Activity Insight Section */}
-        <section className="bg-surface-container-low p-8 rounded-xl border border-white/5 overflow-hidden relative group">
+        <section className="bg-surface-container-low p-6 md:p-8 rounded-xl border border-white/5 overflow-hidden relative group">
           <div className="absolute bottom-0 left-0 w-full flex items-end justify-between px-10 h-24 opacity-20 group-hover:opacity-40 transition-opacity duration-700">
             {[40, 60, 30, 80, 50, 95, 70].map((h, i) => (
               <div key={i} className="w-10 bg-primary/50 rounded-t-sm" style={{ height: `${h}%` }} />

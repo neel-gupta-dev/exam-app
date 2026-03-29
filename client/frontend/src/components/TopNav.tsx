@@ -38,7 +38,7 @@ export default function TopNav() {
         e.preventDefault();
         searchInputRef.current?.focus();
       }
-      
+
       // ⌘/Ctrl + S (Quick Save Modal)
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
@@ -58,7 +58,7 @@ export default function TopNav() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        dropdownRef.current && 
+        dropdownRef.current &&
         !dropdownRef.current.contains(event.target as Node) &&
         searchInputRef.current &&
         !searchInputRef.current.contains(event.target as Node)
@@ -116,7 +116,7 @@ export default function TopNav() {
     e.preventDefault();
     if (!url) return toast.error("URL is required");
     if (!title) return toast.error("Title is required");
-    
+
     setLoading(true);
     try {
       await api.post('/resources', { url, title, type, folderName: folderName || "General" });
@@ -138,9 +138,14 @@ export default function TopNav() {
 
   return (
     <>
-      <header className="fixed top-0 right-0 h-16 bg-surface flex items-center justify-between px-8 w-[calc(100%-16rem)] ml-auto z-40">
+      <header className="fixed top-0 right-0 h-16 bg-surface flex items-center justify-between px-4 md:px-8 w-full md:w-[calc(100%-16rem)] ml-auto z-40">
+        {/* Mobile Brand */}
+        <div className="flex items-center gap-2 md:hidden mr-2 shrink-0">
+          <img src="/vayl-logo.png" alt="Vayl" className="w-6 h-6 object-contain" />
+        </div>
+
         {/* Search */}
-        <div className="flex items-center gap-4 w-1/2">
+        <div className="flex items-center gap-2 md:gap-4 flex-1 max-w-xl md:w-1/2">
           <div className="relative w-full max-w-md">
             <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors z-10 ${showResults ? 'text-primary' : 'text-on-surface-variant'}`} />
             <input
@@ -151,10 +156,10 @@ export default function TopNav() {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleSearchKeyDown}
               onFocus={() => searchQuery && setShowResults(true)}
-              className="w-full bg-surface-container-highest border-none rounded-xl pl-10 pr-4 py-2.5 text-sm focus:ring-1 focus:ring-primary/50 placeholder:text-outline text-on-surface transition-all outline-none z-10 relative"
+              className="w-full bg-surface-container-highest border-none rounded-xl pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-primary/50 placeholder:text-outline text-on-surface transition-all outline-none z-10 relative"
             />
             {!searchQuery && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1 pointer-events-none z-10">
+              <div className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 gap-1 pointer-events-none z-10">
                 <span className="bg-surface-container rounded px-1.5 py-0.5 text-[10px] text-on-surface-variant font-mono border border-outline-variant/20">
                   {modifierSymbol}
                 </span>
@@ -167,9 +172,9 @@ export default function TopNav() {
             {/* Results Dropdown Container */}
             <div ref={dropdownRef}>
               {showResults && (
-                <SearchDropdown 
-                  results={results} 
-                  isLoading={isSearching} 
+                <SearchDropdown
+                  results={results}
+                  isLoading={isSearching}
                   query={searchQuery}
                   onClose={() => setShowResults(false)}
                   onSelect={handleResultSelect}
@@ -179,16 +184,16 @@ export default function TopNav() {
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-6">
-          <button 
+        {/* Actions - Desktop & Mobile */}
+        <div className="flex items-center gap-3 md:gap-6 ml-2 shrink-0">
+          <button
             onClick={() => setIsOpen(true)}
-            className="bg-indigo-500 hover:opacity-90 transition-all text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2"
+            className="bg-indigo-500 hover:opacity-90 transition-all text-white px-3 md:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1 md:gap-2"
           >
             <Plus className="w-4 h-4" />
-            Quick Save
+            <span className="hidden sm:inline">Save Resource</span>
           </button>
-          <div className="flex items-center gap-4 text-on-surface-variant">
+          <div className="hidden md:flex items-center gap-4 text-on-surface-variant">
             <button className="hover:text-indigo-300 transition-opacity">
               <Bell className="w-5 h-5" />
             </button>
@@ -205,7 +210,7 @@ export default function TopNav() {
           <div className="bg-surface-container rounded-2xl w-full max-w-sm shadow-2xl border border-white/10 relative overflow-hidden pointer-events-auto">
             <div className="p-5 border-b border-outline-variant/20 flex justify-between items-center">
               <h2 className="font-headline font-bold text-on-surface">Save Resource</h2>
-              <button 
+              <button
                 onClick={() => setIsOpen(false)}
                 className="p-1 rounded-lg hover:bg-surface-bright text-on-surface-variant transition-colors"
               >

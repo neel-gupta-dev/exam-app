@@ -65,16 +65,32 @@ function ResourceCard({ resource }: { resource: Resource }) {
 // Empty States
 // ----------------------------------------------------------------------------
 function EmptyState() {
+  const handleQuickSaveClick = () => {
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 's',
+        ctrlKey: true,
+        bubbles: true,
+      })
+    );
+  };
+
   return (
     <div className="bg-surface-container/50 border border-dashed border-outline-variant/30 rounded-2xl p-10 flex flex-col items-center justify-center text-center">
       <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
         <FolderOpen className="w-8 h-8 text-primary" />
       </div>
-      <h3 className="text-lg font-bold text-on-surface mb-2">Your Vault is Empty</h3>
-      <h3 className="text-lg font-bold text-on-surface mb-2">Press Ctrl+S</h3>
-      <p className="text-sm text-on-surface-variant max-w-xs mb-6">
-        Click <strong>Quick Save in the top right</strong> to start adding your study materials, PDFs, or YouTube links.
+      <h3 className="text-lg font-bold text-on-surface mb-1">Your Vault is Empty</h3>
+      <p className="text-sm text-on-surface-variant max-w-xs mb-6 mt-2">
+        Click below to start adding your study materials, PDFs, or YouTube links.
       </p>
+      <button 
+        onClick={handleQuickSaveClick}
+        className="px-8 py-3 bg-primary text-on-primary font-bold rounded-xl active:scale-95 transition-all shadow-xl shadow-primary/20 hover:bg-primary-container"
+      >
+        Save a Resource
+      </button>
+      <p className="text-xs text-on-surface-variant mt-4 opacity-50 hidden md:block">Shortcut: Ctrl+S or ⌘+S</p>
     </div>
   );
 }

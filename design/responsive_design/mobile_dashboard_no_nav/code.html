@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vayl - Main Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary-fixed": "#2f384f",
+                        "inverse-primary": "#494bd7",
+                        "on-background": "#dde6f2",
+                        "tertiary-container": "#ced6f5",
+                        "surface-container-lowest": "#000000",
+                        "secondary-container": "#3c3b3f",
+                        "primary-container": "#2f2ebe",
+                        "tertiary-dim": "#c0c9e6",
+                        "on-secondary-fixed-variant": "#5c5b5f",
+                        "primary": "#c0c1ff",
+                        "inverse-on-surface": "#535559",
+                        "surface": "#0b0e11",
+                        "secondary-dim": "#9f9da1",
+                        "error": "#ec7c8a",
+                        "on-surface-variant": "#a3acb7",
+                        "background": "#0b0e11",
+                        "tertiary-fixed-dim": "#c0c9e6",
+                        "surface-tint": "#c0c1ff",
+                        "on-tertiary": "#4a536c",
+                        "tertiary": "#dee5ff",
+                        "surface-variant": "#1e272f",
+                        "on-error-container": "#ff97a3",
+                        "on-secondary-container": "#c1bec3",
+                        "primary-fixed-dim": "#d1d0ff",
+                        "on-error": "#490013",
+                        "error-dim": "#b95463",
+                        "surface-container": "#141a20",
+                        "outline": "#6d7680",
+                        "surface-bright": "#222d37",
+                        "surface-dim": "#0b0e11",
+                        "on-secondary-fixed": "#403f43",
+                        "outline-variant": "#404952",
+                        "on-primary-fixed": "#2622b7",
+                        "on-primary": "#2724b8",
+                        "tertiary-fixed": "#ced6f5",
+                        "surface-container-high": "#192027",
+                        "on-tertiary-fixed-variant": "#4b546d",
+                        "surface-container-highest": "#1e272f",
+                        "on-primary-fixed-variant": "#4647d3",
+                        "error-container": "#7f2737",
+                        "surface-container-low": "#0f1418",
+                        "secondary-fixed-dim": "#d6d3d8",
+                        "secondary-fixed": "#e5e1e6",
+                        "on-secondary": "#202023",
+                        "primary-dim": "#b0b2ff",
+                        "secondary": "#9f9da1",
+                        "on-surface": "#dde6f2",
+                        "on-primary-container": "#ccccff",
+                        "inverse-surface": "#f8f9fe",
+                        "on-tertiary-container": "#424a63",
+                        "primary-fixed": "#e1e0ff"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #0b0e11;
+            color: #dde6f2;
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface selection:bg-primary/30 min-h-screen">
+<!-- TopAppBar -->
+<header class="bg-[#0b0e11] dark:bg-[#0b0e11] fixed top-0 w-full z-50 flex items-center justify-between px-6 h-16 w-full max-w-none">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-indigo-500 dark:text-indigo-400 cursor-pointer active:scale-95 transition-transform">menu</span>
+<div class="flex items-center gap-2">
+<img alt="Vayl Logo" class="h-6 w-auto" data-alt="Modern abstract geometric logo for a technology brand, featuring minimalist indigo lines on a dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDd_T_isscTnXHCcHBOPmwRHbimCAATU4kETdPmG1qValOqkSdlo2tDnYruMqD5Aura_Mo8RdK4m3GTuBS5jaiYBBjNxzSVxI05I1JY1fGFwt5xNgNN3-k2HEr6vc_jXV5zWGG0BsmNT6kafEf7bnDvrEWUptpZAf5Vc8izvGfaCcACZSWcR130qFGyHDf4xYGrJdLrTpmQBmevcsHeq6Id1VlOTG61BaKmitYewO-k1LpT7qkCI1R23s6jsR7GzJ2MbXQJUtdDx-tc"/>
+<h1 class="font-['Manrope'] font-bold tracking-tight text-lg text-indigo-500 font-black tracking-tighter text-xl">Vayl</h1>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-indigo-500 dark:text-indigo-400 cursor-pointer active:scale-95 transition-transform">notifications</span>
+</div>
+</header>
+<main class="pt-20 px-6 max-w-lg mx-auto pb-12">
+<!-- Welcome Section -->
+<section class="mb-8">
+<h2 class="font-headline text-2xl font-extrabold tracking-tight text-on-surface">Main Dashboard</h2>
+<p class="text-on-surface-variant text-sm mt-1">Ready for another session, Scholar?</p>
+</section>
+<!-- Bento Grid Stats -->
+<div class="grid grid-cols-2 gap-4 mb-8">
+<!-- Goal Progress Card -->
+<div class="col-span-1 bg-surface-container rounded-xl p-5 flex flex-col justify-between aspect-square relative overflow-hidden">
+<div class="z-10">
+<span class="material-symbols-outlined text-primary mb-2">track_changes</span>
+<h3 class="font-headline text-xs font-bold uppercase tracking-widest text-on-surface-variant">Daily Goal</h3>
+</div>
+<div class="z-10 mt-auto">
+<span class="text-3xl font-bold font-headline">75%</span>
+<div class="w-full bg-surface-variant h-1 rounded-full mt-2 overflow-hidden">
+<div class="bg-primary h-full w-[75%] rounded-full"></div>
+</div>
+</div>
+<!-- Subtle Texture/Background Detail -->
+<div class="absolute -bottom-4 -right-4 opacity-10">
+<span class="material-symbols-outlined text-[100px]" style="font-variation-settings: 'FILL' 1;">track_changes</span>
+</div>
+</div>
+<!-- Streak Card -->
+<div class="col-span-1 bg-surface-container rounded-xl p-5 flex flex-col justify-between aspect-square relative overflow-hidden">
+<div class="z-10">
+<span class="material-symbols-outlined text-error mb-2">local_fire_department</span>
+<h3 class="font-headline text-xs font-bold uppercase tracking-widest text-on-surface-variant">Streak</h3>
+</div>
+<div class="z-10 mt-auto">
+<div class="flex items-baseline gap-1">
+<span class="text-3xl font-bold font-headline">12</span>
+<span class="text-sm font-medium text-on-surface-variant">days</span>
+</div>
+<p class="text-[10px] text-on-surface-variant mt-2 leading-tight">Consistent growth detected.</p>
+</div>
+</div>
+<!-- CTA Button Block -->
+<div class="col-span-2">
+<button class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold rounded-xl flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-all">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span class="font-headline tracking-tight">Start Focus Session</span>
+</button>
+</div>
+</div>
+<!-- Recent Resources Section -->
+<section class="mb-12">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-headline text-lg font-bold">Recent Resources</h3>
+<span class="text-xs font-bold text-primary uppercase tracking-tighter cursor-pointer">View All</span>
+</div>
+<div class="space-y-3">
+<!-- Resource Item 1 -->
+<div class="group flex items-center gap-4 p-4 bg-surface-container-low hover:bg-surface-bright transition-colors rounded-xl cursor-pointer">
+<div class="w-12 h-12 rounded-lg bg-surface-variant flex items-center justify-center text-indigo-400 group-hover:bg-primary-container group-hover:text-primary transition-all">
+<span class="material-symbols-outlined">description</span>
+</div>
+<div class="flex-1">
+<h4 class="font-semibold text-sm">Physics Notes</h4>
+<p class="text-xs text-on-surface-variant">Modified 2h ago</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">chevron_right</span>
+</div>
+<!-- Resource Item 2 -->
+<div class="group flex items-center gap-4 p-4 bg-surface-container-low hover:bg-surface-bright transition-colors rounded-xl cursor-pointer">
+<div class="w-12 h-12 rounded-lg bg-surface-variant flex items-center justify-center text-indigo-400 group-hover:bg-primary-container group-hover:text-primary transition-all">
+<span class="material-symbols-outlined">explore</span>
+</div>
+<div class="flex-1">
+<h4 class="font-semibold text-sm">UGEE Strategy</h4>
+<p class="text-xs text-on-surface-variant">Modified Yesterday</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">chevron_right</span>
+</div>
+<!-- Resource Item 3 -->
+<div class="group flex items-center gap-4 p-4 bg-surface-container-low hover:bg-surface-bright transition-colors rounded-xl cursor-pointer">
+<div class="w-12 h-12 rounded-lg bg-surface-variant flex items-center justify-center text-indigo-400 group-hover:bg-primary-container group-hover:text-primary transition-all">
+<span class="material-symbols-outlined">science</span>
+</div>
+<div class="flex-1">
+<h4 class="font-semibold text-sm">Organic Mechanisms</h4>
+<p class="text-xs text-on-surface-variant">Modified 3 days ago</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">chevron_right</span>
+</div>
+</div>
+</section>
+<!-- Upcoming Task Card -->
+<section class="bg-surface-container-high rounded-xl p-5 border-l-4 border-primary">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary text-lg">event</span>
+<h4 class="font-headline text-xs font-bold uppercase tracking-widest text-on-surface-variant">Next Review</h4>
+</div>
+<p class="text-sm font-medium mb-1">Thermodynamics Lab Prep</p>
+<p class="text-xs text-on-surface-variant">Tomorrow, 09:00 AM</p>
+</section>
+</main>
+<!-- BottomNavBar -->
+</body></html>

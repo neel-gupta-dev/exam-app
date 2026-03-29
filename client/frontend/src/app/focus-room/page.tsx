@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 import TopNav from "@/components/TopNav";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { BookOpen, Droplets, AudioLines, Volume2, Timer, Mic2, CloudRain, Headphones, Trees, X, Bell } from "lucide-react";
 import api from "@/lib/api";
 import { toast } from "sonner";
@@ -178,10 +179,12 @@ export default function FocusRoomPage() {
 
   return (
     <div className="min-h-screen bg-surface text-on-surface font-body selection:bg-primary/30 flex">
-      <Sidebar />
+      <div className="hidden md:block">
+        <Sidebar />
+      </div>
       <TopNav />
       {/* Main Content Canvas */}
-      <main className="ml-64 pt-16 flex-1 relative flex flex-col items-center justify-center p-6 sm:p-10 overflow-hidden bg-surface h-screen">
+      <main className="ml-0 md:ml-64 pt-16 flex-1 relative flex flex-col items-center justify-center p-6 sm:p-10 overflow-hidden bg-surface h-screen">
         {/* Ambient Background Element */}
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
           <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] ${isBreak ? "bg-tertiary/5" : "bg-primary/5"} rounded-full blur-[100px] transition-colors duration-1000`}></div>
@@ -442,6 +445,9 @@ export default function FocusRoomPage() {
           </div>
         )}
       </main>
+
+      {/* Deep Focus Mode: Hide Bottom Nav when running */}
+      {(!isRunning || isBreak) && <MobileBottomNav />}
     </div>
   );
 }

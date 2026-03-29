@@ -183,9 +183,9 @@ export default function DashboardView() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-[1400px] mx-auto flex gap-8">
-        {/* Left Column (70%) */}
-        <section className="w-[70%] space-y-8">
+      <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row gap-6 md:gap-8">
+        {/* Left Column (Main Area) */}
+        <section className="w-full md:w-[70%] space-y-6 md:space-y-8">
           <div className="flex items-end justify-between">
             <div>
               <h2 className="text-2xl font-extrabold tracking-tight text-on-surface">
@@ -226,8 +226,8 @@ export default function DashboardView() {
           </div>
         </section>
 
-        {/* Right Column (30%) */}
-        <aside className="w-[30%] space-y-6">
+        {/* Right Column (Widgets) */}
+        <aside className="w-full md:w-[30%] space-y-6">
           <ProgressWidget 
             resourceCount={resourceCount} 
             heatmapData={heatmapData} 

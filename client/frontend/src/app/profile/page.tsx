@@ -57,7 +57,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="max-w-[1400px] mx-auto p-10">
+        <div className="max-w-[1400px] mx-auto p-4 md:p-10">
           <LoadingSkeleton count={3} />
         </div>
       </DashboardLayout>
@@ -86,7 +86,7 @@ export default function ProfilePage() {
         {/* Hero Section */}
         <div className="grid grid-cols-12 gap-8 items-stretch">
           {/* Profile Identity */}
-          <div className="col-span-12 lg:col-span-8 bg-surface-container rounded-[2rem] p-10 flex flex-col md:flex-row gap-10 items-center md:items-start relative overflow-hidden border border-white/[0.03]">
+          <div className="col-span-12 lg:col-span-8 bg-surface-container rounded-[2rem] p-6 md:p-10 flex flex-col md:flex-row gap-6 md:gap-10 items-center md:items-start relative overflow-hidden border border-white/[0.03]">
             <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-[100px]" />
             <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-tertiary/5 rounded-full blur-[80px]" />
             <div className="relative group">
@@ -157,10 +157,10 @@ export default function ProfilePage() {
           </div>
 
           {/* Digital ID Card (Passport Style) */}
-          <div className="col-span-12 lg:col-span-4 mx-auto w-full max-w-sm aspect-[2.125/3.37] bg-gradient-to-br from-indigo-900/20 to-surface-container rounded-[2rem] p-8 flex flex-col justify-between border border-primary/20 relative group overflow-hidden shadow-2xl shadow-primary/5">
+          <div className="col-span-12 lg:col-span-4 mx-auto w-full max-w-sm min-h-[240px] aspect-auto md:min-h-0 md:aspect-[2.125/3.37] bg-gradient-to-br from-indigo-900/20 to-surface-container rounded-[2rem] p-6 md:p-8 flex flex-col justify-between border border-primary/20 relative group overflow-hidden shadow-2xl shadow-primary/5">
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-700" />
             <div className="z-10 h-full flex flex-col">
-              <div className="flex justify-between items-start mb-10">
+              <div className="flex justify-between items-start mb-4 md:mb-10">
                 <div className="space-y-1.5">
                   <h3 className="font-bold text-primary text-[10px] tracking-[0.25em] uppercase">Student Passport</h3>
                   <div className="flex items-center gap-2 group/id">
@@ -184,18 +184,18 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <div className="mt-auto space-y-6">
+              <div className="mt-auto space-y-4 md:space-y-6">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-2xl bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center font-black text-xl text-white shadow-inner">
                     {user?.name?.charAt(0)}
                   </div>
                   <div>
                     <h4 className="text-xl font-bold text-white tracking-tight">{user?.name}</h4>
-                    <p className="text-[10px] font-black text-primary uppercase tracking-widest">{targetExams} Aspirant</p>
+                    <p className="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-widest line-clamp-2 leading-tight mt-1">{targetExams} Aspirant</p>
                   </div>
                 </div>
 
-                <div className="pt-6 border-t border-outline-variant/10 flex justify-between items-end">
+                <div className="pt-4 md:pt-6 border-t border-outline-variant/10 flex justify-between items-end">
                   <div className="space-y-4">
                     <div>
                       <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.15em] block mb-1">Mastery Progress</span>
@@ -240,7 +240,7 @@ export default function ProfilePage() {
         {/* Achievements & Metrics */}
         <div className="grid grid-cols-12 gap-8">
           {/* Achievements */}
-          <div className="col-span-12 md:col-span-8 bg-surface-container rounded-[2rem] p-10 border border-white/[0.03]">
+          <div className="col-span-12 md:col-span-8 bg-surface-container rounded-[2rem] p-6 md:p-10 border border-white/[0.03]">
             <div className="flex items-center justify-between mb-12">
               <div>
                 <h3 className="font-extrabold text-2xl text-white mb-1">Scholar Achievements</h3>
@@ -269,7 +269,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Key Metrics */}
-          <div className="col-span-12 md:col-span-4 bg-surface-container rounded-[2rem] p-10 flex flex-col gap-6 border border-white/[0.03]">
+          <div className="col-span-12 md:col-span-4 bg-surface-container rounded-[2rem] p-6 md:p-10 flex flex-col gap-6 border border-white/[0.03]">
             <h3 className="font-extrabold text-2xl text-white mb-2">Key Metrics</h3>
             <div className="flex flex-col gap-4">
               {[
@@ -296,7 +296,7 @@ export default function ProfilePage() {
 
         {/* Account Configuration */}
         <div className="bg-surface-container rounded-[2rem] overflow-hidden border border-white/[0.03]">
-          <div className="px-10 py-8 border-b border-outline-variant/10 flex items-center justify-between">
+          <div className="px-6 md:px-10 py-6 md:py-8 border-b border-outline-variant/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h3 className="font-extrabold text-2xl text-white">Account Configuration</h3>
               <p className="text-sm text-on-surface-variant font-medium mt-1">Manage your academic identity and security</p>
@@ -307,7 +307,7 @@ export default function ProfilePage() {
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2">
-            <div className="p-10 space-y-10">
+            <div className="p-6 md:p-10 space-y-8 md:space-y-10">
               <div>
                 <label className="text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-3">Primary Email</label>
                 <div className="flex items-center gap-4">
@@ -338,7 +338,7 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-            <div className="p-10 bg-surface-container-high/30 space-y-10 border-l border-outline-variant/5">
+            <div className="p-6 md:p-10 bg-surface-container-high/30 space-y-8 md:space-y-10 border-t md:border-t-0 md:border-l border-outline-variant/5">
               <div>
                 <label className="text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-3">Security Infrastructure</label>
                 <div className="p-5 bg-surface-container rounded-2xl border border-outline-variant/10 flex items-start gap-4">

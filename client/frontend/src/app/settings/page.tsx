@@ -102,17 +102,17 @@ export default function SettingsPage() {
 
   return (
     <DashboardLayout>
-      <div className="flex h-full w-full -m-8">
+      <div className="flex flex-col md:flex-row h-full w-full -m-4 md:-m-8">
         {/* Main Content Area */}
-        <section className="flex-1 overflow-y-auto px-12 py-10">
-          <header className="mb-10">
+        <section className="flex-1 overflow-y-auto px-4 md:px-12 py-6 md:py-10 pb-24 md:pb-10">
+          <header className="mb-6 md:mb-10">
             <h2 className="text-3xl font-extrabold tracking-tight text-on-surface mb-2">Edit Profile</h2>
             <p className="text-on-surface-variant max-w-lg">Manage your identity and digital presence across the Vayl ecosystem.</p>
           </header>
 
           <div className="max-w-3xl space-y-8 pb-10">
             {/* Personal Details Form */}
-            <div className="bg-surface-container p-8 rounded-xl space-y-8 border border-white/5">
+            <div className="bg-surface-container p-6 md:p-8 rounded-xl space-y-6 md:space-y-8 border border-white/5">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-bold">Account Information</h3>
                 <button
@@ -237,7 +237,7 @@ export default function SettingsPage() {
             </div>
 
             {/* App Preferences */}
-            <div className="bg-surface-container p-8 rounded-xl space-y-6 border border-white/5">
+            <div className="bg-surface-container p-6 md:p-8 rounded-xl space-y-6 border border-white/5">
               <h3 className="text-lg font-bold">App Preferences</h3>
               <div className="flex items-center justify-between py-2">
                 <div className="space-y-1">
@@ -254,7 +254,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Change Password Section */}
-            <div className="bg-surface-container p-8 rounded-xl space-y-6 border border-white/5">
+            <div className="bg-surface-container p-6 md:p-8 rounded-xl space-y-6 border border-white/5">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-bold">Change Password</h3>
                 <button

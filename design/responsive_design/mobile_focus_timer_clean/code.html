@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vayl | Focus Timer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary-fixed": "#2f384f",
+                        "inverse-primary": "#494bd7",
+                        "on-background": "#dde6f2",
+                        "tertiary-container": "#ced6f5",
+                        "surface-container-lowest": "#000000",
+                        "secondary-container": "#3c3b3f",
+                        "primary-container": "#2f2ebe",
+                        "tertiary-dim": "#c0c9e6",
+                        "on-secondary-fixed-variant": "#5c5b5f",
+                        "primary": "#c0c1ff",
+                        "inverse-on-surface": "#535559",
+                        "surface": "#0b0e11",
+                        "secondary-dim": "#9f9da1",
+                        "error": "#ec7c8a",
+                        "on-surface-variant": "#a3acb7",
+                        "background": "#0b0e11",
+                        "tertiary-fixed-dim": "#c0c9e6",
+                        "surface-tint": "#c0c1ff",
+                        "on-tertiary": "#4a536c",
+                        "tertiary": "#dee5ff",
+                        "surface-variant": "#1e272f",
+                        "on-error-container": "#ff97a3",
+                        "on-secondary-container": "#c1bec3",
+                        "primary-fixed-dim": "#d1d0ff",
+                        "on-error": "#490013",
+                        "error-dim": "#b95463",
+                        "surface-container": "#141a20",
+                        "outline": "#6d7680",
+                        "surface-bright": "#222d37",
+                        "surface-dim": "#0b0e11",
+                        "on-secondary-fixed": "#403f43",
+                        "outline-variant": "#404952",
+                        "on-primary-fixed": "#2622b7",
+                        "on-primary": "#2724b8",
+                        "tertiary-fixed": "#ced6f5",
+                        "surface-container-high": "#192027",
+                        "on-tertiary-fixed-variant": "#4b546d",
+                        "surface-container-highest": "#1e272f",
+                        "on-primary-fixed-variant": "#4647d3",
+                        "error-container": "#7f2737",
+                        "surface-container-low": "#0f1418",
+                        "secondary-fixed-dim": "#d6d3d8",
+                        "secondary-fixed": "#e5e1e6",
+                        "on-secondary": "#202023",
+                        "primary-dim": "#b0b2ff",
+                        "secondary": "#9f9da1",
+                        "on-surface": "#dde6f2",
+                        "on-primary-container": "#ccccff",
+                        "inverse-surface": "#f8f9fe",
+                        "on-tertiary-container": "#424a63",
+                        "primary-fixed": "#e1e0ff"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #0b0e11;
+            color: #dde6f2;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .timer-glow {
+            box-shadow: 0 0 60px -15px rgba(192, 193, 255, 0.15);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface antialiased">
+<!-- TopAppBar Section -->
+<header class="fixed top-0 w-full z-50 bg-[#0b0e11] dark:bg-[#0b0e11]">
+<div class="flex items-center justify-between px-6 h-16 w-full max-w-none bg-[#0f1418]">
+<div class="flex items-center gap-4">
+<button class="text-indigo-400 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-['Manrope'] font-bold tracking-tight text-lg text-indigo-500">Vayl</h1>
+</div>
+<button class="text-indigo-400 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</div>
+</header>
+<main class="min-h-screen pt-16 pb-24 flex flex-col items-center justify-center px-6">
+<!-- Timer Section -->
+<div class="flex-1 flex flex-col items-center justify-center w-full space-y-12">
+<div class="relative group">
+<!-- Decorative Subtle Indigo Glow -->
+<div class="absolute inset-0 bg-primary opacity-5 blur-[100px] rounded-full"></div>
+<!-- Main Timer Circle/Display -->
+<div class="relative w-72 h-72 rounded-full border border-outline-variant/10 flex items-center justify-center timer-glow bg-surface-container-low/30 backdrop-blur-sm">
+<div class="text-center">
+<span class="block font-headline text-7xl font-extrabold tracking-tighter text-on-surface">25:00</span>
+<span class="block font-label text-xs uppercase tracking-[0.2em] text-on-surface-variant mt-2">Deep Work</span>
+</div>
+</div>
+</div>
+<button class="w-full max-w-xs py-4 px-8 bg-gradient-to-br from-primary to-primary-container rounded-full text-on-primary font-headline font-bold text-base tracking-wide active:scale-95 transition-transform duration-200 shadow-lg shadow-primary/10">
+                Start Session
+            </button>
+</div>
+<!-- Dashboard / Context Section -->
+<div class="w-full max-w-md space-y-8 mt-4">
+<!-- Objective Card -->
+<!-- Sound Controls -->
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container p-4 rounded-xl flex items-center justify-between hover:bg-surface-bright transition-colors cursor-pointer group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="water_drop">water_drop</span>
+<span class="font-label text-sm font-medium">Rain</span>
+</div>
+<div class="w-1.5 h-1.5 rounded-full bg-outline-variant"></div>
+</div>
+<div class="bg-surface-container p-4 rounded-xl flex items-center justify-between hover:bg-surface-bright transition-colors cursor-pointer group border border-primary/20">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="album" style="font-variation-settings: 'FILL' 1;">album</span>
+<span class="font-label text-sm font-medium text-primary">Lo-Fi</span>
+</div>
+<div class="w-1.5 h-1.5 rounded-full bg-primary"></div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar Section -->
+<!-- Visual Polish: Grain Overlay -->
+<div class="fixed inset-0 pointer-events-none opacity-[0.03] mix-blend-overlay z-[100] bg-repeat" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCvhoUi6633wPe7TR9jO1Ke156l4-ltLVkhgazqMSKx5HKSs7lovZEBpopAtouyuqzsIux5Qj9rEdCcdwQ25Yr6V-Qe9XRd_xUVQLovSshrZvIcIxaXGNCmtR1OW4Ltfg343jPcvpkHO-JDyfUqJ6nJBMNy50VusFgh5aeFunng_gvD8J27HtzFP4S9ziJIOM1vsu8mAS9hsAYuYxFGIL8Dzz4NYAhUgI5h6QhWbFnXybDTZDW9HZI8os4wW-rGmbYVtYg48VRHkQKV');"></div>
+</body></html>

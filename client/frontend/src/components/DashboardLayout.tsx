@@ -1,4 +1,5 @@
 import Sidebar from "@/components/Sidebar";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import TopNav from "@/components/TopNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DreamerModal from "@/components/DreamerModal";
@@ -33,12 +34,14 @@ export default function DashboardLayout({
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-surface text-on-surface">
-        <Sidebar />
+        <div className="hidden md:block">
+          <Sidebar />
+        </div>
         <TopNav />
         <DreamerModal />
         <ConfidencePopup />
         <FocusAudioPlayer />
-        <main className="pt-24 pb-8 ml-64 px-8 min-h-screen relative flex flex-col">
+        <main className="pt-20 md:pt-24 pb-24 md:pb-8 ml-0 md:ml-64 px-4 md:px-8 min-h-screen relative flex flex-col">
           <div className="flex-1">
             {children}
           </div>
@@ -80,6 +83,7 @@ export default function DashboardLayout({
             </div>
           </footer>
         </main>
+        <MobileBottomNav />
       </div>
     </ProtectedRoute>
   );
