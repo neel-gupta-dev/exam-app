@@ -1,9 +1,13 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import LandingPage from "@/components/LandingPage";
-import DashboardView from "@/components/DashboardView";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
+import dynamic from "next/dynamic";
+
+const LandingPage = dynamic(() => import('@/components/LandingPage'));
+const DashboardView = dynamic(() => import('@/components/DashboardView'), { 
+  loading: () => <LoadingSkeleton count={3} /> 
+});
 
 export default function HomePage() {
   const { token, isLoading } = useAuth();
