@@ -43,21 +43,26 @@ function getHeatmapClass(level: number) {
 export default function AnalyticsPage() {
   const { user } = useAuth();
   const [resources, setResources] = useState<Resource[]>([]);
+  const [heatmapData, setHeatmapData] = useState<{date: string, displayDay: number, units: number, level: number}[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAllResources = async () => {
+    const fetchAnalytics = async () => {
       try {
-        const { data } = await api.get('/resources?page=1&limit=1000');
-        setResources(data.resources || []);
+        const [resResponse, heatmapResponse] = await Promise.all([
+          api.get('/resources?page=1&limit=1000'),
+          api.get('/analytics/heatmap')
+        ]);
+        setResources(resResponse.data.resources || []);
+        setHeatmapData(heatmapResponse.data || []);
       } catch (error) {
-        console.error("Failed to fetch resources for analytics", error);
+        console.error("Failed to fetch analytics data", error);
       } finally {
         setLoading(false);
       }
     };
     if (user) {
-      fetchAllResources();
+      fetchAnalytics();
     }
   }, [user]);
 
@@ -137,7 +142,9 @@ export default function AnalyticsPage() {
     };
   });
 
-  const analyticsHeatmap = new Array(21).fill(0).map((_, i) => ({ day: i + 1, level: i > 15 ? 3 : i % 2 })); // mockup static heatmap still since we don't have historical progression yet
+  const analyticsHeatmap = heatmapData.length > 0 
+    ? heatmapData 
+    : new Array(21).fill(0).map((_, i) => ({ displayDay: i + 1, level: 0 })); 
 
   return (
     <DashboardLayout>
@@ -249,9 +256,9 @@ export default function AnalyticsPage() {
             {["M","T","W","T","F","S","S"].map((d,i) => (
               <div key={i} className="text-center text-[8px] font-bold text-on-surface-variant opacity-50 uppercase">{d}</div>
             ))}
-            {analyticsHeatmap.map((item) => (
-              <div key={item.day} className={`aspect-square rounded flex items-center justify-center text-[10px] font-bold border border-white/5 ${getHeatmapClass(item.level)} ${item.level >= 5 ? "text-white" : item.level >= 1 ? "text-on-surface" : "text-on-surface-variant"}`}>
-                {item.day}
+            {analyticsHeatmap.map((item, i) => (
+              <div key={i} className={`aspect-square rounded flex items-center justify-center text-[10px] font-bold border border-white/5 ${getHeatmapClass(item.level)} ${item.level >= 5 ? "text-white" : item.level >= 1 ? "text-on-surface" : "text-on-surface-variant"}`}>
+                {item.displayDay}
               </div>
             ))}
           </div>

@@ -11,6 +11,7 @@ import LevelProgressBar from "@/components/LevelProgressBar";
 import { User } from "@/types";
 import { useSearch } from "@/context/SearchContext";
 import { sendGAEvent } from '@next/third-parties/google';
+import MonthlyGoalWidget from "@/components/MonthlyGoalWidget";
 
 function ProgressWidget({ resourceCount, heatmapData, currentStreak, user }: { resourceCount: number, heatmapData: number[], currentStreak: number, user: User | null }) {
   const getHeatmapClass = (count: number, maxCount: number) => {
@@ -234,6 +235,7 @@ export default function DashboardView() {
             currentStreak={user?.currentStreak || 0} 
             user={user}
           />
+          <MonthlyGoalWidget />
           <QuickTipCard />
         </aside>
       </div>

@@ -11,6 +11,7 @@ import noteRoutes from '../src/routes/noteRoutes.js';
 import focusRoutes from '../src/routes/focusRoutes.js';
 import publicRoutes from '../src/routes/publicRoutes.js';
 import studyRoutes from '../src/routes/study.js';
+import analyticsRoutes from '../src/routes/analyticsRoutes.js';
 import { getHealth } from '../src/controllers/healthController.js';
 import { closeExpiredSessions } from '../src/services/authService.js';
 import passport from 'passport';
@@ -72,6 +73,7 @@ app.use('/api/notes', noteRoutes);
 app.use('/api/focus', focusRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/study', studyRoutes);
+app.use('/api/analytics', analyticsRoutes);
 app.use('/api/feedback', feedbackRoutes);
 
 // --- Error Handling ---

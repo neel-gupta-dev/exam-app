@@ -110,9 +110,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html 
-      lang="en" 
-      suppressHydrationWarning 
+    <html
+      lang="en"
+      suppressHydrationWarning
       className={`dark h-full antialiased ${montserrat.variable} ${poppins.variable} ${hanken.variable}`}
     >
       <head>
@@ -123,7 +123,7 @@ export default function RootLayout({
       <body className="min-h-full bg-surface text-on-surface font-body">
         <GoogleAnalytics gaId="G-ZDWW48QNX7" />
         <WebVitals />
-	<Analytics/>
+        <Analytics />
         <GoogleSchema />
         <CookieConsent />
         <AppProviders>{children}</AppProviders>

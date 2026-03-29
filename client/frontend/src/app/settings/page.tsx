@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Sparkles, Database, Flag } from "lucide-react";
 import StreakIcon from "@/components/StreakIcon";
 import { TARGET_EXAMS as EXAMS } from '@shared/constants';
+import MonthlyGoalWidget from "@/components/MonthlyGoalWidget";
 
 export default function SettingsPage() {
 
@@ -310,34 +311,7 @@ export default function SettingsPage() {
         {/* Right Column: Metrics & Goals */}
         <aside className="w-80 bg-surface-container-low p-8 hidden xl:flex flex-col gap-8 h-full overflow-y-auto border-l border-white/5">
           {/* Target Goal Widget */}
-          <div className="bg-surface-container p-6 rounded-xl space-y-6 border border-white/5">
-            <div className="flex items-center justify-between">
-              <h4 className="font-bold text-sm">Monthly Goal</h4>
-              <Flag className="w-4 h-4 text-primary" />
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-on-surface-variant">Focus Progress</span>
-                <span className="font-bold text-primary">84 / 120</span>
-              </div>
-              <div className="w-full bg-surface-variant h-1 rounded-full overflow-hidden">
-                <div className="bg-primary h-full w-[70%]"></div>
-              </div>
-            </div>
-            <div className="pt-4 border-t border-outline-variant/30">
-              <p className="text-[11px] text-on-surface-variant uppercase tracking-widest font-bold mb-3">Recent Progress</p>
-              <ul className="space-y-3">
-                <li className="flex items-center gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
-                  <span className="text-xs">Profile Verification</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary/40"></div>
-                  <span className="text-xs text-on-surface-variant">Setup Complete</span>
-                </li>
-              </ul>
-            </div>
-          </div>
+          <MonthlyGoalWidget />
 
           {/* Key Metrics Bento */}
           <div className="space-y-4">
