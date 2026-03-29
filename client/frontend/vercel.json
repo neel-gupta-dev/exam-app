@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://exam-app-production-7f5d.up.railway.app/api/$1"
+    }
+  ],
+  "cleanUrls": true
+}
