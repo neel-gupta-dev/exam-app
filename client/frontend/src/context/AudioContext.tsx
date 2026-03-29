@@ -33,6 +33,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // SSR Safety: Initialize on client
     if (typeof window !== "undefined") {
       const audio = new Audio(`/audio/${currentTrack}.mp3`);
+      audio.preload = "none";
       audio.loop = isLooping;
       audio.volume = volume;
       audioRef.current = audio;
