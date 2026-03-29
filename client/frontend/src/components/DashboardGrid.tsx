@@ -10,7 +10,8 @@ import {
   ChevronRight, 
   ChevronLeft,
   FolderOpen,
-  Search
+  Search,
+  Plus
 } from 'lucide-react';
 import Link from 'next/link';
 import LoadingSkeleton from './LoadingSkeleton';
@@ -66,13 +67,7 @@ function ResourceCard({ resource }: { resource: Resource }) {
 // ----------------------------------------------------------------------------
 function EmptyState() {
   const handleQuickSaveClick = () => {
-    window.dispatchEvent(
-      new KeyboardEvent('keydown', {
-        key: 's',
-        ctrlKey: true,
-        bubbles: true,
-      })
-    );
+    window.dispatchEvent(new Event('openQuickSave'));
   };
 
   return (
@@ -86,9 +81,10 @@ function EmptyState() {
       </p>
       <button 
         onClick={handleQuickSaveClick}
-        className="px-8 py-3 bg-primary text-on-primary font-bold rounded-xl active:scale-95 transition-all shadow-xl shadow-primary/20 hover:bg-primary-container"
+        className="bg-indigo-500 hover:opacity-90 transition-all text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-xl shadow-indigo-500/20 active:scale-95"
       >
-        Save a Resource
+        <Plus className="w-4 h-4" />
+        Save Resource
       </button>
       <p className="text-xs text-on-surface-variant mt-4 opacity-50 hidden md:block">Shortcut: Ctrl+S or ⌘+S</p>
     </div>

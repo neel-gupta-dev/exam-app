@@ -51,7 +51,13 @@ export default function TopNav() {
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    const handleOpenModal = () => setIsOpen(true);
+    window.addEventListener('openQuickSave', handleOpenModal);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('openQuickSave', handleOpenModal);
+    };
   }, []);
 
   // ── Click Outside Search ────────────────────────────────────────────
@@ -151,7 +157,7 @@ export default function TopNav() {
             <input
               ref={searchInputRef}
               type="text"
-              placeholder={`Search resources... (${modifierSymbol} + K)`}
+              placeholder="Search resources..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleSearchKeyDown}
