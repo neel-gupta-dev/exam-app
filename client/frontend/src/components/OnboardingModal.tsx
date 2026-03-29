@@ -5,7 +5,8 @@ import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 
-import { TARGET_EXAMS as EXAMS } from '../../../../shared/constants/index';
+import { TARGET_EXAMS as EXAMS } from '@shared/constants';
+
 
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 5 }, (_, i) => currentYear + i);

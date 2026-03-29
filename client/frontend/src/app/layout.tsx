@@ -33,11 +33,14 @@ const hanken = Hanken_Grotesk({
 export const metadata: Metadata = {
   metadataBase: new URL('https://vayl-app.vercel.app'),
   title: {
-    default: "Vayl | The Silent Architect of JEE Success",
+    default: "Vayl | The Silent Architect of Academic Success",
+
     template: "%s | Vayl"
   },
-  description: "Vayl is the premium study operating system designed for JEE aspirants. Manage high-yield resources, master concepts with deep focus, and track your academic journey with precision.",
-  keywords: ["JEE Preparation", "Study Dashboard", "Academic Vault", "Deep Work", "JEE Resources", "Focus Timer", "Scholar Identity"],
+  description: "Vayl is the premium study operating system designed for elite aspirants. Manage high-yield resources, master concepts with deep focus, and track your academic journey with precision across UPSC, NEET, JEE, CAT, and GATE.",
+  keywords: ["Competitive Exams", "Study OS", "UPSC Preparation", "NEET Resources", "JEE Main", "JEE Advanced", "CAT Preparation", "GATE 2026", "Study Dashboard", "Academic Vault", "Deep Work", "Resource Management", "Focus Timer", "Scholar Identity"],
+
+
   authors: [{ name: "Neel Gupta" }],
   creator: "Neel Gupta",
   publisher: "Vayl Systems",
@@ -51,8 +54,9 @@ export const metadata: Metadata = {
     telephone: false,
   },
   openGraph: {
-    title: "Vayl | The Silent Architect of JEE Success",
-    description: "The premium study operating system for JEE aspirants. Simplify your vault, amplify your focus.",
+    title: "Vayl | The Silent Architect of Academic Success",
+    description: "The premium study operating system for aspirants. Simplify your vault, amplify your focus.",
+
     url: 'https://vayl-app.vercel.app',
     siteName: 'Vayl',
     images: [
@@ -60,7 +64,8 @@ export const metadata: Metadata = {
         url: '/vayl-logo.png',
         width: 800,
         height: 800,
-        alt: 'Vayl | The Silent Architect of JEE Success',
+        alt: 'Vayl | The Silent Architect of Academic Success',
+
       },
       {
         url: '/screenshots/dashboard.png',
@@ -77,8 +82,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Vayl | The Silent Architect of JEE Success',
-    description: 'The premium study operating system for JEE aspirants.',
+    title: 'Vayl | The Silent Architect of Academic Success',
+    description: 'The premium study operating system for elite aspirants.',
+
     images: ['/screenshots/dashboard.png'],
   },
   robots: {

@@ -7,7 +7,7 @@ import api from "@/lib/api";
 import { toast } from "sonner";
 import { Sparkles, Database, Flag } from "lucide-react";
 import StreakIcon from "@/components/StreakIcon";
-import { TARGET_EXAMS } from "@shared/constants";
+import { TARGET_EXAMS as EXAMS } from '@shared/constants';
 
 export default function SettingsPage() {
 
@@ -184,7 +184,7 @@ export default function SettingsPage() {
                     {isDropdownOpen && (
                       <div className="absolute z-50 top-[calc(100%+8px)] left-0 w-full bg-surface-container border border-outline-variant/30 rounded-xl shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-1 ring-1 ring-white/5">
                         <div className="max-h-80 overflow-y-auto p-2 pb-8 space-y-1 custom-scrollbar">
-                          {(TARGET_EXAMS as readonly string[]).map((exam: string) => {
+                          {(EXAMS as readonly string[]).map((exam: string) => {
                             const isSelected = profileForm.targetExam.includes(exam);
                             return (
                               <button
