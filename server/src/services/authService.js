@@ -62,8 +62,11 @@ export const registerUser = async ({ name, email, password, ipAddress }) => {
     email: user.email,
     role: user.role,
     isVerifiedStudent: user.isVerifiedStudent,
+    targetExam: user.targetExam,
+    targetYear: user.targetYear,
     isOnboarded: user.isOnboarded,
     vaultId: user.vaultId,
+    profile: user.profile,
     token: generateToken(user._id),
     sessionId: session._id,
   };
@@ -131,6 +134,7 @@ export const loginUser = async ({ email, password, ipAddress }) => {
     totalActiveSeconds: user.totalActiveSeconds,
     levelData: user.levelData,
     vaultId: user.vaultId,
+    profile: user.profile,
     token: generateToken(user._id),
     sessionId: session._id,
   };
@@ -293,6 +297,7 @@ export const onboardUser = async ({ userId, targetExam, targetYear }) => {
     targetYear: user.targetYear,
     isOnboarded: user.isOnboarded,
     vaultId: user.vaultId,
+    profile: user.profile,
   };
 };
 
