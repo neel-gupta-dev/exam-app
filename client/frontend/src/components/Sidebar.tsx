@@ -12,7 +12,6 @@ import {
   FolderLock,
   GraduationCap,
   BarChart2,
-  Calendar,
   Sun,
   Moon
 } from "lucide-react";
@@ -72,17 +71,23 @@ export default function Sidebar() {
   }, [user]);
 
   return (
-    <aside className="h-screen w-64 fixed left-0 top-0 bg-surface-container-low font-interface antialiased tracking-tight flex flex-col overflow-y-auto z-50">
-      <div className="px-6 py-8 flex-1">
+    <aside className="fixed left-0 top-0 h-screen w-64 bg-surface border-r border-outline-variant/10 flex flex-col z-50 hidden md:flex transition-colors overflow-y-auto">
+      <div className="p-6 flex-1">
         {/* Brand */}
         <div className="flex items-center gap-3 mb-10">
-          <div className="w-10 h-10 flex items-center justify-center">
-            <Image src="/vayl-logo.png" alt="Vayl Logo" width={32} height={32} className="object-contain" />
+          <div className="p-2 bg-primary/10 rounded-xl group hover:bg-primary/20 transition-all duration-300">
+            <Image 
+              src="/vayl-logo.png" 
+              alt="Vayl" 
+              width={24} 
+              height={24} 
+              className="object-contain brightness-0 contrast-125 dark:brightness-100 dark:contrast-100" 
+            />
           </div>
           <div>
-            <Link href="/"><h1 className="text-2xl font-extrabold text-primary font-heading leading-tight tracking-tighter">
-              Vayl
-            </h1></Link>
+            <Link href="/">
+              <h1 className="text-xl font-heading font-black tracking-tighter text-on-surface">VAYL</h1>
+            </Link>
             <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-[0.2em] mt-0.5">
               {user?.targetExam?.[0] || 'Preparation'} • Level {user?.levelData?.currentLevel || 1}
             </p>
@@ -145,7 +150,7 @@ export default function Sidebar() {
       <div className="px-6 py-2">
         <button
           onClick={toggleTheme}
-          className="w-full flex items-center justify-between px-4 py-2 bg-surface-container rounded-xl text-on-surface-variant hover:text-on-surface transition-all group overflow-hidden relative"
+          className="w-full flex items-center justify-between px-4 py-2 bg-surface-container rounded-xl text-on-surface-variant hover:text-on-surface transition-all group overflow-hidden relative shadow-inner"
         >
           <span className="text-xs font-bold uppercase tracking-wider">
             {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
@@ -177,30 +182,23 @@ export default function Sidebar() {
       </div>
 
       {/* User Profile Card */}
-      {
-        user && (
-          <div className="mt-auto p-4 border-t border-outline-variant/10">
-            <div className="bg-surface-container rounded-xl p-4 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold font-body uppercase shrink-0">
-                {user.name.charAt(0)}
-              </div>
-              <div className="overflow-hidden">
-                <p className="text-xs font-semibold text-on-surface truncate">
-                  {user.name}
-                </p>
-                <p className="text-[10px] text-on-surface-variant truncate">
-                  {user.email}
-                </p>
-                {user.vaultId && (
-                  <p className="text-[9px] font-mono text-primary/80 mt-1 uppercase tracking-tighter">
-                    ID: {user.vaultId}
-                  </p>
-                )}
-              </div>
+      {user && (
+        <div className="mt-auto p-4 border-t border-outline-variant/10">
+          <div className="bg-surface-container rounded-xl p-4 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold font-body uppercase shrink-0">
+              {user.name.charAt(0)}
+            </div>
+            <div className="overflow-hidden">
+              <p className="text-xs font-semibold text-on-surface truncate">
+                {user.name}
+              </p>
+              <p className="text-[10px] text-on-surface-variant truncate">
+                {user.email}
+              </p>
             </div>
           </div>
-        )
-      }
-    </aside >
+        </div>
+      )}
+    </aside>
   );
 }

@@ -112,7 +112,7 @@ export default function ConfidencePopup() {
                 className={`flex-1 flex flex-col items-center gap-1.5 p-2 rounded-xl border transition-all ${
                   isSelected 
                     ? `${r.bg} ${r.color} border-current scale-110 shadow-lg` 
-                    : "bg-white/5 border-transparent text-on-surface-variant hover:bg-white/10 hover:border-white/10"
+                    : "bg-surface-container/50 border-transparent text-on-surface-variant hover:bg-surface-container hover:border-outline-variant/20"
                 }`}
                 title={r.label}
               >

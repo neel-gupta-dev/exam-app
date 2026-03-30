@@ -152,16 +152,16 @@ export default function PerformancePage() {
             </div>
             <div>
               <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Avg. Score</p>
-              <p className="text-2xl font-heading font-black text-white">{calculateAverage()}%</p>
+              <p className="text-2xl font-heading font-black text-on-surface">{calculateAverage()}%</p>
             </div>
           </div>
-          <div className="glass-card p-6 rounded-2xl border-white/5 bg-surface-container-low flex items-center gap-5">
+          <div className="glass-card p-6 rounded-2xl border-outline-variant/10 bg-surface-container-low flex items-center gap-5">
             <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400">
               <History className="w-6 h-6" />
             </div>
             <div>
               <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Tests Logged</p>
-              <p className="text-2xl font-heading font-black text-white">{marks.length}</p>
+              <p className="text-2xl font-heading font-black text-on-surface">{marks.length}</p>
             </div>
           </div>
         </div>
@@ -176,7 +176,7 @@ export default function PerformancePage() {
           {/* History List */}
           <div className="lg:col-span-2 space-y-6">
             <div className="flex items-center justify-between mb-4 px-2">
-              <h2 className="text-lg font-heading font-bold text-white flex items-center gap-2">
+              <h2 className="text-lg font-heading font-bold text-on-surface flex items-center gap-2">
                 <Clock className="w-5 h-5 text-primary" />
                 Score History
               </h2>
@@ -191,7 +191,7 @@ export default function PerformancePage() {
                 <div className="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center mb-6">
                   <BarChart2 className="w-8 h-8 text-on-surface-variant opacity-20" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">No records found</h3>
+                <h3 className="text-xl font-bold text-on-surface mb-2">No records found</h3>
                 <p className="text-on-surface-variant text-sm max-w-xs mb-8">
                   Start tracking your academic journey by adding your first test mark.
                 </p>
@@ -216,12 +216,12 @@ export default function PerformancePage() {
                             {new Date(mark.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                           </span>
                         </div>
-                        <h4 className="text-white font-bold text-lg leading-tight mb-1">{mark.testName}</h4>
+                        <h4 className="text-on-surface font-bold text-lg leading-tight mb-1">{mark.testName}</h4>
                         {mark.comments && <p className="text-xs text-on-surface-variant italic truncate max-w-md">"{mark.comments}"</p>}
                       </div>
                       
                       <div className="text-right pr-10">
-                        <p className="text-2xl font-black font-heading text-white">{mark.percentage.toFixed(0)}%</p>
+                        <p className="text-2xl font-black font-heading text-on-surface">{mark.percentage.toFixed(0)}%</p>
                         <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">{mark.score} / {mark.total}</p>
                       </div>
 
@@ -241,7 +241,7 @@ export default function PerformancePage() {
           {/* Quick Guide */}
           <div className="space-y-6">
             <div className="glass-card p-6 rounded-[2rem] border-white/5 bg-primary/5">
-              <h3 className="text-white font-bold flex items-center gap-2 mb-4">
+              <h3 className="text-on-surface font-bold flex items-center gap-2 mb-4">
                 <Info className="w-5 h-5 text-primary" />
                 Why track performance?
               </h3>
@@ -252,7 +252,7 @@ export default function PerformancePage() {
                   { title: "One-Click Brag Sheet", desc: "Automate your resume for college recommendations." }
                 ].map((item, i) => (
                   <li key={i} className="space-y-1">
-                    <p className="text-sm font-bold text-white leading-tight">{item.title}</p>
+                    <p className="text-sm font-bold text-on-surface leading-tight">{item.title}</p>
                     <p className="text-[11px] text-on-surface-variant leading-relaxed">{item.desc}</p>
                   </li>
                 ))}
@@ -263,7 +263,7 @@ export default function PerformancePage() {
               <div className="w-12 h-12 mx-auto rounded-full bg-surface-container-high flex items-center justify-center mb-4">
                 <TrendingUp className="w-6 h-6 text-indigo-400" />
               </div>
-              <h4 className="text-white font-bold mb-2">Visualize Your Path</h4>
+              <h4 className="text-on-surface font-bold mb-2">Visualize Your Path</h4>
               <p className="text-xs text-on-surface-variant mb-6">Graphs and deeper subject analytics are generated automatically as you add more records.</p>
               <div className="w-full h-1 bg-surface-container-high rounded-full overflow-hidden">
                 <div className="h-full bg-primary w-[45%]" />
@@ -276,14 +276,14 @@ export default function PerformancePage() {
         {showAddModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
             <div className="glass-card w-full max-w-md p-8 rounded-[2.5rem] border-white/10 shadow-2xl relative">
-              <h2 className="text-2xl font-heading font-black text-white mb-6">Add Test Record</h2>
+              <h2 className="text-2xl font-heading font-black text-on-surface mb-6">Add Test Record</h2>
               <form onSubmit={handleAddMark} className="space-y-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em] ml-1">Subject</label>
                   <input 
                     type="text" 
                     placeholder="e.g. AP Calculus"
-                    className="w-full bg-surface-container-high border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 transition-colors"
+                    className="w-full bg-surface-container-high border border-outline-variant/20 rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary/50 transition-colors"
                     value={newMark.subject}
                     onChange={e => setNewMark({...newMark, subject: e.target.value})}
                   />
@@ -293,7 +293,7 @@ export default function PerformancePage() {
                   <input 
                     type="text" 
                     placeholder="e.g. Unit 1 Final"
-                    className="w-full bg-surface-container-high border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 transition-colors"
+                    className="w-full bg-surface-container-high border border-outline-variant/20 rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary/50 transition-colors"
                     value={newMark.testName}
                     onChange={e => setNewMark({...newMark, testName: e.target.value})}
                   />
@@ -304,7 +304,7 @@ export default function PerformancePage() {
                     <input 
                       type="number" 
                       placeholder="0"
-                      className="w-full bg-surface-container-high border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 transition-colors"
+                      className="w-full bg-surface-container-high border border-outline-variant/20 rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary/50 transition-colors"
                       value={newMark.score}
                       onChange={e => setNewMark({...newMark, score: e.target.value})}
                     />
@@ -314,7 +314,7 @@ export default function PerformancePage() {
                     <input 
                       type="number" 
                       placeholder="100"
-                      className="w-full bg-surface-container-high border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 transition-colors"
+                      className="w-full bg-surface-container-high border border-outline-variant/20 rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary/50 transition-colors"
                       value={newMark.total}
                       onChange={e => setNewMark({...newMark, total: e.target.value})}
                     />

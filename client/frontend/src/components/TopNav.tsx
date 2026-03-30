@@ -2,9 +2,10 @@
 
 import { useState, FormEvent, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Search, Plus, Bell, Settings, X, Loader2 } from "lucide-react";
+import { Search, Plus, Bell, Settings, X, Loader2, Sun, Moon } from "lucide-react";
 import api from "@/lib/api";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 import { useSearch } from "@/context/SearchContext";
 import { useModifierKey } from "@/hooks/useModifierKey";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -25,6 +26,7 @@ export default function TopNav() {
   const [folderName, setFolderName] = useState("");
   const [loading, setLoading] = useState(false);
   const { searchQuery, setSearchQuery } = useSearch();
+  const { theme, toggleTheme } = useAuth();
   const { modifierSymbol } = useModifierKey();
   const { vibrateClick } = useHaptics();
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -216,8 +218,15 @@ export default function TopNav() {
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Save Resource</span>
           </button>
-          <div className="hidden md:flex items-center gap-4 text-on-surface-variant">
-            <button className="hover:text-indigo-300 transition-opacity">
+          <div className="flex items-center gap-2 md:gap-4 text-on-surface-variant">
+            <button 
+              onClick={toggleTheme}
+              className="p-2 hover:bg-surface-container-high rounded-xl transition-all text-on-surface-variant hover:text-primary active:scale-95"
+              aria-label="Toggle Theme"
+            >
+              {theme === "dark" ? <Sun className="w-5 h-5 shadow-sm" /> : <Moon className="w-5 h-5 shadow-sm" />}
+            </button>
+            <button className="hover:text-indigo-300 transition-opacity hidden md:block">
               <Bell className="w-5 h-5" />
             </button>
             <Link href="/settings" className="hover:text-indigo-300 transition-opacity">

@@ -108,7 +108,7 @@ export default function ProfilePage() {
             </div>
             <div className="flex-1 text-center md:text-left z-10">
               <div className="flex flex-col md:flex-row md:items-baseline gap-4 mb-4">
-                <h2 className="text-5xl font-extrabold tracking-tight text-white">{name}</h2>
+                <h2 className="text-5xl font-extrabold tracking-tight text-on-surface">{name}</h2>
                 <div className="flex items-center gap-2">
                   <span className="bg-primary/20 text-primary text-[10px] font-black px-2.5 py-1 rounded-lg border border-primary/30 uppercase tracking-widest">
                     {title}
@@ -144,14 +144,14 @@ export default function ProfilePage() {
               <p className="text-on-surface-variant max-w-xl mb-8 leading-relaxed text-lg font-medium">
                 {user?.bio || (
                   <>
-                    Dedicated <span className="text-white">{targetExams}</span> Aspirant. Maintaining a steady collection of{" "}
+                    Dedicated <span className="text-on-surface">{targetExams}</span> Aspirant. Maintaining a steady collection of{" "}
                     <span className="text-primary">{resourceCount} saved materials</span> in the Vault.
                   </>
                 )}
               </p>
               <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                 <Link href="/settings">
-                  <button className="cursor-pointer bg-white text-black px-8 py-3.5 rounded-2xl font-bold text-sm hover:bg-primary hover:text-white transition-all duration-300 flex items-center gap-2 shadow-xl shadow-black/20">
+                  <button className="cursor-pointer bg-primary text-on-primary px-8 py-3.5 rounded-2xl font-bold text-sm hover:scale-105 transition-all duration-300 flex items-center gap-2 shadow-xl shadow-primary/20">
                     <Pen className="w-4 h-4" />
                     Edit Profile
                   </button>
@@ -197,11 +197,11 @@ export default function ProfilePage() {
 
               <div className="mt-auto space-y-4 md:space-y-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center font-black text-xl text-white shadow-inner">
+                  <div className="w-14 h-14 rounded-2xl bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center font-black text-xl text-on-surface shadow-inner">
                     {user?.name?.charAt(0)}
                   </div>
                   <div>
-                    <h4 className="text-xl font-bold text-white tracking-tight">{user?.name}</h4>
+                    <h4 className="text-xl font-bold text-on-surface tracking-tight">{user?.name}</h4>
                     <p className="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-widest line-clamp-2 leading-tight mt-1">{targetExams} Aspirant</p>
                   </div>
                 </div>
@@ -211,7 +211,7 @@ export default function ProfilePage() {
                     <div>
                       <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.15em] block mb-1">Mastery Progress</span>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-black text-white">{Math.min(resourceCount * 10, 100)}</span>
+                        <span className="text-3xl font-black text-on-surface">{Math.min(resourceCount * 10, 100)}</span>
                         <span className="text-xs font-bold text-on-surface-variant">%</span>
                       </div>
                     </div>
@@ -254,7 +254,7 @@ export default function ProfilePage() {
           <div className="col-span-12 md:col-span-8 bg-surface-container rounded-[2rem] p-6 md:p-10 border border-white/[0.03]">
             <div className="flex items-center justify-between mb-12">
               <div>
-                <h3 className="font-extrabold text-2xl text-white mb-1">Scholar Achievements</h3>
+                <h3 className="font-extrabold text-2xl text-on-surface mb-1">Scholar Achievements</h3>
                 <p className="text-sm text-on-surface-variant font-medium">Recognition for your academic dedication</p>
               </div>
               <button className="text-primary text-sm font-bold bg-primary/10 px-5 py-2.5 rounded-xl hover:bg-primary hover:text-on-primary transition-all">
@@ -272,7 +272,7 @@ export default function ProfilePage() {
                   <div className={`w-24 h-24 rounded-3xl ${badge.locked ? "bg-surface-variant/30 border border-outline-variant/10" : "bg-surface-container-high border border-outline-variant/20"} flex items-center justify-center mb-5 group-hover:scale-110 transition-all duration-500 shadow-xl shadow-black/20`}>
                     {badge.icon}
                   </div>
-                  <span className={`text-sm font-bold text-center ${badge.locked ? "text-on-surface-variant" : "text-white"}`}>{badge.name}</span>
+                  <span className={`text-sm font-bold text-center ${badge.locked ? "text-on-surface-variant" : "text-on-surface"}`}>{badge.name}</span>
                   <span className="text-[11px] text-on-surface-variant font-black uppercase tracking-widest mt-1">{badge.sub}</span>
                 </div>
               ))}
@@ -281,7 +281,7 @@ export default function ProfilePage() {
 
           {/* Key Metrics */}
           <div className="col-span-12 md:col-span-4 bg-surface-container rounded-[2rem] p-6 md:p-10 flex flex-col gap-6 border border-white/[0.03]">
-            <h3 className="font-extrabold text-2xl text-white mb-2">Key Metrics</h3>
+            <h3 className="font-extrabold text-2xl text-on-surface mb-2">Key Metrics</h3>
             <div className="flex flex-col gap-4">
               {[
                 { icon: <Clock className="w-7 h-7" />, label: "Total Resources", value: resourceCount, unit: "saved", iconBg: "bg-primary/10 text-primary" },
@@ -309,7 +309,7 @@ export default function ProfilePage() {
         <div className="bg-surface-container rounded-[2rem] overflow-hidden border border-white/[0.03]">
           <div className="px-6 md:px-10 py-6 md:py-8 border-b border-outline-variant/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h3 className="font-extrabold text-2xl text-white">Account Configuration</h3>
+              <h3 className="font-extrabold text-2xl text-on-surface">Account Configuration</h3>
               <p className="text-sm text-on-surface-variant font-medium mt-1">Manage your academic identity and security</p>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 text-green-400 rounded-full border border-green-500/20">
@@ -322,7 +322,7 @@ export default function ProfilePage() {
               <div>
                 <label className="text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-3">Primary Email</label>
                 <div className="flex items-center gap-4">
-                  <div className="text-white font-bold text-lg">{email}</div>
+                  <div className="text-on-surface font-bold text-lg">{email}</div>
                   <span className="bg-surface-variant px-3 py-1 rounded text-[10px] text-on-surface-variant font-bold">
                     {user?.isVerifiedStudent ? "VERIFIED ACADEMIC" : "BASIC ACCOUNT"}
                   </span>
@@ -331,7 +331,7 @@ export default function ProfilePage() {
               <div>
                 <label className="text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-3">Membership Plan</label>
                 <div className="flex items-center gap-4">
-                  <div className="text-white font-bold text-lg">Vayl Initial</div>
+                  <div className="text-on-surface font-bold text-lg">Vayl Initial</div>
                   <span className="bg-gradient-to-r from-tertiary/20 to-tertiary/10 text-tertiary text-[10px] font-black px-3 py-1.5 rounded-lg border border-tertiary/20 uppercase tracking-widest">Active</span>
                 </div>
                 <p className="text-xs text-on-surface-variant mt-2 font-medium italic">Your account is active since {new Date().getFullYear()}.</p>
@@ -339,11 +339,11 @@ export default function ProfilePage() {
               <div>
                 <label className="text-[10px] font-black text-primary uppercase tracking-[0.2em] block mb-3">Academic Affiliation</label>
                 <div className="flex items-center gap-3 p-4 bg-surface-container-high rounded-2xl border border-outline-variant/10">
-                  <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                    <GraduationCap className="w-5 h-5 text-black" />
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shadow-lg">
+                    <GraduationCap className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <span className="text-white font-bold text-sm block">{targetExams} Preparation</span>
+                    <span className="text-on-surface font-bold text-sm block">{targetExams} Preparation</span>
                     <span className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Independent Learner</span>
                   </div>
                 </div>
@@ -355,7 +355,7 @@ export default function ProfilePage() {
                 <div className="p-5 bg-surface-container rounded-2xl border border-outline-variant/10 flex items-start gap-4">
                   <ShieldCheck className="w-5 h-5 text-tertiary flex-shrink-0 mt-0.5" />
                   <p className="text-xs text-on-surface-variant leading-relaxed font-medium">
-                    Your research data is protected by <span className="text-white">secure backend encryption</span>. Sync active across <span className="text-white">your authorized devices</span>.
+                    Your research data is protected by <span className="text-on-surface font-bold">secure backend encryption</span>. Sync active across <span className="text-on-surface font-bold">your authorized devices</span>.
                   </p>
                 </div>
               </div>

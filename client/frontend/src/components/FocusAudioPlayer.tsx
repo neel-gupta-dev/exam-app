@@ -39,7 +39,7 @@ export default function FocusAudioPlayer() {
       )}
 
       {/* Main Player Widget */}
-      <div className="flex items-center gap-4 px-4 py-3 bg-black/20 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/40 transition-all hover:bg-black/30">
+      <div className="flex items-center gap-4 px-4 py-3 bg-surface-container-highest/80 backdrop-blur-xl border border-outline-variant/10 rounded-2xl shadow-2xl shadow-black/10 transition-all hover:bg-surface-container-highest">
         
         {/* Visualizer & Track Info */}
         <div className="flex items-center gap-3">
@@ -57,7 +57,7 @@ export default function FocusAudioPlayer() {
               />
             ))}
           </div>
-          <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest hidden sm:block">
+          <span className="text-[10px] font-black text-on-surface-variant/40 uppercase tracking-widest hidden sm:block">
             {currentTrack}
           </span>
         </div>
@@ -66,7 +66,7 @@ export default function FocusAudioPlayer() {
         <div className="flex items-center gap-2">
           <button
             onClick={togglePlay}
-            className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-white/80 hover:text-white"
+            className="p-1.5 hover:bg-primary/10 rounded-lg transition-colors text-on-surface-variant hover:text-primary"
           >
             {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
           </button>
@@ -74,7 +74,7 @@ export default function FocusAudioPlayer() {
           <button
             onClick={toggleLoop}
             className={`p-1.5 rounded-lg transition-colors ${
-              isLooping ? "text-primary bg-primary/10" : "text-white/40 hover:text-white/60"
+              isLooping ? "text-primary bg-primary/10" : "text-on-surface-variant/40 hover:text-on-surface-variant"
             }`}
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -84,14 +84,14 @@ export default function FocusAudioPlayer() {
             <button
               onMouseEnter={() => setShowVolume(true)}
               onClick={() => setShowVolume(!showVolume)}
-              className="p-1.5 text-white/60 hover:text-white transition-colors"
+              className="p-1.5 text-on-surface-variant/60 hover:text-on-surface transition-colors"
             >
               <Volume2 className="w-4 h-4" />
             </button>
             
             {/* Custom Premium Slider */}
             <div 
-              className={`absolute bottom-full right-0 mb-4 px-3 py-4 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-xl transition-all duration-300 origin-bottom ${
+              className={`absolute bottom-full right-0 mb-4 px-3 py-4 bg-surface-container-highest backdrop-blur-2xl border border-outline-variant/10 rounded-xl transition-all duration-300 origin-bottom ${
                 showVolume ? "scale-100 opacity-100" : "scale-95 opacity-0 pointer-events-none"
               }`}
               onMouseLeave={() => setShowVolume(false)}

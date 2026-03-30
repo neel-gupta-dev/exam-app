@@ -233,14 +233,15 @@ export default function FocusRoomPage() {
             {isBreak ? "Break Session" : "Deep Work Session"}
           </h2>
           <div
-            className="font-[family-name:var(--font-headline)] font-extrabold text-[6.5rem] leading-none tracking-tighter drop-shadow-2xl transition-all"
+            className="font-[family-name:var(--font-headline)] font-extrabold text-[8rem] sm:text-[10rem] leading-none tracking-tighter drop-shadow-2xl transition-all duration-700"
             style={{
-              background: "linear-gradient(180deg, #dde6f2 0%, rgba(221, 230, 242, 0.4) 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
+              color: isBreak ? "var(--tertiary)" : "var(--on-surface)",
               fontFeatureSettings: '"tnum"',
               fontVariantNumeric: "tabular-nums",
               letterSpacing: "-0.05em",
+              filter: isBreak 
+                ? "drop-shadow(0 0 40px rgba(var(--tertiary-rgb, 16, 185, 129), 0.1))" 
+                : "none"
             }}
           >
             {formatTime(timeLeft)}

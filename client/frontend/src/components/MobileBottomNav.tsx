@@ -21,7 +21,7 @@ export default function MobileBottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-lg border-t border-white/10 px-6 py-3 flex md:hidden items-center justify-between pb-safe">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-lg border-t border-outline-variant/10 px-6 py-3 flex md:hidden items-center justify-between pb-safe">
       {navItems.map((item) => {
         const isActive = pathname === item.href;
         const Icon = item.icon;
@@ -32,8 +32,8 @@ export default function MobileBottomNav() {
             href={item.href}
             className={`flex flex-col items-center gap-1 min-w-[3.5rem] transition-colors ${
               isActive 
-                ? "text-indigo-400" 
-                : "text-slate-500 hover:text-slate-300"
+                ? "text-primary" 
+                : "text-on-surface-variant hover:text-on-surface"
             }`}
           >
             <div className={`p-1.5 rounded-xl transition-all ${

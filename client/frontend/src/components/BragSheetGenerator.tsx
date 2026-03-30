@@ -92,7 +92,7 @@ export default function BragSheetGenerator({ marks }: BragSheetProps) {
             <span className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
               <ShieldCheck className="w-6 h-6" />
             </span>
-            <h3 className="text-2xl font-heading font-black text-white tracking-tighter">Verified Brag Sheet</h3>
+            <h3 className="text-2xl font-heading font-black text-on-surface tracking-tighter">Verified Brag Sheet</h3>
           </div>
           
           <p className="text-on-surface-variant text-sm max-w-lg mb-8 leading-relaxed">
@@ -102,7 +102,7 @@ export default function BragSheetGenerator({ marks }: BragSheetProps) {
           <button 
             onClick={handleGeneratePDF}
             disabled={generating}
-            className="flex items-center gap-3 bg-white text-black px-8 py-3.5 rounded-2xl font-black text-sm hover:scale-105 transition-all shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-3 bg-primary text-on-primary px-8 py-3.5 rounded-2xl font-black text-sm hover:scale-105 transition-all shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {generating ? (
               <span className="animate-pulse">Generating Portfolio...</span>
