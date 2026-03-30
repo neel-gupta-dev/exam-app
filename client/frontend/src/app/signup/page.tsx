@@ -100,15 +100,15 @@ export default function SignupPage() {
 
       {/* Header / Brand */}
       <header className="fixed top-0 w-full z-50 flex justify-between items-center px-8 h-16">
-        <div className="flex items-center gap-2 text-xl font-headline font-bold tracking-tight text-white">
-          <Image src="/vayl-logo.png" alt="Vayl Logo" width={32} height={32} className="object-contain" />
+        <div className="flex items-center gap-2 text-xl font-headline font-bold tracking-tight text-on-surface">
+          <Image src="/vayl-logo.png" alt="Vayl Logo" width={32} height={32} className="object-contain brightness-0 contrast-125 dark:brightness-100 dark:contrast-100" />
           Vayl
         </div>
       </header>
 
       <main className="w-full max-w-[480px] px-6 py-20 z-10">
         {/* Signup Card */}
-        <div className="bg-surface-container/60 w-full backdrop-blur-2xl rounded-2xl p-8 md:p-10 shadow-2xl relative border border-white/5">
+        <div className="bg-surface-container/60 w-full backdrop-blur-2xl rounded-2xl p-8 md:p-10 shadow-2xl relative border border-outline-variant/10">
           <div className="mb-8 text-center">
             <h1 className="font-headline text-3xl font-extrabold tracking-tight text-on-surface mb-2">Create your vault</h1>
             <p className="text-on-surface-variant text-sm">Secure your knowledge in the digital age.</p>
@@ -118,7 +118,7 @@ export default function SignupPage() {
             <div className="flex justify-center mb-8">
               <button 
                 onClick={handleGoogleLogin}
-                className="w-full flex items-center justify-center gap-2.5 bg-white/5 hover:bg-white/10 transition-colors py-3 rounded-xl border border-white/5" 
+                className="w-full flex items-center justify-center gap-2.5 bg-surface-container-low/40 hover:bg-surface-bright/60 transition-colors py-3 rounded-xl border border-outline-variant/10" 
                 type="button"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -137,7 +137,7 @@ export default function SignupPage() {
                 <div className="w-full h-px bg-white/10"></div>
               </div>
               <div className="relative flex justify-center">
-                <span className="bg-[#141a20] px-4 text-[10px] font-label text-outline uppercase tracking-[0.2em] rounded-full">Or use email</span>
+                <span className="bg-surface-container/60 backdrop-blur-md px-4 text-[10px] font-label text-on-surface-variant font-bold uppercase tracking-[0.2em] rounded-full">Or use email</span>
               </div>
             </div>
 
@@ -145,7 +145,7 @@ export default function SignupPage() {
             <div className="space-y-1.5">
               <label className="font-label text-xs font-semibold uppercase tracking-wider text-on-surface-variant" htmlFor="name">Full Name</label>
               <input
-                className="w-full bg-surface-container-highest/50 border border-white/5 text-on-surface placeholder:text-outline/50 p-3.5 rounded-xl focus:ring-2 focus:ring-indigo-500/50 transition-all outline-none text-sm"
+                className="w-full bg-surface-container-highest/50 border border-outline-variant/10 text-on-surface placeholder:text-on-surface-variant/40 p-3.5 rounded-xl focus:ring-2 focus:ring-primary/20 transition-all outline-none text-sm"
                 id="name"
                 placeholder="John Doe"
                 type="text"
@@ -157,7 +157,7 @@ export default function SignupPage() {
             <div className="space-y-1.5">
               <label className="font-label text-xs font-semibold uppercase tracking-wider text-on-surface-variant" htmlFor="email">Email Address</label>
               <input
-                className="w-full bg-surface-container-highest/50 border border-white/5 text-on-surface placeholder:text-outline/50 p-3.5 rounded-xl focus:ring-2 focus:ring-indigo-500/50 transition-all outline-none text-sm"
+                className="w-full bg-surface-container-highest/50 border border-outline-variant/10 text-on-surface placeholder:text-on-surface-variant/40 p-3.5 rounded-xl focus:ring-2 focus:ring-primary/20 transition-all outline-none text-sm"
                 id="email"
                 placeholder="john@example.com"
                 type="email"
@@ -169,7 +169,7 @@ export default function SignupPage() {
             <div className="space-y-1.5">
               <label className="font-label text-xs font-semibold uppercase tracking-wider text-on-surface-variant" htmlFor="password">Password</label>
               <input
-                className="w-full bg-surface-container-highest/50 border border-white/5 text-on-surface placeholder:text-outline/50 p-3.5 rounded-xl focus:ring-2 focus:ring-indigo-500/50 transition-all outline-none text-sm"
+                className="w-full bg-surface-container-highest/50 border border-outline-variant/10 text-on-surface placeholder:text-on-surface-variant/40 p-3.5 rounded-xl focus:ring-2 focus:ring-primary/20 transition-all outline-none text-sm"
                 id="password"
                 placeholder="••••••••"
                 type="password"
@@ -181,7 +181,7 @@ export default function SignupPage() {
             <div className="space-y-1.5">
               <label className="font-label text-xs font-semibold uppercase tracking-wider text-on-surface-variant" htmlFor="confirm_password">Confirm Password</label>
               <input
-                className="w-full bg-surface-container-highest/50 border border-white/5 text-on-surface placeholder:text-outline/50 p-3.5 rounded-xl focus:ring-2 focus:ring-indigo-500/50 transition-all outline-none text-sm"
+                className="w-full bg-surface-container-highest/50 border border-outline-variant/10 text-on-surface placeholder:text-on-surface-variant/40 p-3.5 rounded-xl focus:ring-2 focus:ring-primary/20 transition-all outline-none text-sm"
                 id="confirm_password"
                 placeholder="••••••••"
                 type="password"
@@ -198,9 +198,9 @@ export default function SignupPage() {
                     type="checkbox" 
                     checked={termsAccepted}
                     onChange={(e) => setTermsAccepted(e.target.checked)}
-                    className="peer appearance-none w-5 h-5 border-2 border-white/10 rounded-lg bg-white/5 checked:bg-indigo-600 checked:border-indigo-600 transition-all cursor-pointer"
+                    className="peer appearance-none w-5 h-5 border-2 border-outline-variant/10 rounded-lg bg-surface-container-highest/50 checked:bg-primary checked:border-primary transition-all cursor-pointer"
                   />
-                  <span className="material-symbols-outlined absolute text-[14px] text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold">check</span>
+                  <span className="material-symbols-outlined absolute text-[14px] text-on-primary-fixed opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold">check</span>
                 </div>
                 <span className="text-xs text-on-surface-variant leading-relaxed group-hover:text-on-surface transition-colors">
                   I agree to the <Link href="/terms" className="text-indigo-400 hover:underline">Terms of Service</Link>
@@ -213,9 +213,9 @@ export default function SignupPage() {
                     type="checkbox" 
                     checked={privacyAccepted}
                     onChange={(e) => setPrivacyAccepted(e.target.checked)}
-                    className="peer appearance-none w-5 h-5 border-2 border-white/10 rounded-lg bg-white/5 checked:bg-indigo-600 checked:border-indigo-600 transition-all cursor-pointer"
+                    className="peer appearance-none w-5 h-5 border-2 border-outline-variant/10 rounded-lg bg-surface-container-highest/50 checked:bg-primary checked:border-primary transition-all cursor-pointer"
                   />
-                  <span className="material-symbols-outlined absolute text-[14px] text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold">check</span>
+                  <span className="material-symbols-outlined absolute text-[14px] text-on-primary-fixed opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold">check</span>
                 </div>
                 <span className="text-xs text-on-surface-variant leading-relaxed group-hover:text-on-surface transition-colors">
                   I have read and accept the <Link href="/privacy-policy" className="text-indigo-400 hover:underline">Privacy Policy</Link>
@@ -241,7 +241,7 @@ export default function SignupPage() {
           <div className="mt-8 text-center border-t border-white/5 pt-6">
             <p className="text-on-surface-variant text-sm">
               Already part of the network?
-              <Link className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors ml-1" href="/login">Login here</Link>
+              <Link className="text-primary hover:text-primary-dim font-semibold transition-colors ml-1" href="/login">Login here</Link>
             </p>
           </div>
         </div>
@@ -256,14 +256,14 @@ export default function SignupPage() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto w-full py-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center px-12 gap-4 z-10">
-        <div className="text-xs font-headline font-bold text-slate-500 uppercase tracking-widest">
+      <footer className="mt-auto w-full py-8 border-t border-outline-variant/10 flex flex-col md:flex-row justify-between items-center px-12 gap-4 z-10">
+        <div className="text-xs font-headline font-bold text-on-surface-variant/40 uppercase tracking-widest">
           © 2024 Vayl Systems.
         </div>
         <div className="flex gap-8">
-          <Link className="font-inter text-[10px] uppercase tracking-widest text-slate-600 hover:text-indigo-400 transition-colors" href="/terms">Terms</Link>
-          <Link className="font-inter text-[10px] uppercase tracking-widest text-slate-600 hover:text-indigo-400 transition-colors" href="/privacy-policy">Privacy</Link>
-          <Link className="font-inter text-[10px] uppercase tracking-widest text-slate-600 hover:text-indigo-400 transition-colors" href="/contact">Support</Link>
+          <Link className="font-inter text-[10px] uppercase tracking-widest text-on-surface-variant/50 hover:text-primary transition-colors" href="/terms">Terms</Link>
+          <Link className="font-inter text-[10px] uppercase tracking-widest text-on-surface-variant/50 hover:text-primary transition-colors" href="/privacy-policy">Privacy</Link>
+          <Link className="font-inter text-[10px] uppercase tracking-widest text-on-surface-variant/50 hover:text-primary transition-colors" href="/contact">Support</Link>
         </div>
       </footer>
     </div>

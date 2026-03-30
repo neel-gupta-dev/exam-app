@@ -11,6 +11,7 @@ export interface User {
   vaultId?: string;
   googleId?: string;
   googleClassroomLinked?: boolean;
+  googleCalendarLinked?: boolean;
   googleAccessToken?: string;
   googleRefreshToken?: string;
   googleTokenExpiresAt?: string | Date;

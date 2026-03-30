@@ -23,12 +23,12 @@ export default function PrivacyPolicy() {
         <header className="mb-16 text-center">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-primary hover:text-white transition-all group mb-8 bg-surface-variant/50 px-4 py-2 rounded-full border border-white/5 hover:border-primary/20"
+            className="inline-flex items-center gap-2 text-primary hover:text-primary-dim transition-all group mb-8 bg-surface-container-high px-4 py-2 rounded-full border border-outline-variant/10 hover:border-primary/20"
           >
             <span className="material-symbols-outlined text-sm group-hover:-translate-x-1 transition-transform">arrow_back</span>
             <span className="text-xs font-interface uppercase tracking-widest font-bold">Back to Vayl</span>
           </Link>
-          <h1 className="text-5xl md:text-6xl font-heading font-black tracking-tighter mb-4 bg-gradient-to-br from-white via-white to-primary/40 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-6xl font-heading font-black tracking-tighter mb-4 bg-gradient-to-br from-on-surface via-on-surface to-primary bg-clip-text text-transparent">
             Privacy Policy
           </h1>
           <p className="text-on-surface-variant font-interface text-sm uppercase tracking-[0.2em] font-medium opacity-70">
@@ -37,7 +37,7 @@ export default function PrivacyPolicy() {
         </header>
 
         {/* Content */}
-        <div className="glass-card rounded-[2.5rem] p-8 md:p-12 space-y-12 leading-relaxed border-white/10 shadow-2xl relative overflow-hidden group">
+        <div className="glass-card rounded-[2.5rem] p-8 md:p-12 space-y-12 leading-relaxed border-outline-variant/10 shadow-2xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-primary/10 transition-colors duration-700" />
 
           <section className="space-y-4">
@@ -47,12 +47,12 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="space-y-6">
-            <h2 className="text-2xl font-heading font-bold text-white flex items-center gap-3">
+            <h2 className="text-2xl font-heading font-bold text-on-surface flex items-center gap-3">
               <span className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary text-sm font-black">1</span>
               Information We Collect
             </h2>
             <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-white/5 p-6 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
+              <div className="bg-surface-container-low p-6 rounded-2xl border border-outline-variant/10 hover:border-primary/20 transition-colors">
                 <h3 className="font-heading font-bold text-primary mb-3 text-sm uppercase tracking-wider">1.1 Account & Identity</h3>
                 <ul className="space-y-3 text-on-surface-variant text-sm">
                   <li className="flex items-start gap-2">
@@ -65,7 +65,7 @@ export default function PrivacyPolicy() {
                   </li>
                 </ul>
               </div>
-              <div className="bg-white/5 p-6 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
+              <div className="bg-surface-container-low p-6 rounded-2xl border border-outline-variant/10 hover:border-primary/20 transition-colors">
                 <h3 className="font-heading font-bold text-primary mb-3 text-sm uppercase tracking-wider">1.2 Google Classroom Data</h3>
                 <ul className="space-y-3 text-on-surface-variant text-sm">
                   <li className="flex items-start gap-2">
@@ -88,11 +88,11 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="space-y-6">
-            <h2 className="text-2xl font-heading font-bold text-white flex items-center gap-3">
+            <h2 className="text-2xl font-heading font-bold text-on-surface flex items-center gap-3">
               <span className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary text-sm font-black">2</span>
               How We Use Your Information
             </h2>
-            <div className="bg-white/2 rounded-2xl p-6 border border-white/5">
+            <div className="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant/5">
               <ul className="grid md:grid-cols-2 gap-4 text-on-surface-variant text-sm">
                 {[
                   "Synchronize academic deadlines",
@@ -112,7 +112,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="space-y-6">
-            <h2 className="text-2xl font-heading font-bold text-white flex items-center gap-3">
+            <h2 className="text-2xl font-heading font-bold text-on-surface flex items-center gap-3">
               <span className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary text-sm font-black">3</span>
               Third-Party Integrations
             </h2>
@@ -125,8 +125,8 @@ export default function PrivacyPolicy() {
                 { title: "Classroom API", desc: "Read-only access to synchronize your academic journey in real-time." },
                 { title: "Revocation", desc: "You can revoke access at any time through your Google Security settings." }
               ].map((item, i) => (
-                <div key={i} className="flex gap-4 p-4 rounded-xl bg-white/5 border border-white/5">
-                  <div className="font-heading font-bold text-white min-w-[140px] text-sm">{item.title}</div>
+                <div key={i} className="flex gap-4 p-4 rounded-xl bg-surface-container-low border border-outline-variant/10">
+                  <div className="font-heading font-bold text-on-surface min-w-[140px] text-sm">{item.title}</div>
                   <div className="text-on-surface-variant text-sm">{item.desc}</div>
                 </div>
               ))}
@@ -148,7 +148,7 @@ export default function PrivacyPolicy() {
             </section>
           </div>
 
-          <footer className="pt-12 border-t border-white/10 mt-12 text-center">
+          <footer className="pt-12 border-t border-outline-variant/10 mt-12 text-center">
             <p className="text-on-surface-variant mb-6 text-sm">
               Questions? Reach out to our dedicated support team.
             </p>

@@ -136,6 +136,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    googleCalendarLinked: {
+      type: Boolean,
+      default: false,
+    },
   },
   { 
     timestamps: true,

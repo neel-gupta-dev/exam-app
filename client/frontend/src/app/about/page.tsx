@@ -23,12 +23,12 @@ export default function AboutPage() {
         <header className="mb-20 text-center">
           <Link 
             href="/" 
-            className="inline-flex items-center gap-2 text-primary hover:text-white transition-all group mb-8 bg-surface-variant/50 px-5 py-2.5 rounded-full border border-white/5 shadow-xl shadow-black/20"
+            className="inline-flex items-center gap-2 text-primary hover:text-primary-dim transition-all group mb-8 bg-surface-container-high px-5 py-2.5 rounded-full border border-outline-variant/10 shadow-xl shadow-black/5"
           >
-            <Image src="/vayl-logo.png" alt="Vayl Logo" width={20} height={20} className="object-contain" />
+            <Image src="/vayl-logo.png" alt="Vayl Logo" width={20} height={20} className="object-contain brightness-0 contrast-125 dark:brightness-100 dark:contrast-100" />
             <span className="text-xs font-interface uppercase tracking-[0.2em] font-bold">Back to Vayl</span>
           </Link>
-          <h1 className="text-6xl md:text-8xl font-heading font-black tracking-tighter mb-6 bg-gradient-to-br from-white via-white to-primary/30 bg-clip-text text-transparent">
+          <h1 className="text-6xl md:text-8xl font-heading font-black tracking-tighter mb-6 bg-gradient-to-br from-on-surface via-on-surface to-primary bg-clip-text text-transparent">
             Our Mission.
           </h1>
           <p className="text-on-surface-variant font-interface max-w-2xl mx-auto text-lg md:text-xl leading-relaxed opacity-80">
@@ -37,31 +37,31 @@ export default function AboutPage() {
         </header>
 
         <div className="grid md:grid-cols-2 gap-8 mb-20">
-          <div className="glass-card rounded-[3rem] p-10 border-white/5 space-y-6">
+          <div className="glass-card rounded-[3rem] p-10 border-outline-variant/10 space-y-6">
             <div className="w-14 h-14 bg-primary/20 rounded-2xl flex items-center justify-center text-primary border border-primary/20 shadow-inner">
               <span className="material-symbols-outlined text-3xl">psychology</span>
             </div>
-            <h2 className="text-3xl font-heading font-bold text-white tracking-tight">The Vision</h2>
+            <h2 className="text-3xl font-heading font-black tracking-tight" style={{ color: 'var(--primary)' }}>The Vision</h2>
             <p className="text-on-surface-variant leading-relaxed">
               We believe that effective learning starts with a clear mind. Vayl provides a unified dashboard to manage high-yield resources, track daily progress, and maintain focus in a world of digital noise.
             </p>
           </div>
 
-          <div className="glass-card rounded-[3rem] p-10 border-white/5 space-y-6">
+          <div className="glass-card rounded-[3rem] p-10 border-outline-variant/10 space-y-6">
             <div className="w-14 h-14 bg-tertiary/20 rounded-2xl flex items-center justify-center text-tertiary border border-tertiary/20 shadow-inner">
               <span className="material-symbols-outlined text-3xl">auto_awesome</span>
             </div>
-            <h2 className="text-3xl font-heading font-bold text-white tracking-tight">Focus Protocol</h2>
+            <h2 className="text-3xl font-heading font-black tracking-tight" style={{ color: 'var(--primary)' }}>Focus Protocol</h2>
             <p className="text-on-surface-variant leading-relaxed">
               Our "Focus Room" and gamified progress systems are designed to turn hours of study into deep work sessions. No distractions, just pure execution.
             </p>
           </div>
         </div>
 
-        <section className="glass-card rounded-[3rem] p-12 mb-20 border-white/5 overflow-hidden relative">
+        <section className="glass-card rounded-[3rem] p-12 mb-20 border-outline-variant/10 overflow-hidden relative">
           <div className="absolute top-0 right-0 w-80 h-80 bg-primary/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
           <div className="relative z-10 space-y-8">
-            <h2 className="text-4xl font-heading font-black text-white">Why Vayl?</h2>
+            <h2 className="text-4xl font-heading font-black text-on-surface">Why Vayl?</h2>
             <div className="grid sm:grid-cols-3 gap-8">
               {[
                 { title: "Personalized", desc: "Every student's vault is unique to their target exam goals.", icon: "person" },
@@ -82,7 +82,7 @@ export default function AboutPage() {
           </div>
         </section>
 
-        <footer className="text-center pt-10 border-t border-white/5">
+        <footer className="text-center pt-10 border-t border-outline-variant/10">
           <p className="text-on-surface-variant text-sm mb-6">Designed for students, by someone who's been there.</p>
           <div className="flex justify-center gap-8 text-xs font-interface font-bold uppercase tracking-widest">
             <Link href="/privacy-policy" className="text-on-surface-variant hover:text-primary transition-colors">Privacy</Link>

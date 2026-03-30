@@ -23,12 +23,12 @@ export default function ContactPage() {
         <header className="mb-20 text-center">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-primary hover:text-white transition-all group mb-10 bg-surface-variant/50 px-5 py-2.5 rounded-full border border-white/5 shadow-xl shadow-black/20"
+            className="inline-flex items-center gap-2 text-primary hover:text-primary-dim transition-all group mb-10 bg-surface-container-high px-5 py-2.5 rounded-full border border-outline-variant/10 shadow-xl shadow-black/5"
           >
             <Image src="/vayl-logo.png" alt="Vayl Logo" width={20} height={20} className="object-contain" />
             <span className="text-xs font-interface uppercase tracking-[0.2em] font-bold">Back to Vayl</span>
           </Link>
-          <h1 className="text-5xl md:text-7xl font-heading font-black tracking-tighter mb-6 bg-gradient-to-br from-white via-white to-error/30 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-7xl font-heading font-black tracking-tighter mb-6 bg-gradient-to-br from-on-surface via-on-surface to-error bg-clip-text text-transparent">
             Get in Touch.
           </h1>
           <p className="text-on-surface-variant font-interface max-w-xl mx-auto text-lg opacity-80 leading-relaxed">
@@ -37,7 +37,7 @@ export default function ContactPage() {
         </header>
 
         <div className="grid md:grid-cols-1 gap-12 max-w-2xl mx-auto">
-          <div className="glass-card rounded-[3rem] p-12 border-white/10 shadow-2xl relative overflow-hidden group">
+          <div className="glass-card rounded-[3rem] p-12 border-outline-variant/10 shadow-2xl relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 
             <div className="space-y-12 relative z-10">
@@ -49,7 +49,7 @@ export default function ContactPage() {
                   <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-primary mb-2">Primary Support</h3>
                   <a
                     href="mailto:neelgupta30@zohomail.in"
-                    className="text-2xl md:text-3xl font-heading font-bold text-white hover:text-primary transition-colors hover:underline decoration-primary/30"
+                    className="text-2xl md:text-3xl font-heading font-bold text-on-surface hover:text-primary transition-colors hover:underline decoration-primary/30"
                   >
                     neelgupta30@zohomail.in
                   </a>
@@ -65,14 +65,14 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-tertiary mb-2">Technical Assistance</h3>
-                  <p className="text-lg font-bold text-white leading-relaxed">
+                  <p className="text-lg font-bold text-on-surface leading-relaxed">
                     Experiencing sync issues or layout bugs? Reach out with your Roll Number for faster resolution.
                   </p>
                 </div>
               </div>
             </div>
 
-            <footer className="mt-16 pt-10 border-t border-white/10 flex flex-wrap gap-4 items-center justify-between">
+            <footer className="mt-16 pt-10 border-t border-outline-variant/10 flex flex-wrap gap-4 items-center justify-between">
               <div className="flex gap-4">
                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                 <span className="text-[10px] font-black uppercase tracking-widest text-green-400 opacity-80">Support Systems Live</span>

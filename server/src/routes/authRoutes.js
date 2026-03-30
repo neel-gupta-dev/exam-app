@@ -11,13 +11,20 @@ const router = Router();
 router.get('/google', (req, res, next) => {
   const scope = ['profile', 'email'];
   
-  // Conditionally add classroom scopes if requested via query param
+  // Conditionally add classroom or calendar scopes if requested via query param
   if (req.query.classroom === 'true') {
     scope.push(
       'https://www.googleapis.com/auth/classroom.courses.readonly',
       'https://www.googleapis.com/auth/classroom.coursework.me.readonly',
       'https://www.googleapis.com/auth/classroom.announcements.readonly',
       'https://www.googleapis.com/auth/classroom.courseworkmaterials.readonly'
+    );
+  }
+
+  if (req.query.calendar === 'true') {
+    scope.push(
+      'https://www.googleapis.com/auth/calendar',
+      'https://www.googleapis.com/auth/calendar.events'
     );
   }
 

@@ -11,8 +11,12 @@ import {
   User as UserIcon,
   FolderLock,
   GraduationCap,
-  BarChart2
+  BarChart2,
+  Calendar,
+  Sun,
+  Moon
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
@@ -35,7 +39,7 @@ const navItems = [
  */
 export default function Sidebar() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, theme, toggleTheme } = useAuth();
   const [folders, setFolders] = useState<string[]>([]);
 
   /**
@@ -95,8 +99,8 @@ export default function Sidebar() {
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 ${isActive
-                  ? "bg-indigo-500/10 text-indigo-400 border-l-2 border-indigo-500"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-surface-bright"
+                  ? "bg-primary/10 text-primary border-l-2 border-primary"
+                  : "text-on-surface-variant hover:text-on-surface hover:bg-surface-bright"
                   }`}
               >
                 <Icon className="w-5 h-5" />
@@ -123,8 +127,8 @@ export default function Sidebar() {
                     key={folderName}
                     href={folderHref}
                     className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors duration-200 ${isActive
-                      ? "bg-indigo-500/10 text-indigo-400"
-                      : "text-slate-400 hover:text-slate-200 hover:bg-surface-bright"
+                      ? "bg-primary/10 text-primary"
+                      : "text-on-surface-variant hover:text-on-surface hover:bg-surface-bright"
                       }`}
                   >
                     <FolderLock className="w-5 h-5" />
@@ -135,6 +139,41 @@ export default function Sidebar() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Theme Toggle */}
+      <div className="px-6 py-2">
+        <button
+          onClick={toggleTheme}
+          className="w-full flex items-center justify-between px-4 py-2 bg-surface-container rounded-xl text-on-surface-variant hover:text-on-surface transition-all group overflow-hidden relative"
+        >
+          <span className="text-xs font-bold uppercase tracking-wider">
+            {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+          </span>
+          <AnimatePresence mode="wait">
+            {theme === 'dark' ? (
+              <motion.div
+                key="sun"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -20, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Sun className="w-4 h-4" />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="moon"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -20, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Moon className="w-4 h-4" />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </button>
       </div>
 
       {/* User Profile Card */}

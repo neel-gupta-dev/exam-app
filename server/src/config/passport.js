@@ -21,8 +21,9 @@ const configurePassport = () => {
           const expires_in = params.expires_in;
           const tokenExpiresAt = new Date(Date.now() + expires_in * 1000);
           
-          // Detect if Classroom scopes were granted
+          // Detect if Classroom or Calendar scopes were granted
           const isClassroomAuth = params.scope && params.scope.includes('classroom');
+          const isCalendarAuth = params.scope && params.scope.includes('calendar');
 
           try {
             // 1. Check if user with googleId exists
@@ -34,6 +35,7 @@ const configurePassport = () => {
               if (refreshToken) user.googleRefreshToken = refreshToken;
               user.googleTokenExpiresAt = tokenExpiresAt;
               if (isClassroomAuth) user.googleClassroomLinked = true;
+              if (isCalendarAuth) user.googleCalendarLinked = true;
               
               // Auto-verify academic domains
               const academicDomains = ['.ac.in', '.edu', '.edu.in', '.res.in', '.ac.uk', '.edu.au', '.edu.sg', '.edu.np', '.edu.bd', '.edu.lk'];
@@ -56,6 +58,7 @@ const configurePassport = () => {
               if (refreshToken) user.googleRefreshToken = refreshToken;
               user.googleTokenExpiresAt = tokenExpiresAt;
               if (isClassroomAuth) user.googleClassroomLinked = true;
+              if (isCalendarAuth) user.googleCalendarLinked = true;
               
               // Auto-verify academic domains
               const academicDomains = ['.ac.in', '.edu', '.edu.in', '.res.in', '.ac.uk', '.edu.au', '.edu.sg', '.edu.np', '.edu.bd', '.edu.lk'];
@@ -80,6 +83,7 @@ const configurePassport = () => {
               googleRefreshToken: refreshToken,
               googleTokenExpiresAt: tokenExpiresAt,
               googleClassroomLinked: isClassroomAuth,
+              googleCalendarLinked: isCalendarAuth,
               // Auto-verify academic domains
               isVerifiedStudent: ['.ac.in', '.edu', '.edu.in', '.res.in', '.ac.uk', '.edu.au', '.edu.sg', '.edu.np', '.edu.bd', '.edu.lk'].some(domain => email.toLowerCase().endsWith(domain)),
             });

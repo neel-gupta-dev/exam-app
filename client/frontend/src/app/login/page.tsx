@@ -121,8 +121,8 @@ function LoginContent() {
 
       {/* Header / Brand */}
       <header className="fixed top-0 w-full z-50 flex justify-between items-center px-8 h-16">
-        <div className="flex items-center gap-2 text-xl font-headline font-bold tracking-tight text-white">
-          <Image src="/vayl-logo.png" alt="Vayl Logo" width={32} height={32} className="object-contain" />
+        <div className="flex items-center gap-2 text-xl font-headline font-bold tracking-tight text-on-surface">
+          <Image src="/vayl-logo.png" alt="Vayl Logo" width={32} height={32} className="object-contain brightness-0 contrast-125 dark:brightness-100 dark:contrast-100" />
           Vayl
         </div>
       </header>
@@ -153,7 +153,7 @@ function LoginContent() {
               <div className="w-full border-t border-outline-variant/10"></div>
             </div>
             <div className="relative flex justify-center text-[10px]">
-              <span className="px-4 bg-[#141a20]/60 backdrop-blur-md rounded-full text-outline font-bold tracking-widest uppercase">Or use email</span>
+              <span className="px-4 bg-surface backdrop-blur-md rounded-full text-on-surface-variant font-black tracking-widest uppercase border border-outline-variant/10">Or use email</span>
             </div>
           </div>
 
@@ -192,29 +192,50 @@ function LoginContent() {
               </div>
             </div>
             {/* Remember Me */}
-            <div className="flex items-center space-x-3 py-1 ml-1">
-              <input 
-                className="w-4 h-4 rounded-md bg-surface-container-highest border-outline-variant/50 text-primary-container focus:ring-0 focus:ring-offset-0 cursor-pointer" 
-                id="remember" 
-                name="remember" 
-                type="checkbox" 
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-              />
-              <label className="text-xs font-medium text-on-surface-variant cursor-pointer select-none" htmlFor="remember">Keep session active</label>
+            <div className="flex items-center space-x-3 py-1 ml-1 cursor-pointer select-none group" onClick={() => setRemember(!remember)}>
+              <div className="relative flex items-center justify-center">
+                {/* Hidden input for accessibility/form state */}
+                <input 
+                  type="checkbox" 
+                  checked={remember}
+                  readOnly
+                  className="sr-only" 
+                  id="remember"
+                  name="remember"
+                />
+                {/* Custom UI Wrapper */}
+                <div className={`w-5 h-5 rounded-lg border-2 transition-all flex items-center justify-center shadow-sm ${
+                  remember ? 'bg-blue-600 border-blue-600' : 'bg-surface-container-highest border-outline-variant/30'
+                } group-hover:border-primary/50`}>
+                  {remember && (
+                    <svg 
+                      className="w-3.5 h-3.5 text-white" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor" 
+                      strokeWidth="4"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+              <label className="text-xs font-black text-on-surface-variant cursor-pointer group-hover:text-on-surface transition-colors uppercase tracking-[0.15em] font-interface">
+                Keep session active
+              </label>
             </div>
             {/* Primary CTA */}
             <button
-              className="w-full bg-primary-container text-primary-fixed font-headline font-bold py-4 rounded-xl shadow-lg shadow-primary-container/20 hover:bg-on-primary-fixed-variant hover:-translate-y-0.5 active:scale-[0.98] transition-all flex justify-center items-center gap-3 group/btn disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full bg-primary text-on-primary font-headline font-black uppercase tracking-widest py-4 rounded-xl shadow-xl shadow-primary/20 hover:bg-primary-dim hover:-translate-y-0.5 active:scale-[0.98] transition-all flex justify-center items-center gap-3 group/btn disabled:opacity-60 disabled:cursor-not-allowed"
               type="submit"
               disabled={loading}
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-primary-fixed border-t-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-on-primary border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   Unlock Vault
-                  <span className="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">key</span>
+                  <span className="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform font-bold">key</span>
                 </>
               )}
             </button>
@@ -230,7 +251,7 @@ function LoginContent() {
                 <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
               </div>
               <div className="text-center relative z-10">
-                <h3 className="font-headline text-xl font-bold text-white mb-2">Verifying Vault Credentials...</h3>
+                <h3 className="font-headline text-xl font-bold text-on-surface mb-2">Verifying Vault Credentials...</h3>
                 <div className="flex items-center justify-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce"></span>
                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:-0.15s]"></span>
@@ -248,23 +269,23 @@ function LoginContent() {
         <div className="mt-10 text-center">
           <p className="text-sm text-on-surface-variant">
             First time here?
-            <Link className="text-primary font-bold hover:text-white transition-colors underline underline-offset-8 ml-1" href="/signup">Request Access</Link>
+            <Link className="text-primary font-bold hover:text-primary-dim transition-colors underline underline-offset-8 ml-1" href="/signup">Request Access</Link>
           </p>
         </div>
       </main>
 
       {/* Page Footer Information */}
       <footer className="mt-auto w-full py-8 px-12 flex flex-col md:flex-row justify-between items-center gap-6 z-20">
-        <div className="text-[10px] font-headline font-bold text-outline uppercase tracking-[0.2em] flex items-center gap-2">
+        <div className="text-[10px] font-headline font-bold text-on-surface-variant/40 uppercase tracking-[0.2em] flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-primary/40"></div>
           Vayl Secure Node
         </div>
         <div className="flex gap-8">
-          <Link className="font-inter text-xs text-slate-500 hover:text-primary transition-colors" href="/privacy-policy">Privacy</Link>
-          <Link className="font-inter text-xs text-slate-500 hover:text-primary transition-colors" href="/terms">Terms</Link>
-          <Link className="font-inter text-xs text-slate-500 hover:text-primary transition-colors" href="/contact">Support</Link>
+          <Link className="font-inter text-xs text-on-surface-variant/60 hover:text-primary transition-colors" href="/privacy-policy">Privacy</Link>
+          <Link className="font-inter text-xs text-on-surface-variant/60 hover:text-primary transition-colors" href="/terms">Terms</Link>
+          <Link className="font-inter text-xs text-on-surface-variant/60 hover:text-primary transition-colors" href="/contact">Support</Link>
         </div>
-        <div className="font-inter text-[10px] text-slate-600 font-medium">
+        <div className="font-inter text-[10px] text-on-surface-variant/40 font-medium">
           © 2024 Vayl. Encrypted Protocol.
         </div>
       </footer>

@@ -14,6 +14,7 @@ import studyRoutes from '../src/routes/study.js';
 import analyticsRoutes from '../src/routes/analyticsRoutes.js';
 import classroomRoutes from '../src/routes/classroomRoutes.js';
 import performanceRoutes from '../src/routes/performanceRoutes.js';
+import calendarRoutes from '../src/routes/calendarRoutes.js';
 import { getHealth } from '../src/controllers/healthController.js';
 import { closeExpiredSessions } from '../src/services/authService.js';
 import passport from 'passport';
@@ -77,6 +78,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/classroom', classroomRoutes);
 app.use('/api/performance', performanceRoutes);
+app.use('/api/calendar', calendarRoutes);
 
 // --- Error Handling ---
 app.use(notFound);

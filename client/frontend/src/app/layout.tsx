@@ -131,7 +131,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`dark h-full antialiased ${montserrat.variable} ${poppins.variable} ${hanken.variable}`}
+      className={`h-full antialiased ${montserrat.variable} ${poppins.variable} ${hanken.variable}`}
     >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />

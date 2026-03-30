@@ -19,6 +19,8 @@ interface AuthContextType {
   fetchUser: () => Promise<void>;
   hapticsEnabled: boolean;
   setHapticsEnabled: (enabled: boolean) => void;
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -248,6 +250,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('kv_hapticsEnabled', String(enabled));
   }, []);
 
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    const storedTheme = localStorage.getItem('kv_theme') as 'light' | 'dark';
+    if (storedTheme) {
+      setTheme(storedTheme);
+    } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+      setTheme('light');
+    }
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => {
+      const newTheme = prev === 'light' ? 'dark' : 'light';
+      localStorage.setItem('kv_theme', newTheme);
+      return newTheme;
+    });
+  }, []);
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -262,6 +283,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       fetchUser,
       hapticsEnabled,
       setHapticsEnabled,
+      theme,
+      toggleTheme,
     }}>
       {children}
     </AuthContext.Provider>
