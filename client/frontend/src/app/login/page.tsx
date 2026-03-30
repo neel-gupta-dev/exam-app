@@ -177,7 +177,7 @@ function LoginContent() {
             <div className="space-y-2">
               <div className="flex justify-between items-center ml-1">
                 <label className="font-label text-xs font-bold text-on-surface-variant uppercase tracking-widest" htmlFor="password">Password</label>
-                <Link className="text-xs font-semibold text-primary hover:text-primary-dim transition-colors" href="#">Forgot password?</Link>
+                <Link className="text-xs font-semibold text-primary hover:text-primary-dim transition-colors" href="/forgot-password">Forgot password?</Link>
               </div>
               <div className="relative group/input">
                 <input
