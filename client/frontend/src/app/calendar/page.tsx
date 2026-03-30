@@ -98,11 +98,11 @@ export default function CalendarPage() {
   const weekDays = getWeekDays();
 
   return (
-    <div className="flex-1 bg-surface-container-lowest p-8 overflow-y-auto no-scrollbar">
+    <div className="flex-1 bg-surface p-8 overflow-y-auto no-scrollbar">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
         <div>
-          <h1 className="text-4xl font-headline font-extrabold text-white tracking-tight mb-2">
+          <h1 className="text-4xl font-headline font-extrabold text-on-surface tracking-tight mb-2">
             Strategic Calendar
           </h1>
           <div className="flex items-center gap-2 text-on-surface-variant font-medium">
@@ -112,13 +112,13 @@ export default function CalendarPage() {
         </div>
 
         <div className="flex items-center gap-3 bg-surface-container-low p-1.5 rounded-2xl border border-outline-variant/10 shadow-lg shadow-black/20">
-          <button onClick={handlePrevWeek} className="p-2.5 hover:bg-surface-bright rounded-xl transition-all text-on-surface-variant hover:text-white">
+          <button onClick={handlePrevWeek} className="p-2.5 hover:bg-surface-bright rounded-xl transition-all text-on-surface-variant hover:text-on-surface">
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <button onClick={handleToday} className="px-5 py-2 hover:bg-surface-bright rounded-xl transition-all text-sm font-bold text-on-surface-variant hover:text-white tracking-wide">
+          <button onClick={handleToday} className="px-5 py-2 hover:bg-surface-bright rounded-xl transition-all text-sm font-bold text-on-surface-variant hover:text-on-surface tracking-wide">
             Today
           </button>
-          <button onClick={handleNextWeek} className="p-2.5 hover:bg-surface-bright rounded-xl transition-all text-on-surface-variant hover:text-white">
+          <button onClick={handleNextWeek} className="p-2.5 hover:bg-surface-bright rounded-xl transition-all text-on-surface-variant hover:text-on-surface">
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
@@ -152,7 +152,7 @@ export default function CalendarPage() {
             <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center mb-8 border border-primary/20 shadow-2xl shadow-primary/10">
                 <CloudSync className="w-10 h-10 text-primary" />
             </div>
-            <h2 className="text-2xl font-headline font-bold text-white mb-4">No Calendar Connected</h2>
+            <h2 className="text-2xl font-headline font-bold text-on-surface mb-4">No Calendar Connected</h2>
             <p className="text-on-surface-variant max-w-sm mb-10 leading-relaxed text-sm">
                 Connect your Google Calendar to manage your study blocks, exams, and personal schedule directly from Vayl.
             </p>
@@ -177,9 +177,9 @@ export default function CalendarPage() {
                             <div className={`text-[10px] font-bold uppercase tracking-[0.2em] mb-1 ${isToday ? 'text-primary' : 'text-on-surface-variant'}`}>
                                 {DAYS[day.getDay()]}
                             </div>
-                            <div className={`text-xl font-headline font-extrabold ${isToday ? 'text-white' : 'text-on-surface-variant'}`}>
-                                {day.getDate()}
-                            </div>
+                             <div className={`text-xl font-headline font-extrabold ${isToday ? 'text-primary' : 'text-on-surface'}`}>
+                                 {day.getDate()}
+                             </div>
                         </div>
                     );
                 })}
@@ -189,10 +189,10 @@ export default function CalendarPage() {
             <div className="grid grid-cols-[80px_repeat(7,1fr)] relative min-h-[1200px]">
                 {/* Time Indicators */}
                 <div className="bg-surface-container-low/20">
-                    {HOURS.map(hour => (
+                     {HOURS.map(hour => (
                         <div key={hour} className="h-[60px] flex items-start justify-center pt-2">
-                             <span className="text-[10px] font-bold text-outline uppercase tracking-wider tabular-nums">
-                                {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM' : hour === 12 ? '12 PM' : `${hour-12} PM`}
+                             <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider tabular-nums">
+                                {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour-12} PM`}
                              </span>
                         </div>
                     ))}
@@ -232,7 +232,7 @@ export default function CalendarPage() {
                                         opacity: loading ? 0.5 : 1
                                     }}
                                 >
-                                    <div className="text-[10px] font-bold text-white truncate mb-0.5 leading-tight">
+                                     <div className="text-[10px] font-bold text-primary-fixed-dim truncate mb-0.5 leading-tight">
                                         {event.summary || 'Study Session'}
                                     </div>
                                     {duration > 40 && (

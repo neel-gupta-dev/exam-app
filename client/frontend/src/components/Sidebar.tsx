@@ -97,6 +97,7 @@ export default function Sidebar() {
         {/* Navigation */}
         <nav className="space-y-2">
           {navItems.map((item) => {
+            if (item.label === "Strategic Calendar") return null;
             const isActive = pathname === item.href;
             const Icon = item.icon;
             return (
