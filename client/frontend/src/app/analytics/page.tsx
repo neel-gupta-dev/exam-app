@@ -21,6 +21,7 @@ import {
   BookOpen,
   FolderOpen
 } from "lucide-react";
+import AnalyticsReportGenerator from "@/components/AnalyticsReportGenerator";
 
 const iconMap: Record<string, React.ReactNode> = {
   clock: <BookOpen className="w-5 h-5" />,
@@ -112,7 +113,7 @@ export default function AnalyticsPage() {
     .slice(0, 5) // top 5
     .map(([name, count], index) => {
       const percent = totalResources > 0 ? Math.round((count / totalResources) * 100) : 0;
-      const colors = ["bg-blue-400", "bg-indigo-400", "bg-emerald-400", "bg-orange-400", "bg-purple-400"];
+      const colors = ["#60a5fa", "#818cf8", "#34d399", "#fb923c", "#c084fc"];
       return { 
         name, 
         percent, 
@@ -187,10 +188,12 @@ export default function AnalyticsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg text-xs font-bold transition-all hover:bg-primary-dim">
-            <Download className="w-4 h-4" />
-            EXPORT REPORT
-          </button>
+          <AnalyticsReportGenerator 
+            resources={resources} 
+            heatmapData={heatmapData} 
+            stats={analyticsStats} 
+            subjectMastery={subjectMastery} 
+          />
         </div>
       </div>
 
@@ -257,7 +260,7 @@ export default function AnalyticsPage() {
                     </div>
                   </div>
                   <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                    <div className={`h-full ${subject.color} rounded-full transition-all duration-1000`} style={{ width: `${subject.percent}%` }} />
+                    <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${subject.percent}%`, backgroundColor: subject.color }} />
                   </div>
                 </div>
               ))}

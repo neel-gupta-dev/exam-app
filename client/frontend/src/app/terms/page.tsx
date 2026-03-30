@@ -50,30 +50,26 @@ export default function TermsOfService() {
               <span className="w-8 h-8 rounded-lg bg-tertiary/20 flex items-center justify-center text-tertiary text-sm font-black">1</span>
               Acceptance of Terms
             </h2>
-            <p className="text-on-surface-variant">
-              By accessing or using Vayl, you agree to be bound by these Terms. If you do not agree to all of the terms and conditions, you may not access the Platform.
+            <p className="text-on-surface-variant text-sm">
+              By accessing Vayl, you agree to these Terms. If you are using the Platform on behalf of an educational institution, you represent that you have the authority to bind that institution to these Terms.
             </p>
           </section>
 
           <section className="space-y-6">
             <h2 className="text-2xl font-heading font-bold text-white flex items-center gap-3">
               <span className="w-8 h-8 rounded-lg bg-tertiary/20 flex items-center justify-center text-tertiary text-sm font-black">2</span>
-              User Conduct
+              Third-Party Integrations
             </h2>
             <div className="bg-white/5 p-6 rounded-2xl border border-white/5 space-y-4">
-              <p className="text-on-surface-variant text-sm">As a user of Vayl, you agree:</p>
+              <p className="text-on-surface-variant text-sm">Vayl allows you to connect your Google Classroom account. By doing so, you acknowledge:</p>
               <ul className="space-y-3 text-on-surface-variant text-sm">
                 <li className="flex items-start gap-2">
                   <span className="material-symbols-outlined text-tertiary text-[10px] mt-1">circle</span>
-                  <span>To provide accurate registration information.</span>
+                  <span>You have the necessary permissions to access and sync your academic data.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="material-symbols-outlined text-tertiary text-[10px] mt-1">circle</span>
-                  <span>To maintain account security.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="material-symbols-outlined text-tertiary text-[10px] mt-1">circle</span>
-                  <span>To use the Platform legally and ethically.</span>
+                  <span>Syncing delays or API limitations from Google's end are beyond Vayl's control.</span>
                 </li>
               </ul>
             </div>
@@ -82,27 +78,43 @@ export default function TermsOfService() {
           <section className="space-y-6">
             <h2 className="text-2xl font-heading font-bold text-white flex items-center gap-3">
               <span className="w-8 h-8 rounded-lg bg-tertiary/20 flex items-center justify-center text-tertiary text-sm font-black">3</span>
-              Academic Integrity
+              Academic Integrity & Conduct
             </h2>
-            <p className="text-on-surface-variant">
-              Vayl is intended to support your learning process. You agree to use the Platform in a manner that complies with the academic integrity policies of your educational institution and examination bodies (e.g., NTA for JEE).
-            </p>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="p-5 rounded-xl bg-white/2 border border-white/5">
+                <h3 className="font-bold text-white mb-2 text-sm uppercase tracking-wider">Focus Room Etiquette</h3>
+                <p className="text-xs text-on-surface-variant leading-relaxed">
+                  Focus Rooms are for deep work. Any disruptive behavior, spamming, or use of the platform to facilitate cheating will result in immediate suspension.
+                </p>
+              </div>
+              <div className="p-5 rounded-xl bg-white/2 border border-white/5">
+                <h3 className="font-bold text-white mb-2 text-sm uppercase tracking-wider">Independent Study</h3>
+                <p className="text-xs text-on-surface-variant leading-relaxed">
+                  AI-assisted features are tools for understanding, not shortcuts. Using Vayl to bypass institutional homework policies is prohibited.
+                </p>
+              </div>
+            </div>
           </section>
 
           <section className="space-y-6">
             <h2 className="text-2xl font-heading font-bold text-white flex items-center gap-3">
               <span className="w-8 h-8 rounded-lg bg-tertiary/20 flex items-center justify-center text-tertiary text-sm font-black">4</span>
+              Institutional Verification
+            </h2>
+            <p className="text-on-surface-variant text-sm">
+              We provide "Verified Student" status based on academic email domains. We reserve the right to revoke this status if we determine the email does not belong to a legitimate educational institution or if the account is used for non-academic purposes.
+            </p>
+          </section>
+
+          <section className="space-y-6">
+            <h2 className="text-2xl font-heading font-bold text-white flex items-center gap-3">
+              <span className="w-8 h-8 rounded-lg bg-tertiary/20 flex items-center justify-center text-tertiary text-sm font-black">5</span>
               Intellectual Property
             </h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="p-5 rounded-xl bg-white/2 border border-white/5">
-                <h3 className="font-bold text-white mb-2 text-sm uppercase tracking-wider">Platform Content</h3>
-                <p className="text-xs text-on-surface-variant">All software, design, and branded elements of Vayl are the intellectual property of the Platform owners.</p>
-              </div>
-              <div className="p-5 rounded-xl bg-white/2 border border-white/5">
-                <h3 className="font-bold text-white mb-2 text-sm uppercase tracking-wider">User Content</h3>
-                <p className="text-xs text-on-surface-variant">You retain ownership of any resources you upload. We host them solely for your personal use.</p>
-              </div>
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/5">
+              <p className="text-on-surface-variant text-sm">
+                Vayl's brand, software, and proprietary algorithms are protected. You retain ownership of your original notes and uploaded materials, granting Vayl a limited license to host them for your personal use.
+              </p>
             </div>
           </section>
 

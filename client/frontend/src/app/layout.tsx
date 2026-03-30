@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Montserrat, Poppins, Hanken_Grotesk } from "next/font/google";
 import AppProviders from "@/components/AppProviders";
+import PageTransition from "@/components/PageTransition";
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { WebVitals } from "@/components/WebVitals";
 import CookieConsent from "@/components/CookieConsent";
@@ -138,12 +139,18 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap" rel="stylesheet" />
       </head>
       <body className="min-h-full bg-surface text-on-surface font-body">
-        <GoogleAnalytics gaId="G-ZDWW48QNX7" />
+        {process.env.NODE_ENV === "production" && (
+          <>
+            <GoogleAnalytics gaId="G-ZDWW48QNX7" />
+            <Analytics />
+          </>
+        )}
         <WebVitals />
-        <Analytics />
         <GoogleSchema />
         <CookieConsent />
-        <AppProviders>{children}</AppProviders>
+        <AppProviders>
+          <PageTransition>{children}</PageTransition>
+        </AppProviders>
       </body>
     </html>
   );

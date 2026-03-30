@@ -15,9 +15,14 @@ const configurePassport = () => {
               ? 'https://exam-app-production-7f5d.up.railway.app/api/auth/google/callback' 
               : 'http://localhost:5000/api/auth/google/callback'),
         },
-        async (accessToken, refreshToken, profile, done) => {
+        async (accessToken, refreshToken, params, profile, done) => {
           const { id, displayName, emails } = profile;
           const email = emails[0].value;
+          const expires_in = params.expires_in;
+          const tokenExpiresAt = new Date(Date.now() + expires_in * 1000);
+          
+          // Detect if Classroom scopes were granted
+          const isClassroomAuth = params.scope && params.scope.includes('classroom');
 
           try {
             // 1. Check if user with googleId exists
@@ -25,6 +30,17 @@ const configurePassport = () => {
 
             if (user) {
               user.lastLoginDate = new Date().toISOString().split('T')[0];
+              user.googleAccessToken = accessToken;
+              if (refreshToken) user.googleRefreshToken = refreshToken;
+              user.googleTokenExpiresAt = tokenExpiresAt;
+              if (isClassroomAuth) user.googleClassroomLinked = true;
+              
+              // Auto-verify academic domains
+              const academicDomains = ['.ac.in', '.edu', '.edu.in', '.res.in', '.ac.uk', '.edu.au', '.edu.sg', '.edu.np', '.edu.bd', '.edu.lk'];
+              if (academicDomains.some(domain => email.toLowerCase().endsWith(domain))) {
+                user.isVerifiedStudent = true;
+              }
+
               await user.save();
               return done(null, user);
             }
@@ -36,6 +52,17 @@ const configurePassport = () => {
               user.googleId = id;
               user.authMethod = 'google';
               user.lastLoginDate = new Date().toISOString().split('T')[0];
+              user.googleAccessToken = accessToken;
+              if (refreshToken) user.googleRefreshToken = refreshToken;
+              user.googleTokenExpiresAt = tokenExpiresAt;
+              if (isClassroomAuth) user.googleClassroomLinked = true;
+              
+              // Auto-verify academic domains
+              const academicDomains = ['.ac.in', '.edu', '.edu.in', '.res.in', '.ac.uk', '.edu.au', '.edu.sg', '.edu.np', '.edu.bd', '.edu.lk'];
+              if (academicDomains.some(domain => email.toLowerCase().endsWith(domain))) {
+                user.isVerifiedStudent = true;
+              }
+
               await user.save();
               return done(null, user);
             }
@@ -48,7 +75,13 @@ const configurePassport = () => {
               authMethod: 'google',
               lastLoginDate: new Date().toISOString().split('T')[0],
               level: 1,
-              isOnboarded: false, // Will require onboarding
+              isOnboarded: false,
+              googleAccessToken: accessToken,
+              googleRefreshToken: refreshToken,
+              googleTokenExpiresAt: tokenExpiresAt,
+              googleClassroomLinked: isClassroomAuth,
+              // Auto-verify academic domains
+              isVerifiedStudent: ['.ac.in', '.edu', '.edu.in', '.res.in', '.ac.uk', '.edu.au', '.edu.sg', '.edu.np', '.edu.bd', '.edu.lk'].some(domain => email.toLowerCase().endsWith(domain)),
             });
 
             // Generate Vault ID

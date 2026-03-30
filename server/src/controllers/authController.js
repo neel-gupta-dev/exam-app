@@ -125,13 +125,16 @@ export const getMe = asyncHandler(async (req, res) => {
 // @route   PATCH /api/auth/profile
 // @access  Private
 export const updateProfile = asyncHandler(async (req, res) => {
-  const { name, email, bio, targetScore } = req.body;
+  const { name, email, bio, targetScore, dreamColleges, currentCoaching, academicLevel } = req.body;
   const user = await authService.updateUserProfile({
     userId: req.user._id,
     name,
     email,
     bio,
     targetScore,
+    dreamColleges,
+    currentCoaching,
+    academicLevel,
   });
   res.json(user);
 });

@@ -53,35 +53,37 @@ export default function PrivacyPolicy() {
             </h2>
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-white/5 p-6 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
-                <h3 className="font-heading font-bold text-primary mb-3 text-sm uppercase tracking-wider">1.1 Personal Information</h3>
+                <h3 className="font-heading font-bold text-primary mb-3 text-sm uppercase tracking-wider">1.1 Account & Identity</h3>
                 <ul className="space-y-3 text-on-surface-variant text-sm">
                   <li className="flex items-start gap-2">
                     <span className="material-symbols-outlined text-primary text-[10px] mt-1">circle</span>
-                    <span><strong>Account Data:</strong> Name, email address, roll number, and password.</span>
+                    <span><strong>Google Profile:</strong> Name, email, and profile picture retrieved via Google OAuth.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="material-symbols-outlined text-primary text-[10px] mt-1">circle</span>
-                    <span><strong>Profile Information:</strong> Profile picture, academic interests, and target examination year.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="material-symbols-outlined text-primary text-[10px] mt-1">circle</span>
-                    <span><strong>Communication Data:</strong> Inquiries sent to support.</span>
+                    <span><strong>Academic Email:</strong> We process your email domain to verify institutional status.</span>
                   </li>
                 </ul>
               </div>
               <div className="bg-white/5 p-6 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
-                <h3 className="font-heading font-bold text-primary mb-3 text-sm uppercase tracking-wider">1.2 Usage Data</h3>
+                <h3 className="font-heading font-bold text-primary mb-3 text-sm uppercase tracking-wider">1.2 Google Classroom Data</h3>
                 <ul className="space-y-3 text-on-surface-variant text-sm">
                   <li className="flex items-start gap-2">
                     <span className="material-symbols-outlined text-primary text-[10px] mt-1">circle</span>
-                    <span>Activity logs, including time spent on modules and quiz performance.</span>
+                    <span><strong>Course Metadata:</strong> Course names, descriptions, and teacher profiles.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="material-symbols-outlined text-primary text-[10px] mt-1">circle</span>
-                    <span>Device info: IP address, browser type, and OS.</span>
+                    <span><strong>Stream Activity:</strong> Assignments, announcements, and resource materials for syncing.</span>
                   </li>
                 </ul>
               </div>
+            </div>
+            <div className="bg-primary/5 p-4 rounded-xl border border-primary/20">
+              <p className="text-xs text-primary font-medium flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm">info</span>
+                Note: Vayl does not store or download your Google Drive files. We only process metadata (titles and links) to display them in your Classroom Hub.
+              </p>
             </div>
           </section>
 
@@ -93,12 +95,12 @@ export default function PrivacyPolicy() {
             <div className="bg-white/2 rounded-2xl p-6 border border-white/5">
               <ul className="grid md:grid-cols-2 gap-4 text-on-surface-variant text-sm">
                 {[
-                  "Provide and maintain services",
-                  "Personalize learning experience",
-                  "Track academic progress",
-                  "Communicate updates",
-                  "Improve platform functionality",
-                  "Security and support"
+                  "Synchronize academic deadlines",
+                  "Automated institutional verification",
+                  "Unified classroom stream feed",
+                  "AI-driven study plan personalization",
+                  "Focus session activity tracking",
+                  "Secure platform authentication"
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-3">
                     <span className="material-symbols-outlined text-primary text-lg">check_circle</span>
@@ -112,16 +114,16 @@ export default function PrivacyPolicy() {
           <section className="space-y-6">
             <h2 className="text-2xl font-heading font-bold text-white flex items-center gap-3">
               <span className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary text-sm font-black">3</span>
-              Sharing Your Information
+              Third-Party Integrations
             </h2>
-            <p className="text-on-surface-variant">
-              We do not sell your personal information. We share data only with:
+            <p className="text-on-surface-variant text-sm">
+              Our platform integrates directly with Google Workspace. Your data use is governed by your Google account settings and our specified scopes.
             </p>
             <div className="space-y-4">
               {[
-                { title: "Service Providers", desc: "Trusted partners assisting in platform operations (hosting, analytics)." },
-                { title: "Legal Requirements", desc: "If mandated by law or for safety purposes." },
-                { title: "Public Profiles", desc: "If you opt-in, your academic identity may be visible to others." }
+                { title: "Google OAuth 2.0", desc: "Used for secure identity management and session persistence." },
+                { title: "Classroom API", desc: "Read-only access to synchronize your academic journey in real-time." },
+                { title: "Revocation", desc: "You can revoke access at any time through your Google Security settings." }
               ].map((item, i) => (
                 <div key={i} className="flex gap-4 p-4 rounded-xl bg-white/5 border border-white/5">
                   <div className="font-heading font-bold text-white min-w-[140px] text-sm">{item.title}</div>
@@ -133,15 +135,15 @@ export default function PrivacyPolicy() {
 
           <div className="grid md:grid-cols-2 gap-8">
             <section className="space-y-4">
-              <h2 className="text-xl font-heading font-bold text-white">4. Data Security</h2>
-              <p className="text-on-surface-variant text-sm">
-                We implement industry-standard security measures. While we strive for 100% security, no internet transmission is entirely risk-free.
+              <h2 className="text-xl font-heading font-bold text-white">4. Verification</h2>
+              <p className="text-on-surface-variant text-sm leading-relaxed">
+                We automatically verify students using institutional email suffixes (e.g., .edu, .ac.in). Users from non-academic domains may require manual verification.
               </p>
             </section>
             <section className="space-y-4">
-              <h2 className="text-xl font-heading font-bold text-white">5. Your Rights</h2>
-              <p className="text-on-surface-variant text-sm">
-                You can access, update, or request deletion of your data at any time via settings or by contacting us directly.
+              <h2 className="text-xl font-heading font-bold text-white">5. Data Retention</h2>
+              <p className="text-on-surface-variant text-sm leading-relaxed">
+                Classroom metadata is cached temporarily to improve speed and was deleted immediately upon account disconnection or deletion.
               </p>
             </section>
           </div>

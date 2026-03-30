@@ -70,13 +70,8 @@ export const endFocus = asyncHandler(async (req, res) => {
 
   await session.save();
 
-  // XP Integration: If focus and completed, update User's totalActiveSeconds
-  // This automatically updates XP/Level via the User model's virtuals
-  if (session.type === 'focus' && session.status === 'completed') {
-    await User.findByIdAndUpdate(req.user._id, {
-      $inc: { totalActiveSeconds: actualDuration }
-    });
-  }
+  // XP/Leveling is now handled globally via the Activity Heartbeat system
+  // We only keep the focus session data here for specific focus analytics
 
   res.json({
     message: 'Session ended',

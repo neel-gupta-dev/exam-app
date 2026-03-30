@@ -9,6 +9,7 @@ import api from "@/lib/api";
 import CreateDeckModal from "@/components/Flashcards/CreateDeckModal";
 import AddCardModal from "@/components/Flashcards/AddCardModal";
 import FlashcardRunner from "@/components/Flashcards/FlashcardRunner";
+import { trackDeckStudyStart, trackDeckCreate } from "@/lib/analytics";
 import {
   Sparkles,
   Zap,
@@ -116,6 +117,10 @@ export default function FlashcardsPage() {
   };
 
   const startStudy = (deckId: string) => {
+    const deck = decks.find(d => d._id === deckId);
+    if (deck) {
+      trackDeckStudyStart(deck.title, deck.totalCards);
+    }
     setSelectedDeckId(deckId);
     setIsRunnerOpen(true);
   };

@@ -1,6 +1,6 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import connectDB from '../src/config/db.js';
 import { notFound, errorHandler } from '../src/middlewares/errorMiddleware.js';
 import authRoutes from '../src/routes/authRoutes.js';
@@ -12,13 +12,13 @@ import focusRoutes from '../src/routes/focusRoutes.js';
 import publicRoutes from '../src/routes/publicRoutes.js';
 import studyRoutes from '../src/routes/study.js';
 import analyticsRoutes from '../src/routes/analyticsRoutes.js';
+import classroomRoutes from '../src/routes/classroomRoutes.js';
+import performanceRoutes from '../src/routes/performanceRoutes.js';
 import { getHealth } from '../src/controllers/healthController.js';
 import { closeExpiredSessions } from '../src/services/authService.js';
 import passport from 'passport';
 import configurePassport from '../src/config/passport.js';
 import { MONGO_URI, PORT, ALLOWED_ORIGINS } from '../src/config/index.js';
-
-dotenv.config();
 
 // Connect to MongoDB
 connectDB().catch(err => {
@@ -75,6 +75,8 @@ app.use('/api/public', publicRoutes);
 app.use('/api/study', studyRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/classroom', classroomRoutes);
+app.use('/api/performance', performanceRoutes);
 
 // --- Error Handling ---
 app.use(notFound);

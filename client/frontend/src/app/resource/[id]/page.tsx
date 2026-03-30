@@ -10,6 +10,7 @@ import api from "@/lib/api";
 import Link from "next/link";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import { toast } from "sonner";
+import { trackResourceView, event as trackEvent } from "@/lib/analytics";
 import {
   ExternalLink,
   Play,
@@ -116,6 +117,11 @@ export default function ResourceViewerPage() {
         setResource(resData);
         setNotes(Array.isArray(notesResp.data) ? notesResp.data : []);
 
+        // Track resource view
+        if (resData) {
+          trackResourceView(resData.title || "Untitled", resData.type || "link");
+        }
+
         // Fetch YouTube Title if applicable
         if (resData?.url && extractYouTubeId(resData.url)) {
           try {
@@ -164,6 +170,13 @@ export default function ResourceViewerPage() {
         prev.map((n) => (n._id === mockId ? resp.data : n))
       );
       toast.success("Note saved!");
+
+      // Track note creation
+      trackEvent({
+        action: "note_created",
+        category: "study_notes",
+        label: resource?.title || "Untitled",
+      });
     } catch (err: any) {
       toast.error(err.response?.data?.error || "Failed to save note");
       setNotes((prev) => prev.filter((n) => n._id !== mockId));

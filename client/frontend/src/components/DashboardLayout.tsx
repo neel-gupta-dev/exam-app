@@ -10,6 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useEffect, useRef } from "react";
 import Link from "next/link";
+import { useActivityTracker } from "@/hooks/useActivityTracker";
 
 const version = packageInfo.version;
 
@@ -27,6 +28,9 @@ export default function DashboardLayout({
   const { user } = useAuth();
   const { vibrateClick } = useHaptics();
   const prevLevelRef = useRef<number | undefined>(user?.levelData?.currentLevel);
+
+  // Global activity tracking
+  useActivityTracker();
 
   /**
    * Level Up Haptic Feedback
@@ -65,7 +69,7 @@ export default function DashboardLayout({
               <p className="text-xs md:text-sm text-gray-500 font-mono tracking-wider uppercase">
                 Vault ID: <span className="text-gray-400">#SYSTEM-ORIGIN</span>
                 <span className="mx-3 text-gray-800">|</span>
-                Crafted with precision in the <span className="text-blue-400/80">City of Lakes</span>
+                Crafted with precision in the <span className="text-blue-400/80"><Link target="_blank" href="https://en.wikipedia.org/wiki/Udaipur">City of Lakes</Link></span>
               </p>
 
               {/* Line 2: The Personal Signature */}

@@ -9,7 +9,9 @@ import {
   BarChart3,
   Settings,
   User as UserIcon,
-  FolderLock
+  FolderLock,
+  GraduationCap,
+  BarChart2
 } from "lucide-react";
 import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
@@ -19,6 +21,8 @@ const navItems = [
   { href: "/", label: "Vault", icon: Archive },
   { href: "/focus-room", label: "Focus Room", icon: Brain },
   { href: "/flashcards", label: "Flashcards", icon: Layers },
+  { href: "/classroom", label: "Classroom", icon: GraduationCap },
+  { href: "/performance", label: "Performance", icon: BarChart2 },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: Settings },
   { href: "/profile", label: "Profile", icon: UserIcon },

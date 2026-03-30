@@ -1,12 +1,13 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Archive, Brain, Layers, User as UserIcon, Settings } from "lucide-react";
+import { Archive, Brain, Layers, GraduationCap, User as UserIcon, Settings } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "Vault", icon: Archive },
   { href: "/focus-room", label: "Focus", icon: Brain },
   { href: "/flashcards", label: "Cards", icon: Layers },
+  { href: "/classroom", label: "Classroom", icon: GraduationCap },
   { href: "/profile", label: "Profile", icon: UserIcon },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

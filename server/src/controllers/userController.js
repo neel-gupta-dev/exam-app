@@ -1,4 +1,5 @@
 import asyncHandler from 'express-async-handler';
+import User from '../models/User.js';
 import * as userService from '../services/userService.js';
 
 // @desc    Update user academic profile
@@ -46,4 +47,22 @@ export const logSearch = asyncHandler(async (req, res) => {
     term,
   });
   res.status(201).json({ message: 'Search logged' });
+});
+// @desc    Update user active time (Heartbeat)
+// @route   POST /api/users/heartbeat
+// @access  Private
+export const updateHeartbeat = asyncHandler(async (req, res) => {
+  const { duration } = req.body; // seconds to add
+  const userId = req.user._id;
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { $inc: { totalActiveSeconds: duration || 30 } },
+    { new: true }
+  ).select('totalActiveSeconds levelData');
+
+  res.json({
+    totalActiveSeconds: user.totalActiveSeconds,
+    levelData: user.levelData
+  });
 });

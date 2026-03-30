@@ -119,6 +119,23 @@ const userSchema = new mongoose.Schema(
         default: '',
       },
     },
+    // Google Classroom Integration
+    googleAccessToken: {
+      type: String,
+      default: null,
+    },
+    googleRefreshToken: {
+      type: String,
+      default: null,
+    },
+    googleTokenExpiresAt: {
+      type: Date,
+      default: null,
+    },
+    googleClassroomLinked: {
+      type: Boolean,
+      default: false,
+    },
   },
   { 
     timestamps: true,

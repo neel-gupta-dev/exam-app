@@ -8,12 +8,30 @@ import generateToken from '../utils/generateToken.js';
 const router = Router();
 
 // --- Google OAuth ---
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+router.get('/google', (req, res, next) => {
+  const scope = ['profile', 'email'];
+  
+  // Conditionally add classroom scopes if requested via query param
+  if (req.query.classroom === 'true') {
+    scope.push(
+      'https://www.googleapis.com/auth/classroom.courses.readonly',
+      'https://www.googleapis.com/auth/classroom.coursework.me.readonly',
+      'https://www.googleapis.com/auth/classroom.announcements.readonly',
+      'https://www.googleapis.com/auth/classroom.courseworkmaterials.readonly'
+    );
+  }
+
+  passport.authenticate('google', { 
+    scope,
+    accessType: 'offline',
+    prompt: req.query.classroom === 'true' ? 'consent' : undefined
+  })(req, res, next);
+});
 
 import { FRONTEND_URL } from '../config/index.js';
 
 router.get('/google/callback', 
-  passport.authenticate('google', { session: false, failureRedirect: '/login' }),
+  passport.authenticate('google', { session: false, failureRedirect: FRONTEND_URL }),
   (req, res) => {
     const token = generateToken(req.user._id);
     res.redirect(`${FRONTEND_URL}/login?token=${token}`);

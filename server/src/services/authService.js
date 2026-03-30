@@ -67,6 +67,8 @@ export const registerUser = async ({ name, email, password, ipAddress }) => {
     isOnboarded: user.isOnboarded,
     vaultId: user.vaultId,
     profile: user.profile,
+    googleClassroomLinked: user.googleClassroomLinked,
+    googleAccessToken: user.googleAccessToken,
     token: generateToken(user._id),
     sessionId: session._id,
   };
@@ -135,6 +137,8 @@ export const loginUser = async ({ email, password, ipAddress }) => {
     levelData: user.levelData,
     vaultId: user.vaultId,
     profile: user.profile,
+    googleClassroomLinked: user.googleClassroomLinked,
+    googleAccessToken: user.googleAccessToken,
     token: generateToken(user._id),
     sessionId: session._id,
   };
@@ -298,13 +302,15 @@ export const onboardUser = async ({ userId, targetExam, targetYear }) => {
     isOnboarded: user.isOnboarded,
     vaultId: user.vaultId,
     profile: user.profile,
+    googleClassroomLinked: user.googleClassroomLinked,
+    googleAccessToken: user.googleAccessToken,
   };
 };
 
 /**
  * Update user profile
  */
-export const updateUserProfile = async ({ userId, name, email, bio, targetScore }) => {
+export const updateUserProfile = async ({ userId, name, email, bio, targetScore, dreamColleges, currentCoaching, academicLevel }) => {
   const user = await User.findById(userId);
   if (!user) {
     const error = new Error('User not found');
@@ -324,6 +330,12 @@ export const updateUserProfile = async ({ userId, name, email, bio, targetScore 
   }
   if (bio !== undefined) user.bio = bio;
   if (targetScore !== undefined) user.targetScore = targetScore;
+
+  // Handle Profile Object Updates
+  if (!user.profile) user.profile = {};
+  if (dreamColleges !== undefined) user.profile.dreamColleges = dreamColleges;
+  if (currentCoaching !== undefined) user.profile.currentCoaching = currentCoaching;
+  if (academicLevel !== undefined) user.profile.academicLevel = academicLevel;
 
   await user.save();
   return user;

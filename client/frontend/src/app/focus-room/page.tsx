@@ -9,6 +9,7 @@ import api from "@/lib/api";
 import { toast } from "sonner";
 import { useAudio } from "@/context/AudioContext";
 import { useHaptics } from "@/hooks/useHaptics";
+import { trackFocusStart, trackFocusComplete } from "@/lib/analytics";
 
 /**
  * Focus Room Page
@@ -86,6 +87,11 @@ export default function FocusRoomPage() {
       });
       sessionIdRef.current = data.sessionId;
       interruptionCountRef.current = 0;
+      
+      if (type === 'focus') {
+        window.dispatchEvent(new Event("VAYL_FOCUS_START"));
+        trackFocusStart(type, focusLength);
+      }
     } catch (error) {
       console.error("Failed to start focus session", error);
     }
@@ -100,6 +106,8 @@ export default function FocusRoomPage() {
     if (!sessionIdRef.current) return;
     try {
       const actualDuration = status === 'completed' ? initialTime : (initialTime - timeLeft);
+      
+      window.dispatchEvent(new Event("VAYL_FOCUS_STOP"));
 
       const { data } = await api.patch(`/focus/end/${sessionIdRef.current}`, {
         status,
@@ -111,6 +119,7 @@ export default function FocusRoomPage() {
         vibrateSuccess();
         // Refresh user context to show new level/XP
         window.dispatchEvent(new Event("focusSessionCompleted"));
+        trackFocusComplete("focus", actualDuration / 60);
       }
       sessionIdRef.current = null;
     } catch (error) {

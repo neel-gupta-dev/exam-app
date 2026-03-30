@@ -47,8 +47,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Hydrate from API on mount and add listeners
   useEffect(() => {
     const initAuth = async () => {
-      const storedToken = localStorage.getItem('kv_token');
-      const storedSessionId = localStorage.getItem('kv_sessionId');
+      // Check both localStorage (persistent) and sessionStorage (volatile)
+      const storedToken = localStorage.getItem('kv_token') || sessionStorage.getItem('kv_token');
+      const storedSessionId = localStorage.getItem('kv_sessionId') || sessionStorage.getItem('kv_sessionId');
+      
       if (storedToken) {
         setToken(storedToken);
         if (storedSessionId) setSessionId(storedSessionId);
@@ -59,6 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch {
           localStorage.removeItem('kv_token');
           localStorage.removeItem('kv_sessionId');
+          sessionStorage.removeItem('kv_token');
+          sessionStorage.removeItem('kv_sessionId');
           setToken(null);
           setSessionId(null);
           setUser(null);
@@ -99,8 +103,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Heartbeat Interval (10 minutes)
     const heartbeatInterval = setInterval(() => {
-      const sId = localStorage.getItem('kv_sessionId');
-      const tk = localStorage.getItem('kv_token');
+      const sId = localStorage.getItem('kv_sessionId') || sessionStorage.getItem('kv_sessionId');
+      const tk = localStorage.getItem('kv_token') || sessionStorage.getItem('kv_token');
       if (sId && tk) {
         api.post('/auth/ping', { sessionId: sId }).catch(() => {});
       }
@@ -111,8 +115,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
         document.title = "Don't Get Distracted, Work Hard.";
-        const sId = localStorage.getItem('kv_sessionId');
-        const tk = localStorage.getItem('kv_token');
+        const sId = localStorage.getItem('kv_sessionId') || sessionStorage.getItem('kv_sessionId');
+        const tk = localStorage.getItem('kv_token') || sessionStorage.getItem('kv_token');
         if (sId && tk) {
           // Use beacon for reliable delivery on tab close/hide
           const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
@@ -154,12 +158,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string, rememberMe: boolean = true) => {
     const publicIp = await fetchPublicIp();
     const { data } = await api.post('/auth/login', { email, password, publicIp });
     const { token: jwt, sessionId: sId, ...userData } = data;
-    localStorage.setItem('kv_token', jwt);
-    localStorage.setItem('kv_sessionId', sId || '');
+    
+    // Conditional persistence: localStorage (persistent) vs sessionStorage (tab-only)
+    const storage = rememberMe ? localStorage : sessionStorage;
+    storage.setItem('kv_token', jwt);
+    storage.setItem('kv_sessionId', sId || '');
+    
     setToken(jwt);
     setSessionId(sId || null);
     setUser(userData);
@@ -168,6 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   const loginWithToken = useCallback(async (jwt: string) => {
+    // Default to localStorage for OAuth (Google) for UX consistency
     localStorage.setItem('kv_token', jwt);
     setToken(jwt);
     try {
@@ -177,6 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error("[Auth] loginWithToken failed:", err);
       localStorage.removeItem('kv_token');
+      sessionStorage.removeItem('kv_token');
       setToken(null);
       toast.error('Session initialization failed');
     }
@@ -186,8 +196,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const publicIp = await fetchPublicIp();
     const { data } = await api.post('/auth/register', { name, email, password, publicIp });
     const { token: jwt, sessionId: sId, ...userData } = data;
+    
+    // Default registration to persistent login
     localStorage.setItem('kv_token', jwt);
     localStorage.setItem('kv_sessionId', sId || '');
+    
     setToken(jwt);
     setSessionId(sId || null);
     setUser(userData);
@@ -196,7 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   const logout = useCallback(async () => {
-    const sId = localStorage.getItem('kv_sessionId');
+    const sId = localStorage.getItem('kv_sessionId') || sessionStorage.getItem('kv_sessionId');
     if (sId) {
       try {
         await api.post('/auth/logout', { sessionId: sId });
@@ -206,6 +219,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     localStorage.removeItem('kv_token');
     localStorage.removeItem('kv_sessionId');
+    sessionStorage.removeItem('kv_token');
+    sessionStorage.removeItem('kv_sessionId');
     setToken(null);
     setSessionId(null);
     setUser(null);

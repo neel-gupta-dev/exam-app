@@ -9,6 +9,11 @@ export interface User {
   targetYear: number | string | null;
   targetScore: string;
   vaultId?: string;
+  googleId?: string;
+  googleClassroomLinked?: boolean;
+  googleAccessToken?: string;
+  googleRefreshToken?: string;
+  googleTokenExpiresAt?: string | Date;
   bio: string;
   currentStreak: number;
   totalActiveSeconds: number;
