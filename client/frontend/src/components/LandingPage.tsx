@@ -174,7 +174,11 @@ export default function LandingPage() {
       />
 
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10">
+      <nav 
+        role="navigation" 
+        aria-label="Main Navigation"
+        className="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10"
+      >
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group relative">
             <motion.div 
@@ -246,7 +250,10 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-40 pb-20 px-6 max-w-7xl mx-auto text-center relative">
+      <section 
+        aria-label="Hero Section"
+        className="pt-40 pb-20 px-6 max-w-7xl mx-auto text-center relative"
+      >
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -311,7 +318,10 @@ export default function LandingPage() {
       </section>
 
       {/* Stats/Proof */}
-      <section className="py-20 px-6 max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+      <section 
+        aria-label="Platform Statistics"
+        className="py-20 px-6 max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8"
+      >
         {[
           { label: "Daily Focus Minutes", value: "480+", icon: <Timer className="w-5 h-5 text-primary" /> },
           { label: "Resources Tracked", value: "5k+", icon: <BookOpen className="w-5 h-5 text-tertiary" /> },
@@ -335,7 +345,10 @@ export default function LandingPage() {
       </section>
 
       {/* Mission Section (Content Depth for SEO) */}
-      <section className="py-24 px-6 max-w-5xl mx-auto border-y border-outline-variant/10 relative overflow-hidden">
+      <section 
+        aria-label="Mission Statement"
+        className="py-24 px-6 max-w-5xl mx-auto border-y border-outline-variant/10 relative overflow-hidden"
+      >
         <div className="absolute top-1/2 left-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px] -translate-x-1/2" />
         <div className="relative z-10 text-center space-y-12">
           <h2 className="text-3xl md:text-5xl font-heading font-black text-on-surface tracking-tight">

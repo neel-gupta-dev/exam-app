@@ -9,7 +9,16 @@ export default function robots(): MetadataRoute.Robots {
   
   return {
     rules: {
-      userAgent: '*',
+      userAgent: [
+        '*', 
+        'GPTBot', 
+        'ChatGPT-User', 
+        'ClaudeBot', 
+        'Perplexity-free-crawler', 
+        'CCBot',
+        'Google-Assistant-SDK',
+        'AnthropicAI'
+      ],
       allow: [
         '/', 
         '/about', 
@@ -18,7 +27,8 @@ export default function robots(): MetadataRoute.Robots {
         '/terms', 
         '/login', 
         '/signup',
-        '/p/' // Allow public profiles
+        '/p/', // Allow public profiles
+        '/blogs' // Allow blog access for LLM context
       ],
       disallow: [
         '/dashboard/', 

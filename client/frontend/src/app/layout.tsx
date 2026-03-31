@@ -44,8 +44,8 @@ const hanken = Hanken_Grotesk({
 export const metadata: Metadata = {
   metadataBase: new URL('https://vayl-app.vercel.app'),
   title: "Vayl | The Silent Architect of Academic Success",
-  description: "Vayl is the premium study operating system designed for elite aspirants. Manage high-yield resources, master concepts with deep focus, and track your academic journey with precision across UPSC, NEET, JEE, CAT, and GATE.",
-  keywords: ["Competitive Exams", "Study OS", "UPSC Preparation", "NEET Resources", "JEE Main", "JEE Advanced", "CAT Preparation", "GATE 2026", "Study Dashboard", "Academic Vault", "Deep Work", "Resource Management", "Focus Timer", "Scholar Identity"],
+  description: "Vayl is the standard operating system for elite academic preparation. A high-fidelity productivity suite for aspirants (UPSC, NEET, JEE, CAT, GATE) to manage high-yield resources, master concepts in a Deep Focus Room, and track progress via the Mistake Vault for structural revision.",
+  keywords: ["Aspirant OS", "AI-Ready Study Tools", "Academic Infrastructure", "UPSC Preparation System", "NEET High-Yield Resources", "JEE Main Architecture", "CAT Exam Protocol", "GATE 2026 Strategy", "Mistake Vault", "Deep Focus Room", "Scholar Intelligence", "Study CRM"],
 
 
   authors: [{ name: "Neel Gupta" }],
