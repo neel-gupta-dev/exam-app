@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Montserrat, Poppins, Hanken_Grotesk } from "next/font/google";
 import AppProviders from "@/components/AppProviders";
 import PageTransition from "@/components/PageTransition";
@@ -139,6 +140,15 @@ export default function RootLayout({
           <>
             <GoogleAnalytics gaId="G-ZDWW48QNX7" />
             <Analytics />
+            <Script id="clarity-script" strategy="afterInteractive">
+              {`
+                (function(c,l,a,r,i,t,y){
+                    c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                    t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+                })(window, document, "clarity", "script", "w4cyy5rkht");
+              `}
+            </Script>
           </>
         )}
         <WebVitals />
