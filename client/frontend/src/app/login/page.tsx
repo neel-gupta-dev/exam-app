@@ -122,7 +122,7 @@ function LoginContent() {
       {/* Header / Brand */}
       <header className="fixed top-0 w-full z-50 flex justify-between items-center px-8 h-16">
         <div className="flex items-center gap-2 text-xl font-headline font-bold tracking-tight text-on-surface">
-          <Image src="/vayl-logo.png" alt="Vayl Logo" width={32} height={32} className="object-contain brightness-0 contrast-125 dark:brightness-100 dark:contrast-100" />
+          <Image src="/vayl-logo.png" alt="Vayl Logo" width={32} height={32} className="object-contain " />
           Vayl
         </div>
       </header>
@@ -292,3 +292,4 @@ function LoginContent() {
     </div>
   );
 }
+

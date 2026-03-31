@@ -81,7 +81,7 @@ export default function Sidebar() {
               alt="Vayl" 
               width={24} 
               height={24} 
-              className="object-contain brightness-0 contrast-125 dark:brightness-100 dark:contrast-100" 
+              className="object-contain " 
             />
           </div>
           <div>
@@ -203,3 +203,4 @@ export default function Sidebar() {
     </aside>
   );
 }
+

@@ -5,7 +5,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import LoadingSkeleton from "@/components/LoadingSkeleton";
+import DashboardSkeleton from "@/components/DashboardSkeleton";
 import dynamic from "next/dynamic";
 
 /**
@@ -15,7 +15,7 @@ import dynamic from "next/dynamic";
  */
 const LandingPage = dynamic(() => import('@/components/LandingPage'));
 const DashboardView = dynamic(() => import('@/components/DashboardView'), { 
-  loading: () => <LoadingSkeleton count={3} /> 
+  loading: () => <DashboardSkeleton /> 
 });
 
 export default function HomePage() {
@@ -25,7 +25,7 @@ export default function HomePage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center">
-        <LoadingSkeleton count={3} />
+        <DashboardSkeleton />
       </div>
     );
   }

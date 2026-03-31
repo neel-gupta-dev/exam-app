@@ -25,7 +25,7 @@ export default function AboutPage() {
             href="/" 
             className="inline-flex items-center gap-2 text-primary hover:text-primary-dim transition-all group mb-8 bg-surface-container-high px-5 py-2.5 rounded-full border border-outline-variant/10 shadow-xl shadow-black/5"
           >
-            <Image src="/vayl-logo.png" alt="Vayl Logo" width={20} height={20} className="object-contain brightness-0 contrast-125 dark:brightness-100 dark:contrast-100" />
+            <Image src="/vayl-logo.png" alt="Vayl Logo" width={20} height={20} className="object-contain " />
             <span className="text-xs font-interface uppercase tracking-[0.2em] font-bold">Back to Vayl</span>
           </Link>
           <h1 className="text-6xl md:text-8xl font-heading font-black tracking-tighter mb-6 bg-gradient-to-br from-on-surface via-on-surface to-primary bg-clip-text text-transparent">
@@ -95,3 +95,4 @@ export default function AboutPage() {
     </div>
   );
 }
+

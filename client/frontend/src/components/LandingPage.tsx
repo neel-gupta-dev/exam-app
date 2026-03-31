@@ -187,7 +187,7 @@ export default function LandingPage() {
                 alt="Vayl Logo" 
                 width={48} 
                 height={48} 
-                className="brightness-0 contrast-125 dark:brightness-100 dark:contrast-100 object-contain"
+                className=" object-contain"
               />
             </motion.div>
             <div className="flex flex-col">
@@ -316,7 +316,7 @@ export default function LandingPage() {
           { label: "Daily Focus Minutes", value: "480+", icon: <Timer className="w-5 h-5 text-primary" /> },
           { label: "Resources Tracked", value: "5k+", icon: <BookOpen className="w-5 h-5 text-tertiary" /> },
           { label: "Aspirants Joined", value: "1k+", icon: <Brain className="w-5 h-5 text-error" /> },
-          { label: "Efficiency Boost", value: "35%", icon: <Image src="/vayl-logo.png" alt="Vayl Logo" width={20} height={20} className="brightness-0 contrast-125 dark:brightness-100 dark:contrast-100 object-contain" /> }
+          { label: "Efficiency Boost", value: "35%", icon: <Image src="/vayl-logo.png" alt="Vayl Logo" width={20} height={20} className=" object-contain" /> }
         ].map((stat, i) => (
           <motion.div 
             key={i} 
@@ -354,7 +354,7 @@ export default function LandingPage() {
             </div>
             <div className="space-y-4">
               <h3 className="text-xl font-bold text-on-surface flex items-center gap-2">
-                <Image src="/vayl-logo.png" alt="Vayl Logo" width={20} height={20} className="brightness-0 contrast-125 dark:brightness-100 dark:contrast-100 object-contain" />
+                <Image src="/vayl-logo.png" alt="Vayl Logo" width={20} height={20} className=" object-contain" />
                 Elite Workflow
               </h3>
               <p className="text-on-surface-variant leading-relaxed opacity-70 font-interface font-medium">
@@ -395,7 +395,7 @@ export default function LandingPage() {
                   animate={{ y: [0, -5, 0] }}
                   transition={{ repeat: Infinity, duration: 2, delay: 0.5, ease: "easeInOut" }}
                 >
-                  <Image src="/vayl-logo.png" alt="Vayl Logo" width={20} height={20} className="brightness-0 contrast-125 dark:brightness-100 dark:contrast-100 object-contain" />
+                  <Image src="/vayl-logo.png" alt="Vayl Logo" width={20} height={20} className=" object-contain" />
                 </motion.div>
                 <span>Ambient High-Yield Audio</span>
               </li>
@@ -454,7 +454,7 @@ export default function LandingPage() {
         <div className="grid md:grid-cols-2 gap-16 items-center">
           <div className="space-y-8">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20">
-              <Image src="/vayl-logo.png" alt="Vayl Logo" width={16} height={16} className="brightness-0 contrast-125 dark:brightness-100 dark:contrast-100 object-contain" />
+              <Image src="/vayl-logo.png" alt="Vayl Logo" width={16} height={16} className=" object-contain" />
               <span className="text-[10px] font-black uppercase tracking-widest text-primary">Academic Identity</span>
             </div>
             <h2 className="text-4xl md:text-6xl font-heading font-black tracking-tight text-on-surface leading-tight">
@@ -567,7 +567,7 @@ export default function LandingPage() {
         >
           <div className="col-span-2 space-y-6">
             <div className="flex items-center gap-3">
-              <Image src="/vayl-logo.png" alt="Vayl Logo" width={32} height={32} className="brightness-0 contrast-125 dark:brightness-100 dark:contrast-100 object-contain" />
+              <Image src="/vayl-logo.png" alt="Vayl Logo" width={32} height={32} className=" object-contain" />
               <span className="text-xl font-heading font-black tracking-widest text-on-surface uppercase italic">Vayl</span>
             </div>
             <p className="text-sm text-on-surface-variant max-w-sm leading-relaxed font-medium">
@@ -614,3 +614,4 @@ export default function LandingPage() {
     </div>
   );
 }
+

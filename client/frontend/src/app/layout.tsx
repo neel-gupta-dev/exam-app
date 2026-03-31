@@ -54,6 +54,12 @@ export const metadata: Metadata = {
   icons: {
     icon: "/vayl-logo.png",
     apple: "/vayl-logo.png",
+    shortcut: "/vayl-logo.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Vayl",
   },
   formatDetection: {
     email: false,
@@ -105,11 +111,6 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "Vayl",
-  },
 };
 
 /**
@@ -135,7 +136,24 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap" rel="stylesheet" />
       </head>
-      <body className="min-h-full bg-surface text-on-surface font-body">
+      <body className="min-h-full bg-surface text-on-surface font-body antialiased selection:bg-primary/20">
+        {/* Service Worker Registration */}
+        <Script id="register-sw" strategy="afterInteractive">
+          {`
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(
+                  function(registration) {
+                    console.log('Service Worker registration successful');
+                  },
+                  function(err) {
+                    console.log('Service Worker registration failed: ', err);
+                  }
+                );
+              });
+            }
+          `}
+        </Script>
         {process.env.NODE_ENV === "production" && (
           <>
             <GoogleAnalytics gaId="G-ZDWW48QNX7" />
