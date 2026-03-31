@@ -5,6 +5,7 @@ import User from '../models/User.js';
 // @route   GET /api/public/profile/:rollNo
 // @access  Public
 export const getPublicProfile = asyncHandler(async (req, res) => {
+  res.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=59');
   const { rollNo } = req.params;
   const cleanRollNo = rollNo.replace(/^#/, '');
   

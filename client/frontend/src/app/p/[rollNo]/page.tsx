@@ -5,6 +5,7 @@ import ProtocolRetry from '@/components/ProtocolRetry';
 import { API_BASE_URL } from '@/config/env';
 
 async function getProfile(rollNo: string) {
+  'use cache';
   try {
     const res = await fetch(`${API_BASE_URL}/public/profile/${rollNo}`, {
       next: { revalidate: 10 },

@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import compression from 'compression';
 import connectDB from '../src/config/db.js';
 import { notFound, errorHandler } from '../src/middlewares/errorMiddleware.js';
 import authRoutes from '../src/routes/authRoutes.js';
@@ -30,6 +31,7 @@ connectDB().catch(err => {
 configurePassport();
 
 const app = express();
+app.use(compression());
 
 // Trust proxy for accurate IP detection (needed for Hostinger/Nginx)
 app.set('trust proxy', true);
