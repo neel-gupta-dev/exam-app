@@ -12,9 +12,6 @@ const nextConfig = {
   reactCompiler: true,
   cacheComponents: true,
   // Restore your build overrides
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
