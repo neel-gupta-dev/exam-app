@@ -37,10 +37,22 @@ app.use(compression());
 app.set('trust proxy', true);
 
 // --- CORS Configuration ---
+// Always-allowed origins as a hard-coded safety net.
+// ALLOWED_ORIGINS env var extends this list (comma-separated).
+const HARDCODED_ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://vayl-app.vercel.app',
+];
+
+const runtimeAllowedOrigins = ALLOWED_ORIGINS
+  ? [...new Set([...HARDCODED_ALLOWED_ORIGINS, ...ALLOWED_ORIGINS])]
+  : HARDCODED_ALLOWED_ORIGINS;
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, etc.)
+      // Allow requests with no origin (mobile apps, curl, Postman, etc.)
       if (!origin) return callback(null, true);
 
       // Allow Chrome Extension origins
@@ -48,12 +60,18 @@ app.use(
         return callback(null, true);
       }
 
-      // Allow whitelisted origins
-      if (ALLOWED_ORIGINS.includes(origin) || ALLOWED_ORIGINS.includes('*')) {
+      // Allow any Vercel preview deploy for this project
+      if (origin.endsWith('.vercel.app')) {
         return callback(null, true);
       }
 
-      return callback(new Error('Not allowed by CORS'));
+      // Allow whitelisted origins
+      if (runtimeAllowedOrigins.includes(origin) || runtimeAllowedOrigins.includes('*')) {
+        return callback(null, true);
+      }
+
+      console.warn(`[CORS] Blocked request from origin: ${origin}`);
+      return callback(new Error(`Not allowed by CORS: ${origin}`));
     },
     credentials: true,
   })
