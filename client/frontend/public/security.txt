@@ -1,0 +1,10 @@
+# Vayl Security Protocol
+# If you find a security vulnerability, please report it via the contact below.
+Contact: mailto:neelgupta30@zohomail.in
+Expires: 2027-04-01T20:00:00.000Z
+Preferred-Languages: en
+Canonical: https://vayl-app.vercel.app/.well-known/security.txt
+Canonical: https://vayl-app.vercel.app/security.txt
+Policy: https://vayl-app.vercel.app/privacy-policy
+Acknowledgments: https://vayl-app.vercel.app/about
+Hiring: https://vayl-app.vercel.app/contact

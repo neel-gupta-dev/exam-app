@@ -48,6 +48,10 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google-analytics.com https://www.clarity.ms https://va.vercel-scripts.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data: https://lh3.googleusercontent.com https://www.google-analytics.com https://www.clarity.ms; font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net; connect-src 'self' https://www.google-analytics.com https://www.clarity.ms https://*.vercel-analytics.com https://cdn.jsdelivr.net; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none';",
           },
+          {
+            key: "Link",
+            value: "<https://fonts.googleapis.com>; rel=preconnect, <https://fonts.gstatic.com>; rel=preconnect; crossorigin, <https://www.google-analytics.com>; rel=dns-prefetch, <https://va.vercel-scripts.com>; rel=dns-prefetch, <https://www.clarity.ms>; rel=dns-prefetch, <https://cdn.jsdelivr.net>; rel=dns-prefetch, <https://lh3.googleusercontent.com>; rel=dns-prefetch",
+          },
         ],
       },
     ];
