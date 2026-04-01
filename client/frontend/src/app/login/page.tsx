@@ -85,10 +85,14 @@ function LoginContent() {
 
   /**
    * Google OAuth Trigger
-   * Redirects the user to the Express backend OAuth endpoint.
+   * This MUST go directly to Railway — it is a full browser navigation,
+   * not an Axios request, so the Next.js proxy cannot handle it.
    */
   const handleGoogleLogin = () => {
-    window.location.href = `${API_BASE_URL}/auth/google`;
+    const railwayAuthUrl = process.env.NODE_ENV === 'production'
+      ? 'https://exam-app-production-7f5d.up.railway.app/api/auth/google'
+      : `${API_BASE_URL}/auth/google`;
+    window.location.href = railwayAuthUrl;
   };
 
   /**
