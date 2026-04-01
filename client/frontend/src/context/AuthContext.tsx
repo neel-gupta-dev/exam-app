@@ -178,19 +178,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   const loginWithToken = useCallback(async (jwt: string) => {
-    // Default to localStorage for OAuth (Google) for UX consistency
-    localStorage.setItem('kv_token', jwt);
+    // Do NOT save to localStorage yet — verify with backend first
     setToken(jwt);
     try {
-      const { data } = await api.get('/auth/me');
+      // Temporarily set token for this request via a direct call with manual header
+      const { data } = await api.get('/auth/me', {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      if (!data) throw new Error('Empty user response from /auth/me');
+      // Only persist once we know the token is valid
+      localStorage.setItem('kv_token', jwt);
       setUser(data);
       toast.success('Logged in with Google!');
     } catch (err) {
-      console.error("[Auth] loginWithToken failed:", err);
-      localStorage.removeItem('kv_token');
-      sessionStorage.removeItem('kv_token');
+      console.error("[Auth] loginWithToken failed — backend rejected the token:", err);
       setToken(null);
-      toast.error('Session initialization failed');
+      toast.error('Session initialization failed. Please try logging in again.');
     }
   }, []);
 

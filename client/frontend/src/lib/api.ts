@@ -28,11 +28,20 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401 && typeof window !== 'undefined') {
-      localStorage.removeItem('kv_token');
-      localStorage.removeItem('kv_sessionId');
-      sessionStorage.removeItem('kv_token');
-      sessionStorage.removeItem('kv_sessionId');
-      window.location.href = '/login';
+      // Only auto-redirect to /login if:
+      // 1. We are NOT already on the login page (prevents redirect loop), AND
+      // 2. There was actually a stored token that silently expired (not a fresh OAuth init)
+      const isOnLoginPage = window.location.pathname === '/login';
+      const hadStoredToken =
+        !!localStorage.getItem('kv_token') || !!sessionStorage.getItem('kv_token');
+
+      if (!isOnLoginPage && hadStoredToken) {
+        localStorage.removeItem('kv_token');
+        localStorage.removeItem('kv_sessionId');
+        sessionStorage.removeItem('kv_token');
+        sessionStorage.removeItem('kv_sessionId');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
