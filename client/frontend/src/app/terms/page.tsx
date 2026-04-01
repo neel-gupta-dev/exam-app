@@ -118,6 +118,18 @@ export default function TermsOfService() {
             </div>
           </section>
 
+          <section className="space-y-6">
+            <h2 className="text-2xl font-heading font-bold text-on-surface flex items-center gap-3">
+              <span className="w-8 h-8 rounded-lg bg-tertiary/20 flex items-center justify-center text-tertiary text-sm font-black">6</span>
+              Vulnerability Disclosure
+            </h2>
+            <div className="bg-tertiary/5 rounded-2xl p-6 border border-tertiary/10">
+              <p className="text-on-surface-variant text-sm leading-relaxed">
+                Vayl encourages responsible security research. We provide a **Safe Harbor** for researchers who discover and disclose vulnerabilities in accordance with our <Link href="/.well-known/security.txt" className="text-tertiary hover:underline">security.txt</Link> guidelines. We promise not to pursue legal action against researchers acting in good faith.
+              </p>
+            </div>
+          </section>
+
           <footer className="pt-12 border-t border-outline-variant/10 mt-12 text-center">
             <p className="text-on-surface-variant mb-6 text-sm">
               Any questions? Reach out to us.

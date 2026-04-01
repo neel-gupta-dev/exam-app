@@ -148,6 +148,16 @@ export default function PrivacyPolicy() {
             </section>
           </div>
 
+          <section className="space-y-6">
+            <h2 className="text-2xl font-heading font-bold text-on-surface flex items-center gap-3">
+              <span className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary text-sm font-black">6</span>
+              Security & Research
+            </h2>
+            <p className="text-on-surface-variant text-sm leading-relaxed">
+              We process contact information provided by security researchers solely for vulnerability disclosure and resolution. All reports are handled with confidentiality and patched within 72 hours of verification. For more details, refer to our <Link href="/.well-known/security.txt" className="text-primary hover:underline">security.txt</Link> protocol.
+            </p>
+          </section>
+
           <footer className="pt-12 border-t border-outline-variant/10 mt-12 text-center">
             <p className="text-on-surface-variant mb-6 text-sm">
               Questions? Reach out to our dedicated support team.
