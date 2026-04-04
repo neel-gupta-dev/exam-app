@@ -2,16 +2,8 @@
     "version": 2,
     "rewrites": [
         {
-            "source": "/api/(.*)",
-            "destination": "/server/api/index.js"
-
-        }
-    ],
-    "redirects": [
-        {
-            "source": "/api",
-            "destination": "/api/",
-            "permanent": true
+            "source": "/api/:path*",
+            "destination": "https://exam-app-production-7f5d.up.railway.app/api/:path*"
         }
     ]
-}
+}
