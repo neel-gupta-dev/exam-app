@@ -2,6 +2,10 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import compression from 'compression';
+import basicAuth from 'express-basic-auth';
+import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
+import path from 'path';
 import connectDB from '../src/config/db.js';
 import { notFound, errorHandler } from '../src/middlewares/errorMiddleware.js';
 import authRoutes from '../src/routes/authRoutes.js';
@@ -101,6 +105,32 @@ app.use('/api/classroom', classroomRoutes);
 app.use('/api/performance', performanceRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/admin', adminRoutes);
+
+// ─── ADMIN PANEL (Static SPA) ────────────────────────────────────────────────
+// Served at a secret path with an extra HTTP Basic Auth gate.
+// Set ADMIN_PATH, ADMIN_BASIC_USER, ADMIN_BASIC_PASS in Railway env vars.
+const ADMIN_PATH   = process.env.ADMIN_PATH       || '/sys-9f3k-ctrl';
+const ADMIN_USER   = process.env.ADMIN_BASIC_USER  || 'vayl_ops';
+const ADMIN_PASS   = process.env.ADMIN_BASIC_PASS  || 'ctrl#9f3k!vayl';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = path.dirname(__filename);
+const adminStaticDir = path.join(__dirname, '..', 'admin-static');
+
+// Gate 1: HTTP Basic Auth
+app.use(ADMIN_PATH, basicAuth({
+  users: { [ADMIN_USER]: ADMIN_PASS },
+  challenge: true,
+  realm: 'Restricted',
+}));
+
+// Serve static admin panel files
+app.use(ADMIN_PATH, express.static(adminStaticDir));
+
+// SPA fallback — send index.html for all sub-routes (React Router handles them)
+app.get(`${ADMIN_PATH}/*`, (req, res) => {
+  res.sendFile(path.join(adminStaticDir, 'index.html'));
+});
 
 // --- Error Handling ---
 app.use(notFound);
