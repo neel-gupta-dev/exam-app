@@ -18,6 +18,7 @@ import performanceRoutes from '../src/routes/performanceRoutes.js';
 import calendarRoutes from '../src/routes/calendarRoutes.js';
 import { getHealth } from '../src/controllers/healthController.js';
 import { closeExpiredSessions } from '../src/services/authService.js';
+import adminRoutes from '../src/routes/adminRoutes.js';
 import passport from 'passport';
 import configurePassport from '../src/config/passport.js';
 import { MONGO_URI, PORT, ALLOWED_ORIGINS } from '../src/config/index.js';
@@ -99,6 +100,7 @@ app.use('/api/feedback', feedbackRoutes);
 app.use('/api/classroom', classroomRoutes);
 app.use('/api/performance', performanceRoutes);
 app.use('/api/calendar', calendarRoutes);
+app.use('/api/admin', adminRoutes);
 
 // --- Error Handling ---
 app.use(notFound);
