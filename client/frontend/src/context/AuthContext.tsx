@@ -179,23 +179,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginWithToken = useCallback(async (jwt: string) => {
     // Do NOT save to localStorage yet — verify with backend first
-    setToken(jwt);
     try {
-      // Temporarily set token for this request via a direct call with manual header
+      // Call /auth/me with manual header so the interceptor doesn't interfere
       const { data } = await api.get('/auth/me', {
         headers: { Authorization: `Bearer ${jwt}` },
       });
       if (!data) throw new Error('Empty user response from /auth/me');
       // Only persist once we know the token is valid
       localStorage.setItem('kv_token', jwt);
+      setToken(jwt);
       setUser(data);
       toast.success('Logged in with Google!');
+      // Redirect to dashboard on success
+      router.replace('/');
     } catch (err) {
       console.error("[Auth] loginWithToken failed — backend rejected the token:", err);
       setToken(null);
+      setUser(null);
       toast.error('Session initialization failed. Please try logging in again.');
+      // Re-throw so the login page .catch() handler fires (not .then())
+      throw err;
     }
-  }, []);
+  }, [router]);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
     const publicIp = await fetchPublicIp();

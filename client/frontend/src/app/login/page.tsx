@@ -73,13 +73,12 @@ function LoginContent() {
     const token = searchParams.get('token');
     if (token) {
       setGoogleLoading(true);
-      loginWithToken(token).then(() => {
-        router.replace('/');
-      }).catch(() => {
+      // loginWithToken handles redirect to '/' on success and re-throws on failure
+      loginWithToken(token).catch(() => {
         setGoogleLoading(false);
       });
     }
-  }, [searchParams, loginWithToken, router]);
+  }, [searchParams, loginWithToken]);
 
   if (!mounted) return null;
 

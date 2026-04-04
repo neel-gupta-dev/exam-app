@@ -157,6 +157,8 @@ userSchema.pre('save', async function () {
 
 // Compare entered password with hashed password
 userSchema.methods.matchPassword = async function (enteredPassword) {
+  // If user authenticated via Google and has no password set, reject immediately.
+  if (!this.password) return false;
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
