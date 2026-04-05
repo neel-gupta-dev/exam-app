@@ -4,6 +4,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import Link from "next/link";
 import packageInfo from '../../package.json';
+import { useSidebar } from "@/hooks/useSidebar";
 
 const version = packageInfo.version;
 
@@ -22,10 +23,12 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { isCollapsed } = useSidebar();
+
   return (
     <ProtectedRoute>
       {/* Content area — offset to account for the persistent Sidebar and TopNav from AppShell */}
-      <main className="pt-20 md:pt-24 pb-24 md:pb-8 ml-0 md:ml-64 px-4 md:px-8 min-h-screen relative flex flex-col">
+      <main className={`pt-20 md:pt-24 pb-24 md:pb-8 ml-0 md:${isCollapsed ? 'ml-20' : 'ml-64'} px-4 md:px-8 min-h-screen relative flex flex-col transition-all duration-300`}>
         <div className="flex-1 flex flex-col">
           {children}
         </div>

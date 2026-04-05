@@ -15,6 +15,8 @@ import {
   Sun,
   Moon,
   Lock,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -22,6 +24,7 @@ import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
 import { isDemoAllowedPath } from "@/lib/demo";
 import DemoSignupModal from "@/components/DemoSignupModal";
+import { useSidebar } from "@/hooks/useSidebar";
 
 const navItems = [
   { href: "/", label: "Vault", icon: Archive },
@@ -51,6 +54,7 @@ const DEMO_USER = {
 export default function Sidebar() {
   const pathname = usePathname();
   const { user, theme, toggleTheme } = useAuth();
+  const { isCollapsed, toggleSidebar } = useSidebar();
   const [folders, setFolders] = useState<string[]>([]);
   const [lockedModal, setLockedModal] = useState<{ open: boolean; feature: string }>({
     open: false,
@@ -90,27 +94,40 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside className="fixed left-0 top-0 h-screen w-64 bg-surface border-r border-outline-variant/10 flex flex-col z-50 hidden md:flex transition-colors overflow-y-auto">
-        <div className="p-6 flex-1">
-          {/* Brand */}
-          <div className="flex items-center gap-3 mb-10">
-            <div className="p-2 bg-primary/10 rounded-xl group hover:bg-primary/20 transition-all duration-300">
-              <Image 
-                src="/vayl-logo.png" 
-                alt="Vayl" 
-                width={24} 
-                height={24} 
-                className="object-contain " 
-              />
-            </div>
-            <div>
-              <Link href="/">
-                <h1 className="text-xl font-heading font-black tracking-tighter text-on-surface">VAYL</h1>
-              </Link>
-              <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-[0.2em] mt-0.5">
-                {user?.targetExam?.[0] || DEMO_USER.exam} • Level {user?.levelData?.currentLevel || DEMO_USER.level}
-              </p>
-            </div>
+      <aside className={`fixed left-0 top-0 h-screen ${isCollapsed ? 'w-20' : 'w-64'} bg-surface border-r border-outline-variant/10 flex flex-col z-50 hidden md:flex transition-all duration-300 overflow-y-auto overflow-x-hidden`}>
+        <div className="p-4 flex-1">
+          {/* Brand & Toggle */}
+          <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} mb-10`}>
+            {/* Branding - Only clearly visible when expanded */}
+            {!isCollapsed && (
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-xl group hover:bg-primary/20 transition-all duration-300">
+                  <Image 
+                    src="/vayl-logo.png" 
+                    alt="Vayl" 
+                    width={24} 
+                    height={24} 
+                    className="object-contain" 
+                  />
+                </div>
+                <div>
+                  <Link href="/">
+                    <h1 className="text-xl font-heading font-black tracking-tighter text-on-surface">VAYL</h1>
+                  </Link>
+                  <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-[0.2em] mt-0.5">
+                    {user?.targetExam?.[0] || DEMO_USER.exam} • Level {user?.levelData?.currentLevel || DEMO_USER.level}
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            {/* Toggle Button */}
+            <button
+              onClick={toggleSidebar}
+              className={`p-2 rounded-xl text-on-surface-variant hover:bg-surface-bright transition-colors ${isCollapsed ? 'bg-primary/10 hover:bg-primary/20 text-primary' : ''}`}
+            >
+              {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+            </button>
           </div>
 
           {/* Demo Banner */}
@@ -134,11 +151,12 @@ export default function Sidebar() {
                   <button
                     key={item.href}
                     onClick={() => setLockedModal({ open: true, feature: item.label })}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-on-surface-variant/40 hover:text-on-surface-variant hover:bg-surface-bright cursor-pointer"
+                    className={`w-full flex items-center ${isCollapsed ? 'justify-center p-2' : 'gap-3 px-3 py-2'} rounded-md transition-all duration-200 text-on-surface-variant/40 hover:text-on-surface-variant hover:bg-surface-bright cursor-pointer`}
+                    title={isCollapsed ? item.label : undefined}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span className="text-sm font-medium flex-1 text-left">{item.label}</span>
-                    <Lock className="w-3.5 h-3.5 opacity-50" />
+                    <Icon className="w-5 h-5 shrink-0" />
+                    {!isCollapsed && <span className="text-sm font-medium flex-1 text-left">{item.label}</span>}
+                    {!isCollapsed && <Lock className="w-3.5 h-3.5 opacity-50 shrink-0" />}
                   </button>
                 );
               }
@@ -149,13 +167,14 @@ export default function Sidebar() {
                 <Link
                   key={item.href}
                   href={demoHref}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 ${isActive
+                  className={`flex items-center ${isCollapsed ? 'justify-center p-2' : 'gap-3 px-3 py-2'} rounded-md transition-all duration-200 ${isActive
                     ? "bg-primary/10 text-primary border-l-2 border-primary"
                     : "text-on-surface-variant hover:text-on-surface hover:bg-surface-bright"
                     }`}
+                  title={isCollapsed ? item.label : undefined}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span className="text-sm font-medium">{item.label}</span>
+                  <Icon className="w-5 h-5 shrink-0" />
+                  {!isCollapsed && <span className="text-sm font-medium truncate">{item.label}</span>}
                 </Link>
               );
             })}
@@ -163,9 +182,11 @@ export default function Sidebar() {
 
           {/* Dynamic Folders */}
           <div className="mt-12">
-            <h2 className="px-3 text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-4">
-              Folders
-            </h2>
+            {!isCollapsed && (
+              <h2 className="px-3 text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-4">
+                Folders
+              </h2>
+            )}
             <div className="space-y-1">
               {isDemo ? (
                 // Demo folders (static)
@@ -173,15 +194,16 @@ export default function Sidebar() {
                   <button
                     key={folderName}
                     onClick={() => setLockedModal({ open: true, feature: "Resource Folders" })}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors duration-200 text-on-surface-variant/50 hover:text-on-surface-variant hover:bg-surface-bright"
+                    className={`w-full flex items-center ${isCollapsed ? 'justify-center p-2' : 'gap-3 px-3 py-2'} rounded-md transition-colors duration-200 text-on-surface-variant/50 hover:text-on-surface-variant hover:bg-surface-bright`}
+                    title={isCollapsed ? folderName : undefined}
                   >
-                    <FolderLock className="w-5 h-5" />
-                    <span className="text-sm font-medium">{folderName}</span>
-                    <Lock className="w-3 h-3 ml-auto opacity-40" />
+                    <FolderLock className="w-5 h-5 shrink-0" />
+                    {!isCollapsed && <span className="text-sm font-medium truncate">{folderName}</span>}
+                    {!isCollapsed && <Lock className="w-3 h-3 ml-auto opacity-40 shrink-0" />}
                   </button>
                 ))
               ) : folders.length === 0 ? (
-                <p className="px-3 text-xs text-on-surface-variant italic">No folders yet.</p>
+                !isCollapsed && <p className="px-3 text-xs text-on-surface-variant italic">No folders yet.</p>
               ) : (
                 folders.map((folderName) => {
                   const folderHref = `/subjects/${encodeURIComponent(folderName)}`;
@@ -190,13 +212,14 @@ export default function Sidebar() {
                     <Link
                       key={folderName}
                       href={folderHref}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors duration-200 ${isActive
+                      className={`flex items-center ${isCollapsed ? 'justify-center p-2' : 'gap-3 px-3 py-2'} rounded-md transition-colors duration-200 ${isActive
                         ? "bg-primary/10 text-primary"
                         : "text-on-surface-variant hover:text-on-surface hover:bg-surface-bright"
                         }`}
+                      title={isCollapsed ? folderName : undefined}
                     >
-                      <FolderLock className="w-5 h-5" />
-                      <span className="text-sm font-medium">{folderName}</span>
+                      <FolderLock className="w-5 h-5 shrink-0" />
+                      {!isCollapsed && <span className="text-sm font-medium truncate">{folderName}</span>}
                     </Link>
                   );
                 })
@@ -206,14 +229,17 @@ export default function Sidebar() {
         </div>
 
         {/* Theme Toggle */}
-        <div className="px-6 py-2">
+        <div className="p-4">
           <button
             onClick={toggleTheme}
-            className="w-full flex items-center justify-between px-4 py-2 bg-surface-container rounded-xl text-on-surface-variant hover:text-on-surface transition-all group overflow-hidden relative shadow-inner"
+            className={`w-full flex items-center ${isCollapsed ? 'justify-center p-2' : 'justify-between px-4 py-2'} bg-surface-container rounded-xl text-on-surface-variant hover:text-on-surface transition-all group overflow-hidden relative shadow-inner`}
+            title={isCollapsed ? (theme === 'dark' ? 'Light Mode' : 'Dark Mode') : undefined}
           >
-            <span className="text-xs font-bold uppercase tracking-wider">
-              {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-            </span>
+            {!isCollapsed && (
+              <span className="text-xs font-bold uppercase tracking-wider">
+                {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+              </span>
+            )}
             <AnimatePresence mode="wait">
               {theme === 'dark' ? (
                 <motion.div
@@ -242,7 +268,7 @@ export default function Sidebar() {
 
         {/* User Profile Card */}
         <div className="mt-auto p-4 border-t border-outline-variant/10">
-          {isDemo && (
+          {isDemo && !isCollapsed && (
             <button 
               onClick={() => {
                 localStorage.removeItem('vayl_demo_mode');
@@ -253,19 +279,34 @@ export default function Sidebar() {
               Exit Demo
             </button>
           )}
-          <div className={`bg-surface-container rounded-xl p-4 flex items-center gap-3 ${isDemo ? 'border border-primary/10' : ''}`}>
+          {isDemo && isCollapsed && (
+            <button 
+              onClick={() => {
+                localStorage.removeItem('vayl_demo_mode');
+                window.location.href = '/';
+              }}
+              className="w-full mb-3 p-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-colors flex items-center justify-center"
+              title="Exit Demo"
+            >
+              Exit
+            </button>
+          )}
+          
+          <div className={`bg-surface-container rounded-xl ${isCollapsed ? 'p-2 justify-center' : 'p-4'} flex items-center gap-3 ${isDemo ? 'border border-primary/10' : ''}`}>
             <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold font-body uppercase shrink-0">
               {displayUser.name.charAt(0)}
             </div>
-            <div className="overflow-hidden">
-              <p className="text-xs font-semibold text-on-surface truncate">
-                {displayUser.name}
-                {isDemo && <span className="ml-1 text-[9px] font-black text-primary uppercase tracking-wider">Demo</span>}
-              </p>
-              <p className="text-[10px] text-on-surface-variant truncate">
-                {displayUser.email}
-              </p>
-            </div>
+            {!isCollapsed && (
+              <div className="overflow-hidden">
+                <p className="text-xs font-semibold text-on-surface truncate">
+                  {displayUser.name}
+                  {isDemo && <span className="ml-1 text-[9px] font-black text-primary uppercase tracking-wider">Demo</span>}
+                </p>
+                <p className="text-[10px] text-on-surface-variant truncate">
+                  {displayUser.email}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </aside>

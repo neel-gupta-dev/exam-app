@@ -12,6 +12,7 @@ import { useHaptics } from "@/hooks/useHaptics";
 import SearchDropdown, { ResourceSearchResult } from "./SearchDropdown";
 import { useRouter } from "next/navigation";
 import DemoSignupModal from "@/components/DemoSignupModal";
+import { useSidebar } from "@/hooks/useSidebar";
 
 /**
  * Global Top Navigation Bar
@@ -21,10 +22,10 @@ import DemoSignupModal from "@/components/DemoSignupModal";
  */
 export default function TopNav() {
   const { user, theme, toggleTheme } = useAuth();
+  const { isCollapsed } = useSidebar();
   const isDemo = !user;
   const [isOpen, setIsOpen] = useState(false);
   const [showDemoModal, setShowDemoModal] = useState(false);
-  
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
   const [type, setType] = useState<"video" | "pdf" | "link" | "other">("link");
@@ -174,8 +175,8 @@ export default function TopNav() {
 
   return (
     <>
-      <header className="fixed top-0 right-0 h-16 bg-surface flex items-center justify-between px-4 md:px-8 w-full md:w-[calc(100%-16rem)] ml-auto z-40">
-        {/* Mobile Brand */}
+      <header className={`fixed top-0 right-0 h-16 bg-surface flex items-center justify-between px-4 md:px-8 w-full md:w-[calc(100%-${isCollapsed ? '5rem' : '16rem'})] transition-all duration-300 ml-auto z-40`}>
+        {/* Search Bar - Hidden on Mobile */}
         <div className="flex items-center gap-2 md:hidden mr-2 shrink-0">
           <img src="/vayl-logo.png" alt="Vayl" className="w-6 h-6 object-contain" />
         </div>
