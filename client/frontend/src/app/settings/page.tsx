@@ -9,6 +9,7 @@ import { Sparkles, Database, Flag } from "lucide-react";
 import StreakIcon from "@/components/StreakIcon";
 import { TARGET_EXAMS as EXAMS } from '@shared/constants';
 import MonthlyGoalWidget from "@/components/MonthlyGoalWidget";
+import DailyGoalWidget from "@/components/DailyGoalWidget";
 
 /**
  * Settings Page
@@ -267,6 +268,9 @@ export default function SettingsPage() {
                 </button>
               </div>
             </div>
+
+            {/* Daily Study Goal */}
+            <DailyGoalWidget variant="full" />
 
             {/* Change Password Section */}
             <div className="bg-surface-container p-6 md:p-8 rounded-xl space-y-6 border border-white/5">

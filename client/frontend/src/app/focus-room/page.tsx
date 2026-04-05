@@ -508,66 +508,30 @@ export default function FocusRoomPage() {
                   </div>
                 </div>
 
-                {/* ── Daily Goal Setting ─────────────────────────── */}
-                <div className="space-y-4">
+                {/* ── Daily Goal (read-only, set in Settings) ──────── */}
+                <div className="space-y-3">
                   <div className="flex items-center gap-2 text-on-surface-variant text-sm font-bold font-headline uppercase tracking-wide">
                     <Target className="w-4 h-4" /> Daily Study Goal
                   </div>
-
-                  {/* Today's progress summary */}
-                  {hasGoal && (
-                    <div className={`flex items-center gap-3 p-3 rounded-xl border ${goalAchievedToday ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-surface-container-highest border-transparent'}`}>
-                      <GoalRing progress={goalProgress} size={40} strokeWidth={3.5} achieved={goalAchievedToday} />
-                      <div>
-                        <p className="text-xs font-bold text-on-surface">
-                          {formatDuration(todayFocusSeconds)} studied today
-                        </p>
-                        <p className={`text-[10px] font-medium ${goalAchievedToday ? 'text-emerald-400' : 'text-on-surface-variant'}`}>
-                          {goalAchievedToday
-                            ? "Goal achieved! Outstanding work. 🏆"
-                            : `${Math.max(0, Math.ceil(dailyGoalMinutes - todayFocusSeconds / 60))} min remaining`}
-                        </p>
-                      </div>
+                  <div className={`flex items-center gap-3 p-3 rounded-xl border ${goalAchievedToday ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-surface-container-highest border-transparent'}`}>
+                    <GoalRing progress={goalProgress} size={40} strokeWidth={3.5} achieved={goalAchievedToday} />
+                    <div className="flex-1">
+                      {hasGoal ? (
+                        <>
+                          <p className="text-xs font-bold text-on-surface">
+                            {formatDuration(todayFocusSeconds)} / {dailyGoalMinutes >= 60 ? `${Math.floor(dailyGoalMinutes/60)}h` : `${dailyGoalMinutes}m`}
+                          </p>
+                          <p className={`text-[10px] font-medium ${goalAchievedToday ? 'text-emerald-400' : 'text-on-surface-variant'}`}>
+                            {goalAchievedToday ? "Goal achieved! 🏆" : `${Math.max(0, Math.ceil(dailyGoalMinutes - todayFocusSeconds / 60))} min remaining`}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-xs text-on-surface-variant">No daily goal set</p>
+                      )}
                     </div>
-                  )}
-
-                  <div className="grid grid-cols-4 gap-2">
-                    {[240, 360, 480, 600].map(m => (
-                      <button key={m}
-                        onClick={() => { setGoalInput(m); saveGoal(m); }}
-                        disabled={goalLoading}
-                        className={`py-2 rounded-lg text-xs font-bold transition-colors ${goalInput === m ? 'bg-primary/10 text-primary border border-primary/30' : 'bg-surface-container-highest text-on-surface-variant hover:bg-surface-bright border border-transparent'}`}
-                      >
-                        {m / 60}h
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <input type="number" min="0" max="1440" placeholder="Custom (minutes)"
-                        value={goalInput || ''}
-                        onChange={(e) => setGoalInput(Number(e.target.value))}
-                        className="w-full py-2.5 px-3 bg-surface-container-highest border-none text-on-surface text-sm rounded-lg focus:ring-1 focus:ring-primary/40"
-                      />
-                    </div>
-                    <button
-                      onClick={() => saveGoal(goalInput)}
-                      disabled={goalLoading}
-                      className="px-4 py-2.5 bg-primary/10 text-primary border border-primary/20 rounded-lg text-xs font-bold hover:bg-primary/20 transition-colors disabled:opacity-50"
-                    >
-                      {goalLoading ? '...' : 'SET'}
-                    </button>
-                    {hasGoal && (
-                      <button
-                        onClick={() => { setGoalInput(0); saveGoal(0); }}
-                        disabled={goalLoading}
-                        className="px-4 py-2.5 bg-surface-container-highest text-on-surface-variant rounded-lg text-xs font-bold hover:bg-surface-bright transition-colors disabled:opacity-50"
-                        title="Remove goal"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    )}
+                    <a href="/settings" className="text-[10px] text-primary font-bold hover:underline shrink-0">
+                      Edit →
+                    </a>
                   </div>
                 </div>
 
