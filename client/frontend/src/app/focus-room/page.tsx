@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import Sidebar from "@/components/Sidebar";
-import TopNav from "@/components/TopNav";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import { AudioLines, Volume2, Timer, Mic2, CloudRain, Headphones, Trees, X, Bell, Target, CheckCircle2 } from "lucide-react";
 import api from "@/lib/api";
@@ -341,9 +339,8 @@ export default function FocusRoomPage() {
   const hasGoal = dailyGoalMinutes > 0;
 
   return (
-    <div className="min-h-screen bg-surface text-on-surface font-body selection:bg-primary/30 flex">
-      <div className="hidden md:block"><Sidebar /></div>
-      <TopNav />
+    <div className="min-h-screen bg-surface text-on-surface font-body selection:bg-primary/30">
+      {/* Sidebar and TopNav are provided by AppShell in layout.tsx */}
 
       {/* Celebration modal */}
       {showCelebration && (

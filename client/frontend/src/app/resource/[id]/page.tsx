@@ -2,10 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
-
-
-import Sidebar from "@/components/Sidebar";
-import TopNav from "@/components/TopNav";
 import api from "@/lib/api";
 import Link from "next/link";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
@@ -302,10 +298,8 @@ export default function ResourceViewerPage() {
   // ── Loading / Error states ───────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface text-on-surface font-body selection:bg-primary/30 flex">
-        <Sidebar />
-        <TopNav />
-        <main className="ml-64 pt-20 px-6 pb-12 min-h-screen w-full">
+      <div className="min-h-screen bg-surface text-on-surface font-body selection:bg-primary/30">
+        <main className="ml-0 md:ml-64 pt-20 px-6 pb-12 min-h-screen w-full">
           <LoadingSkeleton />
         </main>
       </div>
@@ -314,10 +308,8 @@ export default function ResourceViewerPage() {
 
   if (!resource) {
     return (
-      <div className="min-h-screen bg-surface text-on-surface font-body selection:bg-primary/30 flex">
-        <Sidebar />
-        <TopNav />
-        <main className="ml-64 pt-20 px-6 pb-12 min-h-screen w-full flex items-center justify-center">
+      <div className="min-h-screen bg-surface text-on-surface font-body selection:bg-primary/30">
+        <main className="ml-0 md:ml-64 pt-20 px-6 pb-12 min-h-screen w-full flex items-center justify-center">
           <div className="text-center text-on-surface-variant">
             <ExternalLink className="w-12 h-12 mb-4 opacity-50 mx-auto" />
             <h2 className="text-xl font-headline font-bold">
@@ -334,10 +326,8 @@ export default function ResourceViewerPage() {
 
   // ── Main render ──────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-surface text-on-surface font-body selection:bg-primary/30 flex">
-      <Sidebar />
-      <TopNav />
-
+    <div className="min-h-screen bg-surface text-on-surface font-body selection:bg-primary/30">
+      {/* Sidebar and TopNav are provided by AppShell in layout.tsx */}
       <main className="md:ml-64 pt-20 px-6 pb-12 min-h-screen flex-1">
         <div className="max-w-[1400px] mx-auto">
           {/* Breadcrumbs */}

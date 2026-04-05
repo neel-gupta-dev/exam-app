@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { Montserrat, Poppins, Hanken_Grotesk } from "next/font/google";
 import AppProviders from "@/components/AppProviders";
+import AppShell from "@/components/AppShell";
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { WebVitals } from "@/components/WebVitals";
 import CookieConsent from "@/components/CookieConsent";
@@ -177,7 +178,7 @@ export default function RootLayout({
         <GoogleSchema />
         <CookieConsent />
         <AppProviders>
-          {children}
+          <AppShell>{children}</AppShell>
         </AppProviders>
       </body>
     </html>
