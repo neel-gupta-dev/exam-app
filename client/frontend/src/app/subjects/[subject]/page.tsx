@@ -4,6 +4,7 @@ import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
+import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
 import { Resource } from "@/types";
 import {
@@ -56,6 +57,9 @@ export default function SubjectPage({ params }: { params: Promise<{ subject: str
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchLoading, setIsSearchLoading] = useState(false);
 
+  const { user } = useAuth();
+  const isDemo = !user;
+
   /**
    * Data Fetching
    * Queries the backend for resources strictly belonging to the active `decodedSubject`.
@@ -64,6 +68,23 @@ export default function SubjectPage({ params }: { params: Promise<{ subject: str
   useEffect(() => {
     const fetchSubjectResources = async () => {
       setIsSearchLoading(true);
+
+      if (isDemo) {
+        const demoVault = JSON.parse(localStorage.getItem('vayl_demo_vault') || '[]');
+        const filtered = demoVault.filter((res: any) => res.folderName?.toLowerCase() === decodedSubject.toLowerCase());
+        
+        if (searchQuery) {
+          const lowerQ = searchQuery.toLowerCase();
+          setResources(filtered.filter((r: any) => r.title?.toLowerCase().includes(lowerQ)));
+        } else {
+          setResources(filtered);
+        }
+        
+        setLoading(false);
+        setIsSearchLoading(false);
+        return;
+      }
+
       try {
         const { data } = await api.get(`/resources`, {
           params: {
@@ -315,8 +336,9 @@ export default function SubjectPage({ params }: { params: Promise<{ subject: str
                 const isVideo = res.url.includes('youtube') || res.url.includes('mp4');
                 const Icon = isPdf ? FileText : isVideo ? Video : ImageIcon;
 
-                return (
-                 <tr key={res._id} onClick={() => router.push(`/resource/${res._id}`)} className="group hover:bg-surface-container-highest/30 transition-colors cursor-pointer">
+                 const href = isDemo ? `/resource/${res._id}?demo=true` : `/resource/${res._id}`;
+                 return (
+                  <tr key={res._id} onClick={() => router.push(href)} className="group hover:bg-surface-container-highest/30 transition-colors cursor-pointer">
                     <td className="px-6 py-5">
                        <div className="flex items-center gap-4">
                           <div className={`w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-400/20 flex items-center justify-center text-indigo-400`}>

@@ -11,6 +11,8 @@ export const DEMO_ALLOWED_PATHS = [
   '/analytics',
   '/performance',
   '/profile',
+  '/resource',
+  '/subjects',
 ] as const;
 
 export type DemoAllowedPath = typeof DEMO_ALLOWED_PATHS[number];
