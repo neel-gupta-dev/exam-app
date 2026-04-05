@@ -204,7 +204,6 @@ export default function LandingPage() {
           </Link>
           <div className="flex items-center gap-8">
             <div className="hidden md:flex items-center gap-8 text-xs font-interface font-black uppercase tracking-widest text-on-surface-variant">
-              <MagneticButton href="/blogs" className="hover:text-primary transition-colors">Blogs</MagneticButton>
               <MagneticButton href="/about" className="hover:text-primary transition-colors">About</MagneticButton>
               <MagneticButton href="/contact" className="hover:text-primary transition-colors">Contact</MagneticButton>
             </div>
@@ -607,7 +606,6 @@ export default function LandingPage() {
           >
             <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-on-surface">Platform</h4>
             <ul className="space-y-4 text-xs font-interface font-medium text-on-surface-variant">
-              <li><Link href="/blogs" className="hover:text-primary transition-colors">Blog Hub</Link></li>
               <li><Link href="/about" className="hover:text-primary transition-colors">Mission</Link></li>
               <li><Link href="/contact" className="hover:text-primary transition-colors">Support</Link></li>
               <li><Link href="/login" className="hover:text-primary transition-colors">Access Portal</Link></li>
