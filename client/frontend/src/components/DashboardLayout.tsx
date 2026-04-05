@@ -11,6 +11,8 @@ import { useHaptics } from "@/hooks/useHaptics";
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useActivityTracker } from "@/hooks/useActivityTracker";
+import { motion, AnimatePresence } from 'framer-motion';
+import { usePathname } from 'next/navigation';
 
 const version = packageInfo.version;
 
@@ -27,6 +29,7 @@ export default function DashboardLayout({
 }) {
   const { user } = useAuth();
   const { vibrateClick } = useHaptics();
+  const pathname = usePathname();
   const prevLevelRef = useRef<number | undefined>(user?.levelData?.currentLevel);
 
   // Global activity tracking
@@ -57,46 +60,55 @@ export default function DashboardLayout({
         <ConfidencePopup />
         <FocusAudioPlayer />
         <main className="pt-20 md:pt-24 pb-24 md:pb-8 ml-0 md:ml-64 px-4 md:px-8 min-h-screen relative flex flex-col">
-          <div className="flex-1">
-            {children}
-          </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={pathname}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              className="flex-1 flex flex-col"
+            >
+              {children}
 
-          {/* Global Footer Branded Text */}
-          <footer className="mt-12 mx-6 py-12 border border-outline-variant/10 bg-surface-container-high/60 backdrop-blur-md rounded-[3rem] shadow-xl shadow-black/5 dark:shadow-black/40">
-            <div className="max-w-7xl mx-auto px-4 text-center">
+              {/* Global Footer Branded Text */}
+              <footer className="mt-12 mx-6 py-12 border border-outline-variant/10 bg-surface-container-high/60 backdrop-blur-md rounded-[3rem] shadow-xl shadow-black/5 dark:shadow-black/40">
+                <div className="max-w-7xl mx-auto px-4 text-center">
 
-              {/* Line 1: The Meta ID (Senior Move: Uses mono font) */}
-              <p className="text-xs md:text-sm text-on-surface-variant/60 font-mono tracking-wider uppercase">
-                Vault ID: <span className="text-on-surface-variant font-bold">#SYSTEM-ORIGIN</span>
-                <span className="mx-3 opacity-20">|</span>
-                Crafted with precision in the <span className="text-primary font-bold"><Link target="_blank" href="https://en.wikipedia.org/wiki/Udaipur">City of Lakes</Link></span>
-              </p>
+                  {/* Line 1: The Meta ID (Senior Move: Uses mono font) */}
+                  <p className="text-xs md:text-sm text-on-surface-variant/60 font-mono tracking-wider uppercase">
+                    Vault ID: <span className="text-on-surface-variant font-bold">#SYSTEM-ORIGIN</span>
+                    <span className="mx-3 opacity-20">|</span>
+                    Crafted with precision in the <span className="text-primary font-bold"><Link target="_blank" href="https://en.wikipedia.org/wiki/Udaipur">City of Lakes</Link></span>
+                  </p>
 
-              {/* Line 2: The Personal Signature */}
-              <div className="mt-4 flex items-center justify-center gap-2">
-                <div className="h-px w-8 bg-outline-variant/20" />
-                <p className="text-sm text-on-surface-variant font-medium">
-                  Made with <span className="text-rose-400 animate-heart-beat">❤️</span> by
-                  <span className="ml-1 text-primary hover:text-primary-dim transition-all duration-300 cursor-default font-black uppercase tracking-tight">
-                    Neel Gupta
-                  </span>
-                </p>
-                <div className="h-px w-8 bg-outline-variant/20" />
-              </div>
+                  {/* Line 2: The Personal Signature */}
+                  <div className="mt-4 flex items-center justify-center gap-2">
+                    <div className="h-px w-8 bg-outline-variant/20" />
+                    <p className="text-sm text-on-surface-variant font-medium">
+                      Made with <span className="text-rose-400 animate-heart-beat">❤️</span> by
+                      <span className="ml-1 text-primary hover:text-primary-dim transition-all duration-300 cursor-default font-black uppercase tracking-tight">
+                        Neel Gupta
+                      </span>
+                    </p>
+                    <div className="h-px w-8 bg-outline-variant/20" />
+                  </div>
 
-              {/* Optional: Version tag for your Coolify deployments */}
-              <p className="mt-6 text-[10px] text-on-surface-variant/40 uppercase tracking-[0.2em] font-bold">
-                Vayl v{version} • Academic Integrity Guaranteed
-              </p>
+                  {/* Optional: Version tag for your Coolify deployments */}
+                  <p className="mt-6 text-[10px] text-on-surface-variant/40 uppercase tracking-[0.2em] font-bold">
+                    Vayl v{version} • Academic Integrity Guaranteed
+                  </p>
 
-              <div className="mt-8 flex justify-center gap-6 text-[10px] uppercase tracking-widest font-black text-on-surface-variant/60">
-                <Link href="/about" className="hover:text-primary transition-colors">About</Link>
-                <Link href="/contact" className="hover:text-primary transition-colors">Contact</Link>
-                <Link href="/terms" className="hover:text-primary transition-colors">Terms</Link>
-                <Link href="/privacy-policy" className="hover:text-primary transition-colors">Privacy</Link>
-              </div>
-            </div>
-          </footer>
+                  <div className="mt-8 flex justify-center gap-6 text-[10px] uppercase tracking-widest font-black text-on-surface-variant/60">
+                    <Link href="/about" className="hover:text-primary transition-colors">About</Link>
+                    <Link href="/contact" className="hover:text-primary transition-colors">Contact</Link>
+                    <Link href="/terms" className="hover:text-primary transition-colors">Terms</Link>
+                    <Link href="/privacy-policy" className="hover:text-primary transition-colors">Privacy</Link>
+                  </div>
+                </div>
+              </footer>
+            </motion.div>
+          </AnimatePresence>
         </main>
         <MobileBottomNav />
       </div>

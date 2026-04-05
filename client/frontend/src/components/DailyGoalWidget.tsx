@@ -201,10 +201,11 @@ export default function DailyGoalWidget({ variant = "compact", className = "" }:
             <input
               type="number"
               min={0}
-              max={1440}
-              value={goalInput || ""}
-              onChange={(e) => setGoalInput(Number(e.target.value))}
-              placeholder="Custom (mins)"
+              max={24}
+              step={0.5}
+              value={goalInput ? goalInput / 60 : ""}
+              onChange={(e) => setGoalInput(Math.round(Number(e.target.value) * 60))}
+              placeholder="Custom (hours)"
               className="flex-1 py-2 px-3 bg-surface-container-highest border-none text-on-surface text-sm rounded-lg focus:ring-1 focus:ring-primary/40"
             />
             <button

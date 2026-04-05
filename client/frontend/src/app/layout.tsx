@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { Montserrat, Poppins, Hanken_Grotesk } from "next/font/google";
 import AppProviders from "@/components/AppProviders";
-import PageTransition from "@/components/PageTransition";
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { WebVitals } from "@/components/WebVitals";
 import CookieConsent from "@/components/CookieConsent";
@@ -178,7 +177,7 @@ export default function RootLayout({
         <GoogleSchema />
         <CookieConsent />
         <AppProviders>
-          <PageTransition>{children}</PageTransition>
+          {children}
         </AppProviders>
       </body>
     </html>
