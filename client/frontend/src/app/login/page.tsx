@@ -73,6 +73,15 @@ function LoginContent() {
     const token = searchParams.get('token');
     if (token) {
       setGoogleLoading(true);
+      
+      // Clear old session/token data to prevent pre-migration conflicts
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('kv_token');
+        localStorage.removeItem('kv_sessionId');
+        sessionStorage.removeItem('kv_token');
+        sessionStorage.removeItem('kv_sessionId');
+      }
+
       // loginWithToken handles redirect to '/' on success and re-throws on failure
       loginWithToken(token).catch(() => {
         setGoogleLoading(false);
