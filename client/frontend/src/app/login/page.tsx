@@ -88,10 +88,10 @@ function LoginContent() {
    * not an Axios request, so the Next.js proxy cannot handle it.
    */
   const handleGoogleLogin = () => {
-    const railwayAuthUrl = process.env.NODE_ENV === 'production'
-      ? 'https://exam-app-production-7f5d.up.railway.app/api/auth/google'
-      : `${API_BASE_URL}/auth/google`;
-    window.location.href = railwayAuthUrl;
+    const apiBase = process.env.NODE_ENV === 'production'
+      ? (process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in')
+      : `http://localhost:5000`;
+    window.location.href = `${apiBase}/auth/google`;
   };
 
   /**

@@ -3,12 +3,12 @@ const isProd = process.env.NODE_ENV === 'production';
 /**
  * API Base URL
  *
- * In PRODUCTION: Use '/api' (relative path).
- *   Vercel's rewrite in next.config.js proxies all /api/* calls to Railway server-side.
- *   This means the browser never makes a cross-origin request → ZERO CORS issues.
+ * In PRODUCTION: Reads from NEXT_PUBLIC_API_URL env var (set to https://api.vayl.in).
+ *   The browser calls api.vayl.in directly — CORS is handled by the backend's
+ *   *.vayl.in allow-rule. No Vercel proxy needed.
  *
- * In DEVELOPMENT: Point directly to the local Express server.
+ * In DEVELOPMENT: Points directly to the local Express server (no /api suffix).
  */
 export const API_BASE_URL = isProd
-  ? '/api'
-  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api');
+  ? (process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in')
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');

@@ -33,8 +33,8 @@ export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 export const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL || 
   (isProd 
-    ? 'https://exam-app-production-7f5d.up.railway.app/api/auth/google/callback' 
-    : 'http://localhost:5000/api/auth/google/callback');
+    ? 'https://api.vayl.in/auth/google/callback' 
+    : 'http://localhost:5000/auth/google/callback');
 
 // Validation in Dev
 if (!isProd) {

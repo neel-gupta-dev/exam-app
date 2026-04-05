@@ -95,21 +95,21 @@ app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 
 // --- API Routes ---
-app.get('/api/health', getHealth);
+app.get('/health', getHealth);
 
-app.use('/api/auth', authRoutes);
-app.use('/api/resources', resourceRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/notes', noteRoutes);
-app.use('/api/focus', focusRoutes);
-app.use('/api/public', publicRoutes);
-app.use('/api/study', studyRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/feedback', feedbackRoutes);
-app.use('/api/classroom', classroomRoutes);
-app.use('/api/performance', performanceRoutes);
-app.use('/api/calendar', calendarRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/auth', authRoutes);
+app.use('/resources', resourceRoutes);
+app.use('/users', userRoutes);
+app.use('/notes', noteRoutes);
+app.use('/focus', focusRoutes);
+app.use('/public', publicRoutes);
+app.use('/study', studyRoutes);
+app.use('/analytics', analyticsRoutes);
+app.use('/feedback', feedbackRoutes);
+app.use('/classroom', classroomRoutes);
+app.use('/performance', performanceRoutes);
+app.use('/calendar', calendarRoutes);
+app.use('/admin', adminRoutes);
 
 // ─── ADMIN PANEL (Static SPA) ────────────────────────────────────────────────
 // Served at a secret path with an extra HTTP Basic Auth gate.

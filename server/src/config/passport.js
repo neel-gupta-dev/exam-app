@@ -12,8 +12,8 @@ const configurePassport = () => {
           clientSecret: process.env.GOOGLE_CLIENT_SECRET,
           callbackURL: process.env.GOOGLE_CALLBACK_URL || 
             (process.env.NODE_ENV === 'production' 
-              ? 'https://exam-app-production-7f5d.up.railway.app/api/auth/google/callback' 
-              : 'http://localhost:5000/api/auth/google/callback'),
+              ? 'https://api.vayl.in/auth/google/callback' 
+              : 'http://localhost:5000/auth/google/callback'),
         },
         async (accessToken, refreshToken, params, profile, done) => {
           const { id, displayName, emails } = profile;
