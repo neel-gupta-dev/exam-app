@@ -1,29 +1,47 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import DemoSignupModal from '@/components/DemoSignupModal';
+import { isDemoAllowedPath, DEMO_ALLOWED_PATHS } from '@/lib/demo';
+
+export { DEMO_ALLOWED_PATHS };
+
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { token, isLoading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const isDemoUrl = searchParams.get('demo') === 'true';
   const [showRetry, setShowRetry] = useState(false);
+  const [showLockedModal, setShowLockedModal] = useState(false);
 
-  useEffect(() => {
-    if (!isLoading && !token) {
-      router.push('/login');
-    }
-  }, [isLoading, token, router]);
+  // Check if the current page is accessible without login (demo mode)
+  const isDemoAllowed = isDemoAllowedPath(pathname);
 
   useEffect(() => {
     let timer: any;
     if (isLoading) {
-      timer = setTimeout(() => setShowRetry(true), 7000); // Show retry after 7s
+      timer = setTimeout(() => setShowRetry(true), 7000);
     } else {
       setShowRetry(false);
     }
     return () => clearTimeout(timer);
   }, [isLoading]);
+
+  // Show the "locked" modal then redirect non-authed users away from private pages
+  useEffect(() => {
+    if (!isLoading && !token) {
+      if (!isDemoAllowed) {
+        setShowLockedModal(true);
+      } else if (pathname !== '/' && !isDemoUrl) {
+        // If they are on a sub-page but lack the ?demo=true flag, kick to landing page
+        router.push('/');
+      }
+    }
+  }, [isLoading, token, isDemoAllowed, pathname, isDemoUrl, router]);
 
   if (isLoading) {
     return (
@@ -32,7 +50,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
         
         {showRetry && (
           <div className="flex flex-col items-center gap-4 animate-fade-in text-center max-w-sm">
-            <p className="text-on-surface-variant text-sm">
+             <p className="text-on-surface-variant text-sm">
               Connecting to Vayl is taking longer than usual...
             </p>
             <div className="flex gap-4">
@@ -49,16 +67,37 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
                 Go to Login
               </button>
             </div>
-            <p className="text-[10px] text-outline uppercase tracking-wider mt-4">
-              Check if your NEXT_PUBLIC_API_URL is configured correctly.
-            </p>
           </div>
         )}
       </div>
     );
   }
 
-  if (!token) return null;
+  // Authenticated users: full access, render normally
+  if (token) {
+    return <>{children}</>;
+  }
 
-  return <>{children}</>;
+  // Unauthenticated user on a DEMO-ALLOWED page: render with demo data
+  if (isDemoAllowed) {
+    if (pathname !== '/' && !isDemoUrl) {
+      return null; // prevent rendering before redirect happens
+    }
+    return <>{children}</>;
+  }
+
+  // Unauthenticated user on a LOCKED page: show modal then default to landing
+  return (
+    <>
+      {/* Render nothing behind the modal for locked pages */}
+      <DemoSignupModal
+        isOpen={showLockedModal}
+        onClose={() => {
+          setShowLockedModal(false);
+          router.push('/');
+        }}
+        feature="this page"
+      />
+    </>
+  );
 }

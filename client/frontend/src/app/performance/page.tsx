@@ -18,6 +18,7 @@ import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
 import BragSheetGenerator from "@/components/BragSheetGenerator";
 import { event as trackEvent } from "@/lib/analytics";
+import DemoSignupModal from "@/components/DemoSignupModal";
 
 interface TestMark {
   _id: string;
@@ -35,6 +36,17 @@ export default function PerformancePage() {
   const [marks, setMarks] = useState<TestMark[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showDemoModal, setShowDemoModal] = useState(false);
+  const isDemo = !user;
+
+  // Demo data — realistic academic record for Alex Chen
+  const DEMO_MARKS: TestMark[] = [
+    { _id: 'dm1', subject: 'AP Biology', testName: 'Chapter 5 Cell Division', score: 89, total: 100, percentage: 89, date: new Date(Date.now() - 2 * 86400000).toISOString() },
+    { _id: 'dm2', subject: 'AP Chemistry', testName: 'Midterm Exam', score: 74, total: 100, percentage: 74, date: new Date(Date.now() - 9 * 86400000).toISOString() },
+    { _id: 'dm3', subject: 'SAT Math', testName: 'Practice Test #3', score: 740, total: 800, percentage: 92.5, date: new Date(Date.now() - 15 * 86400000).toISOString(), comments: 'Algebra strong, need to work on geometry' },
+    { _id: 'dm4', subject: 'AP Physics', testName: 'Kinematics Unit Test', score: 82, total: 100, percentage: 82, date: new Date(Date.now() - 22 * 86400000).toISOString() },
+  ];
+
   const [newMark, setNewMark] = useState({
     subject: "",
     testName: "",
@@ -45,8 +57,13 @@ export default function PerformancePage() {
   });
 
   useEffect(() => {
+    if (isDemo) {
+      setMarks(DEMO_MARKS);
+      setLoading(false);
+      return;
+    }
     fetchMarks();
-  }, []);
+  }, [isDemo]);
 
   const fetchMarks = async () => {
     try {
@@ -61,6 +78,7 @@ export default function PerformancePage() {
 
   const handleAddMark = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isDemo) { setShowDemoModal(true); return; }
     if (!newMark.subject || !newMark.testName || !newMark.score || !newMark.total) {
       toast.error("Please fill in all required fields");
       return;
@@ -98,6 +116,7 @@ export default function PerformancePage() {
   };
 
   const handleDeleteMark = async (id: string) => {
+    if (isDemo) { setShowDemoModal(true); return; }
     if (!confirm("Are you sure you want to delete this record?")) return;
     try {
       await api.delete(`/performance/marks/${id}`);
@@ -120,7 +139,13 @@ export default function PerformancePage() {
     return (totalPct / marks.length).toFixed(1);
   };
 
+  const handleAddClick = () => {
+    if (isDemo) { setShowDemoModal(true); return; }
+    setShowAddModal(true);
+  };
+
   return (
+    <>
     <DashboardLayout>
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
@@ -135,7 +160,7 @@ export default function PerformancePage() {
           </div>
           <div className="flex items-center gap-3">
             <button 
-              onClick={() => setShowAddModal(true)}
+              onClick={handleAddClick}
               className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 rounded-xl font-bold hover:scale-105 transition-all shadow-lg shadow-primary/20"
             >
               <Plus className="w-5 h-5" />
@@ -350,5 +375,11 @@ export default function PerformancePage() {
         )}
       </div>
     </DashboardLayout>
+    <DemoSignupModal
+      isOpen={showDemoModal}
+      onClose={() => setShowDemoModal(false)}
+      feature="Performance Tracking"
+    />
+    </>
   );
 }

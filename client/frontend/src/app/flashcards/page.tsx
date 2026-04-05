@@ -10,6 +10,7 @@ import CreateDeckModal from "@/components/Flashcards/CreateDeckModal";
 import AddCardModal from "@/components/Flashcards/AddCardModal";
 import FlashcardRunner from "@/components/Flashcards/FlashcardRunner";
 import { trackDeckStudyStart, trackDeckCreate } from "@/lib/analytics";
+import DemoSignupModal from "@/components/DemoSignupModal";
 import {
   Sparkles,
   Zap,
@@ -69,12 +70,20 @@ export default function FlashcardsPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [decks, setDecks] = useState<FlashcardDeck[]>([]);
+  const isDemo = !user;
   
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAddCardModalOpen, setIsAddCardModalOpen] = useState(false);
   const [isRunnerOpen, setIsRunnerOpen] = useState(false);
   const [selectedDeckId, setSelectedDeckId] = useState<string | null>(null);
+  const [showDemoModal, setShowDemoModal] = useState(false);
+
+  // Demo decks
+  const DEMO_DECKS: FlashcardDeck[] = [
+    { id: 'demo1', _id: 'demo1', title: 'Biology Basics', description: 'Cell biology, genetics, and evolution fundamentals', category: 'Science', totalCards: 24, dueCards: 8 },
+    { id: 'demo2', _id: 'demo2', title: 'Physics Laws', description: 'Newtonian mechanics, thermodynamics, and electromagnetism', category: 'Physics', totalCards: 18, dueCards: 3 },
+  ];
 
   /**
    * Data Loading
@@ -93,10 +102,15 @@ export default function FlashcardsPage() {
   };
 
   useEffect(() => {
+    if (isDemo) {
+      setDecks(DEMO_DECKS);
+      setLoading(false);
+      return;
+    }
     if (user) {
       fetchDecks();
     }
-  }, [user]);
+  }, [user, isDemo]);
 
   if (loading) {
     return (
@@ -112,11 +126,13 @@ export default function FlashcardsPage() {
 
   const openAddCard = (e: React.MouseEvent, deckId: string) => {
     e.stopPropagation();
+    if (isDemo) { setShowDemoModal(true); return; }
     setSelectedDeckId(deckId);
     setIsAddCardModalOpen(true);
   };
 
   const startStudy = (deckId: string) => {
+    if (isDemo) { setShowDemoModal(true); return; }
     const deck = decks.find(d => d._id === deckId);
     if (deck) {
       trackDeckStudyStart(deck.title, deck.totalCards);
@@ -126,6 +142,7 @@ export default function FlashcardsPage() {
   };
 
   return (
+    <>
     <DashboardLayout>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -141,7 +158,7 @@ export default function FlashcardsPage() {
           </div>
           <div className="flex gap-4">
             <button 
-              onClick={() => setIsCreateModalOpen(true)}
+              onClick={() => isDemo ? setShowDemoModal(true) : setIsCreateModalOpen(true)}
               className="px-6 py-2.5 bg-surface-container-highest text-on-surface text-sm font-semibold rounded-xl hover:bg-surface-bright transition-colors"
             >
               Add New Deck
@@ -264,10 +281,16 @@ export default function FlashcardsPage() {
           deckId={selectedDeckId} 
           onClose={() => {
             setIsRunnerOpen(false);
-            fetchDecks();
+            if (!isDemo) fetchDecks();
           }} 
         />
       )}
     </DashboardLayout>
+    <DemoSignupModal
+      isOpen={showDemoModal}
+      onClose={() => setShowDemoModal(false)}
+      feature="Flashcard Decks"
+    />
+    </>
   );
 }

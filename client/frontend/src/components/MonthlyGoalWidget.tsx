@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Flag } from "lucide-react";
 import api from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 export interface Milestone {
   id: string;
@@ -19,17 +20,37 @@ export interface MonthlyStats {
   milestones: Milestone[];
 }
 
+const DEMO_STATS: MonthlyStats = {
+  focusProgress: {
+    current: 1200,   // 20 hours (in minutes)
+    target: 2400,    // 40 hours
+    percent: 50,
+  },
+  milestones: [
+    { id: 'm1', label: '10h Focus Goal', isCompleted: true },
+    { id: 'm2', label: '20h Focus Goal', isCompleted: true },
+    { id: 'm3', label: '30h Focus Goal', isCompleted: false },
+  ]
+};
+
 /**
  * Monthly Goal Widget
  * Displays the user's progress towards a monthly focus time target and recent milestones.
  * Listens for `focusSessionCompleted` and `resourceAdded` window events to refresh its data live.
  */
 export default function MonthlyGoalWidget({ className = "" }: { className?: string }) {
+  const { user } = useAuth();
+  const isDemo = !user;
   const [stats, setStats] = useState<MonthlyStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
+      if (isDemo) {
+        setStats(DEMO_STATS);
+        setLoading(false);
+        return;
+      }
       try {
         const { data } = await api.get('/analytics/monthly-stats');
         setStats(data);

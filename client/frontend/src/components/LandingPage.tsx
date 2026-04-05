@@ -51,6 +51,7 @@ const MagneticButton = ({ children, className, onClick, href }: { children: Reac
   const content = (
     <motion.div
       ref={ref}
+      onClick={onClick}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{ x: springX, y: springY }}
@@ -61,7 +62,7 @@ const MagneticButton = ({ children, className, onClick, href }: { children: Reac
   );
 
   if (href) {
-    return <Link href={href} onClick={onClick}>{content}</Link>;
+    return <Link href={href}>{content}</Link>;
   }
   return content;
 };
@@ -237,6 +238,16 @@ export default function LandingPage() {
                 </AnimatePresence>
               </button>
               <MagneticButton href="/login" className="text-xs font-interface font-black uppercase tracking-widest text-on-surface hover:text-primary transition-colors">Login</MagneticButton>
+              <MagneticButton 
+                onClick={() => {
+                  sendGAEvent({ event: 'cta_click', value: 'nav_try_demo' });
+                  localStorage.setItem('vayl_demo_mode', 'true');
+                  window.location.href = '/?demo=true';
+                }}
+                className="text-xs font-interface font-black uppercase tracking-widest px-5 py-2.5 rounded-xl border border-primary/30 text-primary bg-primary/5 hover:bg-primary/15 transition-all cursor-pointer"
+              >
+                Try Demo
+              </MagneticButton>
               <Link
                 href="/signup"
                 onClick={() => sendGAEvent({ event: 'cta_click', value: 'nav_join_now' })}

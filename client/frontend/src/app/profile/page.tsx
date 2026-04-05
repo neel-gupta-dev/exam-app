@@ -223,7 +223,7 @@ export default function ProfilePage() {
                     <div className="bg-white p-1.5 rounded-xl shadow-xl shadow-black/40 rotate-1 flex items-center justify-center w-16 h-16 shrink-0 opacity-90 overflow-hidden">
                       {user?.vaultId && origin ? (
                         <img 
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${origin}/p/${user.vaultId.replace('#', '')}`)}`}
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent('https://vayl.in/signup')}`}
                           alt="ID QR"
                           className="w-full h-full object-contain"
                         />

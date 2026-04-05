@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useAudio } from "@/context/AudioContext";
 import { useHaptics } from "@/hooks/useHaptics";
 import { trackFocusStart, trackFocusComplete } from "@/lib/analytics";
+import { useAuth } from "@/context/AuthContext";
 
 // Motivational messages shown when goal is achieved
 const GOAL_MESSAGES = [
@@ -105,6 +106,11 @@ function GoalCelebrationModal({ onClose }: { onClose: () => void }) {
  */
 export default function FocusRoomPage() {
   // Timer Core State
+  const { user } = useAuth();
+  const isDemo = !user;
+  const DEMO_FOCUS_KEY = 'vayl_demo_focus_seconds';
+  const DEMO_GOAL_KEY = 'vayl_demo_goal_minutes';
+
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [initialTime, setInitialTime] = useState(25 * 60);
   const [isRunning, setIsRunning] = useState(false);
@@ -134,10 +140,28 @@ export default function FocusRoomPage() {
   const interruptionCountRef = useRef(0);
 
   /**
-   * Fetch today's goal progress from the backend.
-   * Called on mount and after every completed focus session.
+   * Fetch today's goal progress.
+   * For demo users: reads from localStorage instead of making API calls.
    */
   const fetchGoalStats = useCallback(async () => {
+    if (isDemo) {
+      const savedSeconds = parseInt(localStorage.getItem(DEMO_FOCUS_KEY) || '0');
+      const savedGoal = parseInt(localStorage.getItem(DEMO_GOAL_KEY) || '0');
+      const achieved = savedGoal > 0 && savedSeconds >= savedGoal * 60;
+      const stats: GoalStats = {
+        todayFocusSeconds: savedSeconds,
+        dailyGoalMinutes: savedGoal,
+        goalAchievedToday: achieved,
+      };
+      setGoalStats(stats);
+      setGoalInput(savedGoal);
+      if (achieved && !celebratedRef.current && !localStorage.getItem(todayKey())) {
+        celebratedRef.current = true;
+        setShowCelebration(true);
+        localStorage.setItem(todayKey(), '1');
+      }
+      return;
+    }
     try {
       const { data } = await api.get('/focus/stats');
       const stats: GoalStats = {
@@ -148,7 +172,6 @@ export default function FocusRoomPage() {
       setGoalStats(stats);
       setGoalInput(stats.dailyGoalMinutes);
 
-      // Show celebration only once per day, only when goal is set & achieved
       if (
         stats.goalAchievedToday &&
         stats.dailyGoalMinutes > 0 &&
@@ -162,14 +185,21 @@ export default function FocusRoomPage() {
     } catch {
       // Silently fail — goal is non-critical
     }
-  }, []);
+  }, [isDemo]);
 
   useEffect(() => { fetchGoalStats(); }, [fetchGoalStats]);
 
   /**
-   * Save the daily goal to the backend.
+   * Save the daily goal.
+   * For demo users: saves to localStorage.
    */
   const saveGoal = async (minutes: number) => {
+    if (isDemo) {
+      localStorage.setItem(DEMO_GOAL_KEY, String(minutes));
+      setGoalStats(prev => ({ ...prev, dailyGoalMinutes: minutes }));
+      toast.success(minutes === 0 ? 'Daily goal removed.' : `Daily goal set to ${minutes} min.`);
+      return;
+    }
     setGoalLoading(true);
     try {
       await api.patch('/focus/goal', { minutes });
@@ -231,6 +261,15 @@ export default function FocusRoomPage() {
   // ── Session API calls ──────────────────────────────────────────
 
   const startSession = async (type: 'focus' | 'short-break' | 'long-break') => {
+    // Demo mode: no API call, just fire analytics events
+    if (isDemo) {
+      interruptionCountRef.current = 0;
+      if (type === 'focus') {
+        window.dispatchEvent(new Event("VAYL_FOCUS_START"));
+        trackFocusStart(type, focusLength);
+      }
+      return;
+    }
     try {
       const { data } = await api.post('/focus/start', {
         type,
@@ -248,7 +287,22 @@ export default function FocusRoomPage() {
   };
 
   const endSession = async (status: 'completed' | 'abandoned') => {
-    if (!sessionIdRef.current) return;
+    if (!sessionIdRef.current && !isDemo) return;
+    // Demo mode: track locally and update localStorage
+    if (isDemo) {
+      const actualDuration = status === 'completed' ? initialTime : (initialTime - timeLeft);
+      window.dispatchEvent(new Event("VAYL_FOCUS_STOP"));
+      if (status === 'completed' && !isBreak) {
+        // Accumulate focus seconds in localStorage
+        const prev = parseInt(localStorage.getItem(DEMO_FOCUS_KEY) || '0');
+        localStorage.setItem(DEMO_FOCUS_KEY, String(prev + actualDuration));
+        toast.success(`Session complete! Great work, Alex!`);
+        vibrateSuccess();
+        trackFocusComplete("focus", actualDuration / 60);
+        fetchGoalStats();
+      }
+      return;
+    }
     try {
       const actualDuration = status === 'completed' ? initialTime : (initialTime - timeLeft);
       window.dispatchEvent(new Event("VAYL_FOCUS_STOP"));
@@ -264,7 +318,6 @@ export default function FocusRoomPage() {
         vibrateSuccess();
         window.dispatchEvent(new Event("focusSessionCompleted"));
         trackFocusComplete("focus", actualDuration / 60);
-        // Re-fetch goal progress after a completed focus session
         fetchGoalStats();
       }
       sessionIdRef.current = null;

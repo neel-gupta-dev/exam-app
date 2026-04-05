@@ -11,6 +11,7 @@ import { useModifierKey } from "@/hooks/useModifierKey";
 import { useHaptics } from "@/hooks/useHaptics";
 import SearchDropdown, { ResourceSearchResult } from "./SearchDropdown";
 import { useRouter } from "next/navigation";
+import DemoSignupModal from "@/components/DemoSignupModal";
 
 /**
  * Global Top Navigation Bar
@@ -19,14 +20,17 @@ import { useRouter } from "next/navigation";
  * Listens for keyboard shortcuts (Cmd/Ctrl+K for search, Cmd/Ctrl+S for save).
  */
 export default function TopNav() {
+  const { user, theme, toggleTheme } = useAuth();
+  const isDemo = !user;
   const [isOpen, setIsOpen] = useState(false);
+  const [showDemoModal, setShowDemoModal] = useState(false);
+  
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
   const [type, setType] = useState<"video" | "pdf" | "link" | "other">("link");
   const [folderName, setFolderName] = useState("");
   const [loading, setLoading] = useState(false);
   const { searchQuery, setSearchQuery } = useSearch();
-  const { theme, toggleTheme } = useAuth();
   const { modifierSymbol } = useModifierKey();
   const { vibrateClick } = useHaptics();
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -37,6 +41,11 @@ export default function TopNav() {
   const [results, setResults] = useState<ResourceSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  
+  const handleOpenModal = () => {
+    if (isDemo) setShowDemoModal(true);
+    else setIsOpen(true);
+  };
 
   // ── Keyboard Shortcuts ──────────────────────────────────────────────
   useEffect(() => {
@@ -50,7 +59,7 @@ export default function TopNav() {
       // ⌘/Ctrl + S (Quick Save Modal)
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
-        setIsOpen(true);
+        handleOpenModal();
       }
 
       // ESC to close results
@@ -59,14 +68,16 @@ export default function TopNav() {
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    const handleOpenModal = () => setIsOpen(true);
-    window.addEventListener('openQuickSave', handleOpenModal);
+    
+    // Using a separate function reference here so we can remove it properly
+    const openQuickSaveEvent = () => handleOpenModal();
+    window.addEventListener('openQuickSave', openQuickSaveEvent);
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('openQuickSave', handleOpenModal);
+      window.removeEventListener('openQuickSave', openQuickSaveEvent);
     };
-  }, []);
+  }, [isDemo]);
 
   // ── Click Outside Search ────────────────────────────────────────────
   useEffect(() => {
@@ -212,7 +223,7 @@ export default function TopNav() {
         {/* Actions - Desktop & Mobile */}
         <div className="flex items-center gap-3 md:gap-6 ml-2 shrink-0">
           <button
-            onClick={() => setIsOpen(true)}
+            onClick={handleOpenModal}
             className="bg-indigo-500 hover:opacity-90 transition-all text-white px-3 md:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1 md:gap-2"
           >
             <Plus className="w-4 h-4" />
@@ -310,6 +321,12 @@ export default function TopNav() {
           </div>
         </div>
       )}
+      
+      <DemoSignupModal
+        isOpen={showDemoModal}
+        onClose={() => setShowDemoModal(false)}
+        feature="Add Resources"
+      />
     </>
   );
 }

@@ -55,6 +55,28 @@ export default function AnalyticsPage() {
   const [heatmapData, setHeatmapData] = useState<{date: string, displayDay: number, units: number, level: number}[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // ── Demo-mode static data ────────────────────────────────────────
+  const DEMO_RESOURCES: Resource[] = [
+    { _id: 'd1', userId: 'demo', title: 'AP Biology Cell Division Notes', type: 'pdf', url: '#', folderName: 'Biology', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { _id: 'd2', userId: 'demo', title: 'Photosynthesis Deep Dive', type: 'video', url: '#', folderName: 'Biology', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { _id: 'd3', userId: 'demo', title: 'Organic Chemistry Mechanisms', type: 'pdf', url: '#', folderName: 'Chemistry', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { _id: 'd4', userId: 'demo', title: 'Kinematics Problem Set', type: 'pdf', url: '#', folderName: 'Physics', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { _id: 'd5', userId: 'demo', title: 'Newton Laws Summary', type: 'link', url: '#', folderName: 'Physics', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { _id: 'd6', userId: 'demo', title: 'SAT Math Practice 2024', type: 'pdf', url: '#', folderName: 'Mathematics', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { _id: 'd7', userId: 'demo', title: 'Calculus Integration Cheatsheet', type: 'link', url: '#', folderName: 'Mathematics', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { _id: 'd8', userId: 'demo', title: 'World War I Timeline', type: 'pdf', url: '#', folderName: 'History', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { _id: 'd9', userId: 'demo', title: 'Mitosis vs Meiosis Flashcards', type: 'other', url: '#', folderName: 'Biology', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { _id: 'd10', userId: 'demo', title: 'Electrochemistry Notes', type: 'pdf', url: '#', folderName: 'Chemistry', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+  ];
+  const DEMO_HEATMAP = Array.from({ length: 21 }, (_, i) => ({
+    date: new Date(Date.now() - (20 - i) * 86400000).toISOString(),
+    displayDay: i + 1,
+    units: Math.floor(Math.random() * 6),
+    level: [0, 1, 3, 0, 2, 5, 1, 0, 4, 2, 3, 1, 0, 5, 2, 1, 3, 0, 4, 2, 5][i],
+  }));
+  // Override user data for demo display
+  const demoUser = !user ? { currentStreak: 14, totalActiveSeconds: 57600, levelData: { currentLevel: 7, xpRemaining: 340, progressToNext: 62 }, isVerifiedStudent: false } : null;
+
   /**
    * Data Fetching Effect
    * Parallelizes network requests to fetch all resources for calculation
@@ -62,6 +84,13 @@ export default function AnalyticsPage() {
    */
   useEffect(() => {
     const fetchAnalytics = async () => {
+      // Demo mode: skip API, use mock data
+      if (!user) {
+        setResources(DEMO_RESOURCES);
+        setHeatmapData(DEMO_HEATMAP);
+        setLoading(false);
+        return;
+      }
       try {
         const [resResponse, heatmapResponse] = await Promise.all([
           api.get('/resources?page=1&limit=1000'),
@@ -75,9 +104,7 @@ export default function AnalyticsPage() {
         setLoading(false);
       }
     };
-    if (user) {
-      fetchAnalytics();
-    }
+    fetchAnalytics();
   }, [user]);
 
   if (loading) {
@@ -122,12 +149,13 @@ export default function AnalyticsPage() {
       };
     });
 
-  // Real Level and Streak from AuthContext
-  const realLevel = user?.levelData?.currentLevel || 1;
-  const currentStreak = user?.currentStreak || 0;
-  const totalActiveSeconds = user?.totalActiveSeconds || 0;
-  const xpRemaining = user?.levelData?.xpRemaining || 0;
-  const progressToNext = user?.levelData?.progressToNext || 0;
+  // Real Level and Streak from AuthContext (or demo values)
+  const activeUser = user ?? demoUser;
+  const realLevel = activeUser?.levelData?.currentLevel || 1;
+  const currentStreak = activeUser?.currentStreak || 0;
+  const totalActiveSeconds = activeUser?.totalActiveSeconds || 0;
+  const xpRemaining = activeUser?.levelData?.xpRemaining || 0;
+  const progressToNext = activeUser?.levelData?.progressToNext || 0;
   
   const formatActiveTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -145,7 +173,7 @@ export default function AnalyticsPage() {
     { label: "Total Resources", value: totalResources.toString(), unit: "saved", icon: "clock", iconColor: "text-primary", iconBg: "bg-primary/10", change: "↑ Active", changeColor: "text-green-400", note: "Keep saving" },
     { label: "Active Time", value: formatActiveTime(totalActiveSeconds), unit: "total", icon: "flame", iconColor: "text-orange-400", iconBg: "bg-orange-500/10", change: "★ Consistent", changeColor: "text-primary", note: `${currentStreak} day streak` },
     { label: "Vault Usage", value: Math.min((totalResources / 100) * 100, 100).toFixed(1), unit: "%", icon: "check-circle", iconColor: "text-emerald-400", iconBg: "bg-emerald-500/10", change: "Growing", changeColor: "text-emerald-400", note: "of 100 goal" },
-    { label: "Scholar Level", value: `Lvl ${realLevel}`, unit: levelName, icon: "trophy", iconColor: "text-purple-400", iconBg: "bg-purple-500/10", change: user?.isVerifiedStudent ? "Verified" : "Unverified", changeColor: user?.isVerifiedStudent ? "text-primary" : "text-surface-variant", note: "Status" },
+    { label: "Scholar Level", value: `Lvl ${realLevel}`, unit: levelName, icon: "trophy", iconColor: "text-purple-400", iconBg: "bg-purple-500/10", change: activeUser?.isVerifiedStudent ? "Verified" : "Unverified", changeColor: activeUser?.isVerifiedStudent ? "text-primary" : "text-surface-variant", note: "Status" },
   ];
 
   const recentSessions = resources.slice(0, 3).map((r, i) => {

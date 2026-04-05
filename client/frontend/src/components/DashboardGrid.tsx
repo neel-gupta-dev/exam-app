@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import LoadingSkeleton from './LoadingSkeleton';
+import { useAuth } from '@/context/AuthContext';
+import DemoSignupModal from '@/components/DemoSignupModal';
 
 function timeAgo(date: string | Date): string {
   const diff = Date.now() - new Date(date).getTime();
@@ -26,7 +28,7 @@ function timeAgo(date: string | Date): string {
   return `${Math.floor(days / 7)}w ago`;
 }
 
-function ResourceCard({ resource }: { resource: Resource }) {
+function ResourceCard({ resource, isDemo, onDemoClick }: { resource: Resource; isDemo?: boolean; onDemoClick?: () => void }) {
   const colors: Record<string, { text: string; bg: string }> = {
     pdf: { text: 'text-red-400', bg: 'bg-red-500/10' },
     video: { text: 'text-indigo-400', bg: 'bg-indigo-500/10' },
@@ -35,20 +37,39 @@ function ResourceCard({ resource }: { resource: Resource }) {
   };
   const color = colors[resource.type] || colors.pdf;
 
+  if (isDemo) {
+    return (
+      <button onClick={onDemoClick} className="group bg-surface-container hover:bg-surface-container-high transition-colors p-5 rounded-xl flex items-center gap-5 cursor-pointer border border-transparent hover:border-outline-variant/10 w-full text-left">
+        <div className={`w-14 h-14 ${color.bg} rounded-lg flex items-center justify-center ${color.text} shrink-0`}>
+          {resource.type === 'video' ? <Play className="w-7 h-7" /> : <FileText className="w-7 h-7" />}
+        </div>
+        <div className="flex-1">
+          <h3 className="font-semibold text-on-surface group-hover:text-primary transition-colors line-clamp-1">{resource.title}</h3>
+          <div className="flex items-center gap-3 mt-2">
+            {resource.folderName && (
+              <span className="px-2 py-0.5 rounded bg-surface-bright text-[10px] font-bold text-indigo-400 uppercase tracking-wider">{resource.folderName}</span>
+            )}
+            <span className="text-xs text-on-surface-variant flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              {timeAgo(resource.createdAt)}
+            </span>
+          </div>
+        </div>
+        <ChevronRight className="w-5 h-5 text-outline opacity-0 group-hover:opacity-100 transition-opacity" />
+      </button>
+    );
+  }
+
   return (
     <Link href={`/resource/${resource._id}`} className="group bg-surface-container hover:bg-surface-container-high transition-colors p-5 rounded-xl flex items-center gap-5 cursor-pointer border border-transparent hover:border-outline-variant/10 block">
       <div className={`w-14 h-14 ${color.bg} rounded-lg flex items-center justify-center ${color.text} shrink-0`}>
         {resource.type === 'video' ? <Play className="w-7 h-7" /> : <FileText className="w-7 h-7" />}
       </div>
       <div className="flex-1">
-        <h3 className="font-semibold text-on-surface group-hover:text-primary transition-colors line-clamp-1">
-          {resource.title}
-        </h3>
+        <h3 className="font-semibold text-on-surface group-hover:text-primary transition-colors line-clamp-1">{resource.title}</h3>
         <div className="flex items-center gap-3 mt-2">
           {resource.folderName && (
-            <span className="px-2 py-0.5 rounded bg-surface-bright text-[10px] font-bold text-indigo-400 uppercase tracking-wider">
-              {resource.folderName}
-            </span>
+            <span className="px-2 py-0.5 rounded bg-surface-bright text-[10px] font-bold text-indigo-400 uppercase tracking-wider">{resource.folderName}</span>
           )}
           <span className="text-xs text-on-surface-variant flex items-center gap-1">
             <Clock className="w-3 h-3" />
@@ -65,8 +86,9 @@ function ResourceCard({ resource }: { resource: Resource }) {
 // ----------------------------------------------------------------------------
 // Empty States
 // ----------------------------------------------------------------------------
-function EmptyState() {
+function EmptyState({ isDemo, onDemoClick }: { isDemo?: boolean; onDemoClick?: () => void }) {
   const handleQuickSaveClick = () => {
+    if (isDemo) { onDemoClick?.(); return; }
     window.dispatchEvent(new Event('openQuickSave'));
   };
 
@@ -128,12 +150,22 @@ export default function DashboardGrid({
 }: { 
   onLoadingChange?: (loading: boolean) => void
 }) {
+  const { user } = useAuth();
+  const isDemo = !user;
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const { searchQuery, setSearchQuery } = useSearch();
   const [currentPage, setCurrentPage] = useState(1);
+  const [showDemoModal, setShowDemoModal] = useState(false);
   const itemsPerPage = 4;
+
+  const DEMO_RESOURCES: Resource[] = [
+    { _id: 'd1', userId: 'demo', title: 'AP Biology: Cell Division & Mitosis', type: 'pdf', url: '#', folderName: 'Biology', createdAt: new Date(Date.now() - 1 * 86400000).toISOString(), updatedAt: new Date().toISOString() },
+    { _id: 'd2', userId: 'demo', title: 'Khan Academy: Organic Chemistry', type: 'video', url: '#', folderName: 'Chemistry', createdAt: new Date(Date.now() - 3 * 86400000).toISOString(), updatedAt: new Date().toISOString() },
+    { _id: 'd3', userId: 'demo', title: 'SAT Math 2024 Practice Questions', type: 'pdf', url: '#', folderName: 'Mathematics', createdAt: new Date(Date.now() - 5 * 86400000).toISOString(), updatedAt: new Date().toISOString() },
+    { _id: 'd4', userId: 'demo', title: 'Newtonian Mechanics Summary', type: 'link', url: '#', folderName: 'Physics', createdAt: new Date(Date.now() - 7 * 86400000).toISOString(), updatedAt: new Date().toISOString() },
+  ];
 
   /**
    * Resource Fetcher
@@ -142,6 +174,13 @@ export default function DashboardGrid({
    * user uses the Quick Save feature.
    */
   useEffect(() => {
+    if (isDemo) {
+      setResources(DEMO_RESOURCES);
+      setLoading(false);
+      setIsInitialLoad(false);
+      onLoadingChange?.(false);
+      return;
+    }
     const fetchResources = async () => {
       setLoading(true);
       onLoadingChange?.(true);
@@ -149,12 +188,12 @@ export default function DashboardGrid({
         const { data } = await api.get('/resources', {
           params: {
             page: 1,
-            limit: 100, // Fetch more for client-side pagination slider
+            limit: 100,
             search: searchQuery || undefined
           }
         });
         setResources(data.resources || []);
-        setCurrentPage(1); // Reset to first page on search
+        setCurrentPage(1);
       } catch (error) {
         console.error('Failed to fetch resources:', error);
       } finally {
@@ -169,12 +208,12 @@ export default function DashboardGrid({
     const handleResourceAdded = () => fetchResources();
     window.addEventListener("resourceAdded", handleResourceAdded);
     return () => window.removeEventListener("resourceAdded", handleResourceAdded);
-  }, [searchQuery]);
+  }, [searchQuery, isDemo]);
 
   if (loading && isInitialLoad) return <LoadingSkeleton count={3} />;
   
   if (resources.length === 0) {
-    return searchQuery ? <NoMatchesState onClear={() => setSearchQuery("")} /> : <EmptyState />;
+    return searchQuery ? <NoMatchesState onClear={() => setSearchQuery("")} /> : <EmptyState isDemo={isDemo} onDemoClick={() => setShowDemoModal(true)} />;
   }
 
   // Pagination Logic
@@ -185,6 +224,7 @@ export default function DashboardGrid({
   const currentItems = resources.slice(startIndex, endIndex);
 
   return (
+    <>
     <div className="space-y-4">
       {/* Gmail-style Pagination Header */}
       <div className="flex items-center justify-between pb-2 border-b border-outline-variant/10">
@@ -226,9 +266,15 @@ export default function DashboardGrid({
 
       <div className="grid grid-cols-1 gap-4">
         {currentItems.map((resource) => (
-          <ResourceCard key={resource._id} resource={resource} />
+          <ResourceCard key={resource._id} resource={resource} isDemo={isDemo} onDemoClick={() => setShowDemoModal(true)} />
         ))}
       </div>
     </div>
+    <DemoSignupModal
+      isOpen={showDemoModal}
+      onClose={() => setShowDemoModal(false)}
+      feature="Resource Vault"
+    />
+    </>
   );
 }
