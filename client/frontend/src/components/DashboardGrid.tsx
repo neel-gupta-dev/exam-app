@@ -37,31 +37,10 @@ function ResourceCard({ resource, isDemo, onDemoClick }: { resource: Resource; i
   };
   const color = colors[resource.type] || colors.pdf;
 
-  if (isDemo) {
-    return (
-      <button onClick={onDemoClick} className="group bg-surface-container hover:bg-surface-container-high transition-colors p-5 rounded-xl flex items-center gap-5 cursor-pointer border border-transparent hover:border-outline-variant/10 w-full text-left">
-        <div className={`w-14 h-14 ${color.bg} rounded-lg flex items-center justify-center ${color.text} shrink-0`}>
-          {resource.type === 'video' ? <Play className="w-7 h-7" /> : <FileText className="w-7 h-7" />}
-        </div>
-        <div className="flex-1">
-          <h3 className="font-semibold text-on-surface group-hover:text-primary transition-colors line-clamp-1">{resource.title}</h3>
-          <div className="flex items-center gap-3 mt-2">
-            {resource.folderName && (
-              <span className="px-2 py-0.5 rounded bg-surface-bright text-[10px] font-bold text-indigo-400 uppercase tracking-wider">{resource.folderName}</span>
-            )}
-            <span className="text-xs text-on-surface-variant flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {timeAgo(resource.createdAt)}
-            </span>
-          </div>
-        </div>
-        <ChevronRight className="w-5 h-5 text-outline opacity-0 group-hover:opacity-100 transition-opacity" />
-      </button>
-    );
-  }
+  const href = isDemo ? `/resource/${resource._id}?demo=true` : `/resource/${resource._id}`;
 
   return (
-    <Link href={`/resource/${resource._id}`} className="group bg-surface-container hover:bg-surface-container-high transition-colors p-5 rounded-xl flex items-center gap-5 cursor-pointer border border-transparent hover:border-outline-variant/10 block">
+    <Link href={href} className="group bg-surface-container hover:bg-surface-container-high transition-colors p-5 rounded-xl flex items-center gap-5 cursor-pointer border border-transparent hover:border-outline-variant/10 block">
       <div className={`w-14 h-14 ${color.bg} rounded-lg flex items-center justify-center ${color.text} shrink-0`}>
         {resource.type === 'video' ? <Play className="w-7 h-7" /> : <FileText className="w-7 h-7" />}
       </div>
@@ -160,12 +139,7 @@ export default function DashboardGrid({
   const [showDemoModal, setShowDemoModal] = useState(false);
   const itemsPerPage = 4;
 
-  const DEMO_RESOURCES: Resource[] = [
-    { _id: 'd1', userId: 'demo', title: 'AP Biology: Cell Division & Mitosis', type: 'pdf', url: '#', folderName: 'Biology', createdAt: new Date(Date.now() - 1 * 86400000).toISOString(), updatedAt: new Date().toISOString() },
-    { _id: 'd2', userId: 'demo', title: 'Khan Academy: Organic Chemistry', type: 'video', url: '#', folderName: 'Chemistry', createdAt: new Date(Date.now() - 3 * 86400000).toISOString(), updatedAt: new Date().toISOString() },
-    { _id: 'd3', userId: 'demo', title: 'SAT Math 2024 Practice Questions', type: 'pdf', url: '#', folderName: 'Mathematics', createdAt: new Date(Date.now() - 5 * 86400000).toISOString(), updatedAt: new Date().toISOString() },
-    { _id: 'd4', userId: 'demo', title: 'Newtonian Mechanics Summary', type: 'link', url: '#', folderName: 'Physics', createdAt: new Date(Date.now() - 7 * 86400000).toISOString(), updatedAt: new Date().toISOString() },
-  ];
+
 
   /**
    * Resource Fetcher
@@ -180,7 +154,7 @@ export default function DashboardGrid({
       
       if (isDemo) {
         const demoVault = JSON.parse(localStorage.getItem('vayl_demo_vault') || '[]');
-        setResources([...demoVault, ...DEMO_RESOURCES]);
+        setResources(demoVault);
         setLoading(false);
         setIsInitialLoad(false);
         onLoadingChange?.(false);

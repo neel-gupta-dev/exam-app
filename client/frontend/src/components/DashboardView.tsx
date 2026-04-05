@@ -161,6 +161,30 @@ export default function DashboardView() {
    */
   useEffect(() => {
     const fetchStats = async () => {
+      const isDemo = !user;
+      
+      if (isDemo) {
+        const demoVault = JSON.parse(localStorage.getItem('vayl_demo_vault') || '[]');
+        setResourceCount(demoVault.length);
+        
+        const heatmapObj = new Array(28).fill(0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        demoVault.forEach((res: any) => {
+          if (!res.createdAt) return;
+          const d = new Date(res.createdAt);
+          d.setHours(0, 0, 0, 0);
+          const diffTime = today.getTime() - d.getTime();
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          if (diffDays >= 0 && diffDays < 28) {
+            const index = 27 - diffDays;
+            heatmapObj[index]++;
+          }
+        });
+        setHeatmapData(heatmapObj);
+        return;
+      }
+
       try {
         const { data } = await api.get('/resources?limit=200'); // fetch up to 200 to build heatmap
         setResourceCount(data.total || 0);
@@ -192,12 +216,13 @@ export default function DashboardView() {
         console.error("Failed to fetch aggregate stats:", error);
       }
     };
-    if (user) {
-      fetchStats();
-      const handleResourceAdded = () => fetchStats();
-      window.addEventListener("resourceAdded", handleResourceAdded);
-      return () => window.removeEventListener("resourceAdded", handleResourceAdded);
-    }
+    
+    // Always call fetchStats to handle both user and demo cases
+    fetchStats();
+    
+    const handleResourceAdded = () => fetchStats();
+    window.addEventListener("resourceAdded", handleResourceAdded);
+    return () => window.removeEventListener("resourceAdded", handleResourceAdded);
   }, [user]);
 
   return (

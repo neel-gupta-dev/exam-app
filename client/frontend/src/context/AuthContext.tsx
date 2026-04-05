@@ -33,6 +33,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   const fetchUser = useCallback(async () => {
+    const activeToken = localStorage.getItem('kv_token') || sessionStorage.getItem('kv_token');
+    if (!activeToken) return; // Do not fetch if there is no token (e.g. in Demo Mode or logged out)
+
     try {
       const { data } = await api.get('/auth/me');
       setUser(data);

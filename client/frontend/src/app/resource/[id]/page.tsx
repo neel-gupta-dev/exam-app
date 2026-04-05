@@ -104,14 +104,27 @@ export default function ResourceViewerPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [resResp, notesResp] = await Promise.all([
-          api.get(`/resources/${id}`),
-          api.get(`/notes/${id}`),
-        ]);
-        
-        const resData = resResp.data;
+        let resData: Resource | null = null;
+        let notesData: Note[] = [];
+
+        if (id.startsWith('demo_')) {
+          const demoVault = JSON.parse(localStorage.getItem('vayl_demo_vault') || '[]');
+          resData = demoVault.find((r: any) => r._id === id) || null;
+          if (!resData) throw new Error("Demo resource not found");
+          
+          const demoNotes = JSON.parse(localStorage.getItem('vayl_demo_notes') || '{}');
+          notesData = demoNotes[id] || [];
+        } else {
+          const [resResp, notesResp] = await Promise.all([
+            api.get(`/resources/${id}`),
+            api.get(`/notes/${id}`),
+          ]);
+          resData = resResp.data;
+          notesData = Array.isArray(notesResp.data) ? notesResp.data : [];
+        }
+
         setResource(resData);
-        setNotes(Array.isArray(notesResp.data) ? notesResp.data : []);
+        setNotes(notesData);
 
         // Track resource view
         if (resData) {
@@ -158,14 +171,22 @@ export default function ResourceViewerPage() {
     setNewNote("");
 
     try {
-      const resp = await api.post("/notes", {
-        resourceId: id,
-        content: savedText,
-      });
-      setNotes((prev) =>
-        prev.map((n) => (n._id === mockId ? resp.data : n))
-      );
-      toast.success("Note saved!");
+      if (id.startsWith('demo_')) {
+        const demoNotesObj = JSON.parse(localStorage.getItem('vayl_demo_notes') || '{}');
+        const existingList = demoNotesObj[id] || [];
+        demoNotesObj[id] = [noteObj, ...existingList];
+        localStorage.setItem('vayl_demo_notes', JSON.stringify(demoNotesObj));
+        toast.success("Demo note saved!");
+      } else {
+        const resp = await api.post("/notes", {
+          resourceId: id,
+          content: savedText,
+        });
+        setNotes((prev) =>
+          prev.map((n) => (n._id === mockId ? resp.data : n))
+        );
+        toast.success("Note saved!");
+      }
 
       // Track note creation
       trackEvent({
