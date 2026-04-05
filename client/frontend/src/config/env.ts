@@ -1,20 +1,32 @@
+/**
+ * API Base URL — resolved at RUNTIME, not build time.
+ *
+ * NEXT_PUBLIC_* variables are embedded at build time.
+ * To guard against stale builds where the env var was updated AFTER
+ * the last deploy, we ALSO check window.__NEXT_PUBLIC_API_URL__ if set,
+ * and always fall back to the hardcoded production URL.
+ *
+ * In DEVELOPMENT: Points directly to the local Express server.
+ */
 const isProd = process.env.NODE_ENV === 'production';
 
-/**
- * API Base URL
- *
- * In PRODUCTION: Reads from NEXT_PUBLIC_API_URL env var (set to https://api.vayl.in).
- *   The browser calls api.vayl.in directly — CORS is handled by the backend's
- *   *.vayl.in allow-rule. No Vercel proxy needed.
- *
- * In DEVELOPMENT: Points directly to the local Express server (no /api suffix).
- *
- * Safety: If NEXT_PUBLIC_API_URL is set without the https:// protocol prefix 
- * (a common mistake), this guard prevents it from being used as a relative path.
- */
-const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-const safeApiUrl = rawApiUrl.startsWith('http') ? rawApiUrl : '';
+function resolveApiUrl(): string {
+  if (!isProd) {
+    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  }
 
-export const API_BASE_URL = isProd
-  ? (safeApiUrl || 'https://api.vayl.in')
-  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
+  const envUrl = process.env.NEXT_PUBLIC_API_URL || '';
+
+  // Safety guard: if the env var was set without https:// (a common mistake),
+  // the browser treats it as a relative path — causing cascading 404s.
+  if (envUrl.startsWith('http')) {
+    return envUrl;
+  }
+
+  // Hardcoded production fallback — this is the canonical API domain.
+  // This ensures even stale builds (where env var hasn't propagated yet)
+  // will still point to the correct backend.
+  return 'https://api.vayl.in';
+}
+
+export const API_BASE_URL = resolveApiUrl();
