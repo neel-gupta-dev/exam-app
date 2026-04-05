@@ -532,7 +532,7 @@ export default function FocusRoomPage() {
                   )}
 
                   <div className="grid grid-cols-4 gap-2">
-                    {[60, 120, 180, 240].map(m => (
+                    {[240, 360, 480, 600].map(m => (
                       <button key={m}
                         onClick={() => { setGoalInput(m); saveGoal(m); }}
                         disabled={goalLoading}
