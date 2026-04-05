@@ -88,9 +88,19 @@ function LoginContent() {
    * not an Axios request, so the Next.js proxy cannot handle it.
    */
   const handleGoogleLogin = () => {
-    const apiBase = process.env.NODE_ENV === 'production'
-      ? (process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in')
-      : `http://localhost:5000`;
+    // Always use the hardcoded production URL as the most reliable fallback.
+    // NEXT_PUBLIC_API_URL is read at build time; if it's missing or malformed
+    // (e.g., missing https://), we fall back gracefully.
+    let apiBase: string;
+    if (process.env.NODE_ENV === 'production') {
+      const envUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      // Guard: ensure the value starts with https:// — if someone set the
+      // env var without the protocol, the browser would treat it as a relative
+      // path and produce a 404 like /exam-app-production.../api/auth/google.
+      apiBase = envUrl.startsWith('http') ? envUrl : 'https://api.vayl.in';
+    } else {
+      apiBase = 'http://localhost:5000';
+    }
     window.location.href = `${apiBase}/auth/google`;
   };
 
