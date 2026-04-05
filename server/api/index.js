@@ -47,7 +47,7 @@ app.set('trust proxy', true);
 const HARDCODED_ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:3001',
-  'https://vayl-app.vercel.app',
+  'https://vayl.in',
 ];
 
 const runtimeAllowedOrigins = ALLOWED_ORIGINS
@@ -65,7 +65,12 @@ app.use(
         return callback(null, true);
       }
 
-      // Allow any Vercel preview deploy for this project
+      // Allow any vayl.in subdomains (e.g. www.vayl.in)
+      if (origin === 'https://vayl.in' || origin.endsWith('.vayl.in')) {
+        return callback(null, true);
+      }
+
+      // Keep allowing Vercel preview deploys for this project
       if (origin.endsWith('.vercel.app')) {
         return callback(null, true);
       }

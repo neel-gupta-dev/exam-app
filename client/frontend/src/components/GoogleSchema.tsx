@@ -6,7 +6,7 @@
  * and potentially generate Sitelinks in search results.
  */
 export default function GoogleSchema() {
-  const domain = "https://vayl-app.vercel.app";
+  const domain = "https://vayl.in";
 
   const websiteSchema = {
     "@context": "https://schema.org",

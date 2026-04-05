@@ -8,7 +8,7 @@ router.get('/submit', async (req, res) => {
 
   // 1. Check if data is missing
   if (!rating || !email) {
-    return res.redirect('https://vayl-app.vercel.app/feedback-error');
+    return res.redirect('https://vayl.in/feedback-error');
   }
 
   try {
@@ -19,11 +19,11 @@ router.get('/submit', async (req, res) => {
     });
 
     // 3. Redirect to your Vercel frontend Success Page
-    res.redirect('https://vayl-app.vercel.app/');
+    res.redirect('https://vayl.in/');
 
   } catch (error) {
     console.error("Feedback API error:", error);
-    res.redirect('https://vayl-app.vercel.app/feedback-error');
+    res.redirect('https://vayl.in/feedback-error');
   }
 });
 

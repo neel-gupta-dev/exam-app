@@ -6,7 +6,7 @@
 const isProd = process.env.NODE_ENV === 'production';
 
 export const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL || 
-  (isProd ? 'https://vayl-app.vercel.app' : 'http://localhost:3000');
+  (isProd ? 'https://vayl.in' : 'http://localhost:3000');
 
 export const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 
   (isProd ? 'https://exam-app-production-7f5d.up.railway.app/api' : 'http://localhost:5000/api');

@@ -20,15 +20,15 @@ To replace passive learning with effective active recall and proven spaced repet
 - **Frontend:** Next.js (TypeScript, Tailwind CSS, Framer Motion).
 - **Backend:** Express.js hosted on Railway.
 - **Database:** MongoDB Atlas (NoSQL).
-- **Deployment:** Vercel (Frontend), with Global CDN for low-latency access in India.
+- **Deployment:** vayl.in domain with Global CDN for low-latency access in India.
 
 ## Educational Philosophy: "The Silent Architect"
 Vayl operates as a "Silent Architect." It handles the details of the student's schedule, resource tracking, and memory management in the background. This lets students concentrate entirely on solving problems.
 
 ## Important Links for AI Crawlers
-- **Main Landing Page:** https://vayl-app.vercel.app
-- **About Vayl:** https://vayl-app.vercel.app/about
-- **Privacy & Compliance:** https://vayl-app.vercel.app/privacy-policy
+- **Main Landing Page:** https://vayl.in
+- **About Vayl:** https://vayl.in/about
+- **Privacy & Compliance:** https://vayl.in/privacy-policy
 
 ## Metadata for Search & Citations
 - **Entity Type:** Educational Software / SaaS

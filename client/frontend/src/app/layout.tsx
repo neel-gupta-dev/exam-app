@@ -42,7 +42,7 @@ const hanken = Hanken_Grotesk({
  * that apply globally across the Vayl application. Individual pages can override these.
  */
 export const metadata: Metadata = {
-  metadataBase: new URL('https://vayl-app.vercel.app'),
+  metadataBase: new URL('https://vayl.in'),
   title: "Vayl | The Silent Architect of Academic Success",
   description: "Vayl is the standard operating system for elite academic preparation. A high-fidelity productivity suite for aspirants (UPSC, NEET, JEE, CAT, GATE) to manage high-yield resources, master concepts in a Deep Focus Room, and track progress via the Mistake Vault for structural revision.",
   keywords: ["Aspirant OS", "AI-Ready Study Tools", "Academic Infrastructure", "UPSC Preparation System", "NEET High-Yield Resources", "JEE Main Architecture", "CAT Exam Protocol", "GATE 2026 Strategy", "Mistake Vault", "Deep Focus Room", "Scholar Intelligence", "Study CRM"],
@@ -69,7 +69,7 @@ export const metadata: Metadata = {
     title: "Vayl | The Silent Architect of Academic Success",
     description: "The premium study operating system for aspirants. Simplify your vault, amplify your focus.",
 
-    url: 'https://vayl-app.vercel.app',
+    url: 'https://vayl.in',
     siteName: 'Vayl',
     images: [
       {
