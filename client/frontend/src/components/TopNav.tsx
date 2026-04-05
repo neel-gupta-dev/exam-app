@@ -175,7 +175,7 @@ export default function TopNav() {
 
   return (
     <>
-      <header className={`fixed top-0 right-0 h-16 bg-surface flex items-center justify-between px-4 md:px-8 w-full md:w-[calc(100%-${isCollapsed ? '5rem' : '16rem'})] transition-all duration-300 ml-auto z-40`}>
+      <header className={`fixed top-0 right-0 h-16 bg-surface flex items-center justify-between px-4 md:px-8 w-full ${isCollapsed ? 'md:w-[calc(100%-5rem)]' : 'md:w-[calc(100%-16rem)]'} transition-all duration-300 ml-auto z-40`}>
         {/* Search Bar - Hidden on Mobile */}
         <div className="flex items-center gap-2 md:hidden mr-2 shrink-0">
           <img src="/vayl-logo.png" alt="Vayl" className="w-6 h-6 object-contain" />
