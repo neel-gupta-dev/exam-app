@@ -174,16 +174,19 @@ export default function DashboardGrid({
    * user uses the Quick Save feature.
    */
   useEffect(() => {
-    if (isDemo) {
-      setResources(DEMO_RESOURCES);
-      setLoading(false);
-      setIsInitialLoad(false);
-      onLoadingChange?.(false);
-      return;
-    }
     const fetchResources = async () => {
       setLoading(true);
       onLoadingChange?.(true);
+      
+      if (isDemo) {
+        const demoVault = JSON.parse(localStorage.getItem('vayl_demo_vault') || '[]');
+        setResources([...demoVault, ...DEMO_RESOURCES]);
+        setLoading(false);
+        setIsInitialLoad(false);
+        onLoadingChange?.(false);
+        return;
+      }
+      
       try {
         const { data } = await api.get('/resources', {
           params: {

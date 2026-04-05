@@ -69,6 +69,13 @@ export default function Sidebar() {
    */
   useEffect(() => {
     const fetchFolders = async () => {
+      if (isDemo) {
+        const demoVault = JSON.parse(localStorage.getItem('vayl_demo_vault') || '[]');
+        const staticFolders = ["Biology", "Physics", "Mathematics", "Chemistry"];
+        const dynamicFolders = Array.from(new Set(demoVault.map((r: any) => r.folderName).filter(Boolean))) as string[];
+        setFolders([...new Set([...staticFolders, ...dynamicFolders])]);
+        return;
+      }
       try {
         const { data } = await api.get('/resources?page=1&limit=100');
         if (data.resources) {
@@ -81,14 +88,14 @@ export default function Sidebar() {
         console.error("Failed to fetch folders:", error);
       }
     };
-    if (user) {
-      fetchFolders();
+    
+    // Always call fetchFolders. It will inherently handle the isDemo bypass internally.
+    fetchFolders();
 
-      const handleResourceAdded = () => fetchFolders();
-      window.addEventListener("resourceAdded", handleResourceAdded);
-      return () => window.removeEventListener("resourceAdded", handleResourceAdded);
-    }
-  }, [user]);
+    const handleResourceAdded = () => fetchFolders();
+    window.addEventListener("resourceAdded", handleResourceAdded);
+    return () => window.removeEventListener("resourceAdded", handleResourceAdded);
+  }, [isDemo]);
 
   const displayUser = user ?? DEMO_USER;
 
@@ -188,30 +195,17 @@ export default function Sidebar() {
               </h2>
             )}
             <div className="space-y-1">
-              {isDemo ? (
-                // Demo folders (static)
-                ["Biology", "Physics", "Mathematics"].map((folderName) => (
-                  <button
-                    key={folderName}
-                    onClick={() => setLockedModal({ open: true, feature: "Resource Folders" })}
-                    className={`w-full flex items-center ${isCollapsed ? 'justify-center p-2' : 'gap-3 px-3 py-2'} rounded-md transition-colors duration-200 text-on-surface-variant/50 hover:text-on-surface-variant hover:bg-surface-bright`}
-                    title={isCollapsed ? folderName : undefined}
-                  >
-                    <FolderLock className="w-5 h-5 shrink-0" />
-                    {!isCollapsed && <span className="text-sm font-medium truncate">{folderName}</span>}
-                    {!isCollapsed && <Lock className="w-3 h-3 ml-auto opacity-40 shrink-0" />}
-                  </button>
-                ))
-              ) : folders.length === 0 ? (
+              {folders.length === 0 ? (
                 !isCollapsed && <p className="px-3 text-xs text-on-surface-variant italic">No folders yet.</p>
               ) : (
                 folders.map((folderName) => {
                   const folderHref = `/subjects/${encodeURIComponent(folderName)}`;
                   const isActive = pathname === folderHref;
+                  const demoHref = isDemo ? `${folderHref}?demo=true` : folderHref;
                   return (
                     <Link
                       key={folderName}
-                      href={folderHref}
+                      href={demoHref}
                       className={`flex items-center ${isCollapsed ? 'justify-center p-2' : 'gap-3 px-3 py-2'} rounded-md transition-colors duration-200 ${isActive
                         ? "bg-primary/10 text-primary"
                         : "text-on-surface-variant hover:text-on-surface hover:bg-surface-bright"

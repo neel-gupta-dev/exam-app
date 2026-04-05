@@ -44,8 +44,7 @@ export default function TopNav() {
   const [showResults, setShowResults] = useState(false);
   
   const handleOpenModal = () => {
-    if (isDemo) setShowDemoModal(true);
-    else setIsOpen(true);
+    setIsOpen(true);
   };
 
   // ── Keyboard Shortcuts ──────────────────────────────────────────────
@@ -156,8 +155,25 @@ export default function TopNav() {
 
     setLoading(true);
     try {
-      await api.post('/resources', { url, title, type, folderName: folderName || "General" });
-      toast.success("Resource saved to vault!");
+      if (isDemo) {
+        const newResource = {
+          _id: 'demo_' + Date.now().toString(),
+          userId: 'demo',
+          title,
+          url,
+          type,
+          folderName: folderName || "General",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        const existing = JSON.parse(localStorage.getItem('vayl_demo_vault') || '[]');
+        localStorage.setItem('vayl_demo_vault', JSON.stringify([newResource, ...existing]));
+        toast.success("Demo resource saved to vault!");
+      } else {
+        await api.post('/resources', { url, title, type, folderName: folderName || "General" });
+        toast.success("Resource saved to vault!");
+      }
+      
       vibrateClick();
       setIsOpen(false);
       setUrl("");
