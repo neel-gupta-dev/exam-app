@@ -128,7 +128,7 @@ app.use(ADMIN_PATH, basicAuth({
 app.use(ADMIN_PATH, express.static(adminStaticDir));
 
 // SPA fallback — send index.html for all sub-routes (React Router handles them)
-app.get(`${ADMIN_PATH}/*`, (req, res) => {
+app.get(`${ADMIN_PATH}/*splat`, (req, res) => {
   res.sendFile(path.join(adminStaticDir, 'index.html'));
 });
 
