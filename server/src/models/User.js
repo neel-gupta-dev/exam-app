@@ -75,6 +75,10 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    dailyGoalMinutes: {
+      type: Number,
+      default: 0,  // 0 = no goal set
+    },
     currentStreak: {
       type: Number,
       default: 0,

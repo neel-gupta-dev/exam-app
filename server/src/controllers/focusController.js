@@ -86,6 +86,26 @@ export const endFocus = asyncHandler(async (req, res) => {
  * @access  Private
  */
 export const getFocusStats = asyncHandler(async (req, res) => {
+  // 1. Start of today in UTC
+  const startOfToday = new Date();
+  startOfToday.setUTCHours(0, 0, 0, 0);
+
+  // 2. Today's focus time (only completed focus sessions)
+  const todayAgg = await FocusSession.aggregate([
+    {
+      $match: {
+        userId: req.user._id,
+        type: 'focus',
+        status: 'completed',
+        createdAt: { $gte: startOfToday },
+      },
+    },
+    { $group: { _id: null, totalSeconds: { $sum: '$timing.actualDuration' } } },
+  ]);
+  const todayFocusSeconds = todayAgg[0]?.totalSeconds ?? 0;
+  const dailyGoalMinutes = req.user.dailyGoalMinutes ?? 0;
+  const goalAchievedToday = dailyGoalMinutes > 0 && todayFocusSeconds >= dailyGoalMinutes * 60;
+
   // 1. General Stats Aggregation
   const generalStats = await FocusSession.aggregate([
     { $match: { userId: req.user._id } },
@@ -155,6 +175,33 @@ export const getFocusStats = asyncHandler(async (req, res) => {
       avgMinutes: Math.round(stat.avgDuration / 60),
       totalMinutes: Math.round(stat.totalTime / 60),
       sessions: stat.sessionCount
-    }))
+    })),
+    // Daily goal fields
+    todayFocusSeconds,
+    dailyGoalMinutes,
+    goalAchievedToday,
   });
+});
+
+/**
+ * @desc    Set or update the user's daily study time goal
+ * @route   PATCH /api/focus/goal
+ * @access  Private
+ */
+export const setDailyGoal = asyncHandler(async (req, res) => {
+  const { minutes } = req.body;
+  const parsed = parseInt(minutes, 10);
+
+  if (isNaN(parsed) || parsed < 0 || parsed > 1440) {
+    res.status(400);
+    throw new Error('Goal must be between 0 and 1440 minutes (24h)');
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    { dailyGoalMinutes: parsed },
+    { new: true, select: 'dailyGoalMinutes' }
+  );
+
+  res.json({ dailyGoalMinutes: user.dailyGoalMinutes });
 });
