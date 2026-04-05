@@ -163,11 +163,11 @@ export default function PrivacyPolicy() {
               Questions? Reach out to our dedicated support team.
             </p>
             <a
-              href="mailto:support@vayl.app"
+              href="mailto:support@vayl.in"
               className="inline-flex items-center gap-3 bg-primary text-on-primary px-8 py-3 rounded-2xl font-bold hover:scale-105 transition-transform duration-300 shadow-lg shadow-primary/20"
             >
               <span className="material-symbols-outlined">mail</span>
-              neelgupta30@zohomail.in
+              support@vayl.in
             </a>
           </footer>
         </div>

@@ -48,10 +48,10 @@ export default function ContactPage() {
                 <div>
                   <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-primary mb-2">Primary Support</h3>
                   <a
-                    href="mailto:neelgupta30@zohomail.in"
+                    href="mailto:support@vayl.in"
                     className="text-2xl md:text-3xl font-heading font-bold text-on-surface hover:text-primary transition-colors hover:underline decoration-primary/30"
                   >
-                    neelgupta30@zohomail.in
+                    support@vayl.in
                   </a>
                   <p className="text-sm text-on-surface-variant mt-4 font-medium opacity-70">
                     Expected response time: Under 24 hours for verified students.

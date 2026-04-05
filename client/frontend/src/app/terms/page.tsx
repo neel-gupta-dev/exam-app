@@ -135,11 +135,11 @@ export default function TermsOfService() {
               Any questions? Reach out to us.
             </p>
             <a 
-              href="mailto:neelgupta30@zohomail.in" 
+              href="mailto:support@vayl.in" 
               className="inline-flex items-center gap-3 bg-tertiary text-on-tertiary px-8 py-3 rounded-2xl font-bold hover:scale-105 transition-transform duration-300 shadow-lg shadow-tertiary/20"
             >
               <span className="material-symbols-outlined">mail</span>
-              neelgupta30@zohomail.in
+              support@vayl.in
             </a>
           </footer>
         </div>
