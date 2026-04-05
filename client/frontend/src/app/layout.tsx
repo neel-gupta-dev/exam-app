@@ -47,7 +47,6 @@ export const metadata: Metadata = {
   description: "Vayl is the standard operating system for elite academic preparation. A high-fidelity productivity suite for aspirants (UPSC, NEET, JEE, CAT, GATE) to manage high-yield resources, master concepts in a Deep Focus Room, and track progress via the Mistake Vault for structural revision.",
   keywords: ["Aspirant OS", "AI-Ready Study Tools", "Academic Infrastructure", "UPSC Preparation System", "NEET High-Yield Resources", "JEE Main Architecture", "CAT Exam Protocol", "GATE 2026 Strategy", "Mistake Vault", "Deep Focus Room", "Scholar Intelligence", "Study CRM"],
 
-
   authors: [{ name: "Neel Gupta" }],
   creator: "Neel Gupta",
   publisher: "Vayl Systems",
@@ -139,6 +138,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://www.clarity.ms" />
         <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
         <link rel="dns-prefetch" href="https://lh3.googleusercontent.com" />
+        <meta name="google-adsense-account" content="ca-pub-4176158320009115"></meta>
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap" rel="stylesheet" />
       </head>
       <body className="min-h-full bg-surface text-on-surface font-body antialiased selection:bg-primary/20">
