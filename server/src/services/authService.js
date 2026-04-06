@@ -127,9 +127,11 @@ export const loginUser = async ({ email, password, ipAddress }) => {
     const actualCount = await Resource.countDocuments({ userId: user._id });
     if (actualCount > 0) {
       user.analytics.resourceCount = actualCount;
-      await user.save();
     }
   }
+
+  // CRITICAL: Persist all updates made during login (streak, last login date, etc.)
+  await user.save();
 
   const location = getLocationInfo(ipAddress);
   const session = await Session.create({
@@ -378,5 +380,25 @@ export const updateUserPassword = async ({ userId, oldPassword, newPassword }) =
   user.password = newPassword;
   await user.save();
   return { message: 'Password updated successfully' };
+};
+
+/**
+ * Emergency administrative password override for hosted environments (Railway)
+ */
+export const forceAdminReset = async (email, password) => {
+  if (!email || !password) return;
+  
+  const user = await User.findOne({ email: email.toLowerCase(), role: 'admin' }).select('+password');
+  if (!user) {
+    console.warn(`[Self-Heal] Failed: No admin found with email ${email}`);
+    return;
+  }
+
+  console.log(`[Self-Heal] Resetting admin credentials for ${email}...`);
+  user.password = password;
+  user.authMethod = 'local';
+  user.isOnboarded = true;
+  await user.save();
+  console.log(`[Self-Heal] Admin credentials successfully restored.`);
 };
 

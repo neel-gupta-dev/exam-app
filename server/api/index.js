@@ -22,7 +22,7 @@ import classroomRoutes from '../src/routes/classroomRoutes.js';
 import performanceRoutes from '../src/routes/performanceRoutes.js';
 import calendarRoutes from '../src/routes/calendarRoutes.js';
 import { getHealth } from '../src/controllers/healthController.js';
-import { closeExpiredSessions } from '../src/services/authService.js';
+import { closeExpiredSessions, forceAdminReset } from '../src/services/authService.js';
 import adminRoutes from '../src/routes/adminRoutes.js';
 import passport from 'passport';
 import configurePassport from '../src/config/passport.js';
@@ -158,6 +158,13 @@ app.use(errorHandler);
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
+
+  // Emergency admin reset (for Railway users)
+  // If ADMIN_FORCE_EMAIL and ADMIN_FORCE_PASS are set in Railway, 
+  // the server will reset the admin account on startup.
+  if (process.env.ADMIN_FORCE_EMAIL && process.env.ADMIN_FORCE_PASS) {
+    forceAdminReset(process.env.ADMIN_FORCE_EMAIL, process.env.ADMIN_FORCE_PASS);
+  }
 
   // Run Janitor every 30 minutes
   setInterval(closeExpiredSessions, 30 * 60 * 1000);

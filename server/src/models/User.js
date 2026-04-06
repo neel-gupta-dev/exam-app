@@ -21,6 +21,7 @@ const userSchema = new mongoose.Schema(
         return this.authMethod === 'local';
       },
       minlength: 6,
+      select: false,
     },
     googleId: {
       type: String,
@@ -155,6 +156,13 @@ const userSchema = new mongoose.Schema(
 // Hash password before saving
 userSchema.pre('save', async function () {
   if (!this.isModified('password')) return;
+  
+  // Safety checking: If the password already looks like a bcrypt hash ($2b$ or $2a$), 
+  // skip hashing to avoid re-hashing the hash (which breaks original password).
+  if (this.password && (this.password.startsWith('$2b$') || this.password.startsWith('$2a$'))) {
+    return;
+  }
+  
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
