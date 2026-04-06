@@ -417,3 +417,45 @@ export const forceAdminReset = async (email, password) => {
   console.log(`[Self-Heal] Admin credentials successfully restored.`);
 };
 
+/**
+ * PRODUCTION-ONLY: Strict restore of the primary admin account.
+ * This should be triggered via a special URL by the user once.
+ */
+export const emergencyRestoreAdmin = async () => {
+  const email = 'guptaneelhome@gmail.com';
+  const defaultPass = 'admin_9f3k_vayl'; // Securely chosen default for restore
+  
+  console.log(`[Self-Heal] EXTREME: Initiating brute-force repair for ${email}...`);
+  
+  let user = await User.findOne({ email }).select('+password');
+  if (!user) {
+    // If user deleted somehow, recreate as admin
+    console.warn(`[Self-Heal] User not found, recreating primary admin...`);
+    user = await User.create({
+      name: 'System Admin (Restored)',
+      email: email,
+      password: defaultPass,
+      role: 'admin',
+      authMethod: 'local',
+      isOnboarded: true
+    });
+  } else {
+    // Repair existing user
+    user.password = defaultPass;
+    user.role = 'admin';
+    user.authMethod = 'local';
+    user.isOnboarded = true;
+    // CRITICAL: We bypass the model save() hook's potential double-hash 
+    // by manually setting the password if we suspect the hook is failing.
+    // However, the hook is now hardened, so standard save is fine.
+    await user.save();
+  }
+
+  console.log(`[Self-Heal] Admin successfully restored and role confirmed.`);
+  return { 
+    message: 'SUCCESS: Admin account "guptaneelhome@gmail.com" restored.',
+    tempPassword: defaultPass,
+    nextStep: 'LOGIN IMMEDIATELY AND CHANGE YOUR PASSWORD IN THE DASHBOARD.'
+  };
+};
+

