@@ -16,7 +16,7 @@ interface MathTextProps {
 export default function MathText({ text, className = "" }: MathTextProps) {
   return (
     <div className={className}>
-      <MathJax hideUntilTypeset="every">
+      <MathJax>
         {text}
       </MathJax>
     </div>

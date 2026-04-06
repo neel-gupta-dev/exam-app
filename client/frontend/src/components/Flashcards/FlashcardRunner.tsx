@@ -198,7 +198,7 @@ export default function FlashcardRunner({ deckId, onClose }: FlashcardRunnerProp
             onClick={() => setIsFlipped(!isFlipped)}
           >
             {/* Front */}
-            <div className="flashcard-face bg-surface-container border border-white/10 glass-card">
+            <div className={`flashcard-face bg-surface-container border border-white/10 glass-card transition-opacity ${isFlipped ? 'opacity-0 z-0' : 'opacity-100 z-10'}`}>
               <span className="absolute top-6 left-6 text-[10px] font-bold text-primary uppercase tracking-widest opacity-50 font-interface">
                 Question
               </span>
@@ -212,7 +212,7 @@ export default function FlashcardRunner({ deckId, onClose }: FlashcardRunnerProp
             </div>
 
             {/* Back */}
-            <div className="flashcard-face flashcard-back bg-surface-container-highest border border-primary/20 glass-card">
+            <div className={`flashcard-face flashcard-back bg-surface-container-highest border border-primary/20 glass-card transition-opacity ${isFlipped ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
               <span className="absolute top-6 left-6 text-[10px] font-bold text-secondary uppercase tracking-widest opacity-50 font-interface">
                 Retention Solution
               </span>

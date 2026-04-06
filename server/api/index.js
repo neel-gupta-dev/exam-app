@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
+import helmet from 'helmet';
 import cors from 'cors';
 import compression from 'compression';
 import basicAuth from 'express-basic-auth';
@@ -36,6 +37,14 @@ connectDB().catch(err => {
 configurePassport();
 
 const app = express();
+app.use(helmet());
+app.use((req, res, next) => {
+  res.setHeader(
+    'Permissions-Policy',
+    'camera=(), microphone=(), geolocation=(), browsing-topics=()'
+  );
+  next();
+});
 app.use(compression());
 
 // Trust proxy for accurate IP detection (needed for Hostinger/Nginx)
