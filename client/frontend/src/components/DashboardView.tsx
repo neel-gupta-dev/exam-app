@@ -150,6 +150,7 @@ export default function DashboardView() {
   const { user } = useAuth();
   const [resourceCount, setResourceCount] = useState(0);
   const [heatmapData, setHeatmapData] = useState<number[]>(new Array(28).fill(0));
+  const [demoName, setDemoName] = useState<string | null>(null);
   const { searchQuery, setSearchQuery } = useSearch();
 
   /**
@@ -166,6 +167,7 @@ export default function DashboardView() {
       if (isDemo) {
         const demoVault = JSON.parse(localStorage.getItem('vayl_demo_vault') || '[]');
         setResourceCount(demoVault.length);
+        setDemoName(localStorage.getItem('vayl_demo_name'));
         
         const heatmapObj = new Array(28).fill(0);
         const today = new Date();
@@ -233,7 +235,7 @@ export default function DashboardView() {
           <div className="flex items-end justify-between">
             <div>
               <h2 className="text-2xl font-extrabold tracking-tight text-on-surface">
-                Welcome back, {user?.name?.split(' ')[0] || 'Scholar'}
+                Welcome back, {user?.name?.split(' ')[0] || demoName || 'Scholar'}
               </h2>
               <p className="text-sm text-on-surface-variant mt-1">
                 Your Vault has {resourceCount} resources ready for review.

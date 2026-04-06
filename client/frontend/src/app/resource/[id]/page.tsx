@@ -40,8 +40,8 @@ interface Note {
 
 // ── YouTube ID extraction ──────────────────────────────────────────────
 function extractYouTubeId(url: string): string | null {
-  const re =
-    /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+  if (!url) return null;
+  const re = /(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/;
   const m = url.match(re);
   return m ? m[1] : null;
 }
@@ -49,6 +49,12 @@ function extractYouTubeId(url: string): string | null {
 function isPdf(url: string): boolean {
   return url.toLowerCase().split(/[?#]/)[0].endsWith(".pdf");
 }
+
+function isDirectVideo(url: string): boolean {
+  const cleanUrl = url.toLowerCase().split(/[?#]/)[0];
+  return cleanUrl.endsWith(".mp4") || cleanUrl.endsWith(".webm") || cleanUrl.endsWith(".ogg");
+}
+
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -134,13 +140,15 @@ export default function ResourceViewerPage() {
         // Fetch YouTube Title if applicable
         if (resData?.url && extractYouTubeId(resData.url)) {
           try {
-            const ytResp = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(resData.url)}&format=json`);
+            const ytResp = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(resData.url)}`);
             if (ytResp.ok) {
               const ytData = await ytResp.json();
-              setVideoTitle(ytData.title);
+              if (ytData.title) {
+                setVideoTitle(ytData.title);
+              }
             }
           } catch (ytErr) {
-            console.error("Failed to fetch YouTube title during main load:", ytErr);
+            // Silently ignore to prevent console.error from triggering the Next.js dev error overlay
           }
         }
       } catch (err: any) {
@@ -251,6 +259,31 @@ export default function ResourceViewerPage() {
       );
     }
 
+    // Direct Video (mp4, webm, etc)
+    if (isDirectVideo(resource.url)) {
+      return (
+        <div className="relative aspect-video rounded-xl overflow-hidden bg-black group flex items-center justify-center border border-white/10 shadow-2xl">
+          <video
+            className="w-full h-full outline-none"
+            src={resource.url}
+            controls
+          />
+          {/* Bottom gradient overlay with title (hides when user interacts with video) */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent pointer-events-none transition-opacity duration-300 opacity-100 group-hover:opacity-0 focus-within:opacity-0">
+            <h1 className="text-2xl font-bold font-headline tracking-tight text-white mb-2">
+              {resource.title || "Video Resource"}
+            </h1>
+          </div>
+          {/* Open in new tab */}
+          <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <a href={resource.url} target="_blank" rel="noreferrer" className="bg-black/40 backdrop-blur-md p-2 rounded-lg hover:bg-black/60 transition-colors">
+              <ExternalLink className="w-5 h-5 text-white" />
+            </a>
+          </div>
+        </div>
+      );
+    }
+
     // PDF Reader
     if (isPdf(resource.url)) {
       return (
@@ -261,19 +294,51 @@ export default function ResourceViewerPage() {
             title={resource.title || "PDF Resource"}
           />
           {/* Floating Actions for PDF */}
-          <div className="absolute top-4 right-4 flex gap-2">
+          <div className="absolute bottom-6 right-6 flex flex-col gap-3">
+            <a
+              href={resource.url}
+              download
+              className="bg-surface-bright/80 backdrop-blur-md p-4 rounded-2xl hover:bg-surface-bright transition-all shadow-xl shadow-black/20 group/btn"
+              title="Download PDF"
+            >
+              <Download className="w-6 h-6 text-on-surface group-hover/btn:scale-110 active:scale-95 transition-transform" />
+            </a>
             <a
               href={resource.url}
               target="_blank"
               rel="noreferrer"
-              className="bg-primary text-on-primary text-xs font-bold px-4 py-2 rounded-lg shadow-lg shadow-primary/20 hover:scale-105 transition-transform flex items-center gap-2"
+              className="bg-surface-bright/80 backdrop-blur-md p-4 rounded-2xl hover:bg-surface-bright transition-all shadow-xl shadow-black/20 group/btn"
+              title="Open in new tab"
             >
-              <Maximize2 className="w-4 h-4" />
-              Full Screen
+              <ExternalLink className="w-6 h-6 text-on-surface group-hover/btn:scale-110 active:scale-95 transition-transform" />
             </a>
           </div>
         </div>
       );
+    }
+
+    // Explicit Fallback for Non-Embeddable YouTube Links (like channels/playlists without a specific video ID) 
+    // This prevents Chrome from showing the generic 'sad face' block icon for X-Frame-Options violations. 
+    if (resource.url && (resource.url.includes("youtube.com") || resource.url.includes("youtu.be"))) {
+       return (
+         <div className="relative aspect-video rounded-xl overflow-hidden bg-surface-container-highest group flex flex-col items-center justify-center p-6 text-center border border-white/10 shadow-2xl">
+           <div className="w-16 h-16 rounded-full bg-surface-variant flex items-center justify-center mb-4 text-on-surface-variant group-hover:text-primary transition-colors">
+              <ExternalLink className="w-8 h-8" />
+           </div>
+           <h2 className="text-xl font-bold text-on-surface mb-2">YouTube Content Requires External Viewing</h2>
+           <p className="text-sm text-on-surface-variant max-w-sm mb-6">
+             Due to YouTube's strict embed policies, this specific link type (like a channel, playlist, or search result) must be opened directly.
+           </p>
+           <a
+             href={resource.url}
+             target="_blank"
+             rel="noreferrer"
+             className="px-6 py-3 bg-primary text-on-primary font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+           >
+             Open in YouTube
+           </a>
+         </div>
+       );
     }
 
     // Default for 'link' type or un-parsed video

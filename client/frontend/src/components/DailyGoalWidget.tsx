@@ -5,6 +5,10 @@ import { Target, CheckCircle2, X } from "lucide-react";
 import api from "@/lib/api";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
+
+const DEMO_FOCUS_KEY = 'vayl_demo_focus_seconds';
+const DEMO_GOAL_KEY = 'vayl_demo_goal_minutes';
 
 const PRESETS = [240, 360, 480, 600]; // minutes
 
@@ -72,6 +76,8 @@ interface Props {
  * Used on: Home (dashboard) right sidebar, Settings page.
  */
 export default function DailyGoalWidget({ variant = "compact", className = "" }: Props) {
+  const { user } = useAuth();
+  const isDemo = !user;
   const [stats, setStats] = useState<GoalStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -79,6 +85,19 @@ export default function DailyGoalWidget({ variant = "compact", className = "" }:
   const [saving, setSaving] = useState(false);
 
   const fetchStats = useCallback(async () => {
+    if (isDemo) {
+      const savedSeconds = parseInt(localStorage.getItem(DEMO_FOCUS_KEY) || '0');
+      const savedGoal = parseInt(localStorage.getItem(DEMO_GOAL_KEY) || '0');
+      const stats: GoalStats = {
+        todayFocusSeconds: savedSeconds,
+        dailyGoalMinutes: savedGoal,
+        goalAchievedToday: savedGoal > 0 && savedSeconds >= savedGoal * 60,
+      };
+      setStats(stats);
+      setGoalInput(savedGoal);
+      setLoading(false);
+      return;
+    }
     try {
       const { data } = await api.get("/focus/stats");
       setStats({
@@ -92,7 +111,7 @@ export default function DailyGoalWidget({ variant = "compact", className = "" }:
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isDemo]);
 
   useEffect(() => {
     fetchStats();
@@ -101,6 +120,22 @@ export default function DailyGoalWidget({ variant = "compact", className = "" }:
   }, [fetchStats]);
 
   const saveGoal = async (minutes: number) => {
+    if (isDemo) {
+      localStorage.setItem(DEMO_GOAL_KEY, String(minutes));
+      const savedSeconds = parseInt(localStorage.getItem(DEMO_FOCUS_KEY) || '0');
+      setStats({
+        todayFocusSeconds: savedSeconds,
+        dailyGoalMinutes: minutes,
+        goalAchievedToday: minutes > 0 && savedSeconds >= minutes * 60,
+      });
+      setGoalInput(minutes);
+      setEditing(false);
+      toast.success(
+        minutes === 0 ? "Daily goal removed." : `Daily goal set to ${formatGoal(minutes)}.`
+      );
+      return;
+    }
+
     setSaving(true);
     try {
       await api.patch("/focus/goal", { minutes });

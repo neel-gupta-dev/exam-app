@@ -28,7 +28,7 @@ function timeAgo(date: string | Date): string {
   return `${Math.floor(days / 7)}w ago`;
 }
 
-function ResourceCard({ resource, isDemo, onDemoClick }: { resource: Resource; isDemo?: boolean; onDemoClick?: () => void }) {
+function ResourceCard({ resource, isDemo }: { resource: Resource; isDemo?: boolean }) {
   const colors: Record<string, { text: string; bg: string }> = {
     pdf: { text: 'text-red-400', bg: 'bg-red-500/10' },
     video: { text: 'text-indigo-400', bg: 'bg-indigo-500/10' },
@@ -65,9 +65,8 @@ function ResourceCard({ resource, isDemo, onDemoClick }: { resource: Resource; i
 // ----------------------------------------------------------------------------
 // Empty States
 // ----------------------------------------------------------------------------
-function EmptyState({ isDemo, onDemoClick }: { isDemo?: boolean; onDemoClick?: () => void }) {
+function EmptyState({ isDemo }: { isDemo?: boolean }) {
   const handleQuickSaveClick = () => {
-    if (isDemo) { onDemoClick?.(); return; }
     window.dispatchEvent(new Event('openQuickSave'));
   };
 
@@ -136,7 +135,6 @@ export default function DashboardGrid({
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const { searchQuery, setSearchQuery } = useSearch();
   const [currentPage, setCurrentPage] = useState(1);
-  const [showDemoModal, setShowDemoModal] = useState(false);
   const itemsPerPage = 4;
 
 
@@ -190,7 +188,7 @@ export default function DashboardGrid({
   if (loading && isInitialLoad) return <LoadingSkeleton count={3} />;
   
   if (resources.length === 0) {
-    return searchQuery ? <NoMatchesState onClear={() => setSearchQuery("")} /> : <EmptyState isDemo={isDemo} onDemoClick={() => setShowDemoModal(true)} />;
+    return searchQuery ? <NoMatchesState onClear={() => setSearchQuery("")} /> : <EmptyState isDemo={isDemo} />;
   }
 
   // Pagination Logic
@@ -241,17 +239,12 @@ export default function DashboardGrid({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
-        {currentItems.map((resource) => (
-          <ResourceCard key={resource._id} resource={resource} isDemo={isDemo} onDemoClick={() => setShowDemoModal(true)} />
-        ))}
-      </div>
+    <div className="grid grid-cols-1 gap-4">
+      {currentItems.map((resource) => (
+        <ResourceCard key={resource._id} resource={resource} isDemo={isDemo} />
+      ))}
     </div>
-    <DemoSignupModal
-      isOpen={showDemoModal}
-      onClose={() => setShowDemoModal(false)}
-      feature="Resource Vault"
-    />
+    </div>
     </>
   );
 }

@@ -111,6 +111,24 @@ export default function TopNav() {
     const fetchResults = async () => {
       setIsSearching(true);
       setShowResults(true);
+      
+      if (!user) {
+        // Demo Mode Search
+        const demoVault = JSON.parse(localStorage.getItem('vayl_demo_vault') || '[]');
+        const lowerQ = searchQuery.toLowerCase();
+        const demoResults = demoVault.filter((r: any) => 
+          r.title?.toLowerCase().includes(lowerQ) || 
+          r.folderName?.toLowerCase().includes(lowerQ) || 
+          r.type?.toLowerCase().includes(lowerQ)
+        ).slice(0, 5);
+        
+        setTimeout(() => {
+          setResults(demoResults);
+          setIsSearching(false);
+        }, 150);
+        return;
+      }
+
       try {
         const { data } = await api.get(`/resources?search=${searchQuery}&limit=5`);
         setResults(data.resources || []);
@@ -123,7 +141,8 @@ export default function TopNav() {
 
     const timer = setTimeout(fetchResults, 400);
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, user]);
+
 
   const handleSearchKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim()) {

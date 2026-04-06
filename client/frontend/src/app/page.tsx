@@ -34,6 +34,10 @@ export default function HomePage() {
     
     if (hasDemoQuery) {
       localStorage.setItem('vayl_demo_mode', 'true');
+      if (!localStorage.getItem('vayl_demo_name')) {
+         const name = window.prompt("Welcome to Demo Mode! What's your name?", "Scholar");
+         localStorage.setItem('vayl_demo_name', name?.trim() || "Scholar");
+      }
       setIsDemo(true);
     } else {
       // If the user manually removes ?demo=true from the URL, immediately exit demo mode
