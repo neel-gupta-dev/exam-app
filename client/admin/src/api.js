@@ -19,7 +19,16 @@ api.interceptors.response.use(
     if (err.response?.status === 401 || err.response?.status === 403) {
       localStorage.removeItem('admin_token');
       localStorage.removeItem('admin_user');
-      window.location.href = '/';
+      
+      // Determine if we are already on the login page to avoid redirect loops
+      const currentPath = window.location.pathname;
+      const isOnLoginPage = currentPath.endsWith('/login') || currentPath.endsWith('/sys-9f3k-ctrl/') || currentPath === '/';
+      
+      if (!isOnLoginPage) {
+        // Redirect to the Admin Panel root relative to the current domain
+        // This ensures we stay within the admin panel context.
+        window.location.href = './'; 
+      }
     }
     return Promise.reject(err);
   }

@@ -78,14 +78,31 @@ export const registerUser = async ({ name, email, password, ipAddress }) => {
  * Login an existing user
  */
 export const loginUser = async ({ email, password, ipAddress }) => {
-  console.log(`[loginUser] Attempting login for ${email} with IP: ${ipAddress}`);
-  const user = await User.findOne({ email });
+  console.log(`[Auth] Login attempt for email: ${email} from IP: ${ipAddress}`);
+  
+  // Explicitly select password in case it was hidden by globbal schema defaults (though not currently the case)
+  const user = await User.findOne({ email }).select('+password');
 
-  if (!user || !(await user.matchPassword(password))) {
+  if (!user) {
+    console.warn(`[Auth] Login failed: User not found for email: ${email}`);
     const error = new Error('Invalid email or password');
     error.statusCode = 401;
     throw error;
   }
+
+  console.log(`[Auth] User found. AuthMethod: ${user.authMethod}, Role: ${user.role}, HasPassword: ${!!user.password}`);
+
+  const isMatch = await user.matchPassword(password);
+  console.log(`[Auth] Password match result: ${isMatch}`);
+
+  if (!isMatch) {
+    console.warn(`[Auth] Login failed: Password mismatch for email: ${email}`);
+    const error = new Error('Invalid email or password');
+    error.statusCode = 401;
+    throw error;
+  }
+
+  console.log(`[Auth] Login successful for: ${email}`);
 
   // Session & Streak Logic
   const todayDateStr = new Date().toISOString().split('T')[0];
