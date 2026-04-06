@@ -8,6 +8,7 @@ import Sessions from './pages/Sessions';
 import Resources from './pages/Resources';
 import FeedbackPage from './pages/Feedback';
 import Health from './pages/Health';
+import Settings from './pages/Settings';
 import Layout from './components/Layout';
 
 export const AuthCtx = createContext(null);
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="/resources" element={<Resources />} />
             <Route path="/feedback" element={<FeedbackPage />} />
             <Route path="/health" element={<Health />} />
+            <Route path="/settings" element={<Settings />} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

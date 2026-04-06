@@ -11,6 +11,7 @@ const NAV = [
   { to: '/resources', label: '📁 Resources' },
   { to: '/feedback',  label: '💬 Feedback' },
   { section: 'System' },
+  { to: '/settings',  label: '⚙️ Settings' },
   { to: '/health',    label: '🩺 Health Monitor' },
 ];
 
