@@ -139,6 +139,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://www.clarity.ms" />
         <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
         <link rel="dns-prefetch" href="https://lh3.googleusercontent.com" />
+        <meta name="monetag" content="cea460f1d065bd17030bb5e93cdf9d58"></meta>
         <meta name="google-adsense-account" content="ca-pub-4176158320009115"></meta>
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap" rel="stylesheet" />
       </head>
