@@ -139,9 +139,9 @@ export default function Sidebar() {
 
           {/* Demo Banner */}
           {isDemo && (
-            <div className="mb-6 px-3 py-2.5 bg-primary/10 border border-primary/20 rounded-xl flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Demo Mode</span>
+            <div className={`mb-6 ${isCollapsed ? 'mx-auto w-10 h-10 justify-center px-0' : 'px-3 py-2.5'} bg-primary/10 border border-primary/20 rounded-xl flex items-center gap-2`}>
+              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shrink-0" />
+              {!isCollapsed && <span className="text-[10px] font-black uppercase tracking-widest text-primary truncate">Demo Mode</span>}
             </div>
           )}
 
