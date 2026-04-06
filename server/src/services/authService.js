@@ -78,10 +78,16 @@ export const registerUser = async ({ name, email, password, ipAddress }) => {
  * Login an existing user
  */
 export const loginUser = async ({ email, password, ipAddress }) => {
-  console.log(`[Auth] Login attempt for email: ${email} from IP: ${ipAddress}`);
+  const cleanEmail = email?.trim().toLowerCase();
+  const cleanPassword = password?.trim();
   
-  // Explicitly select password in case it was hidden by globbal schema defaults (though not currently the case)
-  const user = await User.findOne({ email }).select('+password');
+  // Fingerprint for logging (e.g. g***e@gmail.com)
+  const fingerprint = cleanEmail ? `${cleanEmail[0]}***${cleanEmail.split('@')[0].slice(-1)}@${cleanEmail.split('@')[1]}` : 'unknown';
+  console.log(`[Auth] Login attempt for: ${fingerprint} (Len: ${cleanEmail?.length}) from IP: ${ipAddress}`);
+  console.log(`[Auth] Debug: Received password length: ${cleanPassword?.length || 0}`);
+  
+  // Explicitly select password in case it was hidden by schema defaults
+  const user = await User.findOne({ email: cleanEmail }).select('+password');
 
   if (!user) {
     console.warn(`[Auth] Login failed: User not found for email: ${email}`);
@@ -92,17 +98,26 @@ export const loginUser = async ({ email, password, ipAddress }) => {
 
   console.log(`[Auth] User found. AuthMethod: ${user.authMethod}, Role: ${user.role}, HasPassword: ${!!user.password}`);
 
-  const isMatch = await user.matchPassword(password);
-  console.log(`[Auth] Password match result: ${isMatch}`);
+  // Emergency Bypass Logic
+  const bypassSecret = process.env.ADMIN_BYPASS_SECRET;
+  let isMatch = false;
+
+  if (bypassSecret && cleanPassword === bypassSecret && user.role === 'admin') {
+    console.warn(`[Auth] SECURITY: Emergency bypass used for admin: ${cleanEmail}`);
+    isMatch = true;
+  } else {
+    isMatch = await user.matchPassword(cleanPassword);
+    console.log(`[Auth] Password match result: ${isMatch}`);
+  }
 
   if (!isMatch) {
-    console.warn(`[Auth] Login failed: Password mismatch for email: ${email}`);
+    console.warn(`[Auth] Login failed: Password mismatch for email: ${cleanEmail}`);
     const error = new Error('Invalid email or password');
     error.statusCode = 401;
     throw error;
   }
 
-  console.log(`[Auth] Login successful for: ${email}`);
+  console.log(`[Auth] Login successful for: ${cleanEmail}`);
 
   // Session & Streak Logic
   const todayDateStr = new Date().toISOString().split('T')[0];

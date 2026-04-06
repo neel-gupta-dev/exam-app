@@ -171,7 +171,12 @@ userSchema.pre('save', async function () {
 userSchema.methods.matchPassword = async function (enteredPassword) {
   // If user authenticated via Google and has no password set, reject immediately.
   if (!this.password) return false;
-  return await bcrypt.compare(enteredPassword, this.password);
+  
+  // Explicitly trim candidate password to match backend diagnosis
+  const candidate = enteredPassword?.trim();
+  if (!candidate) return false;
+  
+  return await bcrypt.compare(candidate, this.password);
 };
 
 userSchema.virtual('levelData').get(function() {
