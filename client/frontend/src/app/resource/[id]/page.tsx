@@ -20,6 +20,7 @@ import {
   Italic,
   Link2,
   ImageIcon,
+  Download,
 } from "lucide-react";
 
 interface Resource {
@@ -229,11 +230,11 @@ export default function ResourceViewerPage() {
         <div className="relative aspect-video rounded-xl overflow-hidden bg-surface-container-highest group">
           <iframe
             className="w-full h-full"
-            src={`https://www.youtube-nocookie.com/embed/${vid}`}
+            src={`https://www.youtube.com/embed/${vid}`}
             title="YouTube video player"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerPolicy="strict-origin-when-cross-origin"
+            referrerPolicy="no-referrer-when-downgrade"
             allowFullScreen
           />
           {/* Bottom gradient overlay with title */}
