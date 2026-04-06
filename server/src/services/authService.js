@@ -4,27 +4,16 @@ import Resource from '../models/Resource.js';
 import OtpCode from '../models/OtpCode.js';
 import { generateVaultId } from '../utils/generateVaultId.js';
 import generateToken from '../utils/generateToken.js';
-import geoip from 'geoip-lite';
-
 /**
- * Helper to get location from IP (skips localhost)
+ * Mock helper to get location from IP (skips localhost)
+ * Removed geoip-lite to speed up Railway builds (large database download).
  */
 const getLocationInfo = (ip) => {
   if (!ip || ip === '::1' || ip === '127.0.0.1' || ip === 'unknown') {
     return null;
   }
-  try {
-    const geo = geoip.lookup(ip);
-    if (!geo) return { city: 'Unknown', region: 'Unknown', country: 'Unknown' };
-    return {
-      city: geo.city || 'Unknown',
-      region: geo.region || 'Unknown',
-      country: geo.country || 'Unknown'
-    };
-  } catch (error) {
-    console.error(`[GeoIP] Lookup failed for ${ip}:`, error.message);
-    return null;
-  }
+  // Generic fallback since geoip-lite is removed for build performance
+  return { city: 'Unknown', region: 'Unknown', country: 'Unknown' };
 };
 
 /**

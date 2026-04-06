@@ -5,7 +5,8 @@
   "main": "api/index.js",
   "scripts": {
     "dev": "tsx watch api/index.js",
-    "start": "node api/index.js"
+    "start": "node api/index.js",
+    "build": "echo skip"
   },
   "keywords": [],
   "author": "",
@@ -23,7 +24,6 @@
     "express-async-handler": "^1.2.0",
     "express-basic-auth": "^1.2.1",
     "express-rate-limit": "^8.3.1",
-    "geoip-lite": "^1.4.10",
     "googleapis": "^171.4.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
