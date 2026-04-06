@@ -341,7 +341,7 @@ export default function SubjectPage({ params }: { params: Promise<{ subject: str
 
                  const href = isDemo ? `/resource/${res._id}?demo=true` : `/resource/${res._id}`;
                  return (
-                  <tr key={res._id} onClick={() => router.push(href)} className="group hover:bg-surface-container-highest/30 transition-colors cursor-pointer">
+                  <tr key={res._id} onClick={() => window.location.href = href} className="group hover:bg-surface-container-highest/30 transition-colors cursor-pointer">
                     <td className="px-6 py-5">
                        <div className="flex items-center gap-4">
                           <div className={`w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-400/20 flex items-center justify-center text-indigo-400`}>

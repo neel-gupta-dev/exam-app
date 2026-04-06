@@ -40,7 +40,7 @@ function ResourceCard({ resource, isDemo }: { resource: Resource; isDemo?: boole
   const href = isDemo ? `/resource/${resource._id}?demo=true` : `/resource/${resource._id}`;
 
   return (
-    <Link href={href} className="group bg-surface-container hover:bg-surface-container-high transition-colors p-5 rounded-xl flex items-center gap-5 cursor-pointer border border-transparent hover:border-outline-variant/10 block">
+    <a href={href} className="group bg-surface-container hover:bg-surface-container-high transition-colors p-5 rounded-xl flex items-center gap-5 cursor-pointer border border-transparent hover:border-outline-variant/10 block">
       <div className={`w-14 h-14 ${color.bg} rounded-lg flex items-center justify-center ${color.text} shrink-0`}>
         {resource.type === 'video' ? <Play className="w-7 h-7" /> : <FileText className="w-7 h-7" />}
       </div>
@@ -57,7 +57,7 @@ function ResourceCard({ resource, isDemo }: { resource: Resource; isDemo?: boole
         </div>
       </div>
       <ChevronRight className="w-5 h-5 text-outline opacity-0 group-hover:opacity-100 transition-opacity" />
-    </Link>
+    </a>
   );
 }
 
