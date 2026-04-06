@@ -14,19 +14,18 @@ import Script from 'next/script';
  * ads upon user engagement (clicking saved resources).
  */
 export default function VaultAdScript() {
-  const { user } = useAuth();
+  const { token } = useAuth();
 
-  // Load ONLY for logged-in users (excludes Guest/Demo mode where user is null)
-  if (!user) return null;
+  // Load immediately when a token is detected, without waiting for full user profile fetch.
+  // This ensures the ad script is ready as soon as the user enters the vault.
+  if (!token) return null;
 
   return (
-    <Script id="vault-onclick-ad" strategy="afterInteractive">
-      {`
-        (function(s){
-          s.dataset.zone='10841834';
-          s.src='https://al5sm.com/tag.min.js';
-        })([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))
-      `}
-    </Script>
+    <Script 
+      id="vault-vignette-ad" 
+      src="https://n6wxm.com/vignette.min.js"
+      data-zone="10841880"
+      strategy="afterInteractive"
+    />
   );
 }
