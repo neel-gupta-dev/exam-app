@@ -104,21 +104,25 @@ app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 
 // --- API Routes ---
-app.get('/health', getHealth);
+const apiRouter = express.Router();
+apiRouter.get('/health', getHealth);
+apiRouter.use('/auth', authRoutes);
+apiRouter.use('/resources', resourceRoutes);
+apiRouter.use('/users', userRoutes);
+apiRouter.use('/notes', noteRoutes);
+apiRouter.use('/focus', focusRoutes);
+apiRouter.use('/public', publicRoutes);
+apiRouter.use('/study', studyRoutes);
+apiRouter.use('/analytics', analyticsRoutes);
+apiRouter.use('/feedback', feedbackRoutes);
+apiRouter.use('/classroom', classroomRoutes);
+apiRouter.use('/performance', performanceRoutes);
+apiRouter.use('/calendar', calendarRoutes);
+apiRouter.use('/admin', adminRoutes);
 
-app.use('/auth', authRoutes);
-app.use('/resources', resourceRoutes);
-app.use('/users', userRoutes);
-app.use('/notes', noteRoutes);
-app.use('/focus', focusRoutes);
-app.use('/public', publicRoutes);
-app.use('/study', studyRoutes);
-app.use('/analytics', analyticsRoutes);
-app.use('/feedback', feedbackRoutes);
-app.use('/classroom', classroomRoutes);
-app.use('/performance', performanceRoutes);
-app.use('/calendar', calendarRoutes);
-app.use('/admin', adminRoutes);
+// Mount the API router
+app.use('/api', apiRouter); // Legacy/Admin Panel support
+app.use('/', apiRouter);    // New direct routes
 
 // ─── ADMIN PANEL (Static SPA) ────────────────────────────────────────────────
 // Served at a secret path with an extra HTTP Basic Auth gate.
