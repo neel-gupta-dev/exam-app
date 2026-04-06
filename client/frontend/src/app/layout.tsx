@@ -8,6 +8,7 @@ import { WebVitals } from "@/components/WebVitals";
 import CookieConsent from "@/components/CookieConsent";
 import GoogleSchema from "@/components/GoogleSchema";
 import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import "./globals.css";
 
 /**
@@ -163,6 +164,7 @@ export default function RootLayout({
           <>
             <GoogleAnalytics gaId="G-ZDWW48QNX7" />
             <Analytics />
+            <SpeedInsights />
             <Script id="clarity-script" strategy="afterInteractive">
               {`
                 (function(c,l,a,r,i,t,y){
