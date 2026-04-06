@@ -5,7 +5,6 @@ import MobileBottomNav from "@/components/MobileBottomNav";
 import Link from "next/link";
 import packageInfo from '../../package.json';
 import { useSidebar } from "@/hooks/useSidebar";
-import VaultAdScript from "@/components/VaultAdScript";
 
 
 const version = packageInfo.version;
@@ -73,8 +72,8 @@ export default function DashboardLayout({
       </main>
 
       <MobileBottomNav />
-      <VaultAdScript />
     </ProtectedRoute>
+
 
   );
 }

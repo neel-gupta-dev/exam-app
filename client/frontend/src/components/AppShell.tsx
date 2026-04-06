@@ -12,6 +12,7 @@ import DreamerModal from "@/components/DreamerModal";
 import ConfidencePopup from "@/components/ConfidencePopup";
 import FocusAudioPlayer from "@/components/FocusAudioPlayer";
 import { isDemoAllowedPath } from "@/lib/demo";
+import VaultAdScript from "@/components/VaultAdScript";
 
 /**
  * Inner component that safely calls hooks which require auth context.
@@ -104,6 +105,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <ConfidencePopup />
               <FocusAudioPlayer />
               <AuthenticatedEffects />
+              <VaultAdScript />
             </>
           )}
         </>
