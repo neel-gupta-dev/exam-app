@@ -142,6 +142,8 @@ export default function RootLayout({
         <meta name="monetag" content="cea460f1d065bd17030bb5e93cdf9d58"></meta>
         <meta name="google-adsense-account" content="ca-pub-4176158320009115"></meta>
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap" rel="stylesheet" />
+
+
       </head>
       <body className="min-h-full bg-surface text-on-surface font-body antialiased selection:bg-primary/20">
         {/* Service Worker Registration */}
@@ -183,6 +185,7 @@ export default function RootLayout({
         <AppProviders>
           <AppShell>{children}</AppShell>
         </AppProviders>
+        <script>(function(s){s.dataset.zone='10841880',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
       </body>
     </html>
   );
