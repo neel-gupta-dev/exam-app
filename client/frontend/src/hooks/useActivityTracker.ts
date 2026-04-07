@@ -10,6 +10,7 @@ import { useAuth } from '@/context/AuthContext';
  */
 export function useActivityTracker() {
   const { user, token } = useAuth();
+  const authenticated = !!user && !!token;
   const [isFocusingGlobal, setIsFocusingGlobal] = useState(false);
   const lastActivityRef = useRef<number>(Date.now());
   const intervalRef = useRef<NodeJS.Timeout | null>(null);

@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import Script from "next/script";
 
-export default function AdProvider() {
+export default function AdProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
@@ -17,6 +17,7 @@ export default function AdProvider() {
         data-zone="10841880"
         strategy="afterInteractive"
       />
+      {children}
     </>
   );
 }
