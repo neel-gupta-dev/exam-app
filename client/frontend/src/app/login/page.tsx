@@ -308,7 +308,7 @@ function LoginContent() {
           <Link className="font-inter text-xs text-on-surface-variant/60 hover:text-primary transition-colors" href="/contact">Support</Link>
         </div>
         <div className="font-inter text-[10px] text-on-surface-variant/40 font-medium">
-          © 2024 Vayl. Encrypted Protocol.
+          © 2026 Vayl. Encrypted Protocol.
         </div>
       </footer>
     </div>

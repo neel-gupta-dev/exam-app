@@ -180,7 +180,7 @@ export default function LandingPage() {
         aria-label="Main Navigation"
         className="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10"
       >
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group relative">
             <motion.div 
               animate={{ rotate: [0, 5, -5, 0] }}
@@ -262,7 +262,7 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section 
         aria-label="Hero Section"
-        className="pt-40 pb-20 px-6 max-w-7xl mx-auto text-center relative"
+        className="pt-28 pb-10 px-6 max-w-7xl mx-auto text-center relative"
       >
         <motion.div
           variants={containerVariants}
@@ -276,15 +276,15 @@ export default function LandingPage() {
             </span>
           </motion.div>
           
-          <motion.h1 variants={itemVariants} className="text-5xl md:text-8xl font-heading font-black tracking-tightest leading-[1.1] text-on-surface mb-10 max-w-4xl mx-auto">
+          <motion.h1 variants={itemVariants} className="text-4xl md:text-7xl font-heading font-black tracking-tightest leading-[1.1] text-on-surface mb-6 max-w-4xl mx-auto">
             <CharacterReveal text="Built for the" /> <span className="bg-gradient-to-br from-primary via-on-surface to-tertiary bg-clip-text text-transparent italic">Academic Elite.</span>
           </motion.h1>
 
-          <motion.p variants={itemVariants} className="text-on-surface-variant max-w-2xl mx-auto text-lg md:text-xl leading-relaxed mb-12 opacity-80 font-medium font-interface italic">
+          <motion.p variants={itemVariants} className="text-on-surface-variant max-w-2xl mx-auto text-base md:text-lg leading-relaxed mb-8 opacity-80 font-medium font-interface italic">
             Stop managing files. Start mastering concepts. Vayl is the ultimate command center for high-yield resource management and focused study.
           </motion.p>
 
-          <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-24">
+          <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-12">
             <MagneticButton 
               href="/signup" 
               onClick={() => sendGAEvent({ event: 'cta_click', value: 'hero_deploy_vault' })}

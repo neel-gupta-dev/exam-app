@@ -173,7 +173,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full bg-surface text-on-surface font-body antialiased selection:bg-primary/20">
         {/* Service Worker Registration */}
-        <Script id="register-sw" strategy="afterInteractive">
+        <Script id="register-sw" strategy="lazyOnload">
           {`
             if ('serviceWorker' in navigator) {
               window.addEventListener('load', function() {
@@ -194,7 +194,7 @@ export default function RootLayout({
             <GoogleAnalytics gaId="G-ZDWW48QNX7" />
             <Analytics />
             <SpeedInsights />
-            <Script id="clarity-script" strategy="afterInteractive">
+            <Script id="clarity-script" strategy="lazyOnload">
               {`
                 (function(c,l,a,r,i,t,y){
                     c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};

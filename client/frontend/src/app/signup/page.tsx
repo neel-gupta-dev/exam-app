@@ -258,7 +258,7 @@ export default function SignupPage() {
       {/* Footer */}
       <footer className="mt-auto w-full py-8 border-t border-outline-variant/10 flex flex-col md:flex-row justify-between items-center px-12 gap-4 z-10">
         <div className="text-xs font-headline font-bold text-on-surface-variant/40 uppercase tracking-widest">
-          © 2024 Vayl Systems.
+          © 2026 Vayl Systems.
         </div>
         <div className="flex gap-8">
           <Link className="font-inter text-[10px] uppercase tracking-widest text-on-surface-variant/50 hover:text-primary transition-colors" href="/terms">Terms</Link>
