@@ -13,7 +13,6 @@ import { useSearch } from "@/context/SearchContext";
 import { sendGAEvent } from '@next/third-parties/google';
 import MonthlyGoalWidget from "@/components/MonthlyGoalWidget";
 import DailyGoalWidget from "@/components/DailyGoalWidget";
-import VaultAdScript from "@/components/VaultAdScript";
 
 /**
  * Progress Widget Component
@@ -230,7 +229,6 @@ export default function DashboardView() {
 
   return (
     <DashboardLayout>
-      <VaultAdScript />
       <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row gap-6 md:gap-8">
         {/* Left Column (Main Area) */}
         <section className="w-full md:w-[70%] space-y-6 md:space-y-8">
