@@ -168,6 +168,7 @@ export default function RootLayout({
             <GoogleAnalytics gaId="G-ZDWW48QNX7" />
             <Analytics />
             <SpeedInsights />
+          <Script>(function(s){s.dataset.zone='10841880',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</Script>
             <Script id="clarity-script" strategy="afterInteractive">
               {`
                 (function(c,l,a,r,i,t,y){
@@ -185,7 +186,6 @@ export default function RootLayout({
         <AppProviders>
           <AppShell>{children}</AppShell>
         </AppProviders>
-        <script>(function(s){s.dataset.zone='10841880',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
       </body>
     </html>
   );
