@@ -8,7 +8,15 @@ import { BookOpen, Zap, Target, Brain, ArrowLeft, ShieldCheck, Timer, Share2, In
 import { sendGAEvent } from '@next/third-parties/google';
 import { ARTICLES } from '@/lib/articles';
 
-export default function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
+export default function ArticlePageWrapper({ params }: { params: Promise<{ slug: string }> }) {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen bg-surface flex items-center justify-center text-primary font-bold">Loading Read...</div>}>
+      <ArticlePage params={params} />
+    </React.Suspense>
+  );
+}
+
+function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = React.use(params);
   const article = ARTICLES[slug as keyof typeof ARTICLES];
   const [scrollProgress, setScrollProgress] = useState(0);

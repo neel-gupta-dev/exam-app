@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type React from "react";
 import Script from "next/script";
 import { Montserrat, Poppins, Hanken_Grotesk } from "next/font/google";
-import AppProvider from "@/components/AppProvider";
+import AdProvider from "@/components/AdProvider";
 import AppShell from "@/components/AppShell";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { WebVitals } from "@/components/WebVitals";
@@ -205,9 +205,9 @@ export default function RootLayout({
         <WebVitals />
         <GoogleSchema />
         <CookieConsent />
-        <AppProvider>
+        <AdProvider>
           <AppShell>{children}</AppShell>
-        </AppProvider>
+        </AdProvider>
       </body>
     </html>
   );

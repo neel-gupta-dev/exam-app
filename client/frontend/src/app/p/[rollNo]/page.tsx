@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ShieldAlert, UserPlus, ArrowRight } from 'lucide-react';
 import ProtocolRetry from '@/components/ProtocolRetry';
 import { API_BASE_URL } from '@/config/env';
+import React from 'react';
 
 async function getProfile(rollNo: string) {
   'use cache';
@@ -34,7 +35,15 @@ export async function generateMetadata({ params }: { params: Promise<{ rollNo: s
   };
 }
 
-export default async function PublicProfilePage({ params }: { params: Promise<{ rollNo: string }> }) {
+export default function PublicProfilePageWrapper({ params }: { params: Promise<{ rollNo: string }> }) {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen bg-surface flex items-center justify-center text-primary font-bold">Loading Vault Protocol...</div>}>
+      <PublicProfilePage params={params} />
+    </React.Suspense>
+  );
+}
+
+async function PublicProfilePage({ params }: { params: Promise<{ rollNo: string }> }) {
   const { rollNo } = await params;
   const profile = await getProfile(rollNo);
 
@@ -157,7 +166,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
               <span className="text-primary font-bold mb-1">days</span>
             </div>
             <div className="flex gap-1">
-              {[...Array(7)].map((_, i) => (
+              {Array.from({ length: 7 }).map((_, i) => (
                 <div key={i} className={`w-2 h-2 rounded-full ${i < (profile.streak % 7 || 7) ? 'bg-primary' : 'bg-surface-variant'}`} />
               ))}
             </div>
