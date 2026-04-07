@@ -5,24 +5,20 @@ import Script from 'next/script';
 
 /**
  * VaultAdScript Component
- * 
- * Conditionally injects a specialized on-click advertisement script
- * only for authenticated users who are actively browsing their vault.
- * 
- * The script uses a self-invoking function to append the ad tag to the
- * document's body or root element, enabling interactive pop-under/pop-up
- * ads upon user engagement (clicking saved resources).
+ *
+ * Conditionally injects the vignette ad script only for authenticated users.
+ * The script pre-loads on the dashboard so it is ready to intercept resource
+ * link clicks and display an interstitial ad before navigation.
  */
 export default function VaultAdScript() {
   const { token } = useAuth();
 
-  // Load immediately when a token is detected, without waiting for full user profile fetch.
-  // This ensures the ad script is ready as soon as the user enters the vault.
+  // Only inject for authenticated sessions
   if (!token) return null;
 
   return (
     <Script id="vault-vignette-ad" strategy="afterInteractive">
-      {`(function(s){s.dataset.zone='10841880',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script'));`}
+      {`(function(s){s.dataset.zone='10841880',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`}
     </Script>
   );
 }
