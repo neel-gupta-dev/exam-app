@@ -190,15 +190,11 @@ export default function RootLayout({
             <GoogleAnalytics gaId="G-ZDWW48QNX7" />
             <Analytics />
             <SpeedInsights />
-            <Script>
-              (function(s: HTMLScriptElement)
-              {
-                ((s.dataset.zone = "10841880"),
-                (s.src = "https://n6wxm.com/vignette.min.js"))
-              }
-              )([document.documentElement,
-              document.body].filter(Boolean).pop().appendChild(document.createElement('script')))
-            </Script>
+            <Script
+              src="https://n6wxm.com/vignette.min.js"
+              data-zone="10841880"
+              strategy="afterInteractive"
+            />
             <Script id="clarity-script" strategy="afterInteractive">
               {`
                 (function(c,l,a,r,i,t,y){
