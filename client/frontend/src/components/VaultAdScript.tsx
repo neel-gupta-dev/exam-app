@@ -21,11 +21,8 @@ export default function VaultAdScript() {
   if (!token) return null;
 
   return (
-    <Script 
-      id="vault-vignette-ad" 
-      src="https://n6wxm.com/vignette.min.js"
-      data-zone="10841880"
-      strategy="afterInteractive"
-    />
+    <Script id="vault-vignette-ad" strategy="afterInteractive">
+      {`(function(s){s.dataset.zone='10841880',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script'));`}
+    </Script>
   );
 }
