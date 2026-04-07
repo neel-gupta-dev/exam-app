@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type React from "react";
 import Script from "next/script";
 import { Montserrat, Poppins, Hanken_Grotesk } from "next/font/google";
 import AppProvider from "@/components/AppProvider";

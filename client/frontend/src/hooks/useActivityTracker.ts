@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
  * 
  */
 export function useActivityTracker() {
-  const { user, authenticated } = useAuth();
+  const { user, token } = useAuth();
   const [isFocusingGlobal, setIsFocusingGlobal] = useState(false);
   const lastActivityRef = useRef<number>(Date.now());
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -20,7 +20,7 @@ export function useActivityTracker() {
   const IDLE_THRESHOLD = 120000;
 
   useEffect(() => {
-    if (!authenticated || !user) return;
+    if (!token || !user) return;
 
     const handleActivity = () => {
       lastActivityRef.current = Date.now();
@@ -64,7 +64,7 @@ export function useActivityTracker() {
       window.removeEventListener('VAYL_FOCUS_STOP', stopFocus);
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [authenticated, user, isFocusingGlobal]);
+  }, [token, user, isFocusingGlobal]);
 
   return null;
 }
