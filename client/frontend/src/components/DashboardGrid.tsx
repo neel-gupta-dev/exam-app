@@ -39,10 +39,12 @@ function ResourceCard({ resource, isDemo }: { resource: Resource; isDemo?: boole
 
   const href = isDemo ? `/resource/${resource._id}?demo=true` : `/resource/${resource._id}`;
 
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-
-    // Inject vignette ad only for authenticated (non-demo) users
+  const handleClick = () => {
+    // Re-inject the vignette script on each click for authenticated users.
+    // The VaultAdScript already pre-loads it on page mount, but re-injecting
+    // here ensures the script fires even if the pre-load was delayed.
+    // We do NOT preventDefault — the natural <a href> click must propagate so
+    // the vignette script's registered listeners can intercept the navigation.
     if (!isDemo) {
       try {
         (function(s: HTMLScriptElement) {
@@ -51,9 +53,6 @@ function ResourceCard({ resource, isDemo }: { resource: Resource; isDemo?: boole
         })(([document.documentElement, document.body].filter(Boolean).pop() as HTMLElement).appendChild(document.createElement('script')) as HTMLScriptElement);
       } catch (_) {}
     }
-
-    // Force hard navigation so the vignette detects the page transition
-    window.location.href = href;
   };
 
   return (
