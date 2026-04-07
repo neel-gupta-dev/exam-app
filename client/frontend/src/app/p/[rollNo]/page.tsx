@@ -5,6 +5,8 @@ import ProtocolRetry from '@/components/ProtocolRetry';
 import { API_BASE_URL } from '@/config/env';
 import React from 'react';
 
+export const dynamic = 'force-dynamic';
+
 async function getProfile(rollNo: string) {
   'use cache';
   try {

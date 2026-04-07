@@ -1,10 +1,12 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { BookOpen, Zap, Target, Brain, ArrowLeft, ShieldCheck, Timer, Share2, Info } from 'lucide-react';
+import { ArrowLeft, Share2, Info } from 'lucide-react';
 import { sendGAEvent } from '@next/third-parties/google';
 import { ARTICLES } from '@/lib/articles';
 
