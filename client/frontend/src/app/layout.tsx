@@ -4,6 +4,9 @@ import Script from "next/script";
 import { Montserrat, Poppins, Hanken_Grotesk } from "next/font/google";
 import AdProvider from "@/components/AdProvider";
 import AppShell from "@/components/AppShell";
+import { AuthProvider } from "@/context/AuthContext";
+import { SearchProvider } from "@/context/SearchContext";
+import { AudioProvider } from "@/context/AudioContext";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { WebVitals } from "@/components/WebVitals";
 import CookieConsent from "@/components/CookieConsent";
@@ -205,9 +208,15 @@ export default function RootLayout({
         <WebVitals />
         <GoogleSchema />
         <CookieConsent />
-        <AdProvider>
-          <AppShell>{children}</AppShell>
-        </AdProvider>
+        <AuthProvider>
+          <SearchProvider>
+            <AudioProvider>
+              <AdProvider>
+                <AppShell>{children}</AppShell>
+              </AdProvider>
+            </AudioProvider>
+          </SearchProvider>
+        </AuthProvider>
       </body>
     </html>
   );

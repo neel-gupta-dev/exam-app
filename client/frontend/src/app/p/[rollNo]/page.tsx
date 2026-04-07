@@ -1,14 +1,10 @@
-import { Metadata } from 'next';
 import Link from 'next/link';
 import { ShieldAlert, UserPlus, ArrowRight } from 'lucide-react';
 import ProtocolRetry from '@/components/ProtocolRetry';
 import { API_BASE_URL } from '@/config/env';
 import React from 'react';
 
-export const dynamic = 'force-dynamic';
-
 async function getProfile(rollNo: string) {
-  'use cache';
   try {
     const res = await fetch(`${API_BASE_URL}/public/profile/${rollNo}`, {
       next: { revalidate: 10 },
@@ -21,19 +17,10 @@ async function getProfile(rollNo: string) {
   }
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ rollNo: string }> }): Promise<Metadata> {
-  const { rollNo } = await params;
-  const profile = await getProfile(rollNo);
-  if (!profile) return { title: 'Vault Not Found | Vayl' };
-
+export function generateMetadata({ params }: { params: Promise<{ rollNo: string }> }) {
   return {
-    title: `${profile.name}'s Academic Vault | Vayl`,
-    description: `Level ${profile.level} Scholar with ${profile.streak} day streak. Explore their academic journey.`,
-    openGraph: {
-      title: `${profile.name} - ${profile.targetExam} Aspirant`,
-      description: `Scholar Level ${profile.level} | ${profile.totalStudyHours}h Focused | ${profile.streak} Day Streak`,
-      type: 'profile',
-    }
+    title: `Scholar Vault | Vayl`,
+    description: `Explore this scholar's academic vault, study streaks, and achievements on Vayl.`,
   };
 }
 
