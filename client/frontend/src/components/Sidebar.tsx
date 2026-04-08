@@ -152,7 +152,7 @@ export default function Sidebar() {
               const displayNavItems = [...navItems];
               if (isJee) {
                 // Insert after Vault (index 1)
-                displayNavItems.splice(1, 0, { href: "/dashboard/chapters", label: "Chapter List", icon: Layers });
+                displayNavItems.splice(1, 0, { href: "/chapters", label: "Chapter List", icon: Layers });
               }
               return displayNavItems.map((item) => {
                 if (item.label === "Strategic Calendar") return null;
