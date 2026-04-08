@@ -23,6 +23,14 @@ export function proxy(req: NextRequest) {
     );
   }
 
+  // Prevent direct access to /notes from the main domain
+  if (url.pathname.startsWith("/notes")) {
+    const newPath = path.replace("/notes", "") || "/";
+    return NextResponse.redirect(
+      new URL(`https://notes.vayl.in${newPath}`, req.url)
+    );
+  }
+
   // Otherwise, proceed to main domain routes
   return NextResponse.next();
 }
