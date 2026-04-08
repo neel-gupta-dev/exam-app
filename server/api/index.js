@@ -30,8 +30,79 @@ import configurePassport from '../src/config/passport.js';
 import { MONGO_URI, PORT, ALLOWED_ORIGINS } from '../src/config/index.js';
 
 // Connect to MongoDB
-// ... [No changes to intervening lines in this diff block representation]
+connectDB().catch(err => {
+  console.error('CRITICAL: MongoDB Connection Failed:', err.message);
+});
 
+// Configure Passport
+configurePassport();
+
+const app = express();
+app.use(helmet());
+app.use((req, res, next) => {
+  res.setHeader(
+    'Permissions-Policy',
+    'camera=(), microphone=(), geolocation=(), browsing-topics=()'
+  );
+  next();
+});
+app.use(compression());
+
+// Trust proxy for accurate IP detection (needed for Hostinger/Nginx)
+app.set('trust proxy', true);
+
+// --- CORS Configuration ---
+// Always-allowed origins as a hard-coded safety net.
+// ALLOWED_ORIGINS env var extends this list (comma-separated).
+const HARDCODED_ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://vayl.in',
+];
+
+const runtimeAllowedOrigins = ALLOWED_ORIGINS
+  ? [...new Set([...HARDCODED_ALLOWED_ORIGINS, ...ALLOWED_ORIGINS])]
+  : HARDCODED_ALLOWED_ORIGINS;
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, curl, Postman, etc.)
+      if (!origin) return callback(null, true);
+
+      // Allow Chrome Extension origins
+      if (origin.startsWith('chrome-extension://')) {
+        return callback(null, true);
+      }
+
+      // Allow any vayl.in subdomains (e.g. www.vayl.in)
+      if (origin === 'https://vayl.in' || origin.endsWith('.vayl.in')) {
+        return callback(null, true);
+      }
+
+      // Keep allowing Vercel preview deploys for this project
+      if (origin.endsWith('.vercel.app')) {
+        return callback(null, true);
+      }
+
+      // Allow whitelisted origins
+      if (runtimeAllowedOrigins.includes(origin) || runtimeAllowedOrigins.includes('*')) {
+        return callback(null, true);
+      }
+
+      console.warn(`[CORS] Blocked request from origin: ${origin}`);
+      return callback(new Error(`Not allowed by CORS: ${origin}`));
+    },
+    credentials: true,
+  })
+);
+
+// Body parser
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Passport initialization
+app.use(passport.initialize());
 // --- API Routes ---
 const apiRouter = express.Router();
 apiRouter.get('/health', getHealth);
