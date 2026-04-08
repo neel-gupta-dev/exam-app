@@ -267,10 +267,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedTheme = localStorage.getItem('kv_theme') as 'light' | 'dark';
     if (storedTheme) {
       setTheme(storedTheme);
-    } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
-      setTheme('light');
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setTheme('dark');
     }
   }, []);
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
 
   const toggleTheme = useCallback(() => {
     setTheme(prev => {
