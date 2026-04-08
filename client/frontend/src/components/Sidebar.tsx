@@ -148,12 +148,9 @@ export default function Sidebar() {
           {/* Navigation */}
           <nav className="space-y-1">
             {(() => {
-              const isJee = displayUser?.targetExam?.some((exam: string) => ['jee-main', 'jee-advanced'].includes(exam));
               const displayNavItems = [...navItems];
-              if (isJee) {
-                // Insert after Vault (index 1)
-                displayNavItems.splice(1, 0, { href: "/chapters", label: "Chapter List", icon: Layers });
-              }
+              // Unconditionally show Chapter List under Vault
+              displayNavItems.splice(1, 0, { href: "/chapters", label: "Chapter List", icon: Layers });
               return displayNavItems.map((item) => {
                 if (item.label === "Strategic Calendar") return null;
                 const isActive = pathname === item.href;
