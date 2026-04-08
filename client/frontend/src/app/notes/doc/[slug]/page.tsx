@@ -28,12 +28,22 @@ export default async function PdfViewerPage(
         <h1 className="text-lg md:text-xl font-montserrat font-semibold text-primary capitalize truncate mr-4">
           {slug.replace(/-/g, " ")}
         </h1>
-        <div className="flex gap-2 md:gap-4 shrink-0">
+        <div className="flex gap-2 md:gap-3 shrink-0">
           <a
-            href="/"
-            className="px-3 py-1.5 md:px-4 md:py-2 bg-secondary/10 text-secondary border border-secondary/20 rounded-md font-interface text-sm md:text-base font-medium hover:bg-secondary/20 transition-colors"
+            href="https://vayl.in"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 md:px-4 md:py-2 text-on-surface/70 hover:text-primary font-interface text-sm md:text-base font-medium transition-colors"
           >
             Home
+          </a>
+          <a 
+            href="https://vayl.in/signup" 
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-secondary/10 text-secondary border border-secondary/20 rounded-md font-interface text-sm md:text-base font-medium hover:bg-secondary/20 transition-colors shadow-sm"
+          >
+            Signup
           </a>
           <a 
             href={pdfUrl} 
