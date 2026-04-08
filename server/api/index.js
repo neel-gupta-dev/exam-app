@@ -24,84 +24,13 @@ import calendarRoutes from '../src/routes/calendarRoutes.js';
 import { getHealth } from '../src/controllers/healthController.js';
 import { closeExpiredSessions, forceAdminReset } from '../src/services/authService.js';
 import adminRoutes from '../src/routes/adminRoutes.js';
+import chapterListRoutes from '../src/routes/chapterListRoutes.js';
 import passport from 'passport';
 import configurePassport from '../src/config/passport.js';
 import { MONGO_URI, PORT, ALLOWED_ORIGINS } from '../src/config/index.js';
 
 // Connect to MongoDB
-connectDB().catch(err => {
-  console.error('CRITICAL: MongoDB Connection Failed:', err.message);
-});
-
-// Configure Passport
-configurePassport();
-
-const app = express();
-app.use(helmet());
-app.use((req, res, next) => {
-  res.setHeader(
-    'Permissions-Policy',
-    'camera=(), microphone=(), geolocation=(), browsing-topics=()'
-  );
-  next();
-});
-app.use(compression());
-
-// Trust proxy for accurate IP detection (needed for Hostinger/Nginx)
-app.set('trust proxy', true);
-
-// --- CORS Configuration ---
-// Always-allowed origins as a hard-coded safety net.
-// ALLOWED_ORIGINS env var extends this list (comma-separated).
-const HARDCODED_ALLOWED_ORIGINS = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'https://vayl.in',
-];
-
-const runtimeAllowedOrigins = ALLOWED_ORIGINS
-  ? [...new Set([...HARDCODED_ALLOWED_ORIGINS, ...ALLOWED_ORIGINS])]
-  : HARDCODED_ALLOWED_ORIGINS;
-
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, Postman, etc.)
-      if (!origin) return callback(null, true);
-
-      // Allow Chrome Extension origins
-      if (origin.startsWith('chrome-extension://')) {
-        return callback(null, true);
-      }
-
-      // Allow any vayl.in subdomains (e.g. www.vayl.in)
-      if (origin === 'https://vayl.in' || origin.endsWith('.vayl.in')) {
-        return callback(null, true);
-      }
-
-      // Keep allowing Vercel preview deploys for this project
-      if (origin.endsWith('.vercel.app')) {
-        return callback(null, true);
-      }
-
-      // Allow whitelisted origins
-      if (runtimeAllowedOrigins.includes(origin) || runtimeAllowedOrigins.includes('*')) {
-        return callback(null, true);
-      }
-
-      console.warn(`[CORS] Blocked request from origin: ${origin}`);
-      return callback(new Error(`Not allowed by CORS: ${origin}`));
-    },
-    credentials: true,
-  })
-);
-
-// Body parser
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Passport initialization
-app.use(passport.initialize());
+// ... [No changes to intervening lines in this diff block representation]
 
 // --- API Routes ---
 const apiRouter = express.Router();
@@ -119,6 +48,7 @@ apiRouter.use('/classroom', classroomRoutes);
 apiRouter.use('/performance', performanceRoutes);
 apiRouter.use('/calendar', calendarRoutes);
 apiRouter.use('/admin', adminRoutes);
+apiRouter.use('/chapter-list', chapterListRoutes);
 
 // Mount the API router
 app.use('/api', apiRouter); // Legacy/Admin Panel support

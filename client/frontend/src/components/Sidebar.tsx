@@ -147,44 +147,52 @@ export default function Sidebar() {
 
           {/* Navigation */}
           <nav className="space-y-1">
-            {navItems.map((item) => {
-              if (item.label === "Strategic Calendar") return null;
-              const isActive = pathname === item.href;
-              const isLocked = isDemo && !isDemoAllowedPath(item.href);
-              const Icon = item.icon;
+            {(() => {
+              const isJee = displayUser?.targetExam?.some((exam: string) => ['jee-main', 'jee-advanced'].includes(exam));
+              const displayNavItems = [...navItems];
+              if (isJee) {
+                // Insert after Vault (index 1)
+                displayNavItems.splice(1, 0, { href: "/dashboard/chapters", label: "Chapter List", icon: Layers });
+              }
+              return displayNavItems.map((item) => {
+                if (item.label === "Strategic Calendar") return null;
+                const isActive = pathname === item.href;
+                const isLocked = isDemo && !isDemoAllowedPath(item.href);
+                const Icon = item.icon;
 
-              if (isLocked) {
+                if (isLocked) {
+                  return (
+                    <button
+                      key={item.href}
+                      onClick={() => setLockedModal({ open: true, feature: item.label })}
+                      className={`w-full flex items-center ${isCollapsed ? 'justify-center p-2' : 'gap-3 px-3 py-2'} rounded-md transition-all duration-200 text-on-surface-variant/40 hover:text-on-surface-variant hover:bg-surface-bright cursor-pointer`}
+                      title={isCollapsed ? item.label : undefined}
+                    >
+                      <Icon className="w-5 h-5 shrink-0" />
+                      {!isCollapsed && <span className="text-sm font-medium flex-1 text-left">{item.label}</span>}
+                      {!isCollapsed && <Lock className="w-3.5 h-3.5 opacity-50 shrink-0" />}
+                    </button>
+                  );
+                }
+
+                const demoHref = isDemo && item.href !== '/' ? `${item.href}?demo=true` : (isDemo && item.href === '/' ? '/?demo=true' : item.href);
+
                 return (
-                  <button
+                  <Link
                     key={item.href}
-                    onClick={() => setLockedModal({ open: true, feature: item.label })}
-                    className={`w-full flex items-center ${isCollapsed ? 'justify-center p-2' : 'gap-3 px-3 py-2'} rounded-md transition-all duration-200 text-on-surface-variant/40 hover:text-on-surface-variant hover:bg-surface-bright cursor-pointer`}
+                    href={demoHref}
+                    className={`flex items-center ${isCollapsed ? 'justify-center p-2' : 'gap-3 px-3 py-2'} rounded-md transition-all duration-200 ${isActive
+                      ? "bg-primary/10 text-primary border-l-2 border-primary"
+                      : "text-on-surface-variant hover:text-on-surface hover:bg-surface-bright"
+                      }`}
                     title={isCollapsed ? item.label : undefined}
                   >
                     <Icon className="w-5 h-5 shrink-0" />
-                    {!isCollapsed && <span className="text-sm font-medium flex-1 text-left">{item.label}</span>}
-                    {!isCollapsed && <Lock className="w-3.5 h-3.5 opacity-50 shrink-0" />}
-                  </button>
+                    {!isCollapsed && <span className="text-sm font-medium truncate">{item.label}</span>}
+                  </Link>
                 );
-              }
-
-              const demoHref = isDemo && item.href !== '/' ? `${item.href}?demo=true` : (isDemo && item.href === '/' ? '/?demo=true' : item.href);
-
-              return (
-                <Link
-                  key={item.href}
-                  href={demoHref}
-                  className={`flex items-center ${isCollapsed ? 'justify-center p-2' : 'gap-3 px-3 py-2'} rounded-md transition-all duration-200 ${isActive
-                    ? "bg-primary/10 text-primary border-l-2 border-primary"
-                    : "text-on-surface-variant hover:text-on-surface hover:bg-surface-bright"
-                    }`}
-                  title={isCollapsed ? item.label : undefined}
-                >
-                  <Icon className="w-5 h-5 shrink-0" />
-                  {!isCollapsed && <span className="text-sm font-medium truncate">{item.label}</span>}
-                </Link>
-              );
-            })}
+              });
+            })()}
           </nav>
 
           {/* Dynamic Folders */}
