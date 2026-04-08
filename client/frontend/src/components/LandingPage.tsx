@@ -3,14 +3,14 @@
 import React, { useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { 
-  Zap, 
-  Target, 
-  Brain, 
-  ShieldCheck, 
-  ArrowRight, 
-  BookOpen, 
-  Timer, 
+import {
+  Zap,
+  Target,
+  Brain,
+  ShieldCheck,
+  ArrowRight,
+  BookOpen,
+  Timer,
   LayoutDashboard,
   Sun,
   Moon
@@ -22,40 +22,12 @@ import { motion, AnimatePresence, Variants, useScroll, useTransform, useSpring, 
 // --- Components ---
 
 const MagneticButton = ({ children, className, onClick, href }: { children: React.ReactNode, className?: string, onClick?: () => void, href?: string }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  const springConfig = { damping: 15, stiffness: 150 };
-  const springX = useSpring(x, springConfig);
-  const springY = useSpring(y, springConfig);
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    const { clientX, clientY } = e;
-    const { left, top, width, height } = ref.current?.getBoundingClientRect() || { left: 0, top: 0, width: 0, height: 0 };
-    const centerX = left + width / 2;
-    const centerY = top + height / 2;
-    const distanceX = clientX - centerX;
-    const distanceY = clientY - centerY;
-    
-    // Limits the magnetic pull
-    x.set(distanceX * 0.35);
-    y.set(distanceY * 0.35);
-  };
-
-  const handleMouseLeave = () => {
-    x.set(0);
-    y.set(0);
-  };
-
   const content = (
     <motion.div
-      ref={ref}
       onClick={onClick}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{ x: springX, y: springY }}
-      className={className}
+      whileHover={{ y: -2, scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      className={`${className} cursor-pointer`}
     >
       {children}
     </motion.div>
@@ -105,10 +77,10 @@ const CharacterReveal = ({ text, className }: { text: string, className?: string
           <motion.span
             initial={{ y: "100%" }}
             whileInView={{ y: 0 }}
-            transition={{ 
-              duration: 0.8, 
-              delay: i * 0.05, 
-              ease: [0.33, 1, 0.68, 1] 
+            transition={{
+              duration: 0.8,
+              delay: i * 0.05,
+              ease: [0.33, 1, 0.68, 1]
             }}
             viewport={{ once: true }}
             className="inline-block"
@@ -154,44 +126,44 @@ export default function LandingPage() {
     <div className="min-h-screen bg-surface text-on-surface font-body selection:bg-primary/20 overflow-x-hidden transition-colors duration-500">
       {/* Background Grid & Orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <motion.div 
+        <motion.div
           style={{ y: orb1Y }}
-          className="orb w-[800px] h-[800px] bg-primary/10 top-[-20%] right-[-10%] blur-[120px]" 
+          className="orb w-[800px] h-[800px] bg-primary/10 top-[-20%] right-[-10%] blur-[120px]"
         />
-        <motion.div 
+        <motion.div
           style={{ y: orb2Y }}
-          className="orb w-[600px] h-[600px] bg-tertiary/5 bottom-[-10%] left-[-10%] blur-[100px]" 
+          className="orb w-[600px] h-[600px] bg-tertiary/5 bottom-[-10%] left-[-10%] blur-[100px]"
         />
-        <motion.div 
+        <motion.div
           style={{ opacity: meshOpacity }}
-          className="mesh-grid absolute inset-0 opacity-20" 
+          className="mesh-grid absolute inset-0 opacity-20"
         />
       </div>
 
       {/* Scroll Progress Bar */}
-      <motion.div 
-        className="fixed top-0 left-0 h-1 bg-primary z-[60] origin-left" 
+      <motion.div
+        className="fixed top-0 left-0 h-1 bg-primary z-[60] origin-left"
         style={{ scaleX: useSpring(useTransform(scrollY, [0, 1], [0, 1]), { stiffness: 100, damping: 30 }) }}
       />
 
       {/* Navigation */}
-      <nav 
-        role="navigation" 
+      <nav
+        role="navigation"
         aria-label="Main Navigation"
         className="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10"
       >
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group relative">
-            <motion.div 
+            <motion.div
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
               className="w-12 h-12 flex items-center justify-center group-hover:scale-110 transition-transform relative"
             >
-              <Image 
-                src="/vayl-logo.png" 
-                alt="Vayl Logo" 
-                width={48} 
-                height={48} 
+              <Image
+                src="/vayl-logo.png"
+                alt="Vayl Logo"
+                width={48}
+                height={48}
                 className=" object-contain"
               />
             </motion.div>
@@ -208,7 +180,25 @@ export default function LandingPage() {
               <MagneticButton href="/contact" className="hover:text-primary transition-colors">Contact</MagneticButton>
             </div>
             <div className="flex items-center gap-4">
-              <button 
+              <MagneticButton href="/login" className="text-xs font-interface font-black uppercase tracking-widest text-on-surface hover:text-primary transition-colors">Login</MagneticButton>
+              <MagneticButton
+                onClick={() => {
+                  sendGAEvent({ event: 'cta_click', value: 'nav_try_demo' });
+                  localStorage.setItem('vayl_demo_mode', 'true');
+                  window.location.href = '/?demo=true';
+                }}
+                className="text-xs font-interface font-black uppercase tracking-widest px-5 py-2.5 rounded-xl border border-primary/30 text-primary bg-primary/5 hover:bg-primary/15 transition-all cursor-pointer"
+              >
+                Try Demo
+              </MagneticButton>
+              <Link
+                href="/signup"
+                onClick={() => sendGAEvent({ event: 'cta_click', value: 'nav_join_now' })}
+                className="bg-primary text-on-primary px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest hover:scale-105 transition-transform shadow-lg shadow-primary/20"
+              >
+                Join Now
+              </Link>
+              <button
                 onClick={toggleTheme}
                 className="w-10 h-10 flex items-center justify-center rounded-xl bg-on-surface/5 hover:bg-on-surface/10 transition-colors text-on-surface-variant relative overflow-hidden group"
               >
@@ -236,31 +226,13 @@ export default function LandingPage() {
                   )}
                 </AnimatePresence>
               </button>
-              <MagneticButton href="/login" className="text-xs font-interface font-black uppercase tracking-widest text-on-surface hover:text-primary transition-colors">Login</MagneticButton>
-              <MagneticButton 
-                onClick={() => {
-                  sendGAEvent({ event: 'cta_click', value: 'nav_try_demo' });
-                  localStorage.setItem('vayl_demo_mode', 'true');
-                  window.location.href = '/?demo=true';
-                }}
-                className="text-xs font-interface font-black uppercase tracking-widest px-5 py-2.5 rounded-xl border border-primary/30 text-primary bg-primary/5 hover:bg-primary/15 transition-all cursor-pointer"
-              >
-                Try Demo
-              </MagneticButton>
-              <Link
-                href="/signup"
-                onClick={() => sendGAEvent({ event: 'cta_click', value: 'nav_join_now' })}
-                className="bg-primary text-on-primary px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest hover:scale-105 transition-transform shadow-lg shadow-primary/20"
-              >
-                Join Now
-              </Link>
             </div>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section 
+      <section
         aria-label="Hero Section"
         className="pt-28 pb-10 px-6 max-w-7xl mx-auto text-center relative"
       >
@@ -275,7 +247,7 @@ export default function LandingPage() {
               The Academic Excellence Protocol
             </span>
           </motion.div>
-          
+
           <motion.h1 variants={itemVariants} className="text-4xl md:text-7xl font-heading font-black tracking-tightest leading-[1.1] text-on-surface mb-6 max-w-4xl mx-auto">
             <CharacterReveal text="Built for the" /> <span className="bg-gradient-to-br from-primary via-on-surface to-tertiary bg-clip-text text-transparent italic">Academic Elite.</span>
           </motion.h1>
@@ -285,8 +257,8 @@ export default function LandingPage() {
           </motion.p>
 
           <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-12">
-            <MagneticButton 
-              href="/signup" 
+            <MagneticButton
+              href="/signup"
               onClick={() => sendGAEvent({ event: 'cta_click', value: 'hero_deploy_vault' })}
               className="group relative px-10 py-5 bg-primary text-on-primary rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-3 overflow-hidden shadow-2xl shadow-primary/40"
             >
@@ -294,8 +266,8 @@ export default function LandingPage() {
               <span className="relative z-10">Deploy Your Vault</span>
               <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
             </MagneticButton>
-            <MagneticButton 
-              href="/about" 
+            <MagneticButton
+              href="/about"
               onClick={() => sendGAEvent({ event: 'cta_click', value: 'hero_explore_system' })}
               className="px-10 py-5 bg-surface-container-low border border-outline-variant/10 text-on-surface rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-surface-bright transition-all font-interface"
             >
@@ -305,7 +277,7 @@ export default function LandingPage() {
         </motion.div>
 
         {/* Dashboard Preview */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 60, scale: 0.95 }}
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ type: "spring", stiffness: 50, damping: 20 }}
@@ -314,9 +286,9 @@ export default function LandingPage() {
         >
           <TiltCard className="relative glass-card rounded-[2.5rem] border-outline-variant/10 overflow-hidden shadow-2xl shadow-black/50">
             <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-tertiary/20 rounded-[2.5rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-            <Image 
-              src="/screenshots/dashboard.png" 
-              alt="Vayl Dashboard" 
+            <Image
+              src="/screenshots/dashboard.png"
+              alt="Vayl Dashboard"
               width={1200}
               height={700}
               priority
@@ -328,7 +300,7 @@ export default function LandingPage() {
       </section>
 
       {/* Stats/Proof */}
-      <section 
+      <section
         aria-label="Platform Statistics"
         className="py-20 px-6 max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8"
       >
@@ -338,8 +310,8 @@ export default function LandingPage() {
           { label: "Aspirants Joined", value: "1k+", icon: <Brain className="w-5 h-5 text-error" /> },
           { label: "Efficiency Boost", value: "35%", icon: <Image src="/vayl-logo.png" alt="Vayl Logo" width={20} height={20} className=" object-contain" /> }
         ].map((stat, i) => (
-          <motion.div 
-            key={i} 
+          <motion.div
+            key={i}
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1, type: "spring" }}
@@ -355,7 +327,7 @@ export default function LandingPage() {
       </section>
 
       {/* Mission Section (Content Depth for SEO) */}
-      <section 
+      <section
         aria-label="Mission Statement"
         className="py-24 px-6 max-w-5xl mx-auto border-y border-outline-variant/10 relative overflow-hidden"
       >
@@ -427,12 +399,12 @@ export default function LandingPage() {
           <TiltCard className="relative group">
             <div className="absolute -inset-4 bg-error/10 rounded-[3rem] blur-2xl opacity-0 group-hover:opacity-100 transition duration-700"></div>
             <div className="relative glass-card rounded-[2.5rem] border-outline-variant/10 overflow-hidden shadow-2xl">
-              <Image 
-                src="/screenshots/focus-room.png" 
-                alt="Focus Room" 
+              <Image
+                src="/screenshots/focus-room.png"
+                alt="Focus Room"
                 width={800}
                 height={450}
-                className="w-full h-auto hover:scale-105 transition-transform duration-700" 
+                className="w-full h-auto hover:scale-105 transition-transform duration-700"
               />
             </div>
           </TiltCard>
@@ -443,12 +415,12 @@ export default function LandingPage() {
           <TiltCard className="relative group order-2 md:order-1">
             <div className="absolute -inset-4 bg-tertiary/10 rounded-[3rem] blur-2xl opacity-0 group-hover:opacity-100 transition duration-700"></div>
             <div className="relative glass-card rounded-[2.5rem] border-outline-variant/10 overflow-hidden shadow-2xl">
-              <Image 
-                src="/screenshots/analytics.png" 
-                alt="Vault Analytics" 
+              <Image
+                src="/screenshots/analytics.png"
+                alt="Vault Analytics"
                 width={800}
                 height={450}
-                className="w-full h-auto hover:scale-105 transition-transform duration-700" 
+                className="w-full h-auto hover:scale-105 transition-transform duration-700"
               />
             </div>
           </TiltCard>
@@ -463,8 +435,8 @@ export default function LandingPage() {
             <p className="text-on-surface-variant text-lg leading-relaxed opacity-70 font-semibold font-interface">
               Understand your coverage and streaks with surgical precision. Our analytics suite tracks progress so you can focus on the gaps.
             </p>
-            <Link 
-              href="/signup" 
+            <Link
+              href="/signup"
               onClick={() => sendGAEvent({ event: 'cta_click', value: 'analytics_preview_analyze' })}
               className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-tertiary hover:underline"
             >
@@ -490,12 +462,12 @@ export default function LandingPage() {
           <TiltCard className="relative group">
             <div className="absolute -inset-4 bg-primary/10 rounded-[3rem] blur-2xl opacity-0 group-hover:opacity-100 transition duration-700"></div>
             <div className="relative glass-card rounded-[2.5rem] border-outline-variant/10 overflow-hidden shadow-2xl">
-              <Image 
-                src="/screenshots/public-profile.png" 
-                alt="Public Profile" 
+              <Image
+                src="/screenshots/public-profile.png"
+                alt="Public Profile"
                 width={800}
                 height={500}
-                className="w-full h-auto object-contain hover:scale-105 transition-transform duration-700" 
+                className="w-full h-auto object-contain hover:scale-105 transition-transform duration-700"
               />
             </div>
           </TiltCard>
@@ -504,7 +476,7 @@ export default function LandingPage() {
 
       {/* Features Grid */}
       <section className="py-32 px-6 max-w-7xl mx-auto">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -534,7 +506,7 @@ export default function LandingPage() {
               desc: "Data-driven analytics that show exactly which 20% of effort is driving 80% of results."
             }
           ].map((feature, i) => (
-            <TiltCard 
+            <TiltCard
               key={i}
             >
               <motion.div
@@ -558,7 +530,7 @@ export default function LandingPage() {
 
       {/* Trust Section for Adsense */}
       <section className="py-20 px-6 max-w-4xl mx-auto text-center">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8 }}
@@ -571,8 +543,8 @@ export default function LandingPage() {
           <p className="text-on-surface-variant leading-relaxed opacity-80 font-medium">
             Vayl follows strict data isolation protocols. We provide a space for learning where academic integrity and user privacy are prioritized above all else.
           </p>
-          <Link 
-            href="/privacy-policy" 
+          <Link
+            href="/privacy-policy"
             onClick={() => sendGAEvent({ event: 'cta_click', value: 'trust_read_protocol' })}
             className="text-xs font-interface font-black uppercase tracking-widest text-primary hover:underline"
           >
@@ -582,7 +554,7 @@ export default function LandingPage() {
       </section>
 
       <footer className="theme-light py-20 px-6 border-t border-outline-variant/10 bg-surface-container/30">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
@@ -597,7 +569,7 @@ export default function LandingPage() {
               The next-generation study operating system for aspirants who target excellence. Simplify your vault, amplify your focus.
             </p>
           </div>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -611,7 +583,7 @@ export default function LandingPage() {
               <li><Link href="/login" className="hover:text-primary transition-colors">Access Portal</Link></li>
             </ul>
           </motion.div>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
