@@ -31,7 +31,7 @@ export default function TermsOfService() {
             Terms of Service
           </h1>
           <p className="text-on-surface-variant font-interface text-sm uppercase tracking-[0.2em] font-medium opacity-70">
-            Effective Date: March 27, 2026
+            Effective Date: April 8, 2026
           </p>
         </header>
 
@@ -111,10 +111,19 @@ export default function TermsOfService() {
               <span className="w-8 h-8 rounded-lg bg-tertiary/20 flex items-center justify-center text-tertiary text-sm font-black">5</span>
               Intellectual Property
             </h2>
-            <div className="bg-white/5 rounded-2xl p-6 border border-white/5">
-              <p className="text-on-surface-variant text-sm">
-                Vayl's brand, software, and proprietary algorithms are protected. You retain ownership of your original notes and uploaded materials, granting Vayl a limited license to host them for your personal use.
-              </p>
+            <div className="space-y-4">
+              <div className="bg-white/5 rounded-2xl p-6 border border-white/5">
+                <h3 className="font-bold text-white mb-2 text-sm uppercase tracking-wider">User Content</h3>
+                <p className="text-on-surface-variant text-sm leading-relaxed">
+                  Vayl's brand, software, and proprietary algorithms are protected. You retain ownership of your original notes and uploaded materials, granting Vayl a limited license to host them for your personal use.
+                </p>
+              </div>
+              <div className="bg-white/5 rounded-2xl p-6 border border-white/5">
+                <h3 className="font-bold text-white mb-2 text-sm uppercase tracking-wider">Vayl Notes Subdomain</h3>
+                <p className="text-on-surface-variant text-sm leading-relaxed">
+                  Materials provided on the curated Vayl Notes platform (notes.vayl.in), including PYQs and study guides, are provided solely for your personal, non-commercial education. Automated scraping, mass reproduction, or commercial redistribution of these resources is strictly prohibited.
+                </p>
+              </div>
             </div>
           </section>
 

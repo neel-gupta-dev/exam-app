@@ -32,7 +32,7 @@ export default function PrivacyPolicy() {
             Privacy Policy
           </h1>
           <p className="text-on-surface-variant font-interface text-sm uppercase tracking-[0.2em] font-medium opacity-70">
-            Effective Date: March 27, 2026
+            Effective Date: April 8, 2026
           </p>
         </header>
 
@@ -75,6 +75,15 @@ export default function PrivacyPolicy() {
                   <li className="flex items-start gap-2">
                     <span className="material-symbols-outlined text-primary text-[10px] mt-1">circle</span>
                     <span><strong>Stream Activity:</strong> Assignments, announcements, and resource materials for syncing.</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="bg-surface-container-low p-6 rounded-2xl border border-outline-variant/10 hover:border-primary/20 transition-colors md:col-span-2">
+                <h3 className="font-heading font-bold text-primary mb-3 text-sm uppercase tracking-wider">1.3 Vayl Notes Subdomain</h3>
+                <ul className="space-y-3 text-on-surface-variant text-sm">
+                  <li className="flex items-start gap-2">
+                    <span className="material-symbols-outlined text-primary text-[10px] mt-1">circle</span>
+                    <span><strong>Public Access:</strong> Access to study materials on notes.vayl.in is offered. We do not track individual reading behavior for unauthenticated users beyond standard anonymized network analytics.</span>
                   </li>
                 </ul>
               </div>
