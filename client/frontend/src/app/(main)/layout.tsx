@@ -13,7 +13,7 @@ import CookieConsent from "@/components/CookieConsent";
 import GoogleSchema from "@/components/GoogleSchema";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import "./globals.css";
+import "../globals.css";
 
 /**
  * Font Configurations
