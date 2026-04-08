@@ -1,6 +1,5 @@
 import ChapterList from '../models/ChapterList.js';
-import asyncHandler from '../middlewares/asyncHandler.js';
-import ErrorResponse from '../utils/errorResponse.js';
+import asyncHandler from 'express-async-handler';
 
 // @desc    Get user's chapter list for a specific subject
 // @route   GET /api/chapter-list/:subject
@@ -9,7 +8,8 @@ export const getChapterList = asyncHandler(async (req, res, next) => {
   const { subject } = req.params;
 
   if (!['Physics', 'Chemistry', 'Mathematics'].includes(subject)) {
-    return next(new ErrorResponse(`Invalid subject: ${subject}`, 400));
+    res.status(400);
+    throw new Error(`Invalid subject: ${subject}`);
   }
 
   let chapterList = await ChapterList.findOne({
@@ -48,12 +48,14 @@ export const updateChapterList = asyncHandler(async (req, res, next) => {
   const { columns, chapters } = req.body;
 
   if (!['Physics', 'Chemistry', 'Mathematics'].includes(subject)) {
-    return next(new ErrorResponse(`Invalid subject: ${subject}`, 400));
+    res.status(400);
+    throw new Error(`Invalid subject: ${subject}`);
   }
 
   // Validate columns length
   if (columns && columns.length > 8) {
-    return next(new ErrorResponse('Maximum of 8 dynamic columns allowed', 400));
+    res.status(400);
+    throw new Error('Maximum of 8 dynamic columns allowed');
   }
 
   let chapterList = await ChapterList.findOne({
