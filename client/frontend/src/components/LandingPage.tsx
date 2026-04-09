@@ -13,7 +13,9 @@ import {
   Timer,
   LayoutDashboard,
   Sun,
-  Moon
+  Moon,
+  Menu,
+  X
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { sendGAEvent } from '@next/third-parties/google';
@@ -101,6 +103,7 @@ const CharacterReveal = ({ text, className }: { text: string, className?: string
  */
 export default function LandingPage() {
   const { theme, toggleTheme } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { scrollY } = useScroll();
   const orb1Y = useTransform(scrollY, [0, 1000], [0, 200]);
   const orb2Y = useTransform(scrollY, [0, 1000], [0, -150]);
@@ -174,13 +177,13 @@ export default function LandingPage() {
               </span>
             </div>
           </Link>
-          <div className="flex items-center gap-8">
-            <div className="hidden md:flex items-center gap-8 text-xs font-interface font-black uppercase tracking-widest text-on-surface-variant">
+          <div className="flex items-center gap-4 md:gap-8">
+            <div className="hidden lg:flex items-center gap-8 text-xs font-interface font-black uppercase tracking-widest text-on-surface-variant">
               <MagneticButton href="https://notes.vayl.in" className="hover:text-primary transition-colors">Free Notes</MagneticButton>
               <MagneticButton href="/about" className="hover:text-primary transition-colors">About</MagneticButton>
               <MagneticButton href="/contact" className="hover:text-primary transition-colors">Contact</MagneticButton>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="hidden lg:flex items-center gap-4">
               <MagneticButton href="/login" className="text-xs font-interface font-black uppercase tracking-widest text-on-surface hover:text-primary transition-colors">Login</MagneticButton>
               <MagneticButton
                 onClick={() => {
@@ -199,6 +202,9 @@ export default function LandingPage() {
               >
                 Join Now
               </Link>
+            </div>
+
+            <div className="flex items-center gap-3">
               <button
                 onClick={toggleTheme}
                 className="w-10 h-10 flex items-center justify-center rounded-xl bg-on-surface/5 hover:bg-on-surface/10 transition-colors text-on-surface-variant relative overflow-hidden group"
@@ -227,10 +233,61 @@ export default function LandingPage() {
                   )}
                 </AnimatePresence>
               </button>
+
+              <button
+                className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors z-50"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label="Toggle Mobile Menu"
+              >
+                {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
             </div>
           </div>
         </div>
       </nav>
+
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed inset-0 z-40 bg-surface/95 backdrop-blur-3xl pt-24 px-6 lg:hidden flex flex-col items-center gap-6 overflow-y-auto pb-10"
+          >
+            <div className="flex flex-col items-center gap-6 text-sm font-interface font-black uppercase tracking-widest text-on-surface-variant w-full mt-4">
+              <MagneticButton href="https://notes.vayl.in" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-primary transition-colors py-2">Free Notes</MagneticButton>
+              <MagneticButton href="/about" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-primary transition-colors py-2">About</MagneticButton>
+              <MagneticButton href="/contact" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-primary transition-colors py-2">Contact</MagneticButton>
+            </div>
+            
+            <div className="h-px w-1/3 bg-outline-variant/20 my-2" />
+            
+            <div className="flex flex-col items-center gap-4 w-full px-4">
+              <MagneticButton href="/login" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-interface font-black uppercase tracking-widest text-on-surface hover:text-primary transition-colors py-2">Login</MagneticButton>
+              <MagneticButton
+                onClick={() => {
+                  sendGAEvent({ event: 'cta_click', value: 'nav_try_demo_mobile' });
+                  localStorage.setItem('vayl_demo_mode', 'true');
+                  window.location.href = '/?demo=true';
+                }}
+                className="w-full max-w-sm text-center text-sm font-interface font-black uppercase tracking-widest px-5 py-3 rounded-xl border border-primary/30 text-primary bg-primary/5 hover:bg-primary/15 transition-all cursor-pointer"
+              >
+                Try Demo
+              </MagneticButton>
+              <Link
+                href="/signup"
+                onClick={() => {
+                  sendGAEvent({ event: 'cta_click', value: 'nav_join_now_mobile' });
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full max-w-sm text-center bg-primary text-on-primary px-6 py-3 rounded-xl font-bold text-sm uppercase tracking-widest hover:scale-105 transition-transform shadow-lg shadow-primary/20"
+              >
+                Join Now
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Hero Section */}
       <section
