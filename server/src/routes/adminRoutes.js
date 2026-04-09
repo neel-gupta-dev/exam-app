@@ -8,6 +8,9 @@ import Note from '../models/Note.js';
 import asyncHandler from 'express-async-handler';
 import mongoose from 'mongoose';
 
+/** Escape special regex characters in user input to prevent ReDoS */
+const escapeRegex = (str) => String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const router = Router();
 
 // All admin routes require auth + admin role
@@ -69,7 +72,7 @@ router.get('/users', asyncHandler(async (req, res) => {
 
   const filter = {};
   if (req.query.search) {
-    const re = new RegExp(req.query.search, 'i');
+    const re = new RegExp(escapeRegex(req.query.search), 'i');
     filter.$or = [{ name: re }, { email: re }, { vaultId: re }];
   }
   if (req.query.role) filter.role = req.query.role;
@@ -218,7 +221,7 @@ router.get('/resources', asyncHandler(async (req, res) => {
   const filter = {};
   if (req.query.type) filter.type = req.query.type;
   if (req.query.search) {
-    const re = new RegExp(req.query.search, 'i');
+    const re = new RegExp(escapeRegex(req.query.search), 'i');
     filter.$or = [{ title: re }, { folderName: re }];
   }
 

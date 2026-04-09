@@ -9,8 +9,9 @@ export const getPublicProfile = asyncHandler(async (req, res) => {
   const { rollNo } = req.params;
   const cleanRollNo = rollNo.replace(/^#/, '');
   
-  // Use regex to be resilient to # prefix and case-sensitivity
-  const searchPattern = new RegExp(`^#?${cleanRollNo}$`, 'i');
+  // Escape regex special chars in user input to prevent ReDoS
+  const escaped = cleanRollNo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const searchPattern = new RegExp(`^#?${escaped}$`, 'i');
   
   const user = await User.findOne({ vaultId: { $regex: searchPattern } })
     .select('name targetExam totalActiveSeconds currentStreak isOnboarded isVerifiedStudent createdAt vaultId analytics level');

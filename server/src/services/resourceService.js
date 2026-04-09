@@ -1,6 +1,12 @@
 import Resource from '../models/Resource.js';
 import User from '../models/User.js';
 
+/** Escape special regex characters in user input to prevent ReDoS */
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** Sanitize a string for use as a MongoDB document key (strip dots, $, and control chars) */
+const sanitizeKey = (str) => String(str).replace(/[.$\x00]/g, '_').slice(0, 100);
+
 /**
  * Create a new resource
  */
@@ -8,9 +14,10 @@ export const createResource = async ({ userId, type, url, title, folderName }) =
   const resource = await Resource.create({ userId, type, url, title, folderName });
   
   // O(1) increment of subject distribution and global resource count
+  const safeFolder = sanitizeKey(folderName || 'Uncategorized');
   await User.findByIdAndUpdate(userId, {
     $inc: { 
-      [`analytics.subjectDistribution.${folderName || 'Uncategorized'}`]: folderName ? 1 : 0,
+      [`analytics.subjectDistribution.${safeFolder}`]: folderName ? 1 : 0,
       'analytics.resourceCount': 1
     }
   });
@@ -26,11 +33,11 @@ export const getUserResources = async ({ userId, page = 1, limit = 20, folder, s
 
   const query = { userId };
   if (folder) {
-    query.folderName = { $regex: new RegExp(`^${folder}$`, 'i') };
+    query.folderName = { $regex: new RegExp(`^${escapeRegex(String(folder))}$`, 'i') };
   }
   
   if (search) {
-    query.title = { $regex: search, $options: 'i' };
+    query.title = { $regex: escapeRegex(String(search)), $options: 'i' };
   }
 
   const [resources, total] = await Promise.all([
@@ -65,9 +72,10 @@ export const deleteResource = async ({ id, userId }) => {
   await Resource.deleteOne({ _id: id });
 
   // O(1) decrement of subject distribution and global resource count
+  const safeFolder = sanitizeKey(folderName || 'Uncategorized');
   await User.findByIdAndUpdate(userId, {
     $inc: { 
-      [`analytics.subjectDistribution.${folderName || 'Uncategorized'}`]: folderName ? -1 : 0,
+      [`analytics.subjectDistribution.${safeFolder}`]: folderName ? -1 : 0,
       'analytics.resourceCount': -1
     }
   });

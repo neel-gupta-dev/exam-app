@@ -27,7 +27,7 @@ export const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
   : [FRONTEND_URL];
 
 export const JWT_SECRET = process.env.JWT_SECRET || (isProd ? undefined : 'your_jwt_secret_here');
-export const ADMIN_BYPASS_SECRET = process.env.ADMIN_BYPASS_SECRET || null;
+
 
 // Google OAuth Configuration
 export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -53,6 +53,5 @@ export default {
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
   GOOGLE_CALLBACK_URL,
-  ADMIN_BYPASS_SECRET
 };
 

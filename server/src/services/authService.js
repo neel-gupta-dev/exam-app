@@ -57,7 +57,6 @@ export const registerUser = async ({ name, email, password, ipAddress }) => {
     vaultId: user.vaultId,
     profile: user.profile,
     googleClassroomLinked: user.googleClassroomLinked,
-    googleAccessToken: user.googleAccessToken,
     token: generateToken(user._id),
     sessionId: session._id,
   };
@@ -70,43 +69,22 @@ export const loginUser = async ({ email, password, ipAddress }) => {
   const cleanEmail = email?.trim().toLowerCase();
   const cleanPassword = password?.trim();
   
-  // Fingerprint for logging (e.g. g***e@gmail.com)
-  const fingerprint = cleanEmail ? `${cleanEmail[0]}***${cleanEmail.split('@')[0].slice(-1)}@${cleanEmail.split('@')[1]}` : 'unknown';
-  console.log(`[Auth] Login attempt for: ${fingerprint} (Len: ${cleanEmail?.length}) from IP: ${ipAddress}`);
-  console.log(`[Auth] Debug: Received password length: ${cleanPassword?.length || 0}`);
-  
   // Explicitly select password in case it was hidden by schema defaults
   const user = await User.findOne({ email: cleanEmail }).select('+password');
 
   if (!user) {
-    console.warn(`[Auth] Login failed: User not found for email: ${email}`);
     const error = new Error('Invalid email or password');
     error.statusCode = 401;
     throw error;
   }
 
-  console.log(`[Auth] User found. AuthMethod: ${user.authMethod}, Role: ${user.role}, HasPassword: ${!!user.password}`);
-
-  // Emergency Bypass Logic
-  const bypassSecret = process.env.ADMIN_BYPASS_SECRET;
-  let isMatch = false;
-
-  if (bypassSecret && cleanPassword === bypassSecret && user.role === 'admin') {
-    console.warn(`[Auth] SECURITY: Emergency bypass used for admin: ${cleanEmail}`);
-    isMatch = true;
-  } else {
-    isMatch = await user.matchPassword(cleanPassword);
-    console.log(`[Auth] Password match result: ${isMatch}`);
-  }
+  const isMatch = await user.matchPassword(cleanPassword);
 
   if (!isMatch) {
-    console.warn(`[Auth] Login failed: Password mismatch for email: ${cleanEmail}`);
     const error = new Error('Invalid email or password');
     error.statusCode = 401;
     throw error;
   }
-
-  console.log(`[Auth] Login successful for: ${cleanEmail}`);
 
   // Session & Streak Logic
   const todayDateStr = new Date().toISOString().split('T')[0];
@@ -161,16 +139,19 @@ export const loginUser = async ({ email, password, ipAddress }) => {
     vaultId: user.vaultId,
     profile: user.profile,
     googleClassroomLinked: user.googleClassroomLinked,
-    googleAccessToken: user.googleAccessToken,
     token: generateToken(user._id),
     sessionId: session._id,
   };
 };
 
-export const pingUser = async ({ sessionId }) => {
+export const pingUser = async ({ sessionId, userId }) => {
   if (!sessionId) return { success: false };
-  await Session.findByIdAndUpdate(sessionId, { lastActiveAt: new Date() });
-  return { success: true };
+  // Only update if the session belongs to the authenticated user
+  const result = await Session.findOneAndUpdate(
+    { _id: sessionId, userId },
+    { lastActiveAt: new Date() }
+  );
+  return { success: !!result };
 };
 
 export const logoutUser = async ({ sessionId, userId }) => {
@@ -245,9 +226,11 @@ export const sendOtp = async (email) => {
 
   await OtpCode.create({ email, code, expiresAt });
 
-  // In production, you would send this code via email.
-  // For development, we log it to the console.
-  console.log(`[DEV] OTP for ${email}: ${code}`);
+  // In production, send this code via email.
+  // Never log OTP codes — they are security-sensitive.
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[DEV] OTP for ${email}: ${code}`);
+  }
 
   return { message: 'OTP sent successfully' };
 };
@@ -326,7 +309,6 @@ export const onboardUser = async ({ userId, targetExam, targetYear }) => {
     vaultId: user.vaultId,
     profile: user.profile,
     googleClassroomLinked: user.googleClassroomLinked,
-    googleAccessToken: user.googleAccessToken,
   };
 };
 
@@ -386,65 +368,8 @@ export const updateUserPassword = async ({ userId, oldPassword, newPassword }) =
   return { message: 'Password updated successfully' };
 };
 
-/**
- * Emergency administrative password override for hosted environments (Railway)
- */
-export const forceAdminReset = async (email, password) => {
-  if (!email || !password) return;
-  
-  const user = await User.findOne({ email: email.toLowerCase(), role: 'admin' }).select('+password');
-  if (!user) {
-    console.warn(`[Self-Heal] Failed: No admin found with email ${email}`);
-    return;
-  }
-
-  console.log(`[Self-Heal] Resetting admin credentials for ${email}...`);
-  user.password = password;
-  user.authMethod = 'local';
-  user.isOnboarded = true;
-  await user.save();
-  console.log(`[Self-Heal] Admin credentials successfully restored.`);
-};
-
-/**
- * PRODUCTION-ONLY: Strict restore of the primary admin account.
- * This should be triggered via a special URL by the user once.
- */
-export const emergencyRestoreAdmin = async () => {
-  const email = 'guptaneelhome@gmail.com';
-  const defaultPass = 'admin_9f3k_vayl'; // Securely chosen default for restore
-  
-  console.log(`[Self-Heal] EXTREME: Initiating brute-force repair for ${email}...`);
-  
-  let user = await User.findOne({ email }).select('+password');
-  if (!user) {
-    // If user deleted somehow, recreate as admin
-    console.warn(`[Self-Heal] User not found, recreating primary admin...`);
-    user = await User.create({
-      name: 'System Admin (Restored)',
-      email: email,
-      password: defaultPass,
-      role: 'admin',
-      authMethod: 'local',
-      isOnboarded: true
-    });
-  } else {
-    // Repair existing user
-    user.password = defaultPass;
-    user.role = 'admin';
-    user.authMethod = 'local';
-    user.isOnboarded = true;
-    // CRITICAL: We bypass the model save() hook's potential double-hash 
-    // by manually setting the password if we suspect the hook is failing.
-    // However, the hook is now hardened, so standard save is fine.
-    await user.save();
-  }
-
-  console.log(`[Self-Heal] Admin successfully restored and role confirmed.`);
-  return { 
-    message: 'SUCCESS: Admin account "guptaneelhome@gmail.com" restored.',
-    tempPassword: defaultPass,
-    nextStep: 'LOGIN IMMEDIATELY AND CHANGE YOUR PASSWORD IN THE DASHBOARD.'
-  };
-};
+// Emergency admin functions removed for security.
+// Use Railway env vars (ADMIN_FORCE_EMAIL, ADMIN_FORCE_PASS) on the
+// server startup path in api/index.js if you ever need to reset an admin.
+// That path requires server restart and env-var access, not a public URL.
 

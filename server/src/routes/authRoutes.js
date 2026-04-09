@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { register, login, ping, logout, sendOtp, verifyOtp, onboard, getMe, updateProfile, updatePassword, emergencyRestore } from '../controllers/authController.js';
+import { register, login, ping, logout, sendOtp, verifyOtp, onboard, getMe, updateProfile, updatePassword } from '../controllers/authController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 import passport from 'passport';
 import generateToken from '../utils/generateToken.js';
@@ -46,7 +46,7 @@ router.get('/google/callback',
 );
 
 
-// Rate limiter for OTP endpoint: 3 requests per IP per 15 minutes
+// Rate limiter for OTP send: 3 requests per IP per 15 minutes
 const otpLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 3,
@@ -55,16 +55,43 @@ const otpLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-router.post('/register', register);
-router.post('/login', login);
+// Rate limiter for login: 10 attempts per IP per 15 minutes
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { message: 'Too many login attempts, please try again after 15 minutes' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiter for registration: 5 accounts per IP per 15 minutes
+const registerLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { message: 'Too many accounts created, please try again after 15 minutes' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiter for OTP verification: 10 attempts per IP per 15 minutes
+const otpVerifyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { message: 'Too many verification attempts, please try again after 15 minutes' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+router.post('/register', registerLimiter, register);
+router.post('/login', loginLimiter, login);
 router.post('/ping', protect, ping);
 router.post('/logout', protect, logout);
 router.post('/send-otp', otpLimiter, sendOtp);
-router.post('/verify-otp', verifyOtp);
+router.post('/verify-otp', otpVerifyLimiter, verifyOtp);
 router.patch('/onboard', protect, onboard);
 router.get('/me', protect, getMe);
 router.patch('/profile', protect, updateProfile);
 router.patch('/password', protect, updatePassword);
-router.get('/restore-9f3k-admin', emergencyRestore);
+
 
 export default router;

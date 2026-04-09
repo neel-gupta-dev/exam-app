@@ -48,7 +48,7 @@ export const login = asyncHandler(async (req, res) => {
 // @access  Private
 export const ping = asyncHandler(async (req, res) => {
   const { sessionId } = req.body;
-  const result = await authService.pingUser({ sessionId });
+  const result = await authService.pingUser({ sessionId, userId: req.user._id });
   res.json(result);
 });
 
@@ -156,11 +156,4 @@ export const updatePassword = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-// @desc    Emergency Restore Admin Account (PRODUCTION RECOVERY)
-// @route   GET /api/auth/restore-9f3k-admin
-// @access  Public (Obfuscated URL)
-export const emergencyRestore = asyncHandler(async (req, res) => {
-  const result = await authService.emergencyRestoreAdmin();
-  res.json(result);
-});
 
