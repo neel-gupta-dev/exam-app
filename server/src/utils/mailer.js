@@ -57,6 +57,7 @@ export const sendOtpEmail = async (recipientEmail, otpCode) => {
       <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #0a0a0f; border-radius: 16px; overflow: hidden; border: 1px solid #1a1a2e;">
         <!-- Header -->
         <div style="padding: 32px 32px 0; text-align: center;">
+          <img src="https://vayl.in/vayl-logo.png" alt="Vayl Logo" style="width: 48px; height: 48px; margin-bottom: 16px;">
           <h1 style="margin: 0; font-size: 22px; font-weight: 800; color: #ffffff; letter-spacing: 2px; text-transform: uppercase;">
             VAYL
           </h1>
