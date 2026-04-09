@@ -11,18 +11,11 @@ const zohoTransporter = nodemailer.createTransport({
   }
 });
 
-// ─── ZeptoMail Transporter (lazy — created at send-time so env vars are loaded) ─
- const getZeptoTransporter = () => nodemailer.createTransport({
-  host: 'smtp.zeptomail.in',
-  port: 587,
-  secure: false,
-  requireTLS: true,
-  auth: {
-    user: 'emailapikey',
-    pass: process.env.ZEPTOMAIL_PASS
-  },
-  tls: { rejectUnauthorized: false }
-});
+// ─── ZeptoMail (REST API — to bypass Railway SMTP blocks) ───────────────
+// We no longer use nodemailer for ZeptoMail because Railway blocks outbound
+// SMTP on hobby plans. Using their HTTP POST API resolves it perfectly.
+const ZEPTOMAIL_API_URL = 'https://api.zeptomail.in/v1.1/email';
+
 
 
 // ─── Feedback Email (existing — uses Zoho) ─────────────────────────────
@@ -100,9 +93,39 @@ export const sendOtpEmail = async (recipientEmail, otpCode) => {
     `
   };
 
+  // Send via REST API to evade Railway SMTP Block
   try {
-    await getZeptoTransporter().sendMail(mailOptions);
-    console.log(`[ZeptoMail] OTP email sent to ${recipientEmail}`);
+    // Strip surrounding quotes if present from Railway or dotenv
+    let apiKey = process.env.ZEPTOMAIL_PASS || '';
+    if (apiKey.startsWith('"') && apiKey.endsWith('"')) {
+      apiKey = apiKey.slice(1, -1);
+    }
+    if (apiKey.startsWith("'") && apiKey.endsWith("'")) {
+      apiKey = apiKey.slice(1, -1);
+    }
+
+    const response = await fetch(ZEPTOMAIL_API_URL, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': `Zoho-enczapikey ${apiKey}`
+      },
+      body: JSON.stringify({
+        from: { "address": "noreply@vayl.in", "name": "Vayl" },
+        to: [{ "email_address": { "address": recipientEmail } }],
+        subject: `${otpCode} — Your Vayl Verification Code`,
+        htmlbody: mailOptions.html
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`[ZeptoMail REST Error] ${response.status} - ${errText}`);
+      return false;
+    }
+
+    console.log(`[ZeptoMail] OTP email successfully sent via REST to ${recipientEmail}`);
     return true;
   } catch (error) {
     console.error("[ZeptoMail] Failed to send OTP email:", error.message);
