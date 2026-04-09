@@ -6,6 +6,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Toaster } from "sonner";
+import ConsoleEasterEgg from "@/components/ConsoleEasterEgg";
 import "./globals.css";
 
 const montserrat = Montserrat({
@@ -93,6 +94,7 @@ export default function RootLayout({
           </>
         )}
         {children}
+        <ConsoleEasterEgg />
         <Toaster position="bottom-right" theme="dark" richColors />
       </body>
     </html>
