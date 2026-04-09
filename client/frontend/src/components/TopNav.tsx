@@ -210,7 +210,7 @@ export default function TopNav() {
 
   return (
     <>
-      <header className={`fixed top-0 right-0 h-16 bg-surface flex items-center justify-between px-4 md:px-8 w-full ${isCollapsed ? 'md:w-[calc(100%-5rem)]' : 'md:w-[calc(100%-16rem)]'} transition-all duration-300 ml-auto z-40`}>
+      <header className={`fixed top-0 right-0 h-16 bg-surface flex items-center justify-between px-4 md:px-8 w-full ${isCollapsed ? 'md:w-[calc(100%-5rem)]' : 'md:w-[calc(100%-14rem)] lg:w-[calc(100%-16rem)]'} transition-all duration-300 ml-auto z-40`}>
         {/* Search Bar - Hidden on Mobile */}
         <div className="flex items-center gap-2 md:hidden mr-2 shrink-0">
           <img src="/vayl-logo.png" alt="Vayl" className="w-6 h-6 object-contain" />
@@ -263,7 +263,7 @@ export default function TopNav() {
             className="bg-indigo-500 hover:opacity-90 transition-all text-white px-3 md:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1 md:gap-2"
           >
             <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Save Resource</span>
+            <span className="hidden lg:inline">Save Resource</span>
           </button>
           <div className="flex items-center gap-2 md:gap-4 text-on-surface-variant">
             <button 

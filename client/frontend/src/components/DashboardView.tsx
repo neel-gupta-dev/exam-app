@@ -229,9 +229,9 @@ export default function DashboardView() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row gap-6 md:gap-8">
+      <div className="max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-6 md:gap-8">
         {/* Left Column (Main Area) */}
-        <section className="w-full md:w-[70%] space-y-6 md:space-y-8">
+        <section className="w-full lg:w-[70%] space-y-6 md:space-y-8">
           <div className="flex items-end justify-between">
             <div>
               <h2 className="text-2xl font-extrabold tracking-tight text-on-surface">
@@ -273,7 +273,7 @@ export default function DashboardView() {
         </section>
 
         {/* Right Column (Widgets) */}
-        <aside className="w-full md:w-[30%] space-y-6">
+        <aside className="w-full lg:w-[30%] space-y-6">
           {/* Daily Goal — most prominent widget */}
           <DailyGoalWidget />
           <ProgressWidget 

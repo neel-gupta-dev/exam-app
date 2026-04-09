@@ -101,7 +101,7 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside className={`fixed left-0 top-0 h-screen ${isCollapsed ? 'w-20' : 'w-64'} bg-surface border-r border-outline-variant/10 flex flex-col z-50 hidden md:flex transition-all duration-300 overflow-y-auto overflow-x-hidden`}>
+      <aside className={`fixed left-0 top-0 h-screen ${isCollapsed ? 'w-20' : 'w-56 lg:w-64'} bg-surface border-r border-outline-variant/10 flex flex-col z-50 hidden md:flex transition-all duration-300 overflow-y-auto overflow-x-hidden`}>
         <div className="p-4 flex-1">
           {/* Brand & Toggle */}
           <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} mb-10`}>

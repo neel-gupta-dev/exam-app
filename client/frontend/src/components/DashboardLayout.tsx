@@ -29,7 +29,7 @@ export default function DashboardLayout({
   return (
     <ProtectedRoute>
       {/* Content area — offset to account for the persistent Sidebar and TopNav from AppShell */}
-      <main className={`pt-20 md:pt-24 pb-24 md:pb-8 ml-0 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'} px-4 md:px-8 min-h-screen relative flex flex-col transition-all duration-300`}>
+      <main className={`pt-20 md:pt-24 pb-24 md:pb-8 ml-0 ${isCollapsed ? 'md:ml-20' : 'md:ml-56 lg:ml-64'} px-4 md:px-8 min-h-screen relative flex flex-col transition-all duration-300`}>
         <div className="flex-1 flex flex-col">
           {children}
         </div>
