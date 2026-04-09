@@ -19,6 +19,10 @@ export function middleware(req: NextRequest) {
   const isSyllabusSubdomain = 
     hostname.includes("syllabus.vayl.in") || hostname.includes("syllabus.localhost");
 
+  // 418 Subdomain - rewrites to /418
+  const isTeapotSubdomain = 
+    hostname.includes("418.vayl.in") || hostname.includes("418.localhost");
+
   const searchParams = req.nextUrl.searchParams.toString();
   const path = `${url.pathname}${
     searchParams.length > 0 ? `?${searchParams}` : ""
@@ -35,6 +39,13 @@ export function middleware(req: NextRequest) {
   if (isSyllabusSubdomain) {
     return NextResponse.rewrite(
       new URL(`/syllabus${path === "/" ? "" : path}`, req.url)
+    );
+  }
+
+  // Handle Teapot subdomain rewrite
+  if (isTeapotSubdomain) {
+    return NextResponse.rewrite(
+      new URL(`/418${path === "/" ? "" : path}`, req.url)
     );
   }
 
