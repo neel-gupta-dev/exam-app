@@ -10,6 +10,7 @@ import Sidebar from "@/components/Sidebar";
 import TopNav from "@/components/TopNav";
 import DreamerModal from "@/components/DreamerModal";
 import ConfidencePopup from "@/components/ConfidencePopup";
+import OnboardingModal from "@/components/OnboardingModal";
 import FocusAudioPlayer from "@/components/FocusAudioPlayer";
 import { isDemoAllowedPath } from "@/lib/demo";
 import VaultAdScript from "@/components/VaultAdScript";
@@ -104,6 +105,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <>
               <DreamerModal />
               <ConfidencePopup />
+              <OnboardingModal />
               <FocusAudioPlayer />
               <AuthenticatedEffects />
               <VaultAdScript />
