@@ -1,21 +1,44 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function proxy(req: NextRequest) {
+export function middleware(req: NextRequest) {
   const url = req.nextUrl;
   
-  // Get hostname of request (e.g. notes.vayl.in, notes.localhost:3000)
+  // Get hostname of request (e.g. notes.vayl.in, nta.vayl.in, notes.localhost:3000)
   const hostname = req.headers.get("host") || "";
   
   // Define subdomains we support
   const isNotesSubdomain =
     hostname.includes("notes.vayl.in") || hostname.includes("notes.localhost");
+    
+  // NTA Subdomain - redirects to Rickroll YouTube link as requested
+  const isNtaSubdomain = 
+    hostname.includes("nta.vayl.in") || hostname.includes("nta.localhost");
+
+  // Syllabus Subdomain - rewrites to /syllabus
+  const isSyllabusSubdomain = 
+    hostname.includes("syllabus.vayl.in") || hostname.includes("syllabus.localhost");
 
   const searchParams = req.nextUrl.searchParams.toString();
   const path = `${url.pathname}${
     searchParams.length > 0 ? `?${searchParams}` : ""
   }`;
 
+  // Handle NTA subdomain redirect
+  if (isNtaSubdomain) {
+    return NextResponse.redirect(new URL("https://youtu.be/dQw4w9WgXcQ?si=W7xdj3OAuN0G5P02"), {
+      status: 307 // Temporary redirect
+    });
+  }
+
+  // Handle Syllabus subdomain rewrite
+  if (isSyllabusSubdomain) {
+    return NextResponse.rewrite(
+      new URL(`/syllabus${path === "/" ? "" : path}`, req.url)
+    );
+  }
+
+  // Handle Notes subdomain rewrite
   if (isNotesSubdomain) {
     // Rewrite notes subdomain to the /notes route folder
     return NextResponse.rewrite(
