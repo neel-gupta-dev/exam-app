@@ -176,6 +176,7 @@ export default function LandingPage() {
           </Link>
           <div className="flex items-center gap-8">
             <div className="hidden md:flex items-center gap-8 text-xs font-interface font-black uppercase tracking-widest text-on-surface-variant">
+              <MagneticButton href="https://notes.vayl.in" className="hover:text-primary transition-colors">Free Notes</MagneticButton>
               <MagneticButton href="/about" className="hover:text-primary transition-colors">About</MagneticButton>
               <MagneticButton href="/contact" className="hover:text-primary transition-colors">Contact</MagneticButton>
             </div>

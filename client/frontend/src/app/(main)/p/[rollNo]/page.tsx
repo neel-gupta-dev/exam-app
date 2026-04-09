@@ -3,6 +3,7 @@ import { ShieldAlert, UserPlus, ArrowRight } from 'lucide-react';
 import ProtocolRetry from '@/components/ProtocolRetry';
 import { API_BASE_URL } from '@/config/env';
 import React from 'react';
+import FollowSection from './FollowButton';
 
 async function getProfile(rollNo: string) {
   try {
@@ -126,13 +127,12 @@ async function PublicProfilePage({ params }: { params: Promise<{ rollNo: string 
                     <span>Knowledge Hub</span>
                   </div>
                 </div>
-                <Link
-                  href="/signup"
-                  className="w-full md:w-auto px-8 py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-headline font-bold rounded-xl active:scale-95 transition-all shadow-xl shadow-primary/10 flex items-center justify-center gap-2 group"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  Create Your Own Vault
-                </Link>
+
+                <FollowSection 
+                  targetVaultId={profile.rollNo} 
+                  initialFollowersCount={profile.followersCount || 0}
+                  followingCount={profile.followingCount || 0}
+                />
               </div>
             </div>
           </div>

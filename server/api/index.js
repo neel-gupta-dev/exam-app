@@ -25,6 +25,8 @@ import { getHealth } from '../src/controllers/healthController.js';
 import { closeExpiredSessions } from '../src/services/authService.js';
 import adminRoutes from '../src/routes/adminRoutes.js';
 import chapterListRoutes from '../src/routes/chapterListRoutes.js';
+import followRoutes from '../src/routes/followRoutes.js';
+import notificationRoutes from '../src/routes/notificationRoutes.js';
 import passport from 'passport';
 import configurePassport from '../src/config/passport.js';
 import { MONGO_URI, PORT, ALLOWED_ORIGINS } from '../src/config/index.js';
@@ -120,6 +122,8 @@ apiRouter.use('/performance', performanceRoutes);
 apiRouter.use('/calendar', calendarRoutes);
 apiRouter.use('/admin', adminRoutes);
 apiRouter.use('/chapter-list', chapterListRoutes);
+apiRouter.use('/follow', followRoutes);
+apiRouter.use('/notifications', notificationRoutes);
 
 // Mount the API router
 app.use('/api', apiRouter); // Legacy/Admin Panel support

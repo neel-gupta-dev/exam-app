@@ -4,6 +4,7 @@ import Resource from '../models/Resource.js';
 import OtpCode from '../models/OtpCode.js';
 import { generateVaultId } from '../utils/generateVaultId.js';
 import generateToken from '../utils/generateToken.js';
+import { sendOtpEmail } from '../utils/mailer.js';
 /**
  * Mock helper to get location from IP (skips localhost)
  * Removed geoip-lite to speed up Railway builds (large database download).
@@ -17,7 +18,7 @@ const getLocationInfo = (ip) => {
 };
 
 /**
- * Register a new user
+ * Register a new user (requires prior email verification via OTP)
  */
 export const registerUser = async ({ name, email, password, ipAddress }) => {
   const existingUser = await User.findOne({ email });
@@ -26,6 +27,17 @@ export const registerUser = async ({ name, email, password, ipAddress }) => {
     error.statusCode = 400;
     throw error;
   }
+
+  // Verify the email was pre-confirmed via signup OTP
+  const verifiedOtp = await OtpCode.findOne({ email, type: 'signup', isVerified: true });
+  if (!verifiedOtp) {
+    const error = new Error('Email not verified. Please verify your email address first.');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  // Clean up the verified OTP record now that we're creating the account
+  await OtpCode.deleteMany({ email, type: 'signup' });
 
   const user = await User.create({ 
     name, 
@@ -226,9 +238,14 @@ export const sendOtp = async (email) => {
 
   await OtpCode.create({ email, code, expiresAt });
 
-  // In production, send this code via email.
-  // Never log OTP codes — they are security-sensitive.
-  if (process.env.NODE_ENV !== 'production') {
+  // Send OTP via ZeptoMail in production, log to console in development
+  if (process.env.NODE_ENV === 'production') {
+    const sent = await sendOtpEmail(email, code);
+    if (!sent) {
+      console.error(`[OTP] Failed to send OTP email to ${email}`);
+      // Still return success — OTP is saved in DB, user can retry
+    }
+  } else {
     console.log(`[DEV] OTP for ${email}: ${code}`);
   }
 
@@ -268,6 +285,68 @@ export const verifyOtp = async ({ email, code }) => {
   await OtpCode.deleteMany({ email });
 
   return { message: 'Student verified successfully' };
+};
+
+/**
+ * Send signup verification OTP to any email address
+ */
+export const sendSignupOtp = async (email) => {
+  const cleanEmail = email.trim().toLowerCase();
+
+  // Don't send if user already exists
+  const existingUser = await User.findOne({ email: cleanEmail });
+  if (existingUser) {
+    const error = new Error('An account with this email already exists. Please log in instead.');
+    error.statusCode = 409;
+    throw error;
+  }
+
+  // Delete any existing signup OTPs for this email
+  await OtpCode.deleteMany({ email: cleanEmail, type: 'signup' });
+
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+  await OtpCode.create({ email: cleanEmail, code, expiresAt, type: 'signup' });
+
+  if (process.env.NODE_ENV === 'production') {
+    const sent = await sendOtpEmail(cleanEmail, code);
+    if (!sent) {
+      console.error(`[Signup OTP] Failed to send email to ${cleanEmail}`);
+    }
+  } else {
+    console.log(`[DEV] Signup OTP for ${cleanEmail}: ${code}`);
+  }
+
+  return { message: 'Verification code sent to your email' };
+};
+
+/**
+ * Verify signup OTP — marks it as verified so registerUser can proceed
+ */
+export const verifySignupOtp = async ({ email, code }) => {
+  const cleanEmail = email.trim().toLowerCase();
+
+  const otpRecord = await OtpCode.findOne({ email: cleanEmail, code, type: 'signup' });
+
+  if (!otpRecord) {
+    const error = new Error('Invalid verification code');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (otpRecord.expiresAt < new Date()) {
+    await OtpCode.deleteOne({ _id: otpRecord._id });
+    const error = new Error('Verification code has expired. Please request a new one.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Mark as verified — registerUser will check for this flag
+  otpRecord.isVerified = true;
+  await otpRecord.save();
+
+  return { message: 'Email verified successfully' };
 };
 
 /**

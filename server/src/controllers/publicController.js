@@ -1,5 +1,6 @@
 import asyncHandler from 'express-async-handler';
 import User from '../models/User.js';
+import Follow from '../models/Follow.js';
 
 // @desc    Get public profile by roll number (vaultId)
 // @route   GET /api/public/profile/:rollNo
@@ -24,6 +25,11 @@ export const getPublicProfile = asyncHandler(async (req, res) => {
   const levelData = user.levelData;
   const totalStudyHours = Math.round(user.totalActiveSeconds / 3600);
   const resourceCount = user.analytics?.resourceCount || 0;
+
+  const [followersCount, followingCount] = await Promise.all([
+    Follow.countDocuments({ followingId: user._id }),
+    Follow.countDocuments({ followerId: user._id })
+  ]);
 
   // Generate dynamic badges (Synchronized with private profile)
   const badges = [
@@ -66,6 +72,8 @@ export const getPublicProfile = asyncHandler(async (req, res) => {
     totalStudyHours,
     streak: user.currentStreak || 0,
     resourceCount,
+    followersCount,
+    followingCount,
     badges,
     rollNo: user.vaultId,
     joinedAt: user.createdAt

@@ -78,3 +78,17 @@ export interface Session {
   lastPing: string | Date;
   devicePublicIp?: string;
 }
+
+export interface Notification {
+  _id: string;
+  recipient: string;
+  sender: {
+    _id: string;
+    name: string;
+    vaultId: string;
+  };
+  type: 'follow';
+  isRead: boolean;
+  createdAt: string | Date;
+}
+

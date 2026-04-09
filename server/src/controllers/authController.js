@@ -156,4 +156,31 @@ export const updatePassword = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
+// @desc    Send OTP to any email for signup verification
+// @route   POST /api/auth/send-signup-otp
+// @access  Public
+export const sendSignupOtp = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    res.status(400);
+    throw new Error('Email is required');
+  }
+  const data = await authService.sendSignupOtp(email);
+  res.json(data);
+});
+
+// @desc    Verify signup OTP
+// @route   POST /api/auth/verify-signup-otp
+// @access  Public
+export const verifySignupOtp = asyncHandler(async (req, res) => {
+  const { email, code } = req.body;
+  if (!email || !code) {
+    res.status(400);
+    throw new Error('Email and verification code are required');
+  }
+  const data = await authService.verifySignupOtp({ email, code });
+  res.json(data);
+});
+
+
 

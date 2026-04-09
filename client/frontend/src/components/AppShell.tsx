@@ -83,7 +83,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   // which should only show the shell if 'vayl_demo_mode' is actually active in localStorage
   // (otherwise '/' is the Landing Page and should NOT have the sidebar).
   const isDemoPath = isDemoAllowedPath(pathname);
-  const showShell = isAuthenticated || (isDemoPath && (pathname !== '/' || isDemoMode));
+  const isPublicPage = pathname.startsWith('/p/');
+  const showShell = !isPublicPage && (isAuthenticated || (isDemoPath && (pathname !== '/' || isDemoMode)));
 
   return (
     <>

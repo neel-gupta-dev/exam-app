@@ -16,6 +16,15 @@ const otpCodeSchema = new mongoose.Schema({
     required: true,
     index: { expires: 0 }, // TTL index — document auto-deletes when expiresAt is reached
   },
+  type: {
+    type: String,
+    enum: ['student_verify', 'signup'],
+    default: 'student_verify',
+  },
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const OtpCode = mongoose.model('OtpCode', otpCodeSchema);

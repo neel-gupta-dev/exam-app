@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 
-import { User } from '@/types';
+import { User, Notification } from '@/types';
 interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -49,6 +49,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [router]);
 
+  const checkNotifications = useCallback(async () => {
+    // Only fetch if we have a token
+    const activeToken = localStorage.getItem('kv_token') || sessionStorage.getItem('kv_token');
+    if (!activeToken) return;
+
+    try {
+      const { data } = await api.get<Notification[]>('/notifications');
+      if (data && data.length > 0) {
+        data.forEach((notif) => {
+          if (notif.type === 'follow') {
+            toast.info(
+              <div className="flex items-center gap-1">
+                <span className="text-primary font-black tracking-wide">{notif.sender.name}</span>
+                <span className="text-on-surface-variant font-medium">followed you!</span>
+              </div>,
+              {
+              description: `Vault ID: #${notif.sender.vaultId.replace('#', '')}`,
+              action: {
+                label: 'View Profile',
+                onClick: () => router.push(`/p/${notif.sender.vaultId.replace('#', '')}`)
+              }
+            });
+          }
+        });
+        
+        // Mark these as read so they don't toast again
+        const ids = data.map(n => n._id);
+        await api.post('/notifications/read', { notificationIds: ids });
+      }
+    } catch (err) {
+      console.error("[Auth] Failed to fetch notifications:", err);
+    }
+  }, [token, router]);
+
   // Hydrate from API on mount and add listeners
   useEffect(() => {
     const initAuth = async () => {
@@ -63,6 +97,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           const { data } = await api.get('/auth/me');
           setUser(data);
+          // Check for notifications on initial load
+          checkNotifications();
         } catch {
           localStorage.removeItem('kv_token');
           localStorage.removeItem('kv_sessionId');
@@ -106,7 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     }, 10000);
 
-    // Heartbeat Interval (10 minutes)
+    // Heartbeat Interval (10 minutes) + Notifications check every 2 minutes
     const heartbeatInterval = setInterval(() => {
       const sId = localStorage.getItem('kv_sessionId') || sessionStorage.getItem('kv_sessionId');
       const tk = localStorage.getItem('kv_token') || sessionStorage.getItem('kv_token');
@@ -114,6 +150,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         api.post('/auth/ping', { sessionId: sId }).catch(() => {});
       }
     }, 10 * 60 * 1000);
+
+    const notificationInterval = setInterval(() => {
+      checkNotifications();
+    }, 2 * 60 * 1000);
 
     // Visibility Change Listener (Navigator Beacon for reliable closure + Anti-Distraction Title)
     const originalTitle = document.title;
@@ -141,6 +181,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     return () => {
       clearInterval(heartbeatInterval);
+      clearInterval(notificationInterval);
       window.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('resourceAdded', fetchUser);
       window.removeEventListener('resourceDeleted', fetchUser);
@@ -177,8 +218,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSessionId(sId || null);
     setUser(userData);
     toast.success('Welcome back!');
+    checkNotifications();
     router.push('/');
-  }, [router]);
+  }, [router, checkNotifications]);
 
   const loginWithToken = useCallback(async (jwt: string) => {
     // Do NOT save to localStorage yet — verify with backend first
@@ -193,6 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(jwt);
       setUser(data);
       toast.success('Logged in with Google!');
+      checkNotifications();
       // Redirect to dashboard on success
       router.replace('/');
     } catch (err) {

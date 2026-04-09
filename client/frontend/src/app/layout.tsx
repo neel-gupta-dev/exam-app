@@ -5,6 +5,7 @@ import { Montserrat, Poppins, Hanken_Grotesk } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const montserrat = Montserrat({
@@ -92,6 +93,7 @@ export default function RootLayout({
           </>
         )}
         {children}
+        <Toaster position="bottom-right" theme="dark" richColors />
       </body>
     </html>
   );

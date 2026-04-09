@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { register, login, ping, logout, sendOtp, verifyOtp, onboard, getMe, updateProfile, updatePassword } from '../controllers/authController.js';
+import { register, login, ping, logout, sendOtp, verifyOtp, onboard, getMe, updateProfile, updatePassword, sendSignupOtp, verifySignupOtp } from '../controllers/authController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 import passport from 'passport';
 import generateToken from '../utils/generateToken.js';
@@ -55,20 +55,20 @@ const otpLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Rate limiter for login: 10 attempts per IP per 15 minutes
+// Rate limiter for login: 10 attempts per IP per 1 hour
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 60 * 60 * 1000,
   max: 10,
-  message: { message: 'Too many login attempts, please try again after 15 minutes' },
+  message: { message: 'Too many login attempts, please try again after 1 hour' },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-// Rate limiter for registration: 5 accounts per IP per 15 minutes
+// Rate limiter for registration: 3 accounts per IP per 1 hour
 const registerLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  message: { message: 'Too many accounts created, please try again after 15 minutes' },
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  message: { message: 'Too many accounts created, please try again after 1 hour' },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -88,6 +88,8 @@ router.post('/ping', protect, ping);
 router.post('/logout', protect, logout);
 router.post('/send-otp', otpLimiter, sendOtp);
 router.post('/verify-otp', otpVerifyLimiter, verifyOtp);
+router.post('/send-signup-otp', otpLimiter, sendSignupOtp);
+router.post('/verify-signup-otp', otpVerifyLimiter, verifySignupOtp);
 router.patch('/onboard', protect, onboard);
 router.get('/me', protect, getMe);
 router.patch('/profile', protect, updateProfile);
