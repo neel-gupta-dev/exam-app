@@ -57,7 +57,7 @@ export const sendFeedbackEmail = async (userEmail) => {
 // ─── OTP Email (new — uses ZeptoMail) ──────────────────────────────────
 export const sendOtpEmail = async (recipientEmail, otpCode) => {
   const mailOptions = {
-    from: '"Vayl" <support@vayl.in>',
+    from: '"Vayl" <noreply@vayl.in>',
     to: recipientEmail,
     subject: `${otpCode} — Your Vayl Verification Code`,
     html: `
