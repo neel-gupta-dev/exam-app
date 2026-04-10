@@ -27,6 +27,7 @@ import adminRoutes from '../src/routes/adminRoutes.js';
 import chapterListRoutes from '../src/routes/chapterListRoutes.js';
 import followRoutes from '../src/routes/followRoutes.js';
 import notificationRoutes from '../src/routes/notificationRoutes.js';
+import flashcardRoutes from '../src/routes/flashcardRoutes.js';
 import passport from 'passport';
 import configurePassport from '../src/config/passport.js';
 import { MONGO_URI, PORT, ALLOWED_ORIGINS } from '../src/config/index.js';
@@ -124,6 +125,7 @@ apiRouter.use('/admin', adminRoutes);
 apiRouter.use('/chapter-list', chapterListRoutes);
 apiRouter.use('/follow', followRoutes);
 apiRouter.use('/notifications', notificationRoutes);
+apiRouter.use('/flashcards', flashcardRoutes);
 
 // Mount the API router
 app.use('/api', apiRouter); // Legacy/Admin Panel support
