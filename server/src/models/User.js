@@ -101,6 +101,17 @@ const userSchema = new mongoose.Schema(
         default: '' 
       },
     },
+    /**
+     * analytics — Derived State Cache
+     *
+     * NOTE: These values are intentionally kept here for fast UI rendering
+     * (e.g. Dashboard stat cards). They are DERIVED STATE — incrementally
+     * maintained by controllers and do NOT replace the raw event log.
+     *
+     * The ground truth for all analytics is the ActivityLog collection.
+     * These fields should be treated as a read-optimised cache (CQRS-style),
+     * never as the primary source of truth for ML pipelines.
+     */
     analytics: {
       subjectDistribution: {
         type: Map,
@@ -144,6 +155,23 @@ const userSchema = new mongoose.Schema(
     googleCalendarLinked: {
       type: Boolean,
       default: false,
+    },
+    /**
+     * lastActiveAt — Activity Timestamp
+     *
+     * Updated on every authenticated API call via the auth middleware.
+     * Used for:
+     * - Daily streak calculations
+     * - Churn prediction (ML signal: days since last active)
+     * - Session continuity detection
+     *
+     * More granular than `lastLoginDate` (which only tracks logins).
+     * Indexed for efficient range queries in analytics dashboards.
+     */
+    lastActiveAt: {
+      type: Date,
+      default: null,
+      index: true,
     },
   },
   { 

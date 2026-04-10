@@ -17,6 +17,16 @@ const protect = asyncHandler(async (req, res, next) => {
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
       req.user = await User.findById(decoded.id).select('-password');
+
+      // Fire-and-forget: stamp lastActiveAt without blocking the request chain.
+      // Using updateOne bypasses Mongoose hooks for maximum performance.
+      User.updateOne(
+        { _id: req.user._id },
+        { $set: { lastActiveAt: new Date() } }
+      ).catch((err) => {
+        console.error('[Auth] Failed to update lastActiveAt:', err.message);
+      });
+
       next();
 
     } catch (error) {

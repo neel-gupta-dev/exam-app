@@ -5,13 +5,21 @@ const columnSchema = new mongoose.Schema({
   name: { type: String, required: true }
 }, { _id: false });
 
+const chapterProgressSchema = new mongoose.Schema({
+  completed: { type: Boolean, default: false },
+  completedAt: { type: Date, default: null },
+}, { _id: false });
+
 const chapterSchema = new mongoose.Schema({
   id: { type: String, required: true },
   name: { type: String, default: '' },
   dueDate: { type: Date, default: null },
   progress: {
     type: Map,
-    of: Boolean,
+    // Map<String, { completed: Boolean, completedAt: Date }>
+    // Keys are column IDs (e.g. 'col-1', 'col-2').
+    // Replaces the old Map<String, Boolean> to support time-series analytics.
+    of: chapterProgressSchema,
     default: {}
   }
 }, { _id: false });
