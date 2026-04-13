@@ -26,14 +26,6 @@
 
 While `.env` is in `.gitignore` and NOT tracked in git history (verified), the file exists on disk with **real production-grade secrets**:
 
-```
-JWT_SECRET=45tergt534rg4er3fersgfrtertg4trerg35t4wyj67i8tuiyj
-GOOGLE_CLIENT_SECRET=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
-ADMIN_BASIC_PASS=ctrl#9f3k!vayl
-ZEPTOMAIL_PASS="PHtE6r1eROjqg296+hcGtKPsEcClZ4MqqOpiJQEU5Y4RXvRVHE1..."
-EMAIL_PASS=Neel1!2@3#4$
-```
-
 > [!CAUTION]
 > If this machine is ever compromised, shared, or a backup is leaked, **every secret is exposed in plaintext**. The JWT secret would allow forging auth tokens for any user. The Google Client Secret allows OAuth impersonation. The ZeptoMail key allows sending emails as `noreply@vayl.in`.
 
