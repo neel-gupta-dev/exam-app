@@ -1,30 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-export const CategoryTabs = () => {
-  const [activeTab, setActiveTab] = useState('full');
-
-  const tabs = [
-    { id: 'full', label: 'Full Tests' },
-    { id: 'part', label: 'Part Tests' },
-    { id: 'chapter', label: 'Chapter-wise Tests' },
-    { id: 'previous', label: 'Previous Year Papers' },
-  ];
-
+export default function CategoryTabs() {
   return (
-    <div className="flex items-center gap-3 mb-10 overflow-x-auto pb-2 scrollbar-hide">
-      {tabs.map(tab => (
-        <button
-          key={tab.id}
-          onClick={() => setActiveTab(tab.id)}
-          className={`px-6 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
-              activeTab === tab.id
-                  ? 'bg-surface-container-low text-primary border border-primary-container'
-                  : 'text-on-surface-variant hover:text-on-surface'
-            }`}
-        >
-          {tab.label}
-        </button>
-      ))}
+    <div className="flex items-center space-x-1 mb-10 overflow-x-auto pb-2 scrollbar-hide">
+      <button className="cursor-pointer px-6 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
+        Full Tests
+      </button>
+      <button className="cursor-pointer px-6 py-2.5 rounded-full text-sm font-medium whitespace-nowrap text-on-surface-variant hover:text-on-surface transition-colors border-none bg-transparent">
+        Part Tests
+      </button>
+      <button className="cursor-pointer px-6 py-2.5 rounded-full text-sm font-medium whitespace-nowrap text-on-surface-variant hover:text-on-surface transition-colors border-none bg-transparent">
+        Chapter-wise Tests
+      </button>
+      <button className="cursor-pointer px-6 py-2.5 rounded-full text-sm font-medium whitespace-nowrap text-on-surface-variant hover:text-on-surface transition-colors border-none bg-transparent">
+        Previous Year Papers
+      </button>
     </div>
   );
-};
+}

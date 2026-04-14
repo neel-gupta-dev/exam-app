@@ -1,58 +1,89 @@
-import { Sidebar, TopNav, TestCard, StatsPanel, CategoryTabs } from './components';
+import React from 'react';
 
 export default function App() {
-  const testData = [
-    {
-      badge: 'Advance',
-      subject: 'Physics • Chemistry • Maths',
-      title: 'JEE Full Mock 01',
-      duration: 180,
-      marks: 300,
-      status: 'Not Started',
-      statusIcon: 'radio_button_checked',
-      buttonText: 'Attempt Test',
-      buttonVariant: 'outline'
-    },
-    {
-      badge: 'Intermediate',
-      subject: 'Calculus Focus',
-      title: 'Mathematics Full Mock 04',
-      duration: 90,
-      marks: 120,
-      status: 'In Progress',
-      statusIcon: 'pending',
-      buttonText: 'Resume Test',
-      buttonVariant: 'primary'
-    },
-    {
-      badge: 'Foundation',
-      subject: 'General Aptitude',
-      title: 'Logical Reasoning Mock 02',
-      duration: 60,
-      marks: 100,
-      status: 'Not Started',
-      statusIcon: 'radio_button_checked',
-      buttonText: 'Attempt Test',
-      buttonVariant: 'outline'
-    },
-    {
-      badge: 'Advance',
-      subject: 'Modern Physics',
-      title: 'JEE Full Mock 02',
-      duration: 180,
-      marks: 300,
-      status: 'Not Started',
-      statusIcon: 'radio_button_checked',
-      buttonText: 'Attempt Test',
-      buttonVariant: 'outline'
-    },
-  ];
-
   return (
-    <div className="app-root dark bg-surface text-on-surface">
-      <Sidebar />
-      <TopNav />
-      
+    <div className="min-h-screen bg-background text-on-surface">
+      {/* SideNavBar */}
+      <aside className="fixed left-0 top-0 h-screen w-64 bg-slate-900 flex flex-col py-6 px-4 z-50">
+        <div className="mb-10 px-2">
+          <h1 className="text-xl font-bold tracking-tight text-indigo-500 font-headline">The Scholar</h1>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-medium mt-1">Productivity Suite</p>
+        </div>
+        
+        <nav className="flex-1 space-y-1">
+          <a className="flex items-center px-3 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/30 transition-colors duration-200 rounded-lg group" href="#">
+            <span className="material-symbols-outlined mr-3">dashboard</span>
+            <span className="text-sm font-medium">Dashboard</span>
+          </a>
+          <a className="flex items-center px-3 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/30 transition-colors duration-200 rounded-lg group" href="#">
+            <span className="material-symbols-outlined mr-3">assignment</span>
+            <span className="text-sm font-medium">Exams</span>
+          </a>
+          {/* Active Navigation Logic: Test Series matches current screen */}
+          <a className="flex items-center px-3 py-3 border-l-2 border-indigo-500 bg-slate-800/50 text-indigo-400 font-semibold transition-colors duration-200 group" href="#">
+            <span className="material-symbols-outlined mr-3">layers</span>
+            <span className="text-sm">Test Series</span>
+          </a>
+          <a className="flex items-center px-3 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/30 transition-colors duration-200 rounded-lg group" href="#">
+            <span className="material-symbols-outlined mr-3">insights</span>
+            <span className="text-sm font-medium">Analytics</span>
+          </a>
+          <a className="flex items-center px-3 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/30 transition-colors duration-200 rounded-lg group" href="#">
+            <span className="material-symbols-outlined mr-3">menu_book</span>
+            <span className="text-sm font-medium">Resources</span>
+          </a>
+        </nav>
+        
+        <div className="mt-auto pt-6 border-t border-slate-800/50 space-y-1">
+          <a className="flex items-center px-3 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/30 transition-colors duration-200 rounded-lg group" href="#">
+            <span className="material-symbols-outlined mr-3">settings</span>
+            <span className="text-sm font-medium">Settings</span>
+          </a>
+          <a className="flex items-center px-3 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/30 transition-colors duration-200 rounded-lg group" href="#">
+            <span className="material-symbols-outlined mr-3">help_outline</span>
+            <span className="text-sm font-medium">Support</span>
+          </a>
+          <div className="flex items-center mt-6 px-3">
+            <img 
+              alt="Scholar Profile" 
+              className="w-8 h-8 rounded-full bg-slate-700" 
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2sE9mg57yv5PkRx3-FJoCQSbGTkkdOEGbgy-dFCkWkHoTK3s5wDEMNpkOjUJ5XydVJfnY5Jh09nZN4gkKQtk62AwoqNRw9grUdL9QtGxTYW7qYN-lHNdCxu4pnOBCxRGv7S9fyKLZIWDgcnJP9HfTZuuqli1lWINcw0WDon3zS0cBG-Gydm2HZ5YOWoWw-8bFLouwnsXxkVTPnxMVVwI2lLpZWSuJem2LUi1FcsDA_T7lIx6MHB_g4k2K1Hwlsp3rz9eUBsyj0HBH"
+            />
+            <div className="ml-3 overflow-hidden">
+              <p className="text-xs font-semibold text-slate-200 truncate">Alex Sterling</p>
+              <p className="text-[10px] text-slate-500 truncate">Pro Member</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* TopNavBar */}
+      <header className="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 bg-slate-950/80 backdrop-blur-xl z-40 flex justify-between items-center px-8 shadow-[0_40px_40px_-15px_rgba(0,0,0,0.06)]">
+        <div className="flex items-center w-1/2">
+          <div className="relative w-full max-w-md">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-lg">search</span>
+            <input 
+              className="w-full bg-surface-bright border-none rounded-xl py-2 pl-10 pr-4 text-sm text-on-surface placeholder:text-slate-600 focus:ring-1 focus:ring-indigo-500/50 transition-all outline-none" 
+              placeholder="Search tests, topics, or results..." 
+              type="text"
+            />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 bg-secondary-container rounded text-[10px] font-bold text-on-surface-variant">⌘ K</div>
+          </div>
+        </div>
+        <div className="flex items-center space-x-4">
+          <button className="p-2 text-slate-400 hover:bg-slate-800/50 rounded-lg transition-colors cursor-pointer border-none bg-transparent">
+            <span className="material-symbols-outlined">notifications</span>
+          </button>
+          <button className="p-2 text-slate-400 hover:bg-slate-800/50 rounded-lg transition-colors cursor-pointer border-none bg-transparent">
+            <span className="material-symbols-outlined">dark_mode</span>
+          </button>
+          <div className="h-8 w-px bg-slate-800 mx-2"></div>
+          <div className="text-right mr-3 hidden sm:block">
+            <p className="text-xs font-bold text-on-surface leading-none uppercase tracking-wider">The Focused Scholar</p>
+          </div>
+        </div>
+      </header>
+
       {/* Main Content Canvas */}
       <main className="ml-64 pt-24 px-10 pb-20 min-h-screen">
         {/* Header Section */}
@@ -60,24 +91,216 @@ export default function App() {
           <h2 className="text-4xl font-extrabold font-headline tracking-tight text-on-background">Test Series</h2>
           <p className="text-on-surface-variant mt-2 text-lg font-medium opacity-70">Level up your exam readiness.</p>
         </header>
-        
+
         {/* Category Tabs */}
-        <CategoryTabs />
-        
+        <div className="flex items-center space-x-1 mb-10 overflow-x-auto pb-2 scrollbar-hide">
+          <button className="cursor-pointer px-6 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
+            Full Tests
+          </button>
+          <button className="cursor-pointer px-6 py-2.5 rounded-full text-sm font-medium whitespace-nowrap text-on-surface-variant hover:text-on-surface transition-colors bg-transparent border-none">
+            Part Tests
+          </button>
+          <button className="cursor-pointer px-6 py-2.5 rounded-full text-sm font-medium whitespace-nowrap text-on-surface-variant hover:text-on-surface transition-colors bg-transparent border-none">
+            Chapter-wise Tests
+          </button>
+          <button className="cursor-pointer px-6 py-2.5 rounded-full text-sm font-medium whitespace-nowrap text-on-surface-variant hover:text-on-surface transition-colors bg-transparent border-none">
+            Previous Year Papers
+          </button>
+        </div>
+
         {/* Asymmetric Layout: Test Grid and Quick Stats */}
         <div className="grid grid-cols-12 gap-10">
+          
           {/* Test List (The Core) */}
           <div className="col-span-12 lg:col-span-8 space-y-4">
-            {testData.map((test, index) => (
-              <TestCard
-                key={test.title}
-                {...test}
-              />
-            ))}
+            
+            {/* Test Card 1 */}
+            <div className="bg-surface-container hover:bg-surface-container-high transition-all duration-300 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between group">
+              <div className="flex-1">
+                <div className="flex items-center space-x-3 mb-2">
+                  <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-400 text-[10px] font-bold rounded uppercase tracking-wider">Advance</span>
+                  <span className="text-xs text-on-surface-variant font-medium">Physics • Chemistry • Maths</span>
+                </div>
+                <h3 className="text-xl font-bold text-on-surface font-headline mb-4">JEE Full Mock 01</h3>
+                <div className="flex items-center space-x-6 text-sm text-on-surface-variant">
+                  <div className="flex items-center">
+                    <span className="material-symbols-outlined text-sm mr-2 opacity-60">schedule</span>
+                    180 mins
+                  </div>
+                  <div className="flex items-center">
+                    <span className="material-symbols-outlined text-sm mr-2 opacity-60">grade</span>
+                    300 Marks
+                  </div>
+                  <div className="flex items-center">
+                    <span className="material-symbols-outlined text-sm mr-2 text-error opacity-60">radio_button_checked</span>
+                    Not Started
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6 md:mt-0 md:ml-8">
+                <button className="cursor-pointer w-full md:w-auto px-8 py-3 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 font-bold rounded-lg transition-all border border-indigo-500/20 hover:border-indigo-500/40">
+                  Attempt Test
+                </button>
+              </div>
+            </div>
+
+            {/* Test Card 2 (In Progress) */}
+            <div className="bg-surface-container hover:bg-surface-container-high transition-all duration-300 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between group">
+              <div className="flex-1">
+                <div className="flex items-center space-x-3 mb-2">
+                  <span className="px-2 py-0.5 bg-tertiary-container/20 text-tertiary text-[10px] font-bold rounded uppercase tracking-wider">Intermediate</span>
+                  <span className="text-xs text-on-surface-variant font-medium">Calculus Focus</span>
+                </div>
+                <h3 className="text-xl font-bold text-on-surface font-headline mb-4">Mathematics Full Mock 04</h3>
+                <div className="flex items-center space-x-6 text-sm text-on-surface-variant">
+                  <div className="flex items-center">
+                    <span className="material-symbols-outlined text-sm mr-2 opacity-60">schedule</span>
+                    90 mins
+                  </div>
+                  <div className="flex items-center">
+                    <span className="material-symbols-outlined text-sm mr-2 opacity-60">grade</span>
+                    120 Marks
+                  </div>
+                  <div className="flex items-center">
+                    <span className="material-symbols-outlined text-sm mr-2 text-indigo-400 opacity-60">pending</span>
+                    In Progress
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6 md:mt-0 md:ml-8">
+                <button className="cursor-pointer border-none w-full md:w-auto px-8 py-3 bg-indigo-500 text-on-primary font-bold rounded-lg transition-all shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20">
+                  Resume Test
+                </button>
+              </div>
+            </div>
+
+            {/* Test Card 3 */}
+            <div className="bg-surface-container hover:bg-surface-container-high transition-all duration-300 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between group opacity-70 grayscale-[0.5] hover:opacity-100 hover:grayscale-0">
+              <div className="flex-1">
+                <div className="flex items-center space-x-3 mb-2">
+                  <span className="px-2 py-0.5 bg-slate-800 text-slate-400 text-[10px] font-bold rounded uppercase tracking-wider">Foundation</span>
+                  <span className="text-xs text-on-surface-variant font-medium">General Aptitude</span>
+                </div>
+                <h3 className="text-xl font-bold text-on-surface font-headline mb-4">Logical Reasoning Mock 02</h3>
+                <div className="flex items-center space-x-6 text-sm text-on-surface-variant">
+                  <div className="flex items-center">
+                    <span className="material-symbols-outlined text-sm mr-2 opacity-60">schedule</span>
+                    60 mins
+                  </div>
+                  <div className="flex items-center">
+                    <span className="material-symbols-outlined text-sm mr-2 opacity-60">grade</span>
+                    100 Marks
+                  </div>
+                  <div className="flex items-center">
+                    <span className="material-symbols-outlined text-sm mr-2 text-error opacity-60">radio_button_checked</span>
+                    Not Started
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6 md:mt-0 md:ml-8">
+                <button className="cursor-pointer w-full md:w-auto px-8 py-3 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 font-bold rounded-lg transition-all border border-indigo-500/20 hover:border-indigo-500/40">
+                  Attempt Test
+                </button>
+              </div>
+            </div>
+
+            {/* Test Card 4 */}
+            <div className="bg-surface-container hover:bg-surface-container-high transition-all duration-300 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between group">
+              <div className="flex-1">
+                <div className="flex items-center space-x-3 mb-2">
+                  <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-400 text-[10px] font-bold rounded uppercase tracking-wider">Advance</span>
+                  <span className="text-xs text-on-surface-variant font-medium">Modern Physics</span>
+                </div>
+                <h3 className="text-xl font-bold text-on-surface font-headline mb-4">JEE Full Mock 02</h3>
+                <div className="flex items-center space-x-6 text-sm text-on-surface-variant">
+                  <div className="flex items-center">
+                    <span className="material-symbols-outlined text-sm mr-2 opacity-60">schedule</span>
+                    180 mins
+                  </div>
+                  <div className="flex items-center">
+                    <span className="material-symbols-outlined text-sm mr-2 opacity-60">grade</span>
+                    300 Marks
+                  </div>
+                  <div className="flex items-center">
+                    <span className="material-symbols-outlined text-sm mr-2 text-error opacity-60">radio_button_checked</span>
+                    Not Started
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6 md:mt-0 md:ml-8">
+                <button className="cursor-pointer w-full md:w-auto px-8 py-3 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 font-bold rounded-lg transition-all border border-indigo-500/20 hover:border-indigo-500/40">
+                  Attempt Test
+                </button>
+              </div>
+            </div>
+
           </div>
-          
+
           {/* Sidebar Widgets (Quick Stats) */}
-          <StatsPanel />
+          <div className="col-span-12 lg:col-span-4 space-y-8">
+            
+            {/* Performance Card */}
+            <div className="bg-surface-container p-8 rounded-xl">
+              <h4 className="text-sm font-bold uppercase tracking-widest text-indigo-400 mb-6">Series Overview</h4>
+              <div className="space-y-6">
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-on-surface-variant">Total Progress</span>
+                    <span className="text-on-surface font-bold">12 / 40</span>
+                  </div>
+                  <div className="w-full h-1 bg-surface-variant rounded-full overflow-hidden">
+                    <div className="h-full bg-indigo-500 rounded-full" style={{ width: '30%' }}></div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-surface-container-low rounded-lg">
+                    <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Avg Score</p>
+                    <p className="text-xl font-headline font-bold text-on-surface">78%</p>
+                  </div>
+                  <div className="p-4 bg-surface-container-low rounded-lg">
+                    <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Rank</p>
+                    <p className="text-xl font-headline font-bold text-on-surface">#242</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Learning Path */}
+            <div className="bg-surface-container-low p-8 rounded-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-10">
+                <span className="material-symbols-outlined text-6xl">school</span>
+              </div>
+              <h4 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-6">Recommended Next</h4>
+              <div className="space-y-4">
+                <div className="flex items-start">
+                  <div className="w-8 h-8 rounded bg-indigo-500/20 flex items-center justify-center mr-4 mt-1">
+                    <span className="material-symbols-outlined text-sm text-indigo-400">lightbulb</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-on-surface">Focus: Organic Chemistry</p>
+                    <p className="text-xs text-on-surface-variant mt-1">You missed 4 questions on Hydrocarbons in Mock 01.</p>
+                  </div>
+                </div>
+                <button className="cursor-pointer border-none w-full py-2.5 mt-4 bg-surface-variant text-on-surface-variant text-xs font-bold rounded uppercase tracking-widest hover:bg-indigo-500 hover:text-on-primary transition-all">
+                  View Study Plan
+                </button>
+              </div>
+            </div>
+
+            {/* Bento Ad / Feature */}
+            <div className="h-48 bg-indigo-900/20 rounded-xl relative overflow-hidden group">
+              <img 
+                alt="Premium Prep" 
+                className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700" 
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzWZp3AJPQDwBrSUcwHPfBgk9GLT97L__2TSL94JALtaNDVjWg-bHc4rUFC2MOu70-4PP-_yaov2F-wj_brt9Ot1bd18teo8GJrPByGCMyV6LzlM9NdoURz_vWKJu28TdecOCQdV_cYJH4njVv6yeTSDb93_PEk6-2Jk7gZ-ZLfTR6RcFFskBq18mR4rlzlFYTHTh-QcG23dxRcwmLCKeh1WsQVAE7mlfIAqgPAJe5WgqFTNWntR57eTDy__qo6UYh7Y-R3eB71BQH"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent p-6 flex flex-col justify-end">
+                <h5 className="text-sm font-bold text-white mb-1">Scholar Elite</h5>
+                <p className="text-xs text-slate-300">Unlock expert video solutions for all mocks.</p>
+              </div>
+            </div>
+
+          </div>
         </div>
       </main>
     </div>
