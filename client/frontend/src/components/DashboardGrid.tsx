@@ -39,26 +39,9 @@ function ResourceCard({ resource, isDemo }: { resource: Resource; isDemo?: boole
 
   const href = isDemo ? `/resource/${resource._id}?demo=true` : `/resource/${resource._id}`;
 
-  const handleClick = () => {
-    // Re-inject the vignette script on each click for authenticated users.
-    // The VaultAdScript already pre-loads it on page mount, but re-injecting
-    // here ensures the script fires even if the pre-load was delayed.
-    // We do NOT preventDefault — the natural <a href> click must propagate so
-    // the vignette script's registered listeners can intercept the navigation.
-    if (!isDemo) {
-      try {
-        (function(s: HTMLScriptElement) {
-          s.dataset.zone = '10841880';
-          s.src = 'https://n6wxm.com/vignette.min.js';
-        })(([document.documentElement, document.body].filter(Boolean).pop() as HTMLElement).appendChild(document.createElement('script')) as HTMLScriptElement);
-      } catch (_) {}
-    }
-  };
-
   return (
-    <a
+    <Link
       href={href}
-      onClick={handleClick}
       className="group bg-surface-container hover:bg-surface-container-high transition-colors p-5 rounded-xl flex items-center gap-5 cursor-pointer border border-transparent hover:border-outline-variant/10 block"
     >
       <div className={`w-14 h-14 ${color.bg} rounded-lg flex items-center justify-center ${color.text} shrink-0`}>
@@ -77,7 +60,7 @@ function ResourceCard({ resource, isDemo }: { resource: Resource; isDemo?: boole
         </div>
       </div>
       <ChevronRight className="w-5 h-5 text-outline opacity-0 group-hover:opacity-100 transition-opacity" />
-    </a>
+    </Link>
   );
 }
 
