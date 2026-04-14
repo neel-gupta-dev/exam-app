@@ -12,5 +12,10 @@ client/frontend/.env
 client/frontend/.env.local
 server/.env.local
 server/.env
+client/admin/.env
+client/admin/.env.local
+client/test-dashboard/.env
+client/test-dashboard/.env.local
+
 # client/test-dashboard/node_modules
 
