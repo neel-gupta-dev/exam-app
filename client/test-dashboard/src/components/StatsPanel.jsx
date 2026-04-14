@@ -52,17 +52,17 @@ export default function StatsPanel() {
       </div>
 
       {/* Bento Ad / Feature */}
-      <div className="h-48 bg-indigo-900/20 rounded-xl relative overflow-hidden group">
-        <img 
-          alt="Premium Prep" 
-          className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700" 
+      {/* <div className="h-48 bg-indigo-900/20 rounded-xl relative overflow-hidden group">
+        <img
+          alt="Premium Prep"
+          className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700"
           src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzWZp3AJPQDwBrSUcwHPfBgk9GLT97L__2TSL94JALtaNDVjWg-bHc4rUFC2MOu70-4PP-_yaov2F-wj_brt9Ot1bd18teo8GJrPByGCMyV6LzlM9NdoURz_vWKJu28TdecOCQdV_cYJH4njVv6yeTSDb93_PEk6-2Jk7gZ-ZLfTR6RcFFskBq18mR4rlzlFYTHTh-QcG23dxRcwmLCKeh1WsQVAE7mlfIAqgPAJe5WgqFTNWntR57eTDy__qo6UYh7Y-R3eB71BQH"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent p-6 flex flex-col justify-end">
           <h5 className="text-sm font-bold text-white mb-1">Scholar Elite</h5>
           <p className="text-xs text-slate-300">Unlock expert video solutions for all mocks.</p>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

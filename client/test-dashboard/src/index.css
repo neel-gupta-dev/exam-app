@@ -12,6 +12,10 @@ body,
 #root {
   width: 100%;
   height: 100%;
+}
+
+.dark body,
+.dark #root {
   background-color: #0b0e11;
   color: #dde6f2;
 }
