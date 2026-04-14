@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import LoginPage from './LoginPage';
 import ForcePasswordChange from './ForcePasswordChange';
+import TestEngineLogin from './pages/TestEngineLogin';
 
 export default function App() {
   const [isDark, setIsDark] = useState(() => {
@@ -46,6 +47,25 @@ export default function App() {
   }, [isDark]);
 
   const toggleTheme = () => setIsDark(!isDark);
+
+  // Router override for the popup test engine
+  const searchParams = new URL(window.location.href).searchParams;
+  const isAttemptMode = searchParams.get('attempt') === 'true';
+
+  if (isAttemptMode && user) {
+    let currentTest = null;
+    try {
+      currentTest = JSON.parse(localStorage.getItem('current_test'));
+    } catch {}
+    
+    return (
+      <TestEngineLogin 
+        user={user} 
+        test={currentTest} 
+        onSignIn={() => alert("Test Instructions/Main Engine will load here!")} 
+      />
+    );
+  }
 
   if (!user) {
     return <LoginPage isDark={isDark} onLogin={handleLogin} />;
@@ -362,7 +382,13 @@ export default function App() {
               <div className="space-y-6">
                 <div className={`p-8 rounded-2xl sticky top-32 transition-all duration-300 ${isDark ? 'bg-surface-container' : 'bg-white shadow-2xl border border-indigo-100/50'}`}>
                   <p className={`text-sm font-medium mb-6 ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>Ready to begin your mock exam? Take a deep breath.</p>
-                  <button className="cursor-pointer border-none w-full py-4 bg-indigo-500 text-on-primary font-bold rounded-xl text-lg transition-all shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:scale-95">
+                  <button 
+                    onClick={() => {
+                      localStorage.setItem('current_test', JSON.stringify(selectedTest));
+                      window.open(window.location.origin + '?attempt=true', 'TestEngine', 'width=1024,height=768,fullscreen=yes,toolbar=0,location=0,menubar=0');
+                    }}
+                    className="cursor-pointer border-none w-full py-4 bg-indigo-500 text-on-primary font-bold rounded-xl text-lg transition-all shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:scale-95"
+                  >
                     Start Test Now
                   </button>
                   <p className="text-[10px] text-center mt-4 text-slate-500 uppercase tracking-widest font-bold">Good Luck, Scholar!</p>
