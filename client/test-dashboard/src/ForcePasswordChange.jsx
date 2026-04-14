@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function ForcePasswordChange({ isDark, user, onPasswordChanged, onLogout }) {
-  const [oldPassword, setOldPassword] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -11,10 +10,6 @@ export default function ForcePasswordChange({ isDark, user, onPasswordChanged, o
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!oldPassword) {
-      setError('Please enter your current/default password');
-      return;
-    }
     if (password.length < 6) {
       setError('Password must be at least 6 characters');
       return;
@@ -34,7 +29,6 @@ export default function ForcePasswordChange({ isDark, user, onPasswordChanged, o
           Authorization: `Bearer ${user.token}`,
         },
         body: JSON.stringify({ 
-          oldPassword: oldPassword,
           newPassword: password 
         }),
       });

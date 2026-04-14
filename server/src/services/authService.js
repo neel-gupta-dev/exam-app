@@ -458,10 +458,12 @@ export const updateUserPassword = async ({ userId, oldPassword, newPassword }) =
     throw error;
   }
 
-  if (!(await user.matchPassword(oldPassword))) {
-    const error = new Error('Incorrect old password');
-    error.statusCode = 401;
-    throw error;
+  if (user.hasChangedPassword) {
+    if (!(await user.matchPassword(oldPassword))) {
+      const error = new Error('Incorrect old password');
+      error.statusCode = 401;
+      throw error;
+    }
   }
 
   user.password = newPassword;
