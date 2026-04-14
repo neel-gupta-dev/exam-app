@@ -1,0 +1,16 @@
+node_modules
+dist
+server/node_modules
+client/admin/node_modules
+client/frontend/node_modules
+client/test-dashboard/node_modules
+client/test-dashboard/dist
+client/admin/dist
+client/frontend/dist
+client/frontend/.next
+client/frontend/.env
+client/frontend/.env.local
+server/.env.local
+server/.env
+# client/test-dashboard/node_modules
+
