@@ -30,13 +30,32 @@ const userSchema = new mongoose.Schema(
     },
     authMethod: {
       type: String,
-      enum: ['local', 'google'],
+      enum: ['local', 'google', 'b2b'],
       default: 'local',
     },
     role: {
       type: String,
-      enum: ['student', 'admin'],
+      enum: ['student', 'admin', 'coachingAdmin'],
       default: 'student',
+    },
+    /**
+     * B2B-only: login username (e.g., rahulgupta_RST_001).
+     * Null for B2C users who log in via email.
+     */
+    username: {
+      type: String,
+      unique: true,
+      sparse: true,
+      lowercase: true,
+      trim: true,
+    },
+    /**
+     * B2B: set to false on bulk creation, forces password change on first login.
+     * B2C: always true (no enforcement).
+     */
+    hasChangedPassword: {
+      type: Boolean,
+      default: true,
     },
     isVerifiedStudent: {
       type: Boolean,

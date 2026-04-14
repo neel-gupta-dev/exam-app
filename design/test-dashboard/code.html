@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Test Series - The Focused Scholar</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#a3acb7",
+                        "surface-container-low": "#0f1418",
+                        "surface-container": "#141a20",
+                        "on-background": "#dde6f2",
+                        "on-tertiary-fixed": "#2f384f",
+                        "secondary-dim": "#9f9da1",
+                        "on-primary": "#2724b8",
+                        "surface-container-lowest": "#000000",
+                        "primary-container": "#2f2ebe",
+                        "surface-container-high": "#192027",
+                        "on-secondary-fixed": "#403f43",
+                        "tertiary-fixed": "#ced6f5",
+                        "secondary-fixed-dim": "#d6d3d8",
+                        "on-error-container": "#ff97a3",
+                        "on-tertiary-fixed-variant": "#4b546d",
+                        "inverse-primary": "#494bd7",
+                        "tertiary": "#dee5ff",
+                        "on-secondary": "#202023",
+                        "primary": "#c0c1ff",
+                        "on-primary-container": "#ccccff",
+                        "on-error": "#490013",
+                        "tertiary-container": "#ced6f5",
+                        "primary-fixed-dim": "#d1d0ff",
+                        "surface-container-highest": "#1e272f",
+                        "on-primary-fixed": "#2622b7",
+                        "error": "#ec7c8a",
+                        "tertiary-dim": "#c0c9e6",
+                        "surface": "#0b0e11",
+                        "outline-variant": "#404952",
+                        "surface-variant": "#1e272f",
+                        "on-secondary-container": "#c1bec3",
+                        "surface-tint": "#c0c1ff",
+                        "surface-dim": "#0b0e11",
+                        "error-dim": "#b95463",
+                        "inverse-surface": "#f8f9fe",
+                        "primary-dim": "#b0b2ff",
+                        "error-container": "#7f2737",
+                        "secondary": "#9f9da1",
+                        "on-tertiary": "#4a536c",
+                        "secondary-container": "#3c3b3f",
+                        "inverse-on-surface": "#535559",
+                        "tertiary-fixed-dim": "#c0c9e6",
+                        "outline": "#6d7680",
+                        "primary-fixed": "#e1e0ff",
+                        "on-tertiary-container": "#424a63",
+                        "on-surface": "#dde6f2",
+                        "secondary-fixed": "#e5e1e6",
+                        "background": "#0b0e11",
+                        "on-primary-fixed-variant": "#4647d3",
+                        "on-secondary-fixed-variant": "#5c5b5f",
+                        "surface-bright": "#222d37"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-headline { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- SideNavBar from JSON -->
+<aside class="fixed left-0 top-0 h-screen w-64 bg-slate-900 flex flex-col py-6 px-4 z-50">
+<div class="mb-10 px-2">
+<h1 class="text-xl font-bold tracking-tight text-indigo-500 font-headline">The Scholar</h1>
+<p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-medium mt-1">Productivity Suite</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center px-3 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/30 transition-colors duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center px-3 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/30 transition-colors duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined mr-3">assignment</span>
+<span class="text-sm font-medium">Exams</span>
+</a>
+<!-- Active Navigation Logic: Test Series matches current screen -->
+<a class="flex items-center px-3 py-3 border-l-2 border-indigo-500 bg-slate-800/50 text-indigo-400 font-semibold transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined mr-3">layers</span>
+<span class="text-sm">Test Series</span>
+</a>
+<a class="flex items-center px-3 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/30 transition-colors duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined mr-3">insights</span>
+<span class="text-sm font-medium">Analytics</span>
+</a>
+<a class="flex items-center px-3 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/30 transition-colors duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined mr-3">menu_book</span>
+<span class="text-sm font-medium">Resources</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 border-t border-slate-800/50 space-y-1">
+<a class="flex items-center px-3 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/30 transition-colors duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+<a class="flex items-center px-3 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/30 transition-colors duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined mr-3">help_outline</span>
+<span class="text-sm font-medium">Support</span>
+</a>
+<div class="flex items-center mt-6 px-3">
+<img alt="Scholar Profile" class="w-8 h-8 rounded-full bg-slate-700" data-alt="close-up portrait of a professional student with glasses in a dimly lit library setting with soft bokeh lights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2sE9mg57yv5PkRx3-FJoCQSbGTkkdOEGbgy-dFCkWkHoTK3s5wDEMNpkOjUJ5XydVJfnY5Jh09nZN4gkKQtk62AwoqNRw9grUdL9QtGxTYW7qYN-lHNdCxu4pnOBCxRGv7S9fyKLZIWDgcnJP9HfTZuuqli1lWINcw0WDon3zS0cBG-Gydm2HZ5YOWoWw-8bFLouwnsXxkVTPnxMVVwI2lLpZWSuJem2LUi1FcsDA_T7lIx6MHB_g4k2K1Hwlsp3rz9eUBsyj0HBH"/>
+<div class="ml-3 overflow-hidden">
+<p class="text-xs font-semibold text-slate-200 truncate">Alex Sterling</p>
+<p class="text-[10px] text-slate-500 truncate">Pro Member</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopNavBar from JSON -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 bg-slate-950/80 backdrop-blur-xl z-40 flex justify-between items-center px-8 shadow-[0_40px_40px_-15px_rgba(0,0,0,0.06)]">
+<div class="flex items-center w-1/2">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-lg">search</span>
+<input class="w-full bg-surface-bright border-none rounded-xl py-2 pl-10 pr-4 text-sm text-on-surface placeholder:text-slate-600 focus:ring-1 focus:ring-indigo-500/50 transition-all" placeholder="Search tests, topics, or results..." type="text"/>
+<div class="absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 bg-secondary-container rounded text-[10px] font-bold text-on-surface-variant">⌘ K</div>
+</div>
+</div>
+<div class="flex items-center space-x-4">
+<button class="p-2 text-slate-400 hover:bg-slate-800/50 rounded-lg transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-slate-400 hover:bg-slate-800/50 rounded-lg transition-colors">
+<span class="material-symbols-outlined">dark_mode</span>
+</button>
+<div class="h-8 w-px bg-slate-800 mx-2"></div>
+<div class="text-right mr-3 hidden sm:block">
+<p class="text-xs font-bold text-on-surface leading-none uppercase tracking-wider">The Focused Scholar</p>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-24 px-10 pb-20 min-h-screen">
+<!-- Header Section -->
+<header class="mb-12">
+<h2 class="text-4xl font-extrabold font-headline tracking-tight text-on-background">Test Series</h2>
+<p class="text-on-surface-variant mt-2 text-lg font-medium opacity-70">Level up your exam readiness.</p>
+</header>
+<!-- Category Tabs -->
+<div class="flex items-center space-x-1 mb-10 overflow-x-auto pb-2 scrollbar-hide">
+<button class="px-6 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
+                Full Tests
+            </button>
+<button class="px-6 py-2.5 rounded-full text-sm font-medium whitespace-nowrap text-on-surface-variant hover:text-on-surface transition-colors">
+                Part Tests
+            </button>
+<button class="px-6 py-2.5 rounded-full text-sm font-medium whitespace-nowrap text-on-surface-variant hover:text-on-surface transition-colors">
+                Chapter-wise Tests
+            </button>
+<button class="px-6 py-2.5 rounded-full text-sm font-medium whitespace-nowrap text-on-surface-variant hover:text-on-surface transition-colors">
+                Previous Year Papers
+            </button>
+</div>
+<!-- Asymmetric Layout: Test Grid and Quick Stats -->
+<div class="grid grid-cols-12 gap-10">
+<!-- Test List (The Core) -->
+<div class="col-span-12 lg:col-span-8 space-y-4">
+<!-- Test Card 1 -->
+<div class="bg-surface-container hover:bg-surface-container-high transition-all duration-300 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between group">
+<div class="flex-1">
+<div class="flex items-center space-x-3 mb-2">
+<span class="px-2 py-0.5 bg-indigo-500/20 text-indigo-400 text-[10px] font-bold rounded uppercase tracking-wider">Advance</span>
+<span class="text-xs text-on-surface-variant font-medium">Physics • Chemistry • Maths</span>
+</div>
+<h3 class="text-xl font-bold text-on-surface font-headline mb-4">JEE Full Mock 01</h3>
+<div class="flex items-center space-x-6 text-sm text-on-surface-variant">
+<div class="flex items-center">
+<span class="material-symbols-outlined text-sm mr-2 opacity-60">schedule</span>
+                                180 mins
+                            </div>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-sm mr-2 opacity-60">grade</span>
+                                300 Marks
+                            </div>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-sm mr-2 text-error opacity-60">radio_button_checked</span>
+                                Not Started
+                            </div>
+</div>
+</div>
+<div class="mt-6 md:mt-0 md:ml-8">
+<button class="w-full md:w-auto px-8 py-3 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 font-bold rounded-lg transition-all border border-indigo-500/20 hover:border-indigo-500/40">
+                            Attempt Test
+                        </button>
+</div>
+</div>
+<!-- Test Card 2 (In Progress) -->
+<div class="bg-surface-container hover:bg-surface-container-high transition-all duration-300 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between group">
+<div class="flex-1">
+<div class="flex items-center space-x-3 mb-2">
+<span class="px-2 py-0.5 bg-tertiary-container/20 text-tertiary text-[10px] font-bold rounded uppercase tracking-wider">Intermediate</span>
+<span class="text-xs text-on-surface-variant font-medium">Calculus Focus</span>
+</div>
+<h3 class="text-xl font-bold text-on-surface font-headline mb-4">Mathematics Full Mock 04</h3>
+<div class="flex items-center space-x-6 text-sm text-on-surface-variant">
+<div class="flex items-center">
+<span class="material-symbols-outlined text-sm mr-2 opacity-60">schedule</span>
+                                90 mins
+                            </div>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-sm mr-2 opacity-60">grade</span>
+                                120 Marks
+                            </div>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-sm mr-2 text-indigo-400 opacity-60">pending</span>
+                                In Progress
+                            </div>
+</div>
+</div>
+<div class="mt-6 md:mt-0 md:ml-8">
+<button class="w-full md:w-auto px-8 py-3 bg-indigo-500 text-on-primary font-bold rounded-lg transition-all shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20">
+                            Resume Test
+                        </button>
+</div>
+</div>
+<!-- Test Card 3 -->
+<div class="bg-surface-container hover:bg-surface-container-high transition-all duration-300 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between group opacity-70 grayscale-[0.5] hover:opacity-100 hover:grayscale-0">
+<div class="flex-1">
+<div class="flex items-center space-x-3 mb-2">
+<span class="px-2 py-0.5 bg-slate-800 text-slate-400 text-[10px] font-bold rounded uppercase tracking-wider">Foundation</span>
+<span class="text-xs text-on-surface-variant font-medium">General Aptitude</span>
+</div>
+<h3 class="text-xl font-bold text-on-surface font-headline mb-4">Logical Reasoning Mock 02</h3>
+<div class="flex items-center space-x-6 text-sm text-on-surface-variant">
+<div class="flex items-center">
+<span class="material-symbols-outlined text-sm mr-2 opacity-60">schedule</span>
+                                60 mins
+                            </div>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-sm mr-2 opacity-60">grade</span>
+                                100 Marks
+                            </div>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-sm mr-2 text-error opacity-60">radio_button_checked</span>
+                                Not Started
+                            </div>
+</div>
+</div>
+<div class="mt-6 md:mt-0 md:ml-8">
+<button class="w-full md:w-auto px-8 py-3 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 font-bold rounded-lg transition-all border border-indigo-500/20 hover:border-indigo-500/40">
+                            Attempt Test
+                        </button>
+</div>
+</div>
+<!-- Test Card 4 -->
+<div class="bg-surface-container hover:bg-surface-container-high transition-all duration-300 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between group">
+<div class="flex-1">
+<div class="flex items-center space-x-3 mb-2">
+<span class="px-2 py-0.5 bg-indigo-500/20 text-indigo-400 text-[10px] font-bold rounded uppercase tracking-wider">Advance</span>
+<span class="text-xs text-on-surface-variant font-medium">Modern Physics</span>
+</div>
+<h3 class="text-xl font-bold text-on-surface font-headline mb-4">JEE Full Mock 02</h3>
+<div class="flex items-center space-x-6 text-sm text-on-surface-variant">
+<div class="flex items-center">
+<span class="material-symbols-outlined text-sm mr-2 opacity-60">schedule</span>
+                                180 mins
+                            </div>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-sm mr-2 opacity-60">grade</span>
+                                300 Marks
+                            </div>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-sm mr-2 text-error opacity-60">radio_button_checked</span>
+                                Not Started
+                            </div>
+</div>
+</div>
+<div class="mt-6 md:mt-0 md:ml-8">
+<button class="w-full md:w-auto px-8 py-3 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 font-bold rounded-lg transition-all border border-indigo-500/20 hover:border-indigo-500/40">
+                            Attempt Test
+                        </button>
+</div>
+</div>
+</div>
+<!-- Sidebar Widgets (Quick Stats) -->
+<div class="col-span-12 lg:col-span-4 space-y-8">
+<!-- Performance Card -->
+<div class="bg-surface-container p-8 rounded-xl">
+<h4 class="text-sm font-bold uppercase tracking-widest text-indigo-400 mb-6">Series Overview</h4>
+<div class="space-y-6">
+<div>
+<div class="flex justify-between text-sm mb-2">
+<span class="text-on-surface-variant">Total Progress</span>
+<span class="text-on-surface font-bold">12 / 40</span>
+</div>
+<div class="w-full h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-indigo-500 rounded-full" style="width: 30%"></div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="p-4 bg-surface-container-low rounded-lg">
+<p class="text-[10px] font-bold uppercase text-slate-500 mb-1">Avg Score</p>
+<p class="text-xl font-headline font-bold text-on-surface">78%</p>
+</div>
+<div class="p-4 bg-surface-container-low rounded-lg">
+<p class="text-[10px] font-bold uppercase text-slate-500 mb-1">Rank</p>
+<p class="text-xl font-headline font-bold text-on-surface">#242</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Learning Path -->
+<div class="bg-surface-container-low p-8 rounded-xl relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-6xl">school</span>
+</div>
+<h4 class="text-sm font-bold uppercase tracking-widest text-slate-400 mb-6">Recommended Next</h4>
+<div class="space-y-4">
+<div class="flex items-start">
+<div class="w-8 h-8 rounded bg-indigo-500/20 flex items-center justify-center mr-4 mt-1">
+<span class="material-symbols-outlined text-sm text-indigo-400">lightbulb</span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Focus: Organic Chemistry</p>
+<p class="text-xs text-on-surface-variant mt-1">You missed 4 questions on Hydrocarbons in Mock 01.</p>
+</div>
+</div>
+<button class="w-full py-2.5 mt-4 bg-surface-variant text-on-surface-variant text-xs font-bold rounded uppercase tracking-widest hover:bg-indigo-500 hover:text-on-primary transition-all">
+                            View Study Plan
+                        </button>
+</div>
+</div>
+<!-- Bento Ad / Feature -->
+<div class="h-48 bg-indigo-900/20 rounded-xl relative overflow-hidden group">
+<img alt="Premium Prep" class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700" data-alt="abstract dark artistic rendering of neural pathways glowing in soft indigo light representing deep knowledge and focus" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzWZp3AJPQDwBrSUcwHPfBgk9GLT97L__2TSL94JALtaNDVjWg-bHc4rUFC2MOu70-4PP-_yaov2F-wj_brt9Ot1bd18teo8GJrPByGCMyV6LzlM9NdoURz_vWKJu28TdecOCQdV_cYJH4njVv6yeTSDb93_PEk6-2Jk7gZ-ZLfTR6RcFFskBq18mR4rlzlFYTHTh-QcG23dxRcwmLCKeh1WsQVAE7mlfIAqgPAJe5WgqFTNWntR57eTDy__qo6UYh7Y-R3eB71BQH"/>
+<div class="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent p-6 flex flex-col justify-end">
+<h5 class="text-sm font-bold text-white mb-1">Scholar Elite</h5>
+<p class="text-xs text-slate-300">Unlock expert video solutions for all mocks.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

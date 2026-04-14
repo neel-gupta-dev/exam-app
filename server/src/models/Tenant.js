@@ -14,6 +14,36 @@ const tenantSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+    /**
+     * Short coaching code used in username generation.
+     * e.g., "RST" for Resonance, "ALN" for Allen.
+     * Must be unique and uppercase.
+     */
+    code: {
+      type: String,
+      required: [true, 'Coaching code is required'],
+      unique: true,
+      uppercase: true,
+      trim: true,
+      maxlength: 10,
+    },
+    contactEmail: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    maxStudents: {
+      type: Number,
+      default: 500, // License seat limit
+    },
+    expiresAt: {
+      type: Date,
+      default: null, // null = no expiry
+    },
+    isActive: {
+      type: Boolean,
+      default: true, // false = instantly disable all coaching students
+    },
   },
   { timestamps: true }
 );

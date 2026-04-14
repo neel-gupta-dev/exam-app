@@ -13,5 +13,18 @@ export const adminOnly = asyncHandler(async (req, res, next) => {
   next();
 });
 
-// Convenience combo: protect + adminOnly
+/**
+ * Coaching Admin guard — must be used AFTER protect middleware.
+ * Allows both full admins and coaching admins.
+ */
+export const coachingAdminOnly = asyncHandler(async (req, res, next) => {
+  if (!req.user || !['admin', 'coachingAdmin'].includes(req.user.role)) {
+    res.status(403);
+    throw new Error('Access denied: Coaching Admins only');
+  }
+  next();
+});
+
+// Convenience combos
 export const protectAdmin = [protect, adminOnly];
+export const protectCoachingAdmin = [protect, coachingAdminOnly];

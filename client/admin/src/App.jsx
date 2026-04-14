@@ -9,6 +9,8 @@ import Resources from './pages/Resources';
 import FeedbackPage from './pages/Feedback';
 import Health from './pages/Health';
 import Settings from './pages/Settings';
+import TestManagement from './pages/TestManagement';
+import B2BManagement from './pages/B2BManagement';
 import Layout from './components/Layout';
 
 export const AuthCtx = createContext(null);
@@ -46,6 +48,8 @@ export default function App() {
             <Route path="/sessions" element={<Sessions />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/feedback" element={<FeedbackPage />} />
+            <Route path="/tests" element={<TestManagement />} />
+            <Route path="/b2b" element={<B2BManagement />} />
             <Route path="/health" element={<Health />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
