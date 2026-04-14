@@ -75,25 +75,43 @@ export const registerUser = async ({ name, email, password, ipAddress }) => {
 };
 
 /**
- * Login an existing user
+ * Login an existing user (supports email for B2C, username for B2B)
  */
-export const loginUser = async ({ email, password, ipAddress }) => {
-  const cleanEmail = email?.trim().toLowerCase();
-  const cleanPassword = password?.trim();
-  
-  // Explicitly select password in case it was hidden by schema defaults
-  const user = await User.findOne({ email: cleanEmail }).select('+password');
+export const loginUser = async ({ email, username, password, ipAddress }) => {
+  let user;
+
+  if (username) {
+    // B2B login: find by username
+    const cleanUsername = username.trim().toLowerCase();
+    user = await User.findOne({ username: cleanUsername }).select('+password');
+  } else {
+    // B2C login: find by email
+    const cleanEmail = email.trim().toLowerCase();
+    user = await User.findOne({ email: cleanEmail }).select('+password');
+  }
 
   if (!user) {
-    const error = new Error('Invalid email or password');
+    const error = new Error('Invalid credentials');
     error.statusCode = 401;
     throw error;
   }
 
+  // B2B tenant active check
+  if (user.authMethod === 'b2b' && user.tenantId) {
+    const Tenant = (await import('../models/Tenant.js')).default;
+    const tenant = await Tenant.findById(user.tenantId);
+    if (!tenant || !tenant.isActive) {
+      const error = new Error('Your coaching account has been deactivated. Contact your institute.');
+      error.statusCode = 403;
+      throw error;
+    }
+  }
+
+  const cleanPassword = password?.trim();
   const isMatch = await user.matchPassword(cleanPassword);
 
   if (!isMatch) {
-    const error = new Error('Invalid email or password');
+    const error = new Error('Invalid credentials');
     error.statusCode = 401;
     throw error;
   }
@@ -140,7 +158,11 @@ export const loginUser = async ({ email, password, ipAddress }) => {
     _id: user._id,
     name: user.name,
     email: user.email,
+    username: user.username || null,
     role: user.role,
+    authMethod: user.authMethod,
+    tenantId: user.tenantId || null,
+    hasChangedPassword: user.hasChangedPassword,
     isVerifiedStudent: user.isVerifiedStudent,
     targetExam: user.targetExam,
     targetYear: user.targetYear,

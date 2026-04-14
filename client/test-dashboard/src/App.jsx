@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import LoginPage from './LoginPage';
+import ForcePasswordChange from './ForcePasswordChange';
 
 export default function App() {
   const [isDark, setIsDark] = useState(() => {
@@ -12,6 +14,27 @@ export default function App() {
   const [view, setView] = useState('dashboard'); // New state for navigation
   const [selectedTest, setSelectedTest] = useState(null); // Store active test data
 
+  // Auth state
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('test_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+
+  const handleLogin = (userData) => {
+    localStorage.setItem('test_user', JSON.stringify(userData));
+    localStorage.setItem('test_token', userData.token);
+    setUser(userData);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('test_user');
+    localStorage.removeItem('test_token');
+    setUser(null);
+    setView('dashboard');
+  };
+
   useEffect(() => {
     if (isDark) {
       document.documentElement.classList.add('dark');
@@ -23,6 +46,10 @@ export default function App() {
   }, [isDark]);
 
   const toggleTheme = () => setIsDark(!isDark);
+
+  if (!user) {
+    return <LoginPage isDark={isDark} onLogin={handleLogin} />;
+  }
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-background text-on-surface' : 'bg-slate-50 text-slate-900'}`}>
@@ -66,16 +93,23 @@ export default function App() {
             <span className="material-symbols-outlined mr-3">help_outline</span>
             <span className="text-sm font-medium">Support</span>
           </a>
-          <div className="flex items-center mt-6 px-3">
-            <img
-              alt="Scholar Profile"
-              className="w-8 h-8 rounded-full bg-slate-700"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2sE9mg57yv5PkRx3-FJoCQSbGTkkdOEGbgy-dFCkWkHoTK3s5wDEMNpkOjUJ5XydVJfnY5Jh09nZN4gkKQtk62AwoqNRw9grUdL9QtGxTYW7qYN-lHNdCxu4pnOBCxRGv7S9fyKLZIWDgcnJP9HfTZuuqli1lWINcw0WDon3zS0cBG-Gydm2HZ5YOWoWw-8bFLouwnsXxkVTPnxMVVwI2lLpZWSuJem2LUi1FcsDA_T7lIx6MHB_g4k2K1Hwlsp3rz9eUBsyj0HBH"
-            />
-            <div className="ml-3 overflow-hidden">
-              <p className={`text-xs font-semibold truncate ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>Alex Sterling</p>
-              <p className="text-[10px] text-slate-500 truncate">Pro Member</p>
+          <div className="flex items-center justify-between mt-6 px-3">
+            <div className="flex items-center overflow-hidden">
+              <div className="w-8 h-8 flex-shrink-0 rounded-full bg-indigo-500/20 text-indigo-500 flex items-center justify-center font-bold text-sm">
+                {user.name?.charAt(0).toUpperCase() || 'S'}
+              </div>
+              <div className="ml-3 overflow-hidden pr-2">
+                <p className={`text-xs font-semibold truncate ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>{user.name}</p>
+                <p className="text-[10px] text-slate-500 truncate">{user.authMethod === 'b2b' ? 'Coaching Scholar' : 'Pro Member'}</p>
+              </div>
             </div>
+            <button 
+              onClick={handleLogout}
+              title="Logout"
+              className={`p-1.5 rounded-lg flex-shrink-0 transition-colors ${isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200'}`}
+            >
+              <span className="material-symbols-outlined text-lg">logout</span>
+            </button>
           </div>
         </div>
       </aside>

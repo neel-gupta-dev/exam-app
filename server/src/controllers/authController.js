@@ -26,20 +26,26 @@ export const register = asyncHandler(async (req, res) => {
   res.status(201).json(data);
 });
 
-// @desc    Login user & return token
+// @desc    Login user & return token (supports email for B2C, username for B2B)
 // @route   POST /api/auth/login
 // @access  Public
 export const login = asyncHandler(async (req, res) => {
-  const { email, password, publicIp } = req.body;
+  const { email, username, password, publicIp } = req.body;
   let ipAddress = publicIp || req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
   ipAddress = normalizeIp(ipAddress);
 
-  if (!email || !password) {
+  const identifier = email || username;
+  if (!identifier || !password) {
     res.status(400);
-    throw new Error('Please provide email and password');
+    throw new Error('Please provide email/username and password');
   }
 
-  const data = await authService.loginUser({ email, password, ipAddress });
+  const data = await authService.loginUser({ 
+    email: email || null, 
+    username: username || null, 
+    password, 
+    ipAddress 
+  });
   res.json(data);
 });
 

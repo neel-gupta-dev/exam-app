@@ -5,6 +5,9 @@ import { AuthCtx } from '../App';
 const NAV = [
   { section: 'Main' },
   { to: '/dashboard', label: '📊 Dashboard' },
+  { section: 'Exam Platform' },
+  { to: '/tests',     label: '📝 Test Management' },
+  { to: '/b2b',       label: '🏢 B2B Coaching' },
   { section: 'Data' },
   { to: '/users',     label: '👤 Users' },
   { to: '/sessions',  label: '🔐 Sessions' },
