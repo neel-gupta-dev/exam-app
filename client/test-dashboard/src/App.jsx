@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import LoginPage from './LoginPage';
 import ForcePasswordChange from './ForcePasswordChange';
 import TestEngineLogin from './pages/TestEngineLogin';
+import TestEngineApp from './TestEngineApp';
 
 export default function App() {
   const [isDark, setIsDark] = useState(() => {
@@ -59,10 +60,9 @@ export default function App() {
     } catch {}
     
     return (
-      <TestEngineLogin 
+      <TestEngineApp 
         user={user} 
         test={currentTest} 
-        onSignIn={() => alert("Test Instructions/Main Engine will load here!")} 
       />
     );
   }
