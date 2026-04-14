@@ -150,9 +150,9 @@ export const updateProfile = asyncHandler(async (req, res) => {
 // @access  Private
 export const updatePassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
-  if (!oldPassword || !newPassword) {
+  if (!newPassword) {
     res.status(400);
-    throw new Error('Please provide old and new passwords');
+    throw new Error('Please provide a new password');
   }
   const result = await authService.updateUserPassword({
     userId: req.user._id,
