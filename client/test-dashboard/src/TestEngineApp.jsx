@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import TestEngineLogin from './TestEngineLogin';
+import TestEngineLogin from './pages/TestEngineLogin';
 import TestEngineInstructions from './TestEngineInstructions';
 
 export default function TestEngineApp({ user, test }) {
