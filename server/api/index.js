@@ -28,6 +28,9 @@ import chapterListRoutes from '../src/routes/chapterListRoutes.js';
 import followRoutes from '../src/routes/followRoutes.js';
 import notificationRoutes from '../src/routes/notificationRoutes.js';
 import flashcardRoutes from '../src/routes/flashcardRoutes.js';
+import testRoutes from '../src/routes/testRoutes.js';
+import b2bRoutes from '../src/routes/b2bRoutes.js';
+import coachingAdminRoutes from '../src/routes/coachingAdminRoutes.js';
 import passport from 'passport';
 import configurePassport from '../src/config/passport.js';
 import { MONGO_URI, PORT, ALLOWED_ORIGINS } from '../src/config/index.js';
@@ -126,6 +129,9 @@ apiRouter.use('/chapter-list', chapterListRoutes);
 apiRouter.use('/follow', followRoutes);
 apiRouter.use('/notifications', notificationRoutes);
 apiRouter.use('/flashcards', flashcardRoutes);
+apiRouter.use('/tests', testRoutes);
+apiRouter.use('/b2b', b2bRoutes);
+apiRouter.use('/coaching', coachingAdminRoutes);
 
 // Mount the API router
 app.use('/api', apiRouter); // Legacy/Admin Panel support

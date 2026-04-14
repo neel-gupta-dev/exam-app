@@ -9,6 +9,9 @@ export default function App() {
     return true;
   });
 
+  const [view, setView] = useState('dashboard'); // New state for navigation
+  const [selectedTest, setSelectedTest] = useState(null); // Store active test data
+
   useEffect(() => {
     if (isDark) {
       document.documentElement.classList.add('dark');
@@ -109,222 +112,217 @@ export default function App() {
 
       {/* Main Content Canvas */}
       <main className="ml-64 pt-24 px-10 pb-20 min-h-screen">
-        {/* Header Section */}
-        <header className="mb-12">
-          <h2 className={`text-4xl font-extrabold font-headline tracking-tight ${isDark ? 'text-on-background' : 'text-slate-900'}`}>Test Series</h2>
-          <p className={`mt-2 text-lg font-medium opacity-70 ${isDark ? 'text-on-surface-variant' : 'text-slate-600'}`}>Level up your exam readiness.</p>
-        </header>
+        
+        {view === 'dashboard' ? (
+          <>
+            {/* Header Section */}
+            <header className="mb-12">
+              <h2 className={`text-4xl font-extrabold font-headline tracking-tight ${isDark ? 'text-on-background' : 'text-slate-900'}`}>Test Series</h2>
+              <p className={`mt-2 text-lg font-medium opacity-70 ${isDark ? 'text-on-surface-variant' : 'text-slate-600'}`}>Level up your exam readiness.</p>
+            </header>
 
-        {/* Category Tabs */}
-        <div className="flex items-center space-x-1 mb-10 overflow-x-auto pb-2 scrollbar-hide">
-          <button className="cursor-pointer px-6 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
-            Full Tests
-          </button>
-          {[
-            { id: 'part', label: 'Part Tests' },
-            { id: 'chapter', label: 'Chapter-wise Tests' },
-            { id: 'pyq', label: 'Previous Year Papers' },
-          ].map((tab) => (
-            <button key={tab.id} className={`cursor-pointer px-6 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors bg-transparent border-none ${isDark ? 'text-on-surface-variant hover:text-on-surface' : 'text-slate-500 hover:text-slate-900'}`}>
-              {tab.label}
+            {/* Category Tabs */}
+            <div className="flex items-center space-x-1 mb-10 overflow-x-auto pb-2 scrollbar-hide">
+              <button className="cursor-pointer px-6 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
+                Full Tests
+              </button>
+              {[
+                { id: 'part', label: 'Part Tests' },
+                { id: 'chapter', label: 'Chapter-wise Tests' },
+                { id: 'pyq', label: 'Previous Year Papers' },
+              ].map((tab) => (
+                <button key={tab.id} className={`cursor-pointer px-6 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors bg-transparent border-none ${isDark ? 'text-on-surface-variant hover:text-on-surface' : 'text-slate-500 hover:text-slate-900'}`}>
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Asymmetric Layout: Test Grid and Quick Stats */}
+            <div className="grid grid-cols-12 gap-10">
+              {/* Test List (The Core) */}
+              <div className="col-span-12 lg:col-span-8 space-y-4">
+                {[
+                  { id: 1, badge: 'Advance', subject: 'Physics • Chemistry • Maths', title: 'JEE Full Mock 01', duration: '180 mins', marks: '300 Marks', status: 'Not Started', icon: 'radio_button_checked', statusColor: 'text-error', state: 'default', syllabus: ['Mechanics & Heat', 'Inorganic Chemistry', 'Algebra & Vector'] },
+                  { id: 2, badge: 'Intermediate', subject: 'Calculus Focus', title: 'Mathematics Full Mock 04', duration: '90 mins', marks: '120 Marks', status: 'In Progress', icon: 'pending', statusColor: 'text-indigo-400', state: 'in-progress', syllabus: ['Calculus', 'Limits & Continuity', 'Integration'] },
+                  { id: 3, badge: 'Foundation', subject: 'General Aptitude', title: 'Logical Reasoning Mock 02', duration: '60 mins', marks: '100 Marks', status: 'Not Started', icon: 'radio_button_checked', statusColor: 'text-error', state: 'locked', syllabus: ['Puzzles', 'Number Series', 'Blood Relations'] },
+                  { id: 4, badge: 'Advance', subject: 'Modern Physics', title: 'JEE Full Mock 02', duration: '180 mins', marks: '300 Marks', status: 'Not Started', icon: 'radio_button_checked', statusColor: 'text-error', state: 'default', syllabus: ['Atoms & Nuclei', 'Dual Nature of Matter', 'Semiconductors'] },
+                ].map((test) => (
+                  <div key={test.id} className={`transition-all duration-300 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between group ${test.state === 'locked' ? 'opacity-70 grayscale-[0.5] hover:opacity-100 hover:grayscale-0' : ''} ${isDark ? 'bg-surface-container hover:bg-surface-container-high' : 'bg-white shadow-sm hover:shadow-md border border-slate-100'}`}>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider ${test.state === 'in-progress' ? 'bg-tertiary-container/20 text-tertiary' : test.state === 'locked' ? 'bg-slate-800 text-slate-400' : 'bg-indigo-500/20 text-indigo-400'}`}>
+                          {test.badge}
+                        </span>
+                        <span className={`text-xs font-medium ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>{test.subject}</span>
+                      </div>
+                      <h3 className={`text-xl font-bold font-headline mb-4 ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>{test.title}</h3>
+                      <div className={`flex items-center space-x-6 text-sm ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>
+                        <div className="flex items-center">
+                          <span className="material-symbols-outlined text-sm mr-2 opacity-60">schedule</span>
+                          {test.duration}
+                        </div>
+                        <div className="flex items-center">
+                          <span className="material-symbols-outlined text-sm mr-2 opacity-60">grade</span>
+                          {test.marks}
+                        </div>
+                        <div className="flex items-center">
+                          <span className={`material-symbols-outlined text-sm mr-2 opacity-60 ${test.statusColor}`}>{test.icon}</span>
+                          {test.status}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-6 md:mt-0 md:ml-8">
+                      <button 
+                        onClick={() => {
+                          if (test.state !== 'locked') {
+                            setSelectedTest(test);
+                            setView('instructions');
+                          }
+                        }}
+                        className={`cursor-pointer w-full md:w-auto px-8 py-3 font-bold rounded-lg transition-all ${test.state === 'in-progress' ? 'bg-indigo-500 text-on-primary shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20' : test.state === 'locked' ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 hover:border-indigo-500/40'}`}
+                      >
+                        {test.state === 'in-progress' ? 'Resume Test' : 'Attempt Test'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Sidebar Widgets (Quick Stats) */}
+              <div className="col-span-12 lg:col-span-4 space-y-8">
+                {/* Performance Card */}
+                <div className={`p-8 rounded-xl transition-colors duration-300 ${isDark ? 'bg-surface-container' : 'bg-white shadow-sm border border-slate-100'}`}>
+                  <h4 className="text-sm font-bold uppercase tracking-widest text-indigo-400 mb-6">Series Overview</h4>
+                  <div className="space-y-6">
+                    <div>
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className={isDark ? 'text-on-surface-variant' : 'text-slate-500'}>Total Progress</span>
+                        <span className={`font-bold ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>12 / 40</span>
+                      </div>
+                      <div className={`w-full h-1 rounded-full overflow-hidden ${isDark ? 'bg-surface-variant' : 'bg-slate-100'}`}>
+                        <div className="h-full bg-indigo-500 rounded-full" style={{ width: '30%' }}></div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className={`p-4 rounded-lg transition-colors ${isDark ? 'bg-surface-container-low' : 'bg-slate-50'}`}>
+                        <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Avg Score</p>
+                        <p className={`text-xl font-headline font-bold ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>78%</p>
+                      </div>
+                      <div className={`p-4 rounded-lg transition-colors ${isDark ? 'bg-surface-container-low' : 'bg-slate-50'}`}>
+                        <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Rank</p>
+                        <p className={`text-xl font-headline font-bold ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>#242</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Learning Path */}
+                <div className={`p-8 rounded-xl relative overflow-hidden transition-colors duration-300 ${isDark ? 'bg-surface-container-low' : 'bg-slate-50 border border-slate-200/50'}`}>
+                  <div className="absolute top-0 right-0 p-4 opacity-10">
+                    <span className={`material-symbols-outlined text-6xl ${isDark ? '' : 'text-slate-400'}`}>school</span>
+                  </div>
+                  <h4 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-6">Recommended Next</h4>
+                  <div className="space-y-4">
+                    <div className="flex items-start">
+                      <div className="w-8 h-8 rounded bg-indigo-500/20 flex items-center justify-center mr-4 mt-1">
+                        <span className="material-symbols-outlined text-sm text-indigo-400">lightbulb</span>
+                      </div>
+                      <div>
+                        <p className={`text-sm font-bold ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>Focus: Organic Chemistry</p>
+                        <p className={`text-xs mt-1 ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>You missed 4 questions on Hydrocarbons in Mock 01.</p>
+                      </div>
+                    </div>
+                    <button className={`cursor-pointer border-none w-full py-2.5 mt-4 text-xs font-bold rounded uppercase tracking-widest transition-all ${isDark ? 'bg-surface-variant text-on-surface-variant hover:bg-indigo-500 hover:text-on-primary' : 'bg-slate-200 text-slate-600 hover:bg-slate-900 hover:text-white'}`}>
+                      View Study Plan
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="max-w-4xl mx-auto">
+            {/* Breadcrumb / Back */}
+            <button 
+              onClick={() => setView('dashboard')}
+              className={`flex items-center mb-8 text-sm font-medium transition-colors cursor-pointer border-none bg-transparent ${isDark ? 'text-slate-400 hover:text-indigo-400' : 'text-slate-500 hover:text-indigo-600'}`}
+            >
+              <span className="material-symbols-outlined mr-2 text-lg">arrow_back</span>
+              Back to Test Series
             </button>
-          ))}
-        </div>
 
-        {/* Asymmetric Layout: Test Grid and Quick Stats */}
-        <div className="grid grid-cols-12 gap-10">
-
-          {/* Test List (The Core) */}
-          <div className="col-span-12 lg:col-span-8 space-y-4">
-
-            {/* Test Card 1 */}
-            <div className={`transition-all duration-300 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between group ${isDark ? 'bg-surface-container hover:bg-surface-container-high' : 'bg-white shadow-sm hover:shadow-md border border-slate-100'}`}>
-              <div className="flex-1">
-                <div className="flex items-center space-x-3 mb-2">
-                  <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-400 text-[10px] font-bold rounded uppercase tracking-wider">Advance</span>
-                  <span className={`text-xs font-medium ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>Physics • Chemistry • Maths</span>
-                </div>
-                <h3 className={`text-xl font-bold font-headline mb-4 ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>JEE Full Mock 00</h3>
-                <div className={`flex items-center space-x-6 text-sm ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>
-                  <div className="flex items-center">
-                    <span className="material-symbols-outlined text-sm mr-2 opacity-60">schedule</span>
-                    180 mins
-                  </div>
-                  <div className="flex items-center">
-                    <span className="material-symbols-outlined text-sm mr-2 opacity-60">grade</span>
-                    300 Marks
-                  </div>
-                  <div className="flex items-center">
-                    <span className="material-symbols-outlined text-sm mr-2 text-error opacity-60">radio_button_checked</span>
-                    Not Started
-                  </div>
-                </div>
-              </div>
-              <div className="mt-6 md:mt-0 md:ml-8">
-                <button className="cursor-pointer w-full md:w-auto px-8 py-3 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 font-bold rounded-lg transition-all border border-indigo-500/20 hover:border-indigo-500/40">
-                  Attempt Test
-                </button>
-              </div>
-            </div>
-
-            {/* Test Card 2 (In Progress) */}
-            <div className={`transition-all duration-300 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between group ${isDark ? 'bg-surface-container hover:bg-surface-container-high' : 'bg-white shadow-sm hover:shadow-md border border-slate-100'}`}>
-              <div className="flex-1">
-                <div className="flex items-center space-x-3 mb-2">
-                  <span className="px-2 py-0.5 bg-tertiary-container/20 text-tertiary text-[10px] font-bold rounded uppercase tracking-wider">Intermediate</span>
-                  <span className={`text-xs font-medium ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>Calculus Focus</span>
-                </div>
-                <h3 className={`text-xl font-bold font-headline mb-4 ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>Mathematics Full Mock 04</h3>
-                <div className={`flex items-center space-x-6 text-sm ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>
-                  <div className="flex items-center">
-                    <span className="material-symbols-outlined text-sm mr-2 opacity-60">schedule</span>
-                    90 mins
-                  </div>
-                  <div className="flex items-center">
-                    <span className="material-symbols-outlined text-sm mr-2 opacity-60">grade</span>
-                    120 Marks
-                  </div>
-                  <div className="flex items-center">
-                    <span className={`material-symbols-outlined text-sm mr-2 opacity-60 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>pending</span>
-                    In Progress
-                  </div>
-                </div>
-              </div>
-              <div className="mt-6 md:mt-0 md:ml-8">
-                <button className="cursor-pointer border-none w-full md:w-auto px-8 py-3 bg-indigo-500 text-on-primary font-bold rounded-lg transition-all shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20">
-                  Resume Test
-                </button>
-              </div>
-            </div>
-
-            {/* Test Card 3 */}
-            <div className={`transition-all duration-300 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between group opacity-70 grayscale-[0.5] hover:opacity-100 hover:grayscale-0 ${isDark ? 'bg-surface-container hover:bg-surface-container-high' : 'bg-white shadow-sm hover:shadow-md border border-slate-100'}`}>
-              <div className="flex-1">
-                <div className="flex items-center space-x-3 mb-2">
-                  <span className="px-2 py-0.5 bg-slate-800 text-slate-400 text-[10px] font-bold rounded uppercase tracking-wider">Foundation</span>
-                  <span className={`text-xs font-medium ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>General Aptitude</span>
-                </div>
-                <h3 className={`text-xl font-bold font-headline mb-4 ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>Logical Reasoning Mock 02</h3>
-                <div className={`flex items-center space-x-6 text-sm ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>
-                  <div className="flex items-center">
-                    <span className="material-symbols-outlined text-sm mr-2 opacity-60">schedule</span>
-                    60 mins
-                  </div>
-                  <div className="flex items-center">
-                    <span className="material-symbols-outlined text-sm mr-2 opacity-60">grade</span>
-                    100 Marks
-                  </div>
-                  <div className="flex items-center">
-                    <span className="material-symbols-outlined text-sm mr-2 text-error opacity-60">radio_button_checked</span>
-                    Not Started
-                  </div>
-                </div>
-              </div>
-              <div className="mt-6 md:mt-0 md:ml-8">
-                <button className="cursor-pointer w-full md:w-auto px-8 py-3 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 font-bold rounded-lg transition-all border border-indigo-500/20 hover:border-indigo-500/40">
-                  Attempt Test
-                </button>
-              </div>
-            </div>
-
-            {/* Test Card 4 */}
-            <div className={`transition-all duration-300 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between group ${isDark ? 'bg-surface-container hover:bg-surface-container-high' : 'bg-white shadow-sm hover:shadow-md border border-slate-100'}`}>
-              <div className="flex-1">
-                <div className="flex items-center space-x-3 mb-2">
-                  <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-400 text-[10px] font-bold rounded uppercase tracking-wider">Advance</span>
-                  <span className={`text-xs font-medium ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>Modern Physics</span>
-                </div>
-                <h3 className={`text-xl font-bold font-headline mb-4 ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>JEE Full Mock 02</h3>
-                <div className={`flex items-center space-x-6 text-sm ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>
-                  <div className="flex items-center">
-                    <span className="material-symbols-outlined text-sm mr-2 opacity-60">schedule</span>
-                    180 mins
-                  </div>
-                  <div className="flex items-center">
-                    <span className="material-symbols-outlined text-sm mr-2 opacity-60">grade</span>
-                    300 Marks
-                  </div>
-                  <div className="flex items-center">
-                    <span className="material-symbols-outlined text-sm mr-2 text-error opacity-60">radio_button_checked</span>
-                    Not Started
-                  </div>
-                </div>
-              </div>
-              <div className="mt-6 md:mt-0 md:ml-8">
-                <button className="cursor-pointer w-full md:w-auto px-8 py-3 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 font-bold rounded-lg transition-all border border-indigo-500/20 hover:border-indigo-500/40">
-                  Attempt Test
-                </button>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Sidebar Widgets (Quick Stats) */}
-          <div className="col-span-12 lg:col-span-4 space-y-8">
-
-            {/* Performance Card */}
-            <div className={`p-8 rounded-xl transition-colors duration-300 ${isDark ? 'bg-surface-container' : 'bg-white shadow-sm border border-slate-100'}`}>
-              <h4 className="text-sm font-bold uppercase tracking-widest text-indigo-400 mb-6">Series Overview</h4>
-              <div className="space-y-6">
+            {/* Instruction Hero */}
+            <div className={`rounded-2xl p-8 mb-8 relative overflow-hidden transition-all duration-300 ${isDark ? 'bg-surface-container' : 'bg-white shadow-xl border border-slate-100'}`}>
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
                 <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className={isDark ? 'text-on-surface-variant' : 'text-slate-500'}>Total Progress</span>
-                    <span className={`font-bold ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>12 / 40</span>
+                  <div className="flex items-center space-x-3 mb-4">
+                    <span className="px-3 py-1 bg-indigo-500/10 text-indigo-400 text-xs font-bold rounded-full uppercase tracking-widest border border-indigo-500/20">
+                      {selectedTest?.badge || 'Advance'}
+                    </span>
+                    <span className={`text-sm font-medium ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>{selectedTest?.subject}</span>
                   </div>
-                  <div className={`w-full h-1 rounded-full overflow-hidden ${isDark ? 'bg-surface-variant' : 'bg-slate-100'}`}>
-                    <div className="h-full bg-indigo-500 rounded-full" style={{ width: '30%' }}></div>
-                  </div>
+                  <h1 className={`text-4xl font-extrabold font-headline tracking-tight ${isDark ? 'text-on-background' : 'text-slate-900'}`}>{selectedTest?.title}</h1>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className={`p-4 rounded-lg transition-colors ${isDark ? 'bg-surface-container-low' : 'bg-slate-50'}`}>
-                    <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Avg Score</p>
-                    <p className={`text-xl font-headline font-bold ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>78%</p>
+                <div className="flex space-x-4">
+                  <div className={`text-center px-6 py-3 rounded-xl ${isDark ? 'bg-surface-container-low' : 'bg-slate-50'}`}>
+                    <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Duration</p>
+                    <p className={`text-lg font-bold font-headline ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>{selectedTest?.duration}</p>
                   </div>
-                  <div className={`p-4 rounded-lg transition-colors ${isDark ? 'bg-surface-container-low' : 'bg-slate-50'}`}>
-                    <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Rank</p>
-                    <p className={`text-xl font-headline font-bold ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>#242</p>
+                  <div className={`text-center px-6 py-3 rounded-xl ${isDark ? 'bg-surface-container-low' : 'bg-slate-50'}`}>
+                    <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Total Marks</p>
+                    <p className={`text-lg font-bold font-headline ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>{selectedTest?.marks}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Learning Path */}
-            <div className={`p-8 rounded-xl relative overflow-hidden transition-colors duration-300 ${isDark ? 'bg-surface-container-low' : 'bg-slate-50 border border-slate-200/50'}`}>
-              <div className="absolute top-0 right-0 p-4 opacity-10">
-                <span className={`material-symbols-outlined text-6xl ${isDark ? '' : 'text-slate-400'}`}>school</span>
+            {/* Instructions Main Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="md:col-span-2 space-y-8">
+                {/* Syllabus Section */}
+                <section className={`p-8 rounded-2xl transition-all duration-300 ${isDark ? 'bg-surface-container' : 'bg-white shadow-lg border border-slate-100'}`}>
+                  <h3 className={`text-xl font-bold font-headline mb-6 flex items-center ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                    <span className="material-symbols-outlined mr-3">menu_book</span>
+                    Test Syllabus
+                  </h3>
+                  <ul className="space-y-4">
+                    {selectedTest?.syllabus?.map((item, idx) => (
+                      <li key={idx} className="flex items-start">
+                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 mr-4 flex-shrink-0"></div>
+                        <span className={`text-base leading-relaxed ${isDark ? 'text-on-surface-variant' : 'text-slate-600'}`}>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+
+                {/* Important Instructions */}
+                <section className={`p-8 rounded-2xl transition-all duration-300 ${isDark ? 'bg-surface-container' : 'bg-white shadow-lg border border-slate-100'}`}>
+                  <h3 className={`text-xl font-bold font-headline mb-6 flex items-center ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                    <span className="material-symbols-outlined mr-3">info</span>
+                    Important Guidelines
+                  </h3>
+                  <div className={`space-y-4 text-sm leading-relaxed ${isDark ? 'text-on-surface-variant' : 'text-slate-600'}`}>
+                    <p>• The test will automatically conclude when the timer reaches zero.</p>
+                    <p>• Correct answers award **+4 marks**, while incorrect ones deduct **-1 mark**.</p>
+                    <p>• No marks are deducted for unattempted questions.</p>
+                    <p>• Ensure a stable internet connection for the duration of the test.</p>
+                  </div>
+                </section>
               </div>
-              <h4 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-6">Recommended Next</h4>
-              <div className="space-y-4">
-                <div className="flex items-start">
-                  <div className="w-8 h-8 rounded bg-indigo-500/20 flex items-center justify-center mr-4 mt-1">
-                    <span className="material-symbols-outlined text-sm text-indigo-400">lightbulb</span>
-                  </div>
-                  <div>
-                    <p className={`text-sm font-bold ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>Focus: Organic Chemistry</p>
-                    <p className={`text-xs mt-1 ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>You missed 4 questions on Hydrocarbons in Mock 01.</p>
-                  </div>
+
+              {/* Action Sidebar */}
+              <div className="space-y-6">
+                <div className={`p-8 rounded-2xl sticky top-32 transition-all duration-300 ${isDark ? 'bg-surface-container' : 'bg-white shadow-2xl border border-indigo-100/50'}`}>
+                  <p className={`text-sm font-medium mb-6 ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>Ready to begin your mock exam? Take a deep breath.</p>
+                  <button className="cursor-pointer border-none w-full py-4 bg-indigo-500 text-on-primary font-bold rounded-xl text-lg transition-all shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:scale-95">
+                    Start Test Now
+                  </button>
+                  <p className="text-[10px] text-center mt-4 text-slate-500 uppercase tracking-widest font-bold">Good Luck, Scholar!</p>
                 </div>
-                <button className={`cursor-pointer border-none w-full py-2.5 mt-4 text-xs font-bold rounded uppercase tracking-widest transition-all ${isDark ? 'bg-surface-variant text-on-surface-variant hover:bg-indigo-500 hover:text-on-primary' : 'bg-slate-200 text-slate-600 hover:bg-slate-900 hover:text-white'}`}>
-                  View Study Plan
-                </button>
               </div>
             </div>
-
-            {/* Bento Ad / Feature */}
-            {/* <div className="h-48 bg-indigo-900/20 rounded-xl relative overflow-hidden group">
-              <img 
-                alt="Premium Prep" 
-                className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700" 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzWZp3AJPQDwBrSUcwHPfBgk9GLT97L__2TSL94JALtaNDVjWg-bHc4rUFC2MOu70-4PP-_yaov2F-wj_brt9Ot1bd18teo8GJrPByGCMyV6LzlM9NdoURz_vWKJu28TdecOCQdV_cYJH4njVv6yeTSDb93_PEk6-2Jk7gZ-ZLfTR6RcFFskBq18mR4rlzlFYTHTh-QcG23dxRcwmLCKeh1WsQVAE7mlfIAqgPAJe5WgqFTNWntR57eTDy__qo6UYh7Y-R3eB71BQH"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent p-6 flex flex-col justify-end">
-                <h5 className="text-sm font-bold text-white mb-1">Scholar Elite</h5>
-                <p className="text-xs text-slate-300">Unlock expert video solutions for all mocks.</p>
-              </div>
-            </div> */}
-
           </div>
-        </div>
+        )}
       </main>
     </div>
   );

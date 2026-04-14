@@ -88,8 +88,8 @@ router.get('/users/:id', asyncHandler(async (req, res) => {
  */
 router.patch('/users/:id/role', asyncHandler(async (req, res) => {
   const { role } = req.body;
-  if (!['student', 'admin'].includes(role)) {
-    res.status(400); throw new Error('Invalid role. Must be student or admin.');
+  if (!['student', 'admin', 'coachingAdmin'].includes(role)) {
+    res.status(400); throw new Error('Invalid role. Must be student, admin, or coachingAdmin.');
   }
   if (req.params.id === req.user._id.toString() && role !== 'admin') {
     res.status(400); throw new Error('You cannot demote yourself.');
