@@ -51,6 +51,20 @@ export default function App() {
     return <LoginPage isDark={isDark} onLogin={handleLogin} />;
   }
 
+  if (user && user.hasChangedPassword === false) {
+    return (
+      <ForcePasswordChange 
+        isDark={isDark} 
+        user={user} 
+        onPasswordChanged={() => {
+          const updatedUser = { ...user, hasChangedPassword: true };
+          handleLogin(updatedUser);
+        }}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-background text-on-surface' : 'bg-slate-50 text-slate-900'}`}>
       {/* SideNavBar */}

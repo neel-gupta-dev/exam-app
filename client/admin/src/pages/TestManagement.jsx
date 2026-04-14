@@ -35,43 +35,33 @@ export default function TestManagement() {
     try {
       setLoading(true);
       const [tRes, tenRes, gRes] = await Promise.all([
-        api.get('/admin/tests' in {} ? '/tests/admin' : '/api/tests/admin'),
-        api.get('/api/b2b/tenants').catch(() => ({ data: [] })),
-        api.get('/api/b2b/groups').catch(() => ({ data: [] })),
+        api.get('/tests/admin'),
+        api.get('/b2b/tenants').catch(() => ({ data: [] })),
+        api.get('/b2b/groups').catch(() => ({ data: [] })),
       ]);
       setTests(tRes.data?.tests || tRes.data || []);
       setTenants(tenRes.data || []);
       setGroups(gRes.data || []);
-    } catch {
-      // Retry with alternate path
-      try {
-        const res = await api.get('/tests/admin');
-        setTests(res.data?.tests || []);
-      } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
     } finally { setLoading(false); }
   };
 
   const fetchTests = async () => {
     try {
-      const res = await api.get('/api/tests/admin');
+      const res = await api.get('/tests/admin');
       setTests(res.data?.tests || []);
-    } catch {
-      try {
-        const res = await api.get('/tests/admin');
-        setTests(res.data?.tests || []);
-      } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
     }
   };
 
   const fetchQuestions = async (testId) => {
     try {
-      const res = await api.get(`/api/tests/${testId}/questions`);
+      const res = await api.get(`/tests/${testId}/questions`);
       setQuestions(res.data || []);
-    } catch {
-      try {
-        const res = await api.get(`/tests/${testId}/questions`);
-        setQuestions(res.data || []);
-      } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -79,9 +69,9 @@ export default function TestManagement() {
     e.preventDefault();
     try {
       if (editingTest) {
-        await api.patch(`/api/tests/${editingTest._id}`, form);
+        await api.patch(`/tests/${editingTest._id}`, form);
       } else {
-        await api.post('/api/tests', form);
+        await api.post('/tests', form);
       }
       setShowForm(false);
       setEditingTest(null);
@@ -94,7 +84,7 @@ export default function TestManagement() {
 
   const handleTogglePublish = async (testId) => {
     try {
-      await api.patch(`/api/tests/${testId}/publish`);
+      await api.patch(`/tests/${testId}/publish`);
       fetchTests();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to toggle publish');
@@ -104,7 +94,7 @@ export default function TestManagement() {
   const handleDeleteTest = async (testId) => {
     if (!confirm('Delete this test and ALL its questions?')) return;
     try {
-      await api.delete(`/api/tests/${testId}`);
+      await api.delete(`/tests/${testId}`);
       fetchTests();
       if (selectedTest?._id === testId) { setSelectedTest(null); setQuestions([]); }
     } catch (err) {
@@ -122,7 +112,7 @@ export default function TestManagement() {
         negativeMarks: qForm.negativeMarks ? Number(qForm.negativeMarks) : null,
         imageUrl: qForm.imageUrl || null,
       };
-      await api.post(`/api/tests/${selectedTest._id}/questions`, payload);
+      await api.post(`/tests/${selectedTest._id}/questions`, payload);
       setShowQuestionForm(false);
       setQForm({
         section: 'General', type: 'single', content: '', imageUrl: '',
@@ -141,7 +131,7 @@ export default function TestManagement() {
   const handleDeleteQuestion = async (qId) => {
     if (!confirm('Delete this question?')) return;
     try {
-      await api.delete(`/api/tests/${selectedTest._id}/questions/${qId}`);
+      await api.delete(`/tests/${selectedTest._id}/questions/${qId}`);
       fetchQuestions(selectedTest._id);
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to delete');

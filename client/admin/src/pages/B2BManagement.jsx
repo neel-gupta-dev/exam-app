@@ -20,8 +20,8 @@ export default function B2BManagement() {
     try {
       setLoading(true);
       const [tRes, gRes] = await Promise.all([
-        api.get('/api/b2b/tenants'),
-        api.get('/api/b2b/groups'),
+        api.get('/b2b/tenants'),
+        api.get('/b2b/groups'),
       ]);
       setTenants(tRes.data || []);
       setGroups(gRes.data || []);
@@ -31,7 +31,7 @@ export default function B2BManagement() {
   const handleCreateTenant = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/api/b2b/tenants', tenantForm);
+      await api.post('/b2b/tenants', tenantForm);
       setShowTenantForm(false);
       setTenantForm({ name: '', subdomain: '', code: '', contactEmail: '', maxStudents: 500 });
       fetchData();
@@ -42,7 +42,7 @@ export default function B2BManagement() {
 
   const handleToggleTenant = async (tenantId) => {
     try {
-      await api.patch(`/api/b2b/tenants/${tenantId}/toggle`);
+      await api.patch(`/b2b/tenants/${tenantId}/toggle`);
       fetchData();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to toggle');
@@ -56,7 +56,7 @@ export default function B2BManagement() {
       const lines = uploadForm.studentsText.split('\n').filter(l => l.trim());
       const students = lines.map(line => ({ name: line.trim() }));
 
-      const res = await api.post(`/api/b2b/tenants/${showUploadForm}/students/bulk`, {
+      const res = await api.post(`/b2b/tenants/${showUploadForm}/students/bulk`, {
         students,
         defaultPassword: uploadForm.defaultPassword,
       });
@@ -73,7 +73,7 @@ export default function B2BManagement() {
   const handleCreateAdmin = async (e) => {
     e.preventDefault();
     try {
-      await api.post(`/api/b2b/tenants/${showAdminForm}/admin`, adminForm);
+      await api.post(`/b2b/tenants/${showAdminForm}/admin`, adminForm);
       setShowAdminForm(null);
       setAdminForm({ name: '', email: '', password: '' });
       alert('Coaching admin account created successfully!');

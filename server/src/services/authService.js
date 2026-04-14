@@ -451,7 +451,7 @@ export const updateUserProfile = async ({ userId, name, email, bio, targetScore,
  * Update user password
  */
 export const updateUserPassword = async ({ userId, oldPassword, newPassword }) => {
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).select('+password');
   if (!user) {
     const error = new Error('User not found');
     error.statusCode = 404;
