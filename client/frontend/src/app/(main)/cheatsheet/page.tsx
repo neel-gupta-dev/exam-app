@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import api from "../../../../shared/api"; // Note: Might need path adjustment based on your setup
+import api from "@/lib/api";
 
 type SubjectType = "chemistry" | "physics" | "mathematics";
 
