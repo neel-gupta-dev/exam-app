@@ -4,25 +4,47 @@ import ForcePasswordChange from './ForcePasswordChange';
 import TestEngineLogin from './pages/TestEngineLogin';
 import TestEngineApp from './TestEngineApp';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function App() {
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('theme');
-      return saved ? saved === 'dark' : true; // Default to dark as requested
+      return saved ? saved === 'dark' : true; 
     }
     return true;
   });
 
-  const [view, setView] = useState('dashboard'); // New state for navigation
-  const [selectedTest, setSelectedTest] = useState(null); // Store active test data
+  const [view, setView] = useState('dashboard');
+  const [selectedTest, setSelectedTest] = useState(null);
+  
+  const [tests, setTests] = useState([]);
+  const [loadingTests, setLoadingTests] = useState(true);
 
-  // Auth state
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem('test_user');
       return saved ? JSON.parse(saved) : null;
     } catch { return null; }
   });
+
+  useEffect(() => {
+    if (user && view === 'dashboard') {
+      setLoadingTests(true);
+      fetch(`${API_BASE}/tests`, {
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      })
+      .then(res => res.json())
+      .then(data => {
+        setTests(data);
+        setLoadingTests(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoadingTests(false);
+      });
+    }
+  }, [user, view]);
 
   const handleLogin = (userData) => {
     localStorage.setItem('test_user', JSON.stringify(userData));
@@ -209,19 +231,27 @@ export default function App() {
             <div className="grid grid-cols-12 gap-10">
               {/* Test List (The Core) */}
               <div className="col-span-12 lg:col-span-8 space-y-4">
-                {[
-                  { id: 1, badge: 'Advance', subject: 'Physics • Chemistry • Maths', title: 'JEE Full Mock 01', duration: '180 mins', marks: '300 Marks', status: 'Not Started', icon: 'radio_button_checked', statusColor: 'text-error', state: 'default', syllabus: ['Mechanics & Heat', 'Inorganic Chemistry', 'Algebra & Vector'] },
-                  { id: 2, badge: 'Intermediate', subject: 'Calculus Focus', title: 'Mathematics Full Mock 04', duration: '90 mins', marks: '120 Marks', status: 'In Progress', icon: 'pending', statusColor: 'text-indigo-400', state: 'in-progress', syllabus: ['Calculus', 'Limits & Continuity', 'Integration'] },
-                  { id: 3, badge: 'Foundation', subject: 'General Aptitude', title: 'Logical Reasoning Mock 02', duration: '60 mins', marks: '100 Marks', status: 'Not Started', icon: 'radio_button_checked', statusColor: 'text-error', state: 'locked', syllabus: ['Puzzles', 'Number Series', 'Blood Relations'] },
-                  { id: 4, badge: 'Advance', subject: 'Modern Physics', title: 'JEE Full Mock 02', duration: '180 mins', marks: '300 Marks', status: 'Not Started', icon: 'radio_button_checked', statusColor: 'text-error', state: 'default', syllabus: ['Atoms & Nuclei', 'Dual Nature of Matter', 'Semiconductors'] },
-                ].map((test) => (
-                  <div key={test.id} className={`transition-all duration-300 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between group ${test.state === 'locked' ? 'opacity-70 grayscale-[0.5] hover:opacity-100 hover:grayscale-0' : ''} ${isDark ? 'bg-surface-container hover:bg-surface-container-high' : 'bg-white shadow-sm hover:shadow-md border border-slate-100'}`}>
+                {loadingTests ? (
+                  <div className={`p-8 text-center rounded-xl ${isDark ? 'bg-surface-container' : 'bg-white'}`}>
+                    <span className="material-symbols-outlined animate-spin text-indigo-500 text-3xl">sync</span>
+                    <p className={`mt-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Loading tests...</p>
+                  </div>
+                ) : tests.length === 0 ? (
+                  <div className={`p-8 text-center rounded-xl ${isDark ? 'bg-surface-container' : 'bg-white'}`}>
+                    <span className={`material-symbols-outlined text-4xl mb-2 ${isDark ? 'text-slate-600' : 'text-slate-300'}`}>assignment_late</span>
+                    <h3 className={`text-lg font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>No Tests Available</h3>
+                    <p className={`text-sm ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Check back later or contact your coach.</p>
+                  </div>
+                ) : tests.map((test) => (
+                  <div key={test._id} className={`transition-all duration-300 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between group ${isDark ? 'bg-surface-container hover:bg-surface-container-high' : 'bg-white shadow-sm hover:shadow-md border border-slate-100'}`}>
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
-                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider ${test.state === 'in-progress' ? 'bg-tertiary-container/20 text-tertiary' : test.state === 'locked' ? 'bg-slate-800 text-slate-400' : 'bg-indigo-500/20 text-indigo-400'}`}>
-                          {test.badge}
+                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider bg-indigo-500/20 text-indigo-400`}>
+                          {test.category || 'General'}
                         </span>
-                        <span className={`text-xs font-medium ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>{test.subject}</span>
+                        <span className={`text-xs font-medium ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>
+                          {test.sections?.map(s => s.name).join(' • ') || 'Full Exam'}
+                        </span>
                       </div>
                       <h3 className={`text-xl font-bold font-headline mb-4 ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>{test.title}</h3>
                       <div className={`flex items-center space-x-6 text-sm ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>
