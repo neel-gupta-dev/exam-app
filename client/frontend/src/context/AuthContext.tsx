@@ -86,9 +86,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Hydrate from API on mount and add listeners
   useEffect(() => {
     const initAuth = async () => {
-      // Check both localStorage (persistent) and sessionStorage (volatile)
-      const storedToken = localStorage.getItem('kv_token') || sessionStorage.getItem('kv_token');
-      const storedSessionId = localStorage.getItem('kv_sessionId') || sessionStorage.getItem('kv_sessionId');
+      let storedToken = null;
+      let storedSessionId = null;
+      try {
+        storedToken = localStorage.getItem('kv_token') || sessionStorage.getItem('kv_token');
+        storedSessionId = localStorage.getItem('kv_sessionId') || sessionStorage.getItem('kv_sessionId');
+      } catch (e) {
+        console.warn('Storage access blocked:', e);
+      }
       
       if (storedToken) {
         setToken(storedToken);

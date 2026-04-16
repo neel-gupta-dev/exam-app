@@ -71,7 +71,12 @@ export default function Sidebar() {
   useEffect(() => {
     const fetchFolders = async () => {
       if (isDemo) {
-        const demoVault = JSON.parse(localStorage.getItem('vayl_demo_vault') || '[]');
+        let demoVault = [];
+        try {
+          demoVault = JSON.parse(localStorage.getItem('vayl_demo_vault') || '[]');
+        } catch (e) {
+          console.warn('Demo vault access failed:', e);
+        }
         const staticFolders = ["Biology", "Physics", "Mathematics", "Chemistry"];
         const dynamicFolders = Array.from(new Set(demoVault.map((r: any) => r.folderName).filter(Boolean))) as string[];
         setFolders([...new Set([...staticFolders, ...dynamicFolders])]);

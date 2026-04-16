@@ -69,7 +69,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const handleStorageChange = () => {
-      setIsDemoMode(localStorage.getItem('vayl_demo_mode') === 'true');
+      try {
+        setIsDemoMode(localStorage.getItem('vayl_demo_mode') === 'true');
+      } catch (e) {
+        setIsDemoMode(false);
+      }
     };
     handleStorageChange();
     

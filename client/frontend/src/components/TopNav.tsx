@@ -114,7 +114,12 @@ export default function TopNav() {
       
       if (!user) {
         // Demo Mode Search
-        const demoVault = JSON.parse(localStorage.getItem('vayl_demo_vault') || '[]');
+        let demoVault = [];
+        try {
+          demoVault = JSON.parse(localStorage.getItem('vayl_demo_vault') || '[]');
+        } catch (e) {
+          console.warn('Demo vault search failed:', e);
+        }
         const lowerQ = searchQuery.toLowerCase();
         const demoResults = demoVault.filter((r: any) => 
           r.title?.toLowerCase().includes(lowerQ) || 
@@ -185,9 +190,13 @@ export default function TopNav() {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
-        const existing = JSON.parse(localStorage.getItem('vayl_demo_vault') || '[]');
-        localStorage.setItem('vayl_demo_vault', JSON.stringify([newResource, ...existing]));
-        toast.success("Demo resource saved to vault!");
+        try {
+          const existing = JSON.parse(localStorage.getItem('vayl_demo_vault') || '[]');
+          localStorage.setItem('vayl_demo_vault', JSON.stringify([newResource, ...existing]));
+          toast.success("Demo resource saved to vault!");
+        } catch (e) {
+          toast.error("Could not save to demo vault (storage blocked)");
+        }
       } else {
         await api.post('/resources', { url, title, type, folderName: folderName || "General" });
         toast.success("Resource saved to vault!");

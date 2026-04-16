@@ -189,7 +189,7 @@ export default function LandingPage() {
               <MagneticButton
                 onClick={() => {
                   sendGAEvent({ event: 'cta_click', value: 'nav_try_demo' });
-                  localStorage.setItem('vayl_demo_mode', 'true');
+                  try { localStorage.setItem('vayl_demo_mode', 'true'); } catch (e) {}
                   window.location.href = '/?demo=true';
                 }}
                 className="text-xs font-interface font-black uppercase tracking-widest px-5 py-2.5 rounded-xl border border-primary/30 text-primary bg-primary/5 hover:bg-primary/15 transition-all cursor-pointer"
@@ -269,7 +269,7 @@ export default function LandingPage() {
               <MagneticButton
                 onClick={() => {
                   sendGAEvent({ event: 'cta_click', value: 'nav_try_demo_mobile' });
-                  localStorage.setItem('vayl_demo_mode', 'true');
+                  try { localStorage.setItem('vayl_demo_mode', 'true'); } catch (e) {}
                   window.location.href = '/?demo=true';
                 }}
                 className="w-full max-w-sm text-center text-sm font-interface font-black uppercase tracking-widest px-5 py-3 rounded-xl border border-primary/30 text-primary bg-primary/5 hover:bg-primary/15 transition-all cursor-pointer"
