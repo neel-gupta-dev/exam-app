@@ -32,6 +32,7 @@ import testRoutes from '../src/routes/testRoutes.js';
 import b2bRoutes from '../src/routes/b2bRoutes.js';
 import coachingAdminRoutes from '../src/routes/coachingAdminRoutes.js';
 import attemptRoutes from '../src/routes/attemptRoutes.js';
+import cheatsheetRoutes from '../src/routes/cheatsheetRoutes.js';
 import passport from 'passport';
 import configurePassport from '../src/config/passport.js';
 import { MONGO_URI, PORT, ALLOWED_ORIGINS } from '../src/config/index.js';
@@ -141,6 +142,7 @@ apiRouter.use('/tests', testRoutes);
 apiRouter.use('/b2b', b2bRoutes);
 apiRouter.use('/coaching', coachingAdminRoutes);
 apiRouter.use('/attempts', attemptRoutes);
+apiRouter.use('/cheatsheet', cheatsheetRoutes);
 
 // Mount the API router
 app.use('/api', apiRouter); // Legacy/Admin Panel support

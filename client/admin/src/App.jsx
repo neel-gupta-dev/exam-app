@@ -11,6 +11,7 @@ import Health from './pages/Health';
 import Settings from './pages/Settings';
 import TestManagement from './pages/TestManagement';
 import B2BManagement from './pages/B2BManagement';
+import Cheatsheets from './pages/Cheatsheets';
 import Layout from './components/Layout';
 
 export const AuthCtx = createContext(null);
@@ -50,6 +51,7 @@ export default function App() {
             <Route path="/feedback" element={<FeedbackPage />} />
             <Route path="/tests" element={<TestManagement />} />
             <Route path="/b2b" element={<B2BManagement />} />
+            <Route path="/cheatsheets" element={<Cheatsheets />} />
             <Route path="/health" element={<Health />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
