@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import TestEngineLogin from './pages/TestEngineLogin';
 import TestEngineInstructions from './TestEngineInstructions';
+import TestEngine from './pages/TestEngine';
 
 export default function TestEngineApp({ user, test }) {
   // steps: 'login' -> 'instructions' -> 'test'
@@ -28,9 +29,13 @@ export default function TestEngineApp({ user, test }) {
 
   if (step === 'test') {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-100">
-        <h1 className="text-3xl font-bold">Main Exam Interface Loading...</h1>
-      </div>
+      <TestEngine
+        testId={test?._id}
+        user={user}
+        onSubmitted={() => {
+          // Could redirect or show result — TestEngine handles result display internally
+        }}
+      />
     );
   }
 

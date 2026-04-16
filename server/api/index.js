@@ -31,13 +31,20 @@ import flashcardRoutes from '../src/routes/flashcardRoutes.js';
 import testRoutes from '../src/routes/testRoutes.js';
 import b2bRoutes from '../src/routes/b2bRoutes.js';
 import coachingAdminRoutes from '../src/routes/coachingAdminRoutes.js';
+import attemptRoutes from '../src/routes/attemptRoutes.js';
 import passport from 'passport';
 import configurePassport from '../src/config/passport.js';
 import { MONGO_URI, PORT, ALLOWED_ORIGINS } from '../src/config/index.js';
+import { connectRedis } from '../src/config/redis.js';
 
 // Connect to MongoDB
 connectDB().catch(err => {
   console.error('CRITICAL: MongoDB Connection Failed:', err.message);
+});
+
+// Connect to Redis (non-blocking — app works without it)
+connectRedis().catch(err => {
+  console.warn('[Redis] Skipping Redis:', err.message);
 });
 
 // Configure Passport
@@ -133,6 +140,7 @@ apiRouter.use('/flashcards', flashcardRoutes);
 apiRouter.use('/tests', testRoutes);
 apiRouter.use('/b2b', b2bRoutes);
 apiRouter.use('/coaching', coachingAdminRoutes);
+apiRouter.use('/attempts', attemptRoutes);
 
 // Mount the API router
 app.use('/api', apiRouter); // Legacy/Admin Panel support
