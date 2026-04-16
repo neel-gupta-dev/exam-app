@@ -8,6 +8,7 @@ import Note from '../models/Note.js';
 import ActivityLog from '../models/ActivityLog.js';
 import FocusSession from '../models/FocusSession.js';
 import Flashcard from '../models/Flashcard.js';
+import TestAttempt from '../models/TestAttempt.js';
 
 /**
  * @desc    Individual User Analytics (God Mode)
@@ -36,7 +37,8 @@ export const getUserAnalytics = asyncHandler(async (req, res) => {
     focusSessionsCount,
     flashcardsCount,
     activityTimeline,
-    heatmapData
+    heatmapData,
+    testAttempts
   ] = await Promise.all([
     FocusSession.countDocuments({ userId: userObjectId }),
     Flashcard.countDocuments({ userId: userObjectId }),
@@ -55,21 +57,18 @@ export const getUserAnalytics = asyncHandler(async (req, res) => {
       },
       {
         $group: {
-          _id: {
-            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" }
-          },
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
           count: { $sum: 1 }
         }
       },
       { $sort: { "_id": 1 } },
-      {
-        $project: {
-          _id: 0,
-          date: "$_id",
-          count: 1
-        }
-      }
-    ])
+      { $project: { _id: 0, date: "$_id", count: 1 } }
+    ]),
+    // New feature: CBT Test Attempts
+    TestAttempt.find({ userId: userObjectId })
+      .populate('testId', 'title category totalMarks durationMinutes')
+      .sort({ createdAt: -1 })
+      .lean()
   ]);
 
   // 3. Construct the response object
@@ -90,11 +89,14 @@ export const getUserAnalytics = asyncHandler(async (req, res) => {
       currentStreak: user.currentStreak || 0,
       totalFocusSessions: focusSessionsCount,
       totalFlashcards: flashcardsCount,
+      totalTestsTaken: testAttempts.length,
     },
     timeline: activityTimeline,
     heatmap: heatmapData,
+    testAttempts: testAttempts,
   });
 });
+
 
 /**
  * Note: Keeping existing admin logic refactored here for consistency

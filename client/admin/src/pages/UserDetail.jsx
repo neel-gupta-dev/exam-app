@@ -37,7 +37,7 @@ export default function UserDetail() {
     </div>
   );
 
-  const { user, vitals, timeline, heatmap } = analytics;
+  const { user, vitals, timeline, heatmap, testAttempts = [] } = analytics;
 
   // Helper for dates
   const formatDate = (date) => date ? new Date(date).toLocaleString('en-IN', {
@@ -100,7 +100,7 @@ export default function UserDetail() {
               <span className="badge badge-blue">Live Feed</span>
             </div>
             <div className="card-body" style={{ padding: 0 }}>
-              <div className="table-wrap" style={{ maxHeight: '600px', overflowY: 'auto' }}>
+              <div className="table-wrap" style={{ maxHeight: '400px', overflowY: 'auto' }}>
                 <table>
                   <thead>
                     <tr>
@@ -125,6 +125,47 @@ export default function UserDetail() {
                     ))}
                     {!timeline.length && (
                       <tr><td colSpan={3} className="text-center text-muted" style={{ padding: 20 }}>No logs found.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div className="card" style={{ marginTop: '16px' }}>
+            <div className="card-header">
+              CBT Test Results
+              <span className="badge badge-purple">{testAttempts.length} Attempts</span>
+            </div>
+            <div className="card-body" style={{ padding: 0 }}>
+              <div className="table-wrap" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Test Name</th>
+                      <th>Score</th>
+                      <th>Stats</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {testAttempts.map(att => (
+                      <tr key={att._id}>
+                        <td className="td-mono">{formatDate(att.createdAt)}</td>
+                        <td style={{ fontWeight: 600 }}>{att.testId?.title || 'Unknown Test'}</td>
+                        <td>
+                          <strong style={{ color: att.score >= 0 ? '#166534' : '#991b1b' }}>{att.score}</strong>
+                          <span className="text-muted" style={{ fontSize: '11px' }}> / {att.testId?.totalMarks || '?'}</span>
+                        </td>
+                        <td style={{ fontSize: '11px' }}>
+                          <span style={{ color: 'green' }}>{att.correctCount} ✓</span> &nbsp;
+                          <span style={{ color: 'red' }}>{att.incorrectCount} ✗</span> &nbsp;
+                          <span style={{ color: 'gray' }}>{att.skippedCount} —</span>
+                        </td>
+                      </tr>
+                    ))}
+                    {!testAttempts.length && (
+                      <tr><td colSpan={4} className="text-center text-muted" style={{ padding: 20 }}>No tests attempted yet.</td></tr>
                     )}
                   </tbody>
                 </table>
