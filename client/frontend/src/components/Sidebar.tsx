@@ -30,6 +30,7 @@ const navItems = [
   { href: "/", label: "Vault", icon: Archive },
   { href: "/focus-room", label: "Focus Room", icon: Brain },
   { href: "/flashcards", label: "Flashcards", icon: Layers },
+  { href: "/cheatsheet", label: "Cheatsheet", icon: Layers }, // Or another appropriate icon
   { href: "/classroom", label: "Classroom", icon: GraduationCap },
   { href: "/performance", label: "Performance", icon: BarChart2 },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },

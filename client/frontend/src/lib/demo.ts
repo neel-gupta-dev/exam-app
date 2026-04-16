@@ -13,6 +13,7 @@ export const DEMO_ALLOWED_PATHS = [
   '/profile',
   '/resource',
   '/subjects',
+  '/cheatsheet',
 ] as const;
 
 export type DemoAllowedPath = typeof DEMO_ALLOWED_PATHS[number];

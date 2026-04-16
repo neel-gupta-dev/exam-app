@@ -180,6 +180,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-4 md:gap-8">
             <div className="hidden lg:flex items-center gap-8 text-xs font-interface font-black uppercase tracking-widest text-on-surface-variant">
               <MagneticButton href="https://notes.vayl.in" className="hover:text-primary transition-colors">Free Notes</MagneticButton>
+              <MagneticButton href="/cheatsheet" className="hover:text-primary transition-colors">Cheatsheet</MagneticButton>
               <MagneticButton href="/about" className="hover:text-primary transition-colors">About</MagneticButton>
               <MagneticButton href="/contact" className="hover:text-primary transition-colors">Contact</MagneticButton>
             </div>
@@ -256,6 +257,7 @@ export default function LandingPage() {
           >
             <div className="flex flex-col items-center gap-6 text-sm font-interface font-black uppercase tracking-widest text-on-surface-variant w-full mt-4">
               <MagneticButton href="https://notes.vayl.in" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-primary transition-colors py-2">Free Notes</MagneticButton>
+              <MagneticButton href="/cheatsheet" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-primary transition-colors py-2">Cheatsheet</MagneticButton>
               <MagneticButton href="/about" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-primary transition-colors py-2">About</MagneticButton>
               <MagneticButton href="/contact" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-primary transition-colors py-2">Contact</MagneticButton>
             </div>
