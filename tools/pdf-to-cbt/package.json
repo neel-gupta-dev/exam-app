@@ -1,0 +1,14 @@
+{
+  "name": "pdf-to-cbt",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Convert PDF exam papers to CBT questions for the Vayl exam engine",
+  "main": "converter.js",
+  "scripts": {
+    "convert": "node converter.js"
+  },
+  "dependencies": {
+    "pdf-parse": "^1.1.1"
+  }
+}

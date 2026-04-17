@@ -2,6 +2,7 @@ import asyncHandler from 'express-async-handler';
 import Test from '../models/Test.js';
 import Question from '../models/Question.js';
 import Group from '../models/Group.js';
+import { parsePdfBuffer } from '../services/pdfParserService.js';
 
 /**
  * @desc    Create a new test (Admin only)
@@ -358,4 +359,65 @@ export const deleteQuestion = asyncHandler(async (req, res) => {
   }
 
   res.json({ message: 'Question deleted' });
+});
+
+/**
+ * @desc    Import questions from a PDF file
+ * @route   POST /api/tests/:testId/questions/import-pdf
+ * @access  Admin
+ */
+export const importPdfQuestions = asyncHandler(async (req, res) => {
+  const test = await Test.findById(req.params.testId);
+  if (!test) {
+    res.status(404);
+    throw new Error('Test not found');
+  }
+
+  if (!req.file) {
+    res.status(400);
+    throw new Error('No PDF file uploaded');
+  }
+
+  // Parse the PDF buffer
+  const { questions, stats } = await parsePdfBuffer(req.file.buffer, {
+    section: req.body.section || null,
+    type: req.body.type || null,
+    positiveMarks: req.body.positiveMarks ? Number(req.body.positiveMarks) : test.defaultPositiveMarks,
+    negativeMarks: req.body.negativeMarks ? Number(req.body.negativeMarks) : test.defaultNegativeMarks,
+  });
+
+  if (questions.length === 0) {
+    res.status(422);
+    throw new Error(stats.error || 'Could not parse any questions from this PDF');
+  }
+
+  // If mode=preview, just return parsed questions without saving
+  if (req.body.mode === 'preview') {
+    return res.json({ questions, stats });
+  }
+
+  // Otherwise, insert into DB
+  const lastQuestion = await Question.findOne({ testId: test._id }).sort({ order: -1 });
+  let currentOrder = lastQuestion ? lastQuestion.order : 0;
+
+  const docs = questions.map(q => {
+    const { _meta, ...rest } = q;
+    return {
+      testId: test._id,
+      order: ++currentOrder,
+      ...rest,
+    };
+  });
+
+  const inserted = await Question.insertMany(docs);
+
+  // Update denormalized count
+  test.questionCount = await Question.countDocuments({ testId: test._id });
+  await test.save();
+
+  res.status(201).json({
+    message: `${inserted.length} questions imported from PDF`,
+    count: inserted.length,
+    stats,
+  });
 });

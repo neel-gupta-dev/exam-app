@@ -12,6 +12,12 @@ export default function TestManagement() {
   const [questions, setQuestions] = useState([]);
   const [showQuestionForm, setShowQuestionForm] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(null);
+  // PDF Import state
+  const [showPdfImport, setShowPdfImport] = useState(false);
+  const [pdfFile, setPdfFile] = useState(null);
+  const [pdfPreview, setPdfPreview] = useState(null);
+  const [pdfStats, setPdfStats] = useState(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   // Test form state
   const [form, setForm] = useState({
@@ -145,6 +151,42 @@ export default function TestManagement() {
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to delete');
     }
+  };
+
+  // PDF Import handlers
+  const handlePdfPreview = async () => {
+    if (!pdfFile || !selectedTest) return;
+    setPdfLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('pdf', pdfFile);
+      formData.append('mode', 'preview');
+      const res = await api.post(`/tests/${selectedTest._id}/questions/import-pdf`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setPdfPreview(res.data.questions);
+      setPdfStats(res.data.stats);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to parse PDF');
+    } finally { setPdfLoading(false); }
+  };
+
+  const handlePdfConfirmImport = async () => {
+    if (!pdfFile || !selectedTest) return;
+    setPdfLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('pdf', pdfFile);
+      formData.append('mode', 'import');
+      const res = await api.post(`/tests/${selectedTest._id}/questions/import-pdf`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      alert(`✅ ${res.data.count} questions imported!`);
+      setPdfPreview(null); setPdfStats(null); setPdfFile(null); setShowPdfImport(false);
+      fetchQuestions(selectedTest._id);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Import failed');
+    } finally { setPdfLoading(false); }
   };
 
   const visibilityLabel = (v) => ({ b2c_public: '🌐 B2C Public', b2c_group: '🎯 B2C Group', b2b_coaching: '🏢 B2B Coaching', b2b_group: '🏷️ B2B Group' }[v] || v);
@@ -302,7 +344,10 @@ export default function TestManagement() {
               }}>
                 {showQuestionForm ? 'Cancel' : '+ Add Question'}
               </button>
-              <button className="btn btn-sm" onClick={() => { setSelectedTest(null); setQuestions([]); setShowQuestionForm(false); }}>✕ Close</button>
+              <button className="btn btn-sm" style={{ background: '#7c3aed', color: '#fff' }} onClick={() => { setShowPdfImport(!showPdfImport); setPdfPreview(null); setPdfStats(null); setPdfFile(null); }}>
+                {showPdfImport ? 'Cancel Import' : '📄 Import PDF'}
+              </button>
+              <button className="btn btn-sm" onClick={() => { setSelectedTest(null); setQuestions([]); setShowQuestionForm(false); setShowPdfImport(false); }}>✕ Close</button>
             </div>
           </div>
 
@@ -381,6 +426,67 @@ export default function TestManagement() {
                 {editingQuestion ? 'Update Question' : 'Add Question'}
               </button>
             </form>
+          )}
+
+          {/* PDF Import Panel */}
+          {showPdfImport && (
+            <div style={{ marginTop: 16, padding: 20, background: 'rgba(124,58,237,0.08)', borderRadius: 8, border: '1px solid rgba(124,58,237,0.2)' }}>
+              <h4 style={{ margin: '0 0 12px', color: '#7c3aed' }}>📄 Import Questions from PDF</h4>
+              <p style={{ fontSize: 13, opacity: 0.7, margin: '0 0 16px' }}>Upload a JEE/NEET/CUET style PDF. The engine will auto-detect sections, question types, and answer keys. Questions with images will be flagged for manual review.</p>
+              
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input type="file" accept=".pdf" onChange={e => { setPdfFile(e.target.files[0]); setPdfPreview(null); setPdfStats(null); }} style={{ flex: 1 }} />
+                <button className="btn btn-primary" onClick={handlePdfPreview} disabled={!pdfFile || pdfLoading} style={{ background: '#7c3aed' }}>
+                  {pdfLoading ? '⏳ Parsing...' : '🔍 Preview Questions'}
+                </button>
+              </div>
+
+              {pdfStats && (
+                <div style={{ marginTop: 16, padding: 12, background: 'rgba(0,0,0,0.05)', borderRadius: 6, fontSize: 13 }}>
+                  <strong>Parse Results:</strong>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8, marginTop: 8 }}>
+                    <div>📋 Total: <strong>{pdfStats.total}</strong></div>
+                    <div>✅ With Answers: <strong>{pdfStats.withAnswers}</strong></div>
+                    <div>🖼️ Need Images: <strong style={{ color: pdfStats.withImages > 0 ? '#e67e22' : 'inherit' }}>{pdfStats.withImages}</strong></div>
+                    <div>📂 Sections: <strong>{pdfStats.sections?.join(', ')}</strong></div>
+                  </div>
+                </div>
+              )}
+
+              {pdfPreview && pdfPreview.length > 0 && (
+                <div style={{ marginTop: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <strong>Preview ({pdfPreview.length} questions):</strong>
+                    <button className="btn btn-primary" onClick={handlePdfConfirmImport} disabled={pdfLoading} style={{ background: '#059669' }}>
+                      {pdfLoading ? '⏳ Importing...' : `✅ Confirm Import (${pdfPreview.length} questions)`}
+                    </button>
+                  </div>
+                  <div style={{ maxHeight: 400, overflowY: 'auto', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6 }}>
+                    {pdfPreview.map((q, idx) => (
+                      <div key={idx} style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: 13 }}>
+                        <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
+                          <strong>Q{q._meta?.originalNumber || idx + 1}.</strong>
+                          <span className="badge">{q.section}</span>
+                          <span className="badge">{q.type}</span>
+                          {q._meta?.hasImage && <span className="badge badge-warning">🖼️ Has Image</span>}
+                          {q._meta?.needsAnswer && <span className="badge badge-warning">❓ No Answer</span>}
+                        </div>
+                        <p style={{ margin: '4px 0', whiteSpace: 'pre-wrap', opacity: 0.9 }}>{q.content?.substring(0, 200)}{q.content?.length > 200 ? '...' : ''}</p>
+                        {q.options?.length > 0 && (
+                          <div style={{ marginTop: 4, opacity: 0.7 }}>
+                            {q.options.map(o => (
+                              <span key={o.label} style={{ marginRight: 12, color: q.correctAnswer?.includes(o.label) ? '#2ecc71' : 'inherit' }}>
+                                {q.correctAnswer?.includes(o.label) ? '✅' : '○'} {o.label}. {o.content?.substring(0, 60)}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Question List */}

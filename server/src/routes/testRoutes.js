@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer from 'multer';
 import { protectAdmin } from '../middlewares/adminMiddleware.js';
 import { protect } from '../middlewares/authMiddleware.js';
 import {
@@ -14,9 +15,11 @@ import {
   getTestQuestions,
   updateQuestion,
   deleteQuestion,
+  importPdfQuestions,
 } from '../controllers/testController.js';
 
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } }); // 15MB max
 
 // ─── STUDENT-FACING ───────────────────────────────────────────────────────────
 // Returns only tests the logged-in user is eligible for (B2C or B2B)
@@ -34,6 +37,7 @@ router.delete('/:id', protectAdmin, deleteTest);
 router.get('/:testId/questions', protectAdmin, getTestQuestions);
 router.post('/:testId/questions', protectAdmin, addQuestion);
 router.post('/:testId/questions/bulk', protectAdmin, bulkAddQuestions);
+router.post('/:testId/questions/import-pdf', protectAdmin, upload.single('pdf'), importPdfQuestions);
 router.patch('/:testId/questions/:questionId', protectAdmin, updateQuestion);
 router.delete('/:testId/questions/:questionId', protectAdmin, deleteQuestion);
 
