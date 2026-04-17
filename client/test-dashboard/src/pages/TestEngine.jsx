@@ -299,16 +299,16 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   const summary = getSummary();
   const fullName = user?.name || 'Student';
 
-  // Extract NTA exact logic statuses class formats
-  const getButtonClass = (status) => {
-     switch(status) {
-        case 'answered': return 'text-white bg-[url(\'/tcs/answered.svg\')] bg-contain bg-no-repeat bg-center pb-[2px]';
-        case 'unanswered': return 'text-white bg-[url(\'/tcs/not-answered.svg\')] bg-contain bg-no-repeat bg-center pb-[2px]';
-        case 'not-visited': return 'text-[#333] bg-[url(\'/tcs/not-visited.svg\')] bg-contain bg-no-repeat bg-center pb-[2px]';
-        case 'marked-for-review': return 'text-white bg-[url(\'/tcs/marked.svg\')] bg-contain bg-no-repeat bg-center pb-[2px]';
-        case 'answered-and-marked': return 'text-white bg-[url(\'/tcs/answered-marked.svg\')] bg-contain bg-no-repeat bg-center pb-[2px]';
-        default: return 'text-[#333] bg-[url(\'/tcs/not-visited.svg\')] bg-contain bg-no-repeat bg-center pb-[2px]';
-     }
+  // NTA icon renderer mapping
+  const TcsIcon = ({ status, text }) => {
+    switch(status) {
+      case 'not-visited': return <div className="w-[30px] h-[26px] flex items-center justify-center bg-gradient-to-b from-[#fdfdfd] to-[#e6e6e6] border border-[#999] rounded-[3px] font-bold text-[#333] shrink-0 text-[14px]" style={{boxShadow: 'inset 0px -6px 8px -4px rgba(0,0,0,0.1)'}}>{text}</div>;
+      case 'unanswered': return <div className="relative w-[30px] h-[30px] bg-gradient-to-b from-[#eb6a47] to-[#c73111] text-white flex flex-col items-center justify-center font-bold shrink-0" style={{ clipPath: 'polygon(0% 0%, 100% 0%, 100% 65%, 50% 100%, 0% 65%)', borderTopLeftRadius: 3, borderTopRightRadius: 3 }}><span className="relative z-10 text-[14px] leading-none mb-[3px] drop-shadow-sm">{text}</span></div>;
+      case 'answered': return <div className="relative w-[30px] h-[30px] bg-gradient-to-b from-[#8fc938] to-[#518a10] text-white flex flex-col items-center justify-center font-bold shrink-0" style={{ clipPath: 'polygon(50% 0%, 100% 28%, 100% 100%, 0% 100%, 0% 28%)', borderBottomLeftRadius: 3, borderBottomRightRadius: 3 }}><span className="relative z-10 text-[14px] leading-none mt-1 drop-shadow-sm">{text}</span></div>;
+      case 'marked-for-review': return <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-b from-[#7c51a8] to-[#48287a] text-white flex items-center justify-center font-bold shrink-0 shadow-inner"><span className="text-[14px] leading-none drop-shadow-sm">{text}</span></div>;
+      case 'answered-and-marked': return <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-b from-[#7c51a8] to-[#48287a] text-white flex items-center justify-center font-bold shrink-0 shadow-inner relative"><span className="text-[14px] leading-none drop-shadow-sm">{text}</span><div className="absolute -bottom-0.5 -right-0.5 w-[13px] h-[13px] bg-[#609919] rounded-[2px] border border-white flex items-center justify-center shadow-sm"><div className="w-[5px] h-[5px] bg-white rounded-sm mt-0.5"></div></div></div>;
+      default: return <div className="w-[30px] h-[26px] flex items-center justify-center bg-gradient-to-b from-[#fdfdfd] to-[#e6e6e6] border border-[#999] rounded-[3px] font-bold text-[#333] shrink-0 text-[14px]" style={{boxShadow: 'inset 0px -6px 8px -4px rgba(0,0,0,0.1)'}}>{text}</div>;
+    }
   };
 
   return (
@@ -434,27 +434,27 @@ export default function TestEngine({ testId, user, onSubmitted }) {
         {/* Right Column Palette */}
         <div className="w-[250px] bg-[#eef3f6] hidden sm:flex flex-col border-l border-[#ccc] shrink-0">
           <div className="p-3 bg-white border-b border-[#ccc] shrink-0">
-            <div className="grid grid-cols-2 gap-y-2 gap-x-1 text-[11px] font-medium leading-tight text-[#333]">
-              <div className="flex gap-1.5 items-center">
-                <div className="w-8 h-7 bg-[url('/tcs/answered.svg')] bg-contain bg-no-repeat bg-center flex items-center justify-center text-white pb-[2px]">{summary.answered}</div>
+            <div className="grid grid-cols-2 gap-y-3 gap-x-1 text-[11.5px] font-medium leading-[1.1] text-[#333] px-1">
+              <div className="flex gap-2 items-center">
+                <TcsIcon status="answered" text={summary.answered} />
                 <span>Answered</span>
               </div>
-              <div className="flex gap-1.5 items-center">
-                <div className="w-8 h-7 bg-[url('/tcs/not-answered.svg')] bg-contain bg-no-repeat bg-center flex items-center justify-center text-white pb-[2px]">{summary.unanswered}</div>
+              <div className="flex gap-2 items-center">
+                <TcsIcon status="unanswered" text={summary.unanswered} />
                 <span>Not<br/>Answered</span>
               </div>
-              <div className="flex gap-1.5 items-center">
-                <div className="w-8 h-7 bg-[url('/tcs/not-visited.svg')] bg-contain bg-no-repeat bg-center flex items-center justify-center text-[#333] pb-[2px]">{summary.notVisited}</div>
+              <div className="flex gap-2 items-center">
+                <TcsIcon status="not-visited" text={summary.notVisited} />
                 <span>Not<br/>Visited</span>
               </div>
-              <div className="flex gap-1.5 items-center">
-                <div className="w-8 h-7 bg-[url('/tcs/marked.svg')] bg-contain bg-no-repeat bg-center flex items-center justify-center text-white pb-[2px]">{summary.markedForReview}</div>
+              <div className="flex gap-2 items-center">
+                <TcsIcon status="marked-for-review" text={summary.markedForReview} />
                 <span>Marked<br/>for Review</span>
               </div>
             </div>
-            <div className="flex gap-1.5 items-center mt-2 text-[11px] font-medium text-[#333]">
-               <div className="w-8 h-7 bg-[url('/tcs/answered-marked.svg')] bg-contain bg-no-repeat bg-center flex items-center justify-center text-white pb-[2px]">{summary.answeredAndMarked}</div>
-               <span className="leading-tight">Answered & Marked for<br/>Review (will also be evaluated)</span>
+            <div className="flex gap-2 items-start mt-4 px-1 text-[11.5px] font-medium text-[#333]">
+               <TcsIcon status="answered-and-marked" text={summary.answeredAndMarked} />
+               <span className="leading-[1.1]">Answered & Marked for Review (will be considered for evaluation)</span>
             </div>
           </div>
 
@@ -473,9 +473,9 @@ export default function TestEngine({ testId, user, onSubmitted }) {
                    <button 
                      key={q._id} 
                      onClick={() => setCurrentIdx(globalIdx)}
-                     className={`w-[34px] h-[30px] flex items-center justify-center text-[13px] font-bold ${getButtonClass(status)}`}
+                     className="focus:outline-none transition-transform hover:scale-[1.05]"
                    >
-                     {globalIdx + 1}
+                     <TcsIcon status={status} text={globalIdx + 1} />
                    </button>
                  )
               })}
