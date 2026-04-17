@@ -388,7 +388,10 @@ export const importPdfQuestions = asyncHandler(async (req, res) => {
 
   if (questions.length === 0) {
     res.status(422);
-    throw new Error(stats.error || 'Could not parse any questions from this PDF');
+    return res.json({
+      message: stats.error || 'Could not parse any questions from this PDF',
+      textSample: stats.textSample || null,
+    });
   }
 
   // If mode=preview, just return parsed questions without saving

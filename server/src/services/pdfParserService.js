@@ -86,16 +86,66 @@ export async function parsePdfBuffer(buffer, opts = {}) {
     .replace(/\r\n/g, '\n').replace(/\f/g, '\n').replace(/\t/g, ' ')
     .replace(/ {3,}/g, '  ').replace(/\n{4,}/g, '\n\n\n');
 
-  // Split into question blocks
-  const splitPattern = /(?:^|\n)\s*(?:Q(?:ues)?\.?\s*)?(\d{1,3})\s*[.):\-–]\s*/g;
-  const splits = [];
-  let match;
-  while ((match = splitPattern.exec(text)) !== null) {
-    splits.push({ index: match.index, number: parseInt(match[1]), len: match[0].length });
+  // ─── Multi-format question boundary detection ──────────────────────────────
+  // Supports:
+  //   "1."  "1)"  "1:"  "Q.1"  "Q1."  "Ques.1"  "(1)"  "1 " at start of line
+  //   Numbers must be at the start of a line (after optional whitespace)
+  //   Deliberately excludes pure numbers inside sentences (like option values)
+  const patterns = [
+    // Format: "Q.1", "Q1.", "Ques. 1", "Question 1" etc.
+    /(?:^|\n)[ \t]*(?:Q(?:uestion|ues)?\.?\s*)(\d{1,3})[\s.):\-–]/gm,
+    // Format: "(1)", "(12)" — number inside parens at line start
+    /(?:^|\n)[ \t]*\((\d{1,3})\)[ \t]/gm,
+    // Format: "1." or "1)" or "1:" at line start
+    /(?:^|\n)[ \t]*(\d{1,3})[.):\-–][ \t]/gm,
+    // Format: "1  " — number followed by 2+ spaces then text (common in some JEE PDFs)
+    /(?:^|\n)[ \t]*(\d{1,3})[ \t]{2,}(?=[A-Za-z(])/gm,
+  ];
+
+  // Try each pattern and take whichever finds the most matches (best fit for this PDF)
+  let splits = [];
+  for (const pattern of patterns) {
+    const candidate = [];
+    let match;
+    pattern.lastIndex = 0;
+    while ((match = pattern.exec(text)) !== null) {
+      candidate.push({ index: match.index, number: parseInt(match[1]), len: match[0].length });
+    }
+    // Prefer the pattern that finds sequential numbered questions (1, 2, 3...)
+    // Filter: must have at least 3 sequential numbers to be considered real
+    const sequential = candidate.filter((c, i) =>
+      i === 0 || c.number === candidate[i - 1].number + 1 || c.number <= 5
+    );
+    if (sequential.length > splits.length) {
+      splits = candidate;
+    }
+  }
+
+  // Final filter: remove false positives — keep only entries where numbers
+  // are roughly sequential (skip wild jumps like 1 → 45 → 2)
+  if (splits.length > 3) {
+    const filtered = [splits[0]];
+    for (let i = 1; i < splits.length; i++) {
+      const prev = filtered[filtered.length - 1].number;
+      const curr = splits[i].number;
+      // Allow same number or +1 to +5 sequential jump (handles multi-part questions)
+      if (curr > prev && curr <= prev + 10) filtered.push(splits[i]);
+      else if (curr === 1 && prev > 50) filtered.push(splits[i]); // new section restart
+    }
+    // Only use filtered if it's not much smaller (don't over-filter)
+    if (filtered.length >= splits.length * 0.6) splits = filtered;
   }
 
   if (splits.length === 0) {
-    return { questions: [], stats: { total: 0, error: 'No questions detected in PDF' } };
+    // Last resort: return diagnostic info
+    return {
+      questions: [],
+      stats: {
+        total: 0,
+        error: 'No questions detected. Ensure PDF has numbered questions (e.g. "1.", "Q.1", "(1)").',
+        textSample: text.substring(0, 500), // first 500 chars for debugging
+      }
+    };
   }
 
   const sectionHeaderRe = /(?:SECTION|PART)\s*[-–:]\s*[A-Z0-9]{0,3}\s*[-–:.]?\s*(Physics|Chemistry|Math(?:ematics|s)?|Biology|Botany|Zoology|English|General\s*Knowledge|Reasoning)/gi;

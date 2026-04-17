@@ -18,6 +18,7 @@ export default function TestManagement() {
   const [pdfPreview, setPdfPreview] = useState(null);
   const [pdfStats, setPdfStats] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState(null);
 
   // Test form state
   const [form, setForm] = useState({
@@ -157,6 +158,9 @@ export default function TestManagement() {
   const handlePdfPreview = async () => {
     if (!pdfFile || !selectedTest) return;
     setPdfLoading(true);
+    setPdfError(null);
+    setPdfPreview(null);
+    setPdfStats(null);
     try {
       const formData = new FormData();
       formData.append('pdf', pdfFile);
@@ -164,10 +168,16 @@ export default function TestManagement() {
       const res = await api.post(`/tests/${selectedTest._id}/questions/import-pdf`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      setPdfPreview(res.data.questions);
-      setPdfStats(res.data.stats);
+      if (res.data.questions) {
+        setPdfPreview(res.data.questions);
+        setPdfStats(res.data.stats);
+      } else {
+        // Parse failed — show diagnostic
+        setPdfError({ message: res.data.message, textSample: res.data.textSample });
+      }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to parse PDF');
+      const data = err.response?.data;
+      setPdfError({ message: data?.message || 'Failed to parse PDF', textSample: data?.textSample || null });
     } finally { setPdfLoading(false); }
   };
 
@@ -435,11 +445,23 @@ export default function TestManagement() {
               <p style={{ fontSize: 13, opacity: 0.7, margin: '0 0 16px' }}>Upload a JEE/NEET/CUET style PDF. The engine will auto-detect sections, question types, and answer keys. Questions with images will be flagged for manual review.</p>
               
               <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-                <input type="file" accept=".pdf" onChange={e => { setPdfFile(e.target.files[0]); setPdfPreview(null); setPdfStats(null); }} style={{ flex: 1 }} />
+                <input type="file" accept=".pdf" onChange={e => { setPdfFile(e.target.files[0]); setPdfPreview(null); setPdfStats(null); setPdfError(null); }} style={{ flex: 1 }} />
                 <button className="btn btn-primary" onClick={handlePdfPreview} disabled={!pdfFile || pdfLoading} style={{ background: '#7c3aed' }}>
                   {pdfLoading ? '⏳ Parsing...' : '🔍 Preview Questions'}
                 </button>
               </div>
+
+              {pdfError && (
+                <div style={{ marginTop: 16, padding: 12, background: 'rgba(220,38,38,0.1)', borderRadius: 6, border: '1px solid rgba(220,38,38,0.3)', fontSize: 13 }}>
+                  <strong style={{ color: '#ef4444' }}>❌ {pdfError.message}</strong>
+                  {pdfError.textSample && (
+                    <div style={{ marginTop: 10 }}>
+                      <p style={{ opacity: 0.7, marginBottom: 4 }}>First 500 chars extracted from PDF (check if questions are numbered correctly):</p>
+                      <pre style={{ background: 'rgba(0,0,0,0.2)', padding: 10, borderRadius: 4, fontSize: 11, whiteSpace: 'pre-wrap', maxHeight: 180, overflowY: 'auto' }}>{pdfError.textSample}</pre>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {pdfStats && (
                 <div style={{ marginTop: 16, padding: 12, background: 'rgba(0,0,0,0.05)', borderRadius: 6, fontSize: 13 }}>
