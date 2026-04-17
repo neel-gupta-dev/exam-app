@@ -7,6 +7,15 @@ export default function TestEngineInstructions({ user, onReady }) {
   const handleNext = () => setPage(2);
   const handlePrev = () => setPage(1);
 
+  const handleReady = () => {
+    try {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(e => console.log('Fullscreen failed:', e));
+      }
+    } catch (err) {}
+    onReady();
+  };
+
   // Fallback name processing
   const fullName = user?.name || user?.username || 'John Smith';
 
@@ -137,7 +146,7 @@ export default function TestEngineInstructions({ user, onReady }) {
                   </button>
                   
                   <button
-                    onClick={onReady}
+                    onClick={handleReady}
                     disabled={!isChecked}
                     className={`px-8 py-1.5 font-sans text-sm shadow-sm transition-colors border ${
                       isChecked 
