@@ -33,6 +33,10 @@ const testSchema = new mongoose.Schema(
         questionCount: { type: Number, default: 0 }, // Denormalized for display
       },
     ],
+    syllabus: {
+      type: [String],
+      default: [],
+    },
     // --- Audience Targeting ---
     visibility: {
       type: String,

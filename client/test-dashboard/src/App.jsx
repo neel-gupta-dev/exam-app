@@ -355,20 +355,19 @@ export default function App() {
                 <div>
                   <div className="flex items-center space-x-3 mb-4">
                     <span className="px-3 py-1 bg-indigo-500/10 text-indigo-400 text-xs font-bold rounded-full uppercase tracking-widest border border-indigo-500/20">
-                      {selectedTest?.badge || 'Advance'}
+                      {selectedTest?.category || 'Advance'}
                     </span>
-                    <span className={`text-sm font-medium ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>{selectedTest?.subject}</span>
                   </div>
                   <h1 className={`text-4xl font-extrabold font-headline tracking-tight ${isDark ? 'text-on-background' : 'text-slate-900'}`}>{selectedTest?.title}</h1>
                 </div>
                 <div className="flex space-x-4">
                   <div className={`text-center px-6 py-3 rounded-xl ${isDark ? 'bg-surface-container-low' : 'bg-slate-50'}`}>
                     <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Duration</p>
-                    <p className={`text-lg font-bold font-headline ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>{selectedTest?.duration}</p>
+                    <p className={`text-lg font-bold font-headline ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>{selectedTest?.durationMinutes || 0} mins</p>
                   </div>
                   <div className={`text-center px-6 py-3 rounded-xl ${isDark ? 'bg-surface-container-low' : 'bg-slate-50'}`}>
                     <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Total Marks</p>
-                    <p className={`text-lg font-bold font-headline ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>{selectedTest?.marks}</p>
+                    <p className={`text-lg font-bold font-headline ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>{selectedTest?.totalMarks || 0}</p>
                   </div>
                 </div>
               </div>
@@ -384,12 +383,16 @@ export default function App() {
                     Test Syllabus
                   </h3>
                   <ul className="space-y-4">
-                    {selectedTest?.syllabus?.map((item, idx) => (
-                      <li key={idx} className="flex items-start">
-                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 mr-4 flex-shrink-0"></div>
-                        <span className={`text-base leading-relaxed ${isDark ? 'text-on-surface-variant' : 'text-slate-600'}`}>{item}</span>
-                      </li>
-                    ))}
+                    {selectedTest?.syllabus?.length > 0 ? (
+                      selectedTest.syllabus.map((item, idx) => (
+                        <li key={idx} className="flex items-start">
+                          <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 mr-4 flex-shrink-0"></div>
+                          <span className={`text-base leading-relaxed ${isDark ? 'text-on-surface-variant' : 'text-slate-600'}`}>{item}</span>
+                        </li>
+                      ))
+                    ) : (
+                      <p className={`text-sm italic ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>No syllabus details provided for this test.</p>
+                    )}
                   </ul>
                 </section>
 

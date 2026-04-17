@@ -17,7 +17,7 @@ export default function TestManagement() {
   const [form, setForm] = useState({
     title: '', description: '', category: 'General', durationMinutes: 180,
     totalMarks: 300, visibility: 'b2c_public', targetTenants: [], targetGroups: [],
-    defaultPositiveMarks: 4, defaultNegativeMarks: 1,
+    defaultPositiveMarks: 4, defaultNegativeMarks: 1, syllabusText: '',
   });
 
   // Question form state
@@ -69,14 +69,15 @@ export default function TestManagement() {
   const handleSubmitTest = async (e) => {
     e.preventDefault();
     try {
+      const payload = { ...form, syllabus: form.syllabusText?.split('\n').filter(s => s.trim()) || [] };
       if (editingTest) {
-        await api.patch(`/tests/${editingTest._id}`, form);
+        await api.patch(`/tests/${editingTest._id}`, payload);
       } else {
-        await api.post('/tests', form);
+        await api.post('/tests', payload);
       }
       setShowForm(false);
       setEditingTest(null);
-      setForm({ title: '', description: '', category: 'General', durationMinutes: 180, totalMarks: 300, visibility: 'b2c_public', targetTenants: [], targetGroups: [], defaultPositiveMarks: 4, defaultNegativeMarks: 1 });
+      setForm({ title: '', description: '', category: 'General', durationMinutes: 180, totalMarks: 300, visibility: 'b2c_public', targetTenants: [], targetGroups: [], defaultPositiveMarks: 4, defaultNegativeMarks: 1, syllabusText: '' });
       fetchTests();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to save test');
@@ -193,6 +194,10 @@ export default function TestManagement() {
                 <label>Description</label>
                 <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} />
               </div>
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <label>Syllabus (One point per line)</label>
+                <textarea value={form.syllabusText || ''} onChange={e => setForm({ ...form, syllabusText: e.target.value })} rows={4} placeholder="e.g. Physics - Kinematics..." />
+              </div>
 
               {/* Audience Targeting */}
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
@@ -266,7 +271,7 @@ export default function TestManagement() {
                     <button className="btn btn-sm" onClick={() => handleTogglePublish(test._id)}>
                       {test.isPublished ? '⏸ Unpublish' : '🚀 Publish'}
                     </button>
-                    <button className="btn btn-sm" onClick={() => { setEditingTest(test); setForm({ title: test.title, description: test.description || '', category: test.category || 'General', durationMinutes: test.durationMinutes, totalMarks: test.totalMarks, visibility: test.visibility, targetTenants: test.targetTenants?.map(t => t._id || t) || [], targetGroups: test.targetGroups?.map(g => g._id || g) || [], defaultPositiveMarks: test.defaultPositiveMarks || 4, defaultNegativeMarks: test.defaultNegativeMarks || 1 }); setShowForm(true); }}>✏️ Edit</button>
+                    <button className="btn btn-sm" onClick={() => { setEditingTest(test); setForm({ title: test.title, description: test.description || '', category: test.category || 'General', durationMinutes: test.durationMinutes, totalMarks: test.totalMarks, visibility: test.visibility, targetTenants: test.targetTenants?.map(t => t._id || t) || [], targetGroups: test.targetGroups?.map(g => g._id || g) || [], defaultPositiveMarks: test.defaultPositiveMarks || 4, defaultNegativeMarks: test.defaultNegativeMarks || 1, syllabusText: test.syllabus?.join('\n') || '' }); setShowForm(true); }}>✏️ Edit</button>
                     <button className="btn btn-sm btn-danger" onClick={() => handleDeleteTest(test._id)}>🗑</button>
                   </div>
                 </td>
