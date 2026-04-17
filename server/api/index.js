@@ -23,6 +23,7 @@ import performanceRoutes from '../src/routes/performanceRoutes.js';
 import calendarRoutes from '../src/routes/calendarRoutes.js';
 import { getHealth } from '../src/controllers/healthController.js';
 import { closeExpiredSessions } from '../src/services/authService.js';
+import { startEvaluationWorker } from '../src/workers/evaluationWorker.js';
 import adminRoutes from '../src/routes/adminRoutes.js';
 import chapterListRoutes from '../src/routes/chapterListRoutes.js';
 import followRoutes from '../src/routes/followRoutes.js';
@@ -192,6 +193,9 @@ if (!process.env.VERCEL) {
 
     // Run Janitor every 30 minutes
     setInterval(closeExpiredSessions, 30 * 60 * 1000);
+    
+    // Start background grading engine
+    startEvaluationWorker();
   });
 }
 

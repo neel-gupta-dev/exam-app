@@ -273,12 +273,23 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   if (submitted && result) {
     return (
       <div className="flex flex-col h-screen bg-[#E8EDF2] items-center justify-center p-4">
-          <div className="bg-white p-8 rounded shadow text-center max-w-sm w-full">
-            <h1 className="text-2xl font-bold mb-4">Exam Completed</h1>
-            <p className="mb-2">Score: {result.score}</p>
-            <p className="mb-2">Correct: {result.correctCount}</p>
-            <p className="mb-6">Incorrect: {result.incorrectCount}</p>
-            <button onClick={() => window.close()} className="px-6 py-2 bg-blue-600 text-white rounded font-bold">Close Window</button>
+          <div className="bg-white p-8 rounded shadow text-center max-w-lg w-full border-t-4 border-[#3b82f6]">
+            <h1 className="text-2xl font-bold mb-4 text-[#3a5c8e]">Evaluation Submitted</h1>
+            <p className="mb-6 text-slate-600 font-medium">Your test has been successfully submitted to the evaluation queue. Your final score and detailed report will be available on your dashboard shortly.</p>
+            <div className="flex justify-center mt-6">
+              <button onClick={() => {
+                // If Fullscreen, exit first
+                if (document.fullscreenElement) {
+                   document.exitFullscreen().catch(e => console.log('Exit fullscreen failed', e));
+                }
+                const btn = document.createElement('a'); 
+                btn.href = '/dashboard'; 
+                btn.click();
+                if (onSubmitted) onSubmitted(); 
+              }} className="px-8 py-2.5 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded font-bold shadow-sm transition">
+                Return to Dashboard
+              </button>
+            </div>
           </div>
       </div>
     );

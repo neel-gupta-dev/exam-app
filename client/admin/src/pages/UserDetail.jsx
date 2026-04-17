@@ -154,13 +154,25 @@ export default function UserDetail() {
                         <td className="td-mono">{formatDate(att.createdAt)}</td>
                         <td style={{ fontWeight: 600 }}>{att.testId?.title || 'Unknown Test'}</td>
                         <td>
-                          <strong style={{ color: att.score >= 0 ? '#166534' : '#991b1b' }}>{att.score}</strong>
-                          <span className="text-muted" style={{ fontSize: '11px' }}> / {att.testId?.totalMarks || '?'}</span>
+                          {att.status === 'evaluating' ? (
+                            <span style={{ color: '#d97706', fontWeight: 'bold' }}>Queued</span>
+                          ) : (
+                            <>
+                              <strong style={{ color: att.score >= 0 ? '#166534' : '#991b1b' }}>{att.score}</strong>
+                              <span className="text-muted" style={{ fontSize: '11px' }}> / {att.testId?.totalMarks || '?'}</span>
+                            </>
+                          )}
                         </td>
                         <td style={{ fontSize: '11px' }}>
-                          <span style={{ color: 'green' }}>{att.correctCount} ✓</span> &nbsp;
-                          <span style={{ color: 'red' }}>{att.incorrectCount} ✗</span> &nbsp;
-                          <span style={{ color: 'gray' }}>{att.skippedCount} —</span>
+                          {att.status === 'evaluating' ? (
+                            <span className="text-muted">Evaluating...</span>
+                          ) : (
+                            <>
+                              <span style={{ color: 'green' }}>{att.correctCount} ✓</span> &nbsp;
+                              <span style={{ color: 'red' }}>{att.incorrectCount} ✗</span> &nbsp;
+                              <span style={{ color: 'gray' }}>{att.skippedCount} —</span>
+                            </>
+                          )}
                         </td>
                       </tr>
                     ))}

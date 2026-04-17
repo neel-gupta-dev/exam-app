@@ -122,51 +122,14 @@ export const submitAssessment = asyncHandler(async (req, res) => {
 
   const { answers, startTime } = JSON.parse(activeSessionRaw);
 
-  const test = await Test.findById(testId);
-  const questions = await Question.find({ testId });
-
-  let totalScore = 0;
-  let correctCount = 0;
-  let incorrectCount = 0;
-  let skippedCount = 0;
-
-  // Grade
-  questions.forEach(q => {
-    const answerData = answers[q._id.toString()];
-    if (!answerData || !answerData.selectedOption || answerData.selectedOption.length === 0) {
-      skippedCount++;
-      return;
-    }
-
-    const pos = q.positiveMarks ?? test.defaultPositiveMarks;
-    const neg = q.negativeMarks ?? test.defaultNegativeMarks;
-
-    // Comparing array equality for multiple choice/single choice
-    // Assumes answerData.selectedOption is an array of labels, e.g. ["A"], ["B", "C"]
-    const isCorrect = 
-      answerData.selectedOption.length === q.correctAnswer.length &&
-      answerData.selectedOption.every(opt => q.correctAnswer.includes(opt));
-
-    if (isCorrect) {
-      totalScore += pos;
-      correctCount++;
-    } else {
-      totalScore -= neg;
-      incorrectCount++;
-    }
-  });
-
   const endTime = new Date();
   const durationUsedMinutes = Math.round((endTime.getTime() - new Date(startTime).getTime()) / 60000);
 
-  // Store permanent result
+  // Store raw result for background evaluation queue
   const attempt = await TestAttempt.create({
     userId,
     testId,
-    score: totalScore,
-    correctCount,
-    incorrectCount,
-    skippedCount,
+    status: 'evaluating', // Pushed to queue
     durationUsedMinutes,
     rawAnswers: answers, // Stores exactly what the user selected + review state
   });
@@ -174,5 +137,5 @@ export const submitAssessment = asyncHandler(async (req, res) => {
   // Cleanup Redis
   await redis.del(sessionKey);
 
-  res.status(201).json(attempt);
+  res.status(201).json({ message: 'Evaluation pending', attempt });
 });

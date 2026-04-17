@@ -40,7 +40,7 @@ const testAttemptSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['in-progress', 'completed', 'auto-submitted'],
+      enum: ['in-progress', 'completed', 'auto-submitted', 'evaluating'],
       default: 'in-progress',
     },
     startedAt: {
