@@ -104,8 +104,8 @@ const testAttemptSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Compound unique: one active attempt per user per test
-testAttemptSchema.index({ userId: 1, testId: 1 }, { unique: true });
+// Compound index for fast lookup (no longer unique as retakes are allowed)
+testAttemptSchema.index({ userId: 1, testId: 1 });
 // For coaching admin: list all attempts for a test
 testAttemptSchema.index({ testId: 1, status: 1 });
 

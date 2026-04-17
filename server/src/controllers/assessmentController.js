@@ -24,12 +24,7 @@ export const startAssessment = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'Test not found' });
   }
 
-  // Check if player has already submitted it
-  const existingAttempt = await TestAttempt.findOne({ userId, testId });
-  if (existingAttempt) {
-    return res.status(400).json({ message: 'Test already submitted' });
-  }
-
+  // Removed the block so students can attempt the test again (retakes).
   const sessionKey = `cbt_session:${userId}:${testId}`;
 
   // Check if an active session exists in Redis

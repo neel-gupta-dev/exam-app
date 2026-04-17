@@ -11,6 +11,7 @@ export default function TestManagement() {
   const [selectedTest, setSelectedTest] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [showQuestionForm, setShowQuestionForm] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState(null);
 
   // Test form state
   const [form, setForm] = useState({
@@ -112,8 +113,15 @@ export default function TestManagement() {
         negativeMarks: qForm.negativeMarks ? Number(qForm.negativeMarks) : null,
         imageUrl: qForm.imageUrl || null,
       };
-      await api.post(`/tests/${selectedTest._id}/questions`, payload);
+      
+      if (editingQuestion) {
+        await api.patch(`/tests/${selectedTest._id}/questions/${editingQuestion._id}`, payload);
+      } else {
+        await api.post(`/tests/${selectedTest._id}/questions`, payload);
+      }
+      
       setShowQuestionForm(false);
+      setEditingQuestion(null);
       setQForm({
         section: 'General', type: 'single', content: '', imageUrl: '',
         options: [
@@ -124,7 +132,7 @@ export default function TestManagement() {
       });
       fetchQuestions(selectedTest._id);
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to add question');
+      alert(err.response?.data?.message || 'Failed to save question');
     }
   };
 
@@ -275,10 +283,21 @@ export default function TestManagement() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3>📋 Questions: {selectedTest.title} ({questions.length})</h3>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn btn-primary" onClick={() => setShowQuestionForm(!showQuestionForm)}>
+              <button className="btn btn-primary" onClick={() => {
+                setEditingQuestion(null);
+                setQForm({
+                  section: 'General', type: 'single', content: '', imageUrl: '',
+                  options: [
+                    { label: 'A', content: '' }, { label: 'B', content: '' },
+                    { label: 'C', content: '' }, { label: 'D', content: '' },
+                  ],
+                  correctAnswer: [], solution: '', positiveMarks: '', negativeMarks: '',
+                });
+                setShowQuestionForm(!showQuestionForm);
+              }}>
                 {showQuestionForm ? 'Cancel' : '+ Add Question'}
               </button>
-              <button className="btn btn-sm" onClick={() => { setSelectedTest(null); setQuestions([]); }}>✕ Close</button>
+              <button className="btn btn-sm" onClick={() => { setSelectedTest(null); setQuestions([]); setShowQuestionForm(false); }}>✕ Close</button>
             </div>
           </div>
 
@@ -353,7 +372,9 @@ export default function TestManagement() {
                   <textarea value={qForm.solution} onChange={e => setQForm({ ...qForm, solution: e.target.value })} rows={2} />
                 </div>
               </div>
-              <button type="submit" className="btn btn-primary" style={{ marginTop: 12 }}>Add Question</button>
+              <button type="submit" className="btn btn-primary" style={{ marginTop: 12 }}>
+                {editingQuestion ? 'Update Question' : 'Add Question'}
+              </button>
             </form>
           )}
 
@@ -379,7 +400,27 @@ export default function TestManagement() {
                   )}
                   {q.type === 'integer' && <div style={{ fontSize: 13 }}>Answer: <strong style={{ color: '#2ecc71' }}>{q.correctAnswer?.join(', ')}</strong></div>}
                 </div>
-                <button className="btn btn-sm btn-danger" onClick={() => handleDeleteQuestion(q._id)}>🗑</button>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button className="btn btn-sm" onClick={() => {
+                    setEditingQuestion(q);
+                    setQForm({
+                      section: q.section || 'General',
+                      type: q.type || 'single',
+                      content: q.content,
+                      imageUrl: q.imageUrl || '',
+                      options: q.options && q.options.length > 0 ? q.options : [
+                        { label: 'A', content: '' }, { label: 'B', content: '' },
+                        { label: 'C', content: '' }, { label: 'D', content: '' },
+                      ],
+                      correctAnswer: q.correctAnswer || [],
+                      solution: q.solution || '',
+                      positiveMarks: q.positiveMarks || '',
+                      negativeMarks: q.negativeMarks || '',
+                    });
+                    setShowQuestionForm(true);
+                  }} title="Edit Question">✏️</button>
+                  <button className="btn btn-sm btn-danger" onClick={() => handleDeleteQuestion(q._id)} title="Delete Question">🗑</button>
+                </div>
               </div>
             ))}
             {questions.length === 0 && <p style={{ textAlign: 'center', padding: 24, opacity: 0.5 }}>No questions yet. Add your first question above.</p>}
