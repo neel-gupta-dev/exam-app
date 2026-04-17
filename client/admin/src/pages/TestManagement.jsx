@@ -471,6 +471,10 @@ export default function TestManagement() {
                     <div>✅ With Answers: <strong>{pdfStats.withAnswers}</strong></div>
                     <div>🖼️ Need Images: <strong style={{ color: pdfStats.withImages > 0 ? '#e67e22' : 'inherit' }}>{pdfStats.withImages}</strong></div>
                     <div>📂 Sections: <strong>{pdfStats.sections?.join(', ')}</strong></div>
+                    {pdfStats.withSolutions > 0 && <div>💡 Solutions: <strong>{pdfStats.withSolutions}</strong></div>}
+                    {pdfStats.types && <div>📊 MCQ: {pdfStats.types.single}S + {pdfStats.types.multiple}M + {pdfStats.types.integer}I</div>}
+                    {pdfStats.avgConfidence > 0 && <div>🎯 Confidence: <strong style={{ color: pdfStats.avgConfidence >= 70 ? '#2ecc71' : pdfStats.avgConfidence >= 40 ? '#f39c12' : '#e74c3c' }}>{pdfStats.avgConfidence}%</strong></div>}
+                    {pdfStats.lowConfidenceCount > 0 && <div>⚠️ Low conf: <strong style={{ color: '#e67e22' }}>{pdfStats.lowConfidenceCount}</strong></div>}
                   </div>
                 </div>
               )}
@@ -485,13 +489,15 @@ export default function TestManagement() {
                   </div>
                   <div style={{ maxHeight: 400, overflowY: 'auto', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6 }}>
                     {pdfPreview.map((q, idx) => (
-                      <div key={idx} style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: 13 }}>
+                      <div key={idx} style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: 13, borderLeft: `3px solid ${(q._meta?.confidence || 0) >= 70 ? '#2ecc71' : (q._meta?.confidence || 0) >= 40 ? '#f39c12' : '#e74c3c'}` }}>
                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
                           <strong>Q{q._meta?.originalNumber || idx + 1}.</strong>
                           <span className="badge">{q.section}</span>
                           <span className="badge">{q.type}</span>
-                          {q._meta?.hasImage && <span className="badge badge-warning">🖼️ Has Image</span>}
-                          {q._meta?.needsAnswer && <span className="badge badge-warning">❓ No Answer</span>}
+                          <span style={{ fontSize: 10, opacity: 0.5 }}>{q._meta?.confidence}%</span>
+                          {q._meta?.hasImage && <span className="badge badge-warning">🖼️ Image</span>}
+                          {q._meta?.needsAnswer && <span className="badge badge-warning">❓ No Ans</span>}
+                          {q.solution && <span className="badge" style={{ background: 'rgba(46,204,113,0.2)', color: '#2ecc71' }}>💡 Sol</span>}
                         </div>
                         <p style={{ margin: '4px 0', whiteSpace: 'pre-wrap', opacity: 0.9 }}>{q.content?.substring(0, 200)}{q.content?.length > 200 ? '...' : ''}</p>
                         {q.options?.length > 0 && (
@@ -503,11 +509,15 @@ export default function TestManagement() {
                             ))}
                           </div>
                         )}
+                        {q.type === 'integer' && q.correctAnswer?.length > 0 && (
+                          <div style={{ marginTop: 4, fontSize: 12 }}>Answer: <strong style={{ color: '#2ecc71' }}>{q.correctAnswer.join(', ')}</strong></div>
+                        )}
                       </div>
                     ))}
                   </div>
                 </div>
               )}
+
             </div>
           )}
 
