@@ -25,6 +25,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   const syncDirty = useRef(false);
   const timerRef = useRef(null);
   const syncRef = useRef(null);
+  const submitLock = useRef(false);
   const token = user?.token || localStorage.getItem('test_token');
 
   // ─── API helper ───
@@ -246,16 +247,22 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     } else if (currentFilterIdx === filteredQuestions.length - 1) {
       const currSectionIdx = sections.findIndex(s => s.name === activeSection);
       if (currSectionIdx >= 0 && currSectionIdx < sections.length - 1) {
-        const nextSection = sections[currSectionIdx + 1].name;
-        setActiveSection(nextSection);
-        const firstQ = questions.find(q => q.section === nextSection);
-        if (firstQ) setCurrentIdx(questions.indexOf(firstQ));
+        for (let i = currSectionIdx + 1; i < sections.length; i++) {
+           const nextSection = sections[i].name;
+           const firstQ = questions.find(q => q.section === nextSection);
+           if (firstQ) {
+               setActiveSection(nextSection);
+               setCurrentIdx(questions.indexOf(firstQ));
+               break;
+           }
+        }
       }
     }
   };
 
   const handleSubmit = async (isAutoSubmit = false) => {
-    if (submitted) return;
+    if (submitted || submitLock.current) return;
+    submitLock.current = true;
     setIsSubmitting(true);
     await doSync();
     
@@ -272,6 +279,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
         if (!isAutoSubmit) {
           alert('Failed to submit: ' + e.message);
           setIsSubmitting(false);
+          submitLock.current = false;
           return;
         } else {
           await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -279,6 +287,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
       }
     }
     setIsSubmitting(false);
+    submitLock.current = false;
   };
 
   const getFilteredQuestions = () => {
