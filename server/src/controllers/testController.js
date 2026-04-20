@@ -2,6 +2,8 @@ import asyncHandler from 'express-async-handler';
 import Test from '../models/Test.js';
 import Question from '../models/Question.js';
 import Group from '../models/Group.js';
+import TestAttempt from '../models/TestAttempt.js';
+import { getRedis } from '../config/redis.js';
 import { parsePdfBuffer } from '../services/pdfParserService.js';
 
 /**
@@ -110,7 +112,7 @@ export const getStudentTests = asyncHandler(async (req, res) => {
   }
 
   const now = new Date();
-  const tests = await Test.find({
+  const rawTests = await Test.find({
     isPublished: true,
     ...audienceFilter,
     // Schedule check: only show if start time has passed (or is null)
@@ -122,7 +124,44 @@ export const getStudentTests = asyncHandler(async (req, res) => {
     .select('title description category durationMinutes totalMarks sections questionCount visibility scheduledStartAt scheduledEndAt')
     .sort({ createdAt: -1 });
 
-  res.json(tests);
+  const redis = getRedis();
+  const testIds = rawTests.map(t => t._id);
+  const attempts = await TestAttempt.find({ userId, testId: { $in: testIds } }).lean();
+
+  const enrichedTests = await Promise.all(rawTests.map(async (t) => {
+    const testObj = t.toObject();
+    const attempt = attempts.find(a => a.testId.toString() === t._id.toString());
+    
+    let state = 'default';
+    let status = 'Not Started';
+    
+    if (attempt) {
+      if (attempt.status === 'completed' || attempt.status === 'evaluated') {
+        state = 'completed';
+        status = 'Completed';
+      } else if (attempt.status === 'evaluating') {
+        state = 'completed';
+        status = 'Evaluating';
+      }
+    } else {
+      if (redis) {
+        const sessionKey = `cbt_session:${userId.toString()}:${t._id.toString()}`;
+        const hasSession = await redis.exists(sessionKey);
+        if (hasSession) {
+          state = 'in-progress';
+          status = 'In Progress';
+        }
+      }
+    }
+    
+    return {
+      ...testObj,
+      state,
+      status,
+    };
+  }));
+
+  res.json(enrichedTests);
 });
 
 /**

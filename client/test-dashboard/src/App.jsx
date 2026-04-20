@@ -257,29 +257,35 @@ export default function App() {
                       <div className={`flex items-center space-x-6 text-sm ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>
                         <div className="flex items-center">
                           <span className="material-symbols-outlined text-sm mr-2 opacity-60">schedule</span>
-                          {test.duration}
+                          {test.durationMinutes} mins
                         </div>
                         <div className="flex items-center">
                           <span className="material-symbols-outlined text-sm mr-2 opacity-60">grade</span>
-                          {test.marks}
+                          {test.totalMarks} Marks
                         </div>
                         <div className="flex items-center">
-                          <span className={`material-symbols-outlined text-sm mr-2 opacity-60 ${test.statusColor}`}>{test.icon}</span>
-                          {test.status}
+                          {test.state === 'in-progress' && <span className={`material-symbols-outlined text-sm mr-2 opacity-60 text-yellow-500`}>pending</span>}
+                          {test.state === 'completed' && <span className={`material-symbols-outlined text-sm mr-2 opacity-60 text-green-500`}>check_circle</span>}
+                          {(!test.state || test.state === 'default') && <span className={`material-symbols-outlined text-sm mr-2 opacity-60 text-slate-500`}>radio_button_checked</span>}
+                          {test.status || 'Not Started'}
                         </div>
                       </div>
                     </div>
                     <div className="mt-6 md:mt-0 md:ml-8">
                       <button 
                         onClick={() => {
+                          if (test.state === 'completed') {
+                            alert("Your detailed performance report will be generated shortly. Report view feature is coming in the next update.");
+                            return;
+                          }
                           if (test.state !== 'locked') {
                             setSelectedTest(test);
                             setView('instructions');
                           }
                         }}
-                        className={`cursor-pointer w-full md:w-auto px-8 py-3 font-bold rounded-lg transition-all ${test.state === 'in-progress' ? 'bg-indigo-500 text-on-primary shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20' : test.state === 'locked' ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 hover:border-indigo-500/40'}`}
+                        className={`cursor-pointer w-full md:w-auto px-8 py-3 font-bold rounded-lg transition-all ${test.state === 'in-progress' ? 'bg-indigo-500 text-on-primary shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20' : test.state === 'locked' ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : test.state === 'completed' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 hover:border-indigo-500/40'}`}
                       >
-                        {test.state === 'in-progress' ? 'Resume Test' : 'Attempt Test'}
+                        {test.state === 'in-progress' ? 'Resume Test' : test.state === 'completed' ? 'View Result' : 'Attempt Test'}
                       </button>
                     </div>
                   </div>
