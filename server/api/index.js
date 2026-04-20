@@ -40,9 +40,17 @@ import configurePassport from '../src/config/passport.js';
 import { MONGO_URI, PORT, ALLOWED_ORIGINS } from '../src/config/index.js';
 import { connectRedis } from '../src/config/redis.js';
 
-// Connect to MongoDB
-connectDB().catch(err => {
-  console.error('CRITICAL: MongoDB Connection Failed:', err.message);
+// Block requests strictly until Serverless DB resolves (Fixes Vercel Container Freezing Mongoose TCP)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    if (req.path === '/health' || req.path === '/api/health') {
+       return res.json({ database: { status: 'failed', error: error.message } });
+    }
+    res.status(503).json({ message: 'Database Connection Failed', error: error.message });
+  }
 });
 
 // Connect to Redis (non-blocking — app works without it)
