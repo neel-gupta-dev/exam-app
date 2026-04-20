@@ -40,6 +40,18 @@ import configurePassport from '../src/config/passport.js';
 import { MONGO_URI, PORT, ALLOWED_ORIGINS } from '../src/config/index.js';
 import { connectRedis } from '../src/config/redis.js';
 
+
+
+// Connect to Redis (non-blocking — app works without it)
+connectRedis().catch(err => {
+  console.warn('[Redis] Skipping Redis:', err.message);
+});
+
+// Configure Passport
+configurePassport();
+
+const app = express();
+
 // Block requests strictly until Serverless DB resolves (Fixes Vercel Container Freezing Mongoose TCP)
 app.use(async (req, res, next) => {
   try {
@@ -53,15 +65,6 @@ app.use(async (req, res, next) => {
   }
 });
 
-// Connect to Redis (non-blocking — app works without it)
-connectRedis().catch(err => {
-  console.warn('[Redis] Skipping Redis:', err.message);
-});
-
-// Configure Passport
-configurePassport();
-
-const app = express();
 app.use(helmet());
 app.use((req, res, next) => {
   res.setHeader(
