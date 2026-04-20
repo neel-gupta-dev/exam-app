@@ -39,7 +39,7 @@ export default function App() {
 
   return (
     <AuthCtx.Provider value={{ user, login, logout }}>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.VITE_ADMIN_BASE || '/sys-9f3k-ctrl'}>
         <Routes>
           <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
           <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
