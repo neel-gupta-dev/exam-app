@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Info, User as UserIcon, List } from 'lucide-react';
+import LatexRenderer from '../components/LatexRenderer';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -17,6 +18,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
   const [showWarning, setShowWarning] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState(null);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
@@ -106,6 +108,16 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     return () => clearInterval(timerRef.current);
   }, [loading, submitted]);
 
+  // ─── Mark viewed questions as unanswered ───
+  useEffect(() => {
+    if (!currentQuestion || submitted) return;
+    setAnswers(prev => {
+      if (prev.some(a => a.questionId === currentQuestion._id)) return prev;
+      syncDirty.current = true;
+      return [...prev, { questionId: currentQuestion._id, selectedAnswer: [], status: 'unanswered' }];
+    });
+  }, [currentQuestion, submitted]);
+
   // ─── Auto-sync API ───
   useEffect(() => {
     if (submitted) return;
@@ -190,6 +202,13 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     updateAnswer(currentQuestion._id, newSelected, newSelected.length > 0 ? 'answered' : 'unanswered');
   };
 
+  const handleIntegerSelect = (val) => {
+    if (!currentQuestion) return;
+    const cleanVal = val.trim();
+    const newSelected = cleanVal ? [cleanVal] : [];
+    updateAnswer(currentQuestion._id, newSelected, newSelected.length > 0 ? 'answered' : 'unanswered');
+  };
+
   const handleSaveNext = () => {
     if (!currentQuestion) return;
     const current = answers.find((a) => a.questionId === currentQuestion._id);
@@ -198,7 +217,8 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     if (current && current.selectedAnswer.length > 0 && existingStatus !== 'answered-and-marked') {
       updateAnswer(currentQuestion._id, current.selectedAnswer, 'answered');
     } else if (!current || current.selectedAnswer.length === 0) {
-      updateAnswer(currentQuestion._id, [], 'unanswered');
+      const newStatus = existingStatus === 'marked-for-review' ? 'marked-for-review' : 'unanswered';
+      updateAnswer(currentQuestion._id, [], newStatus);
     }
     goNext();
   };
@@ -223,21 +243,42 @@ export default function TestEngine({ testId, user, onSubmitted }) {
       const nextQ = filteredQuestions[currentFilterIdx + 1];
       const globalIdx = questions.findIndex((q) => q._id === nextQ._id);
       setCurrentIdx(globalIdx);
+    } else if (currentFilterIdx === filteredQuestions.length - 1) {
+      const currSectionIdx = sections.findIndex(s => s.name === activeSection);
+      if (currSectionIdx >= 0 && currSectionIdx < sections.length - 1) {
+        const nextSection = sections[currSectionIdx + 1].name;
+        setActiveSection(nextSection);
+        const firstQ = questions.find(q => q.section === nextSection);
+        if (firstQ) setCurrentIdx(questions.indexOf(firstQ));
+      }
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (isAutoSubmit = false) => {
     if (submitted) return;
+    setIsSubmitting(true);
     await doSync();
-    try {
-      const res = await apiFetch(`/assessment/${testId}/submit`, { method: 'POST' });
-      setResult(res);
-      setSubmitted(true);
-      clearInterval(timerRef.current);
-      clearInterval(syncRef.current);
-    } catch (e) {
-      alert('Failed to submit: ' + e.message);
+    
+    let success = false;
+    while (!success) {
+      try {
+        const res = await apiFetch(`/assessment/${testId}/submit`, { method: 'POST' });
+        setResult(res);
+        setSubmitted(true);
+        success = true;
+        clearInterval(timerRef.current);
+        clearInterval(syncRef.current);
+      } catch (e) {
+        if (!isAutoSubmit) {
+          alert('Failed to submit: ' + e.message);
+          setIsSubmitting(false);
+          return;
+        } else {
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+        }
+      }
     }
+    setIsSubmitting(false);
   };
 
   const getFilteredQuestions = () => {
@@ -268,6 +309,18 @@ export default function TestEngine({ testId, user, onSubmitted }) {
 
   if (loading) {
     return <div className="flex h-screen items-center justify-center bg-white"><div className="animate-spin text-[#3b82f6] text-4xl">↻</div></div>;
+  }
+
+  if (isSubmitting) {
+    return (
+      <div className="flex flex-col h-screen bg-[#E8EDF2] items-center justify-center p-4">
+         <div className="bg-white p-8 rounded shadow text-center max-w-sm w-full border-t-4 border-[#e67e22]">
+           <div className="animate-spin text-[#e67e22] text-4xl mb-4 flex justify-center">↻</div>
+           <h2 className="text-xl font-bold mb-2 text-[#333]">Submitting Test...</h2>
+           <p className="text-slate-600 font-medium text-sm">Please do not close this window. We are securely uploading your responses.</p>
+         </div>
+      </div>
+    );
   }
 
   if (submitted && result) {
@@ -392,12 +445,12 @@ export default function TestEngine({ testId, user, onSubmitted }) {
           <div className="flex-1 overflow-y-auto px-4 py-3 bg-white scroll-smooth relative mb-14">
             <h3 className="text-[15px] font-bold mb-4 text-[#333]">Question No. {currentIdx + 1}</h3>
             <div className="text-[14.5px] text-black pr-2 mb-6 font-medium whitespace-pre-wrap">
-              {currentQuestion?.content}
+              <LatexRenderer text={currentQuestion?.content} />
               {currentQuestion?.imageUrl && <img src={currentQuestion.imageUrl} alt="" className="mt-4 max-w-full" />}
             </div>
 
             <div className="pl-2 space-y-3">
-              {currentQuestion?.options?.map((opt, i) => {
+              {currentQuestion?.type !== 'integer' && currentQuestion?.options?.map((opt, i) => {
                  const isSelected = currentAnswer?.selectedAnswer?.includes(opt.label);
                  return (
                    <label key={opt.label} className="flex flex-row items-start gap-2 cursor-pointer font-medium hover:bg-gray-50 rounded p-1 p-2 border-b border-gray-100">
@@ -406,13 +459,29 @@ export default function TestEngine({ testId, user, onSubmitted }) {
                        name={`q-${currentQuestion._id}`}
                        checked={isSelected || false}
                        onChange={() => handleOptionSelect(opt.label)}
-                       className="w-4 h-4 mt-1 accent-[#3b82f6] cursor-pointer"
+                       className="w-4 h-4 mt-1 accent-[#3b82f6] cursor-pointer shrink-0"
                      />
-                     <span className="text-[14.5px]"><b className="mr-1">{opt.label}.</b> {opt.content}</span>
+                     <span className="text-[14.5px] flex-1">
+                       <b className="mr-1">{opt.label}.</b> 
+                       <LatexRenderer text={opt.content} />
+                     </span>
                      {opt.imageUrl && <img src={opt.imageUrl} alt="" className="max-h-24 ml-2" />}
                    </label>
                  )
               })}
+              {currentQuestion?.type === 'integer' && (
+                 <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded max-w-sm">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Numerical Answer</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={currentAnswer?.selectedAnswer?.[0] || ''}
+                      onChange={(e) => handleIntegerSelect(e.target.value)}
+                      placeholder="Enter value"
+                      className="border border-gray-300 rounded px-3 py-2 w-full text-sm focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6] bg-white transition-shadow"
+                    />
+                 </div>
+              )}
             </div>
           </div>
 
