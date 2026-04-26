@@ -215,6 +215,8 @@ export default function Home() {
             <a href="/privacy" className="hover:text-blue-400 transition-colors">Privacy Policy</a>
             <span>•</span>
             <a href="/terms" className="hover:text-blue-400 transition-colors">Terms of Service</a>
+            <span>•</span>
+            <a href="/contact" className="hover:text-blue-400 transition-colors">Contact</a>
           </div>
           <p className="text-xs text-gray-700 font-medium">
             Powered by Vayl Platform
