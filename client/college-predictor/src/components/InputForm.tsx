@@ -421,11 +421,7 @@ export default function InputForm({ onSubmit, loading, onReset, hasResults }: In
               </label>
 
               {!useMarketRanking && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                >
+                <div className="mt-2">
                   {/* Selected branches (ordered) */}
                   {selectedBranches.length > 0 && (
                     <div className="mb-4">
@@ -506,7 +502,7 @@ export default function InputForm({ onSubmit, loading, onReset, hasResults }: In
                       );
                     })}
                   </div>
-                </motion.div>
+                </div>
               )}
             </motion.div>
           )}
