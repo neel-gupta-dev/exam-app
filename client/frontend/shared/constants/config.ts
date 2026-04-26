@@ -6,17 +6,17 @@
 const isProd = process.env.NODE_ENV === 'production';
 
 export const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL || 
-  (isProd ? 'https://vayl.in' : 'http://localhost:3000');
+  (isProd ? '' : 'http://localhost:3000');
 
 export const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 
-  (isProd ? 'https://api.vayl.in' : 'http://localhost:5000');
+  (isProd ? '' : 'http://localhost:5000');
 
 export const GOOGLE_OAUTH_CONFIG = {
   clientId: process.env.GOOGLE_CLIENT_ID || '',
   clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
   callbackUrl: process.env.GOOGLE_CALLBACK_URL || 
     (isProd 
-      ? 'https://api.vayl.in/auth/google/callback' 
+      ? '' 
       : 'http://localhost:5000/auth/google/callback'),
 };
 

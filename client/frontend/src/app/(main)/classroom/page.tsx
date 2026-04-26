@@ -19,8 +19,9 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
+import { API_BASE_URL } from "@/config/env";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const BACKEND_URL = API_BASE_URL || "http://localhost:5000";
 
 interface Course {
   id: string;

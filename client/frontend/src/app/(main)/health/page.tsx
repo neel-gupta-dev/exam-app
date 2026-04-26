@@ -74,7 +74,7 @@ export default function HealthPage() {
     const start = performance.now();
     try {
       // Use API_BASE_URL from env — with hardcoded fallback for stale builds.
-      const apiUrl = API_BASE_URL || 'https://api.vayl.in';
+      const apiUrl = API_BASE_URL;
       const response = await fetch(`${apiUrl}/health`, { mode: 'cors' });
       const end = performance.now();
       const currentLatency = Math.round(end - start);

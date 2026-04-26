@@ -34,7 +34,7 @@ export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 export const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL || 
   (isProd 
-    ? 'https://api.vayl.in/auth/google/callback' 
+    ? '' 
     : 'http://localhost:5000/auth/google/callback');
 
 // Validation in Dev

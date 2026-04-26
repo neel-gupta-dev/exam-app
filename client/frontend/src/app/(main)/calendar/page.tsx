@@ -79,7 +79,7 @@ export default function CalendarPage() {
   };
 
   const navigateToGoogleAuth = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/auth/google?calendar=true`;
+    window.location.href = `${API_BASE_URL || 'http://localhost:5000'}/auth/google?calendar=true`;
   };
 
   const getWeekDays = () => {

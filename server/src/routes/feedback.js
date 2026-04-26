@@ -2,6 +2,7 @@ import express from 'express';
 const router = express.Router();
 import Feedback from '../models/Feedback.js';
 import rateLimit from 'express-rate-limit';
+import { FRONTEND_URL } from '../config/index.js';
 
 // Rate limiter: 5 feedback submissions per IP per 15 minutes
 const feedbackLimiter = rateLimit({
@@ -19,13 +20,13 @@ router.get('/submit', feedbackLimiter, async (req, res) => {
   // Validate inputs
   const parsedRating = parseInt(rating, 10);
   if (!rating || !email || isNaN(parsedRating) || parsedRating < 1 || parsedRating > 5) {
-    return res.redirect('https://vayl.in/feedback-error');
+    return res.redirect(`${FRONTEND_URL}/feedback-error`);
   }
 
   // Basic email format check & length limit
   const cleanEmail = String(email).slice(0, 254).toLowerCase().trim();
   if (!cleanEmail.includes('@')) {
-    return res.redirect('https://vayl.in/feedback-error');
+    return res.redirect(`${FRONTEND_URL}/feedback-error`);
   }
 
   try {
@@ -34,11 +35,11 @@ router.get('/submit', feedbackLimiter, async (req, res) => {
       rating: parsedRating
     });
 
-    res.redirect('https://vayl.in/');
+    res.redirect(`${FRONTEND_URL}/`);
 
   } catch (error) {
     console.error("Feedback API error:", error);
-    res.redirect('https://vayl.in/feedback-error');
+    res.redirect(`${FRONTEND_URL}/feedback-error`);
   }
 });
 
