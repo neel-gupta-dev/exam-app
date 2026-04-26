@@ -38,6 +38,11 @@ export const metadata: Metadata = {
       "Smart college predictions based on your rank, preferences, and market trends.",
     type: "website",
   },
+  icons: {
+    icon: "/vayl-logo.png",
+    shortcut: "/vayl-logo.png",
+    apple: "/vayl-logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -64,6 +69,19 @@ export default function RootLayout({
             }}
           />
         </div>
+        
+        {/* Nav Header */}
+        <header className="w-full border-b border-navy-800/50 bg-navy-900/40 backdrop-blur-md sticky top-0 z-50">
+          <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <img src="/vayl-logo.png" alt="Vayl Logo" className="w-6 h-6 object-contain" />
+              <span className="font-[family-name:var(--font-heading)] font-bold text-white text-xl tracking-tight">
+                Vayl <span className="text-blue-500 font-medium">Predictor</span>
+              </span>
+            </div>
+          </div>
+        </header>
+
         {children}
       </body>
     </html>

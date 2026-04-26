@@ -167,14 +167,15 @@ export default function Home() {
       </AnimatePresence>
 
       {/* ─── Footer ─── */}
-      <footer className="px-4 py-8 border-t border-navy-800">
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-xs text-gray-600">
-            Cutoff data sourced from JoSAA & CSAB 2024. Results are predictive
+      <footer className="px-4 py-8 border-t border-navy-800 bg-navy-900/20">
+        <div className="max-w-4xl mx-auto flex flex-col items-center text-center">
+          <img src="/vayl-logo.png" alt="Vayl Logo" className="w-8 h-8 object-contain mb-3 opacity-80" />
+          <p className="text-xs text-gray-500 mb-1">
+            Cutoff data sourced from JoSAA & CSAB 2024/2025. Results are predictive
             and based on previous year trends. Actual cutoffs may vary.
           </p>
-          <p className="text-xs text-gray-700 mt-1">
-            Built with ❤️ for JEE aspirants
+          <p className="text-xs text-gray-700 font-medium">
+            Powered by Vayl Platform
           </p>
         </div>
       </footer>
