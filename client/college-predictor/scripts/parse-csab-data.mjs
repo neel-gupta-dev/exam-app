@@ -28,7 +28,7 @@ async function main() {
     "Other State": "OS",
   };
 
-  function parseFile(filename, instituteType, roundNumber) {
+  function parseFile(filename, instituteType, roundNumber, counseling = "CSAB") {
     const filePath = join(DATA_DIR, filename);
     console.log(`\n📖 Reading: ${filename}`);
 
@@ -73,7 +73,7 @@ async function main() {
         closing_rank: closingRank,
         round: roundNumber, // Dynamic round from file
         year: 2025,
-        counseling: "CSAB",
+        counseling: counseling,
       });
     }
 
@@ -99,10 +99,13 @@ async function main() {
   const nitR3 = parseFile("NITs Csab(Round 3 2025).xlsx", "NIT", 3);
 
   const gftiR1 = parseFile("GFTIs Csab(Round 1 2025).xlsx", "GFTI", 1);
+  
+  const iitR5 = parseFile("IITs Josaa(Round 5 2025).xlsx", "IIT", 5, "JoSAA");
 
   const iiitEntries = [...iiitR1, ...iiitR2, ...iiitR3];
   const nitEntries = [...nitR1, ...nitR2, ...nitR3];
   const gftiEntries = [...gftiR1];
+  const iitEntries = [...iitR5];
 
   // Write output
   const iiitOutput = join(DATA_DIR, "cutoffs-iiit-csab.json");
@@ -119,7 +122,11 @@ async function main() {
   writeFileSync(gftiOutput, JSON.stringify(gftiEntries, null, 2));
   console.log(`✅ Written ${gftiEntries.length} GFTI entries to cutoffs-gfti-csab.json`);
 
-  const allEntries = [...iiitEntries, ...nitEntries, ...gftiEntries];
+  const iitOutput = join(DATA_DIR, "cutoffs-iit-josaa.json");
+  writeFileSync(iitOutput, JSON.stringify(iitEntries, null, 2));
+  console.log(`✅ Written ${iitEntries.length} IIT entries to cutoffs-iit-josaa.json`);
+
+  const allEntries = [...iiitEntries, ...nitEntries, ...gftiEntries, ...iitEntries];
   writeFileSync(allOutput, JSON.stringify(allEntries, null, 2));
   console.log(`✅ Written ${allEntries.length} total entries to cutoffs-all.json`);
 
