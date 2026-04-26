@@ -139,12 +139,46 @@ export const getMonthlyStats = asyncHandler(async (req, res) => {
     }
   ];
 
+  // 3. Calculate Today's Focus Time (resets at 5 AM IST)
+  // 5 AM IST = 23:30 UTC (previous day)
+  const nowUtcTime = now.getTime();
+  const offsetIST = 5.5 * 60 * 60 * 1000;
+  const nowIST = new Date(nowUtcTime + offsetIST);
+  
+  const today5AmIST = new Date(nowIST);
+  if (nowIST.getUTCHours() < 5) {
+    today5AmIST.setUTCDate(today5AmIST.getUTCDate() - 1);
+  }
+  today5AmIST.setUTCHours(5, 0, 0, 0);
+  
+  const today5AmUTC = new Date(today5AmIST.getTime() - offsetIST);
+
+  const todayFocusStats = await FocusSession.aggregate([
+    { 
+      $match: { 
+        userId, 
+        type: 'focus', 
+        status: 'completed',
+        createdAt: { $gte: today5AmUTC }
+      } 
+    },
+    {
+      $group: {
+        _id: null,
+        totalSeconds: { $sum: '$timing.actualDuration' }
+      }
+    }
+  ]);
+
+  const todayFocusSeconds = todayFocusStats.length > 0 ? todayFocusStats[0].totalSeconds : 0;
+
   res.json({
     focusProgress: {
       current: focusMinutes,
       target: focusTargetMinutes,
       percent: Math.min(Math.round((focusMinutes / focusTargetMinutes) * 100), 100)
     },
+    todayFocusSeconds,
     milestones
   });
 });

@@ -54,7 +54,7 @@ export function predictColleges(
     if (userRank === null || userRank === undefined) continue;
 
     // ─── Step 1: Filter by Eligibility ───
-    if (!isEligible(cutoff, input, seatTypes, genderFilter)) continue;
+    if (!isEligible(cutoff, input, seatTypes, genderFilter, institute)) continue;
 
     // ─── Step 2: Classify Chance ───
     const chanceResult = classifyChance(userRank, cutoff.closing_rank);
@@ -155,7 +155,8 @@ function isEligible(
   cutoff: CutoffEntry,
   input: UserInput,
   seatTypes: string[],
-  genderFilter: string[]
+  genderFilter: string[],
+  institute: InstituteMetadata
 ): boolean {
   // Check seat type (category)
   if (!seatTypes.includes(cutoff.seat_type)) return false;
@@ -167,14 +168,11 @@ function isEligible(
   if (input.round !== null && cutoff.round !== input.round) return false;
 
   // Check quota for NITs (HS/OS based on home state)
-  const institute_type = cutoff.institute_code.startsWith("IIT") ? "IIT" : "other";
+  const institute_type = institute.type;
   if (institute_type !== "IIT") {
     // For NITs/IIITs/GFTIs: check home state vs other state quota
     if (cutoff.quota === "HS" || cutoff.quota === "OS") {
-      const isHomeState = isInstituteInHomeState(
-        cutoff.institute_name,
-        input.home_state
-      );
+      const isHomeState = institute.state.toLowerCase() === input.home_state.toLowerCase();
       if (cutoff.quota === "HS" && !isHomeState) return false;
       if (cutoff.quota === "OS" && isHomeState) return false;
     }
@@ -182,65 +180,6 @@ function isEligible(
   }
 
   return true;
-}
-
-/**
- * Check if an institute is in the user's home state.
- * Uses the institute metadata for state matching.
- */
-function isInstituteInHomeState(
-  instituteName: string,
-  homeState: string
-): boolean {
-  // This is a simplified check — in production, use institute metadata
-  const lowerName = instituteName.toLowerCase();
-  const lowerState = homeState.toLowerCase();
-
-  // Direct state name match
-  if (lowerName.includes(lowerState)) return true;
-
-  // Common abbreviations and city-to-state mappings
-  const stateKeywords: Record<string, string[]> = {
-    "tamil nadu": ["trichy", "tiruchirappalli", "madras", "chennai", "kancheepuram"],
-    karnataka: ["surathkal", "bangalore", "dharwad"],
-    "west bengal": ["kharagpur", "durgapur", "kalyani"],
-    telangana: ["warangal", "hyderabad"],
-    kerala: ["calicut", "kozhikode", "palakkad", "kottayam"],
-    odisha: ["rourkela", "bhubaneswar"],
-    maharashtra: ["mumbai", "bombay", "nagpur", "pune"],
-    "uttar pradesh": ["kanpur", "allahabad", "varanasi", "lucknow"],
-    rajasthan: ["jaipur", "jodhpur", "kota", "ajmer"],
-    "madhya pradesh": ["bhopal", "indore", "gwalior", "jabalpur"],
-    bihar: ["patna", "bhagalpur"],
-    gujarat: ["gandhinagar", "surat", "ahmedabad", "vadodara"],
-    punjab: ["jalandhar", "rupnagar", "ropar", "longowal"],
-    haryana: ["kurukshetra", "sonepat", "kundli"],
-    himachal: ["hamirpur", "mandi", "una"],
-    jharkhand: ["dhanbad", "jamshedpur", "ranchi"],
-    assam: ["guwahati", "silchar", "tezpur"],
-    delhi: ["delhi"],
-    goa: ["goa", "ponda"],
-    chhattisgarh: ["raipur", "bhilai", "bilaspur", "naya raipur"],
-    "jammu and kashmir": ["jammu", "srinagar", "katra"],
-    "andhra pradesh": ["tirupati", "sri city", "kurnool", "tadepalligudem"],
-    uttarakhand: ["roorkee", "srinagar garhwal", "haridwar"],
-    chandigarh: ["chandigarh"],
-    puducherry: ["puducherry", "karaikal"],
-    tripura: ["agartala"],
-    meghalaya: ["shillong"],
-    manipur: ["imphal"],
-    mizoram: ["aizawl"],
-    nagaland: ["dimapur"],
-    sikkim: ["ravangla"],
-    "arunachal pradesh": ["nirjuli", "itanagar"],
-  };
-
-  const keywords = stateKeywords[lowerState];
-  if (keywords) {
-    return keywords.some((kw) => lowerName.includes(kw));
-  }
-
-  return false;
 }
 
 /**
@@ -306,7 +245,11 @@ function sortResults(results: PredictionResult[]): PredictionResult[] {
   };
 
   return results.sort((a, b) => {
-    // First sort by composite score (highest first)
+    // First sort by chance priority (safe > moderate > low)
+    const priorityDiff = chancePriority[a.chance] - chancePriority[b.chance];
+    if (priorityDiff !== 0) return priorityDiff;
+
+    // Then sort by composite score (highest first)
     return b.composite_score - a.composite_score;
   });
 }
@@ -327,7 +270,5 @@ function deduplicateResults(results: PredictionResult[]): PredictionResult[] {
     }
   }
 
-  return Array.from(seen.values()).sort(
-    (a, b) => b.composite_score - a.composite_score
-  );
+  return sortResults(Array.from(seen.values()));
 }

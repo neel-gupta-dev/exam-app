@@ -53,6 +53,7 @@ export default function AnalyticsPage() {
   // Local state for fetched analytics data
   const [resources, setResources] = useState<Resource[]>([]);
   const [heatmapData, setHeatmapData] = useState<{date: string, displayDay: number, units: number, level: number}[]>([]);
+  const [todayFocusSeconds, setTodayFocusSeconds] = useState(0);
   const [loading, setLoading] = useState(true);
 
   // ── Demo-mode static data ────────────────────────────────────────
@@ -92,12 +93,16 @@ export default function AnalyticsPage() {
         return;
       }
       try {
-        const [resResponse, heatmapResponse] = await Promise.all([
+        const [resResponse, heatmapResponse, statsResponse] = await Promise.all([
           api.get('/resources?page=1&limit=1000'),
-          api.get('/analytics/heatmap')
+          api.get('/analytics/heatmap'),
+          api.get('/analytics/monthly-stats')
         ]);
         setResources(resResponse.data.resources || []);
         setHeatmapData(heatmapResponse.data || []);
+        if (statsResponse.data?.todayFocusSeconds) {
+          setTodayFocusSeconds(statsResponse.data.todayFocusSeconds);
+        }
       } catch (error) {
         console.error("Failed to fetch analytics data", error);
       } finally {
@@ -171,6 +176,7 @@ export default function AnalyticsPage() {
 
   const analyticsStats = [
     { label: "Total Resources", value: totalResources.toString(), unit: "saved", icon: "clock", iconColor: "text-primary", iconBg: "bg-primary/10", change: "↑ Active", changeColor: "text-green-400", note: "Keep saving" },
+    { label: "Today's Study", value: formatActiveTime(todayFocusSeconds), unit: "today", icon: "zap", iconColor: "text-yellow-400", iconBg: "bg-yellow-500/10", change: "↻ Resets", changeColor: "text-surface-variant", note: "at 5 AM IST" },
     { label: "Active Time", value: formatActiveTime(totalActiveSeconds), unit: "total", icon: "flame", iconColor: "text-orange-400", iconBg: "bg-orange-500/10", change: "★ Consistent", changeColor: "text-primary", note: `${currentStreak} day streak` },
     { label: "Vault Usage", value: Math.min((totalResources / 100) * 100, 100).toFixed(1), unit: "%", icon: "check-circle", iconColor: "text-emerald-400", iconBg: "bg-emerald-500/10", change: "Growing", changeColor: "text-emerald-400", note: "of 100 goal" },
     { label: "Scholar Level", value: `Lvl ${realLevel}`, unit: levelName, icon: "trophy", iconColor: "text-purple-400", iconBg: "bg-purple-500/10", change: activeUser?.isVerifiedStudent ? "Verified" : "Unverified", changeColor: activeUser?.isVerifiedStudent ? "text-primary" : "text-surface-variant", note: "Status" },
@@ -226,7 +232,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-10">
         {analyticsStats.map((stat) => (
           <div key={stat.label} className="bg-surface-container/50 border border-white/5 p-6 rounded-2xl">
             <div className="flex items-center gap-3 mb-4">
