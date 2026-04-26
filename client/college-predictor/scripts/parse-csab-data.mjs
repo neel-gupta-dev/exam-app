@@ -94,15 +94,20 @@ async function main() {
   const iiitR2 = parseFile("IIITs Csab.xlsx", "IIIT", 2); // Assumed Round 2
   const iiitR3 = parseFile("IIITs Csab(Round 3 2025).xlsx", "IIIT", 3);
   
+  const nitR1 = parseFile("NITs Csab(Round 1 2025).xlsx", "NIT", 1);
   const nitR2 = parseFile("NITs Csab.xlsx", "NIT", 2); // Assumed Round 2
   const nitR3 = parseFile("NITs Csab(Round 3 2025).xlsx", "NIT", 3);
 
+  const gftiR1 = parseFile("GFTIs Csab(Round 1 2025).xlsx", "GFTI", 1);
+
   const iiitEntries = [...iiitR1, ...iiitR2, ...iiitR3];
-  const nitEntries = [...nitR2, ...nitR3];
+  const nitEntries = [...nitR1, ...nitR2, ...nitR3];
+  const gftiEntries = [...gftiR1];
 
   // Write output
   const iiitOutput = join(DATA_DIR, "cutoffs-iiit-csab.json");
   const nitOutput = join(DATA_DIR, "cutoffs-nit-csab.json");
+  const gftiOutput = join(DATA_DIR, "cutoffs-gfti-csab.json");
   const allOutput = join(DATA_DIR, "cutoffs-all.json");
 
   writeFileSync(iiitOutput, JSON.stringify(iiitEntries, null, 2));
@@ -111,7 +116,10 @@ async function main() {
   writeFileSync(nitOutput, JSON.stringify(nitEntries, null, 2));
   console.log(`✅ Written ${nitEntries.length} NIT entries to cutoffs-nit-csab.json`);
 
-  const allEntries = [...iiitEntries, ...nitEntries];
+  writeFileSync(gftiOutput, JSON.stringify(gftiEntries, null, 2));
+  console.log(`✅ Written ${gftiEntries.length} GFTI entries to cutoffs-gfti-csab.json`);
+
+  const allEntries = [...iiitEntries, ...nitEntries, ...gftiEntries];
   writeFileSync(allOutput, JSON.stringify(allEntries, null, 2));
   console.log(`✅ Written ${allEntries.length} total entries to cutoffs-all.json`);
 

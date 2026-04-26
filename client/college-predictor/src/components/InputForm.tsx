@@ -15,7 +15,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { UserInput, CollegePreferences } from "../lib/types";
-import { STATES, CATEGORIES, BRANCH_LIST, JOSAA_ROUNDS } from "../lib/constants";
+import { STATES, CATEGORIES, BRANCH_GROUPS, JOSAA_ROUNDS } from "../lib/constants";
 
 interface InputFormProps {
   onSubmit: (input: UserInput) => void;
@@ -392,22 +392,39 @@ export default function InputForm({ onSubmit, loading, onReset, hasResults }: In
                     </div>
                   )}
 
-                  {/* Available branches */}
-                  <p className="text-xs text-gray-400 mb-2 uppercase tracking-wider">
-                    Click to add:
-                  </p>
-                  <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-2">
-                    {BRANCH_LIST.filter(
-                      (b) => !selectedBranches.includes(b)
-                    ).map((branch) => (
-                      <button
-                        key={branch}
-                        onClick={() => toggleBranch(branch)}
-                        className="chip bg-navy-700/50 text-gray-300 border-navy-600 hover:bg-navy-600 hover:text-white transition-all"
-                      >
-                        + {branch}
-                      </button>
-                    ))}
+                  {/* Available branches by Category */}
+                  <div className="flex justify-between items-end mb-3">
+                    <p className="text-xs text-gray-400 uppercase tracking-wider">
+                      Click to add:
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-5 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
+                    {BRANCH_GROUPS.map((group: any) => {
+                      const availableBranches = group.branches.filter(
+                        (b: string) => !selectedBranches.includes(b)
+                      );
+                      
+                      if (availableBranches.length === 0) return null;
+
+                      return (
+                        <div key={group.name} className="bg-navy-800/40 p-3 rounded-lg border border-navy-700/50">
+                          <p className="text-sm font-semibold text-blue-300 mb-2 border-b border-navy-700 pb-1">
+                            {group.name}
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {availableBranches.map((branch: string) => (
+                              <button
+                                key={branch}
+                                onClick={() => toggleBranch(branch)}
+                                className="px-2 py-1 text-left text-xs rounded-md bg-navy-700/50 text-gray-300 border border-navy-600 hover:bg-navy-600 hover:text-white transition-all shadow-sm"
+                              >
+                                + {branch}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </motion.div>
               )}
