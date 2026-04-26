@@ -1,4 +1,8 @@
-import pdfParse from 'pdf-parse';
+/**
+ * NOTE: pdf-parse is loaded lazily inside parsePdfBuffer() via dynamic import.
+ * This prevents Vercel serverless cold-start crashes — pdf-parse tries to load
+ * test fixture files at import time that don't exist on Vercel's filesystem.
+ */
 
 /**
  * ╔════════════════════════════════════════════════════════════════════════════╗
@@ -505,6 +509,8 @@ function detectSectionChange(text) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export async function parsePdfBuffer(buffer, opts = {}) {
+  // Dynamic import — prevents cold-start crash on Vercel (see top-of-file note)
+  const { default: pdfParse } = await import('pdf-parse');
   const data = await pdfParse(buffer);
   const rawText = data.text;
 

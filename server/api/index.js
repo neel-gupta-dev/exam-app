@@ -1,4 +1,5 @@
-import 'dotenv/config';
+// dotenv is handled by src/config/index.js (dev only)
+// On Vercel, env vars are injected via the dashboard — no .env file needed
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -43,9 +44,15 @@ import { connectRedis } from '../src/config/redis.js';
 
 
 // Connect to Redis (non-blocking — app works without it)
-connectRedis().catch(err => {
-  console.warn('[Redis] Skipping Redis:', err.message);
-});
+// On Vercel serverless, skip Redis entirely — no persistent connection available
+// and a hanging TCP SYN to localhost:6379 would drain the function timeout.
+if (!process.env.VERCEL && process.env.REDIS_URL) {
+  connectRedis().catch(err => {
+    console.warn('[Redis] Skipping Redis:', err.message);
+  });
+} else if (!process.env.REDIS_URL) {
+  console.warn('[Redis] No REDIS_URL set — running without cache.');
+}
 
 // Configure Passport
 configurePassport();
