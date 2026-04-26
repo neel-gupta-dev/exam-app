@@ -1,5 +1,15 @@
+import type { Metadata } from "next";
 import React from 'react';
 import { Mail } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: "Contact Us",
+  description:
+    "Contact Vayl College Predictor support. Email us at support@vayl.in for questions about our JEE college prediction tool, data requests, or feedback.",
+  alternates: { canonical: "https://predictor.vayl.in/contact" },
+  robots: { index: true, follow: true },
+};
+
 
 export default function ContactPage() {
   return (

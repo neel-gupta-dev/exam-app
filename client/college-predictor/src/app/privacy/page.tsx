@@ -1,4 +1,14 @@
+import type { Metadata } from "next";
 import React from 'react';
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description:
+    "Read the Vayl College Predictor privacy policy. Learn how we collect, store, and use your data when you use our free JEE college predictor tool.",
+  alternates: { canonical: "https://predictor.vayl.in/privacy" },
+  robots: { index: true, follow: true },
+};
+
 
 export default function PrivacyPolicy() {
   return (

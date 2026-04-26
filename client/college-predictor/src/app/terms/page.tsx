@@ -1,4 +1,13 @@
+import type { Metadata } from "next";
 import React from 'react';
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description:
+    "Read the Vayl College Predictor terms of service. Understand your rights and responsibilities when using our free JEE college prediction tool.",
+  alternates: { canonical: "https://predictor.vayl.in/terms" },
+  robots: { index: true, follow: true },
+};
 
 export default function TermsOfService() {
   return (

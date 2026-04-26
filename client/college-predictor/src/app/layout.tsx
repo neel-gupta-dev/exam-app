@@ -15,35 +15,86 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
 });
 
+const SITE_URL = "https://predictor.vayl.in";
+
 export const metadata: Metadata = {
-  title: "College Predictor — JEE Mains & Advanced 2025",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "JEE College Predictor 2025 — IIT, NIT, IIIT, BITS | Vayl",
+    template: "%s | Vayl College Predictor",
+  },
   description:
-    "Predict your best colleges based on JEE Mains and JEE Advanced rank. Get personalized recommendations for IITs, NITs, IIITs, and GFTIs with our smart algorithm.",
+    "Free JEE College Predictor 2025. Predict your best IIT, NIT, IIIT, GFTI and BITS college based on your JEE Mains rank, JEE Advanced rank or BITSAT score. Uses real JoSAA & CSAB 2024 cutoff data with AI-based branch and college scoring.",
   keywords: [
-    "JEE",
-    "college predictor",
-    "IIT",
-    "NIT",
-    "IIIT",
-    "GFTI",
-    "JoSAA",
-    "CSAB",
-    "cutoff",
-    "rank predictor",
-    "JEE Mains",
-    "JEE Advanced",
+    "JEE college predictor 2025",
+    "JEE Mains college predictor",
+    "JEE Advanced college predictor",
+    "NIT predictor",
+    "IIT predictor",
+    "IIIT predictor",
+    "BITS predictor",
+    "BITSAT college predictor",
+    "JoSAA cutoff 2024",
+    "CSAB cutoff 2024",
+    "college predictor rank wise",
+    "best college for JEE rank",
+    "JEE rank to college",
+    "NIT cutoff 2025",
+    "IIT cutoff 2025",
+    "GFTI predictor",
+    "Vayl predictor",
   ],
+  authors: [{ name: "Vayl", url: "https://vayl.in" }],
+  creator: "Vayl",
+  publisher: "Vayl",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-snippet": -1,
+      "max-image-preview": "large",
+      "max-video-preview": -1,
+    },
+  },
+  alternates: {
+    canonical: SITE_URL,
+  },
   openGraph: {
-    title: "College Predictor — JEE Mains & Advanced 2025",
-    description:
-      "Smart college predictions based on your rank, preferences, and market trends.",
     type: "website",
+    locale: "en_IN",
+    url: SITE_URL,
+    siteName: "Vayl College Predictor",
+    title: "JEE College Predictor 2025 — IIT, NIT, IIIT, BITS | Vayl",
+    description:
+      "Free JEE College Predictor 2025. Enter your JEE Mains rank, Advanced rank or BITSAT score and get instant, AI-ranked college predictions with real cutoff data.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Vayl JEE College Predictor 2025",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "JEE College Predictor 2025 — IIT, NIT, IIIT, BITS | Vayl",
+    description:
+      "Free JEE College Predictor. Enter your rank and get instant predictions for IITs, NITs, IIITs, GFTIs & BITS.",
+    images: ["/og-image.png"],
+    creator: "@vayl_in",
   },
   icons: {
     icon: "/vayl-logo.png",
     shortcut: "/vayl-logo.png",
     apple: "/vayl-logo.png",
   },
+  verification: {
+    google: "your-google-site-verification-code", // Replace with real code from Google Search Console
+  },
+  category: "education",
 };
 
 export default function RootLayout({
@@ -53,6 +104,103 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
+      <head>
+        {/* JSON-LD Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "WebSite",
+                  "@id": `${SITE_URL}/#website`,
+                  url: SITE_URL,
+                  name: "Vayl College Predictor",
+                  description:
+                    "Free JEE College Predictor 2025. Predict IIT, NIT, IIIT, GFTI and BITS colleges using real JoSAA & CSAB cutoff data.",
+                  publisher: {
+                    "@type": "Organization",
+                    name: "Vayl",
+                    url: "https://vayl.in",
+                    logo: {
+                      "@type": "ImageObject",
+                      url: `${SITE_URL}/vayl-logo.png`,
+                    },
+                  },
+                  potentialAction: {
+                    "@type": "SearchAction",
+                    target: {
+                      "@type": "EntryPoint",
+                      urlTemplate: `${SITE_URL}/?rank={search_term_string}`,
+                    },
+                    "query-input": "required name=search_term_string",
+                  },
+                },
+                {
+                  "@type": "WebApplication",
+                  "@id": `${SITE_URL}/#app`,
+                  name: "JEE College Predictor 2025",
+                  url: SITE_URL,
+                  applicationCategory: "EducationalApplication",
+                  operatingSystem: "All",
+                  description:
+                    "Enter your JEE Mains rank, JEE Advanced rank, or BITSAT score to get ranked college predictions for IITs, NITs, IIITs, GFTIs and BITS using real JoSAA 2024 and CSAB 2024 cutoff data.",
+                  offers: {
+                    "@type": "Offer",
+                    price: "0",
+                    priceCurrency: "INR",
+                  },
+                  creator: {
+                    "@type": "Organization",
+                    name: "Vayl",
+                    url: "https://vayl.in",
+                  },
+                  keywords:
+                    "JEE college predictor, NIT predictor, IIT predictor, JoSAA cutoff, JEE rank college",
+                },
+                {
+                  "@type": "FAQPage",
+                  mainEntity: [
+                    {
+                      "@type": "Question",
+                      name: "How does the JEE college predictor work?",
+                      acceptedAnswer: {
+                        "@type": "Answer",
+                        text: "Enter your JEE Mains rank, JEE Advanced rank, or BITSAT score along with your category and preferences. Our algorithm matches your rank against real JoSAA 2024 and CSAB 2024 closing ranks to calculate your admission probability for each college and branch.",
+                      },
+                    },
+                    {
+                      "@type": "Question",
+                      name: "Is this JEE college predictor free?",
+                      acceptedAnswer: {
+                        "@type": "Answer",
+                        text: "Yes, the Vayl JEE College Predictor is completely free to use. No sign-up required.",
+                      },
+                    },
+                    {
+                      "@type": "Question",
+                      name: "Which colleges does this predictor cover?",
+                      acceptedAnswer: {
+                        "@type": "Answer",
+                        text: "This predictor covers all 23 IITs, 31 NITs, 25 IIITs, 30+ GFTIs, and all BITS Pilani campuses (Pilani, Goa, Hyderabad), using real JoSAA and CSAB 2024 cutoff data.",
+                      },
+                    },
+                    {
+                      "@type": "Question",
+                      name: "What is the cutoff data based on?",
+                      acceptedAnswer: {
+                        "@type": "Answer",
+                        text: "All cutoff data is sourced from official JoSAA 2024 and CSAB 2024 closing ranks across all categories (OPEN, EWS, OBC-NCL, SC, ST) and seat types.",
+                      },
+                    },
+                  ],
+                },
+              ],
+            }),
+          }}
+        />
+      </head>
       <body className="antialiased">
         {/* Background Effects */}
         <div className="fixed inset-0 -z-10 overflow-hidden">

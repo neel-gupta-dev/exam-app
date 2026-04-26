@@ -17,6 +17,7 @@ import {
   Lock,
   ChevronLeft,
   ChevronRight,
+  ExternalLink,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -36,6 +37,10 @@ const navItems = [
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: Settings },
   { href: "/profile", label: "Profile", icon: UserIcon },
+];
+
+const externalNavItems = [
+  { href: "https://predictor.vayl.in", label: "College Predictor", icon: GraduationCap },
 ];
 
 /** Demo persona shown in the sidebar when no user is logged in */
@@ -197,6 +202,32 @@ export default function Sidebar() {
               });
             })()}
           </nav>
+
+          {/* External Tools */}
+          <div className="mt-4 pt-4 border-t border-outline-variant/10">
+            {!isCollapsed && (
+              <p className="px-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Tools</p>
+            )}
+            {externalNavItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex items-center ${isCollapsed ? 'justify-center p-2' : 'gap-3 px-3 py-2'} rounded-md transition-all duration-200 text-on-surface-variant hover:text-on-surface hover:bg-surface-bright`}
+                  title={isCollapsed ? item.label : undefined}
+                >
+                  <Icon className="w-5 h-5 shrink-0" />
+                  {!isCollapsed && (
+                    <span className="text-sm font-medium truncate flex-1">{item.label}</span>
+                  )}
+                  {!isCollapsed && <ExternalLink className="w-3 h-3 opacity-40 shrink-0" />}
+                </a>
+              );
+            })}
+          </div>
 
           {/* Dynamic Folders */}
           <div className="mt-12">
