@@ -59,35 +59,14 @@ configurePassport();
 
 const app = express();
 
-// Block requests strictly until Serverless DB resolves (Fixes Vercel Container Freezing Mongoose TCP)
-app.use(async (req, res, next) => {
-  try {
-    await connectDB();
-    next();
-  } catch (error) {
-    if (req.path === '/health' || req.path === '/api/health') {
-       return res.json({ database: { status: 'failed', error: error.message } });
-    }
-    res.status(503).json({ message: 'Database Connection Failed', error: error.message });
-  }
-});
-
-app.use(helmet());
-app.use((req, res, next) => {
-  res.setHeader(
-    'Permissions-Policy',
-    'camera=(), microphone=(), geolocation=(), browsing-topics=()'
-  );
-  next();
-});
-app.use(compression());
-
-// Trust proxy for accurate IP detection (needed for Hostinger/Nginx)
+// Trust proxy for accurate IP detection (needed for Hostinger/Nginx & Vercel)
 app.set('trust proxy', true);
 
-// --- CORS Configuration ---
-// Always-allowed origins as a hard-coded safety net.
-// ALLOWED_ORIGINS env var extends this list (comma-separated).
+// --- CORS Configuration (MUST be FIRST — before connectDB) ---
+// On Vercel, every cold start re-runs connectDB which takes 3-5s.
+// If CORS middleware comes AFTER connectDB, browser preflight OPTIONS
+// requests get blocked/timeout WITHOUT proper CORS headers, causing
+// the frontend to see "CORS error" instead of the real issue.
 const HARDCODED_ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:3001',
@@ -132,9 +111,39 @@ app.use(
   })
 );
 
-// Body parser
+// Body parser (before connectDB — parsing the body doesn't need DB)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Security headers — configured for cross-origin API server
+app.use(helmet({
+  // Disable CORP — default 'same-origin' blocks cross-origin API responses
+  crossOriginResourcePolicy: false,
+  // Disable COEP — not needed for a JSON API and can block cross-origin loads
+  crossOriginEmbedderPolicy: false,
+}));
+app.use((req, res, next) => {
+  res.setHeader(
+    'Permissions-Policy',
+    'camera=(), microphone=(), geolocation=(), browsing-topics=()'
+  );
+  next();
+});
+app.use(compression());
+
+// Block requests strictly until Serverless DB resolves (Fixes Vercel Container Freezing Mongoose TCP)
+// This MUST come AFTER CORS so preflight OPTIONS get proper headers even during cold starts.
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    if (req.path === '/health' || req.path === '/api/health') {
+       return res.json({ database: { status: 'failed', error: error.message } });
+    }
+    res.status(503).json({ message: 'Database Connection Failed', error: error.message });
+  }
+});
 
 // Passport initialization
 app.use(passport.initialize());
