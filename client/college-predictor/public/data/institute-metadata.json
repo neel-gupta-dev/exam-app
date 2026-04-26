@@ -1525,7 +1525,8 @@
     "nirf_rank": null,
     "placement_median_lpa": 12,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Indian institute of information technology, Raichur, Karnataka"
   },
   {
     "institute_code": "IIIT-VICD",
@@ -1538,7 +1539,8 @@
     "nirf_rank": null,
     "placement_median_lpa": 10,
     "city_tier": 3,
-    "campus_rating": 4
+    "campus_rating": 4,
+    "institute_name": "Indian Institute of Information Technology, Vadodara International Campus Diu (IIITVICD)"
   },
   {
     "institute_code": "NIT-ARP",
@@ -1551,7 +1553,8 @@
     "nirf_rank": null,
     "placement_median_lpa": 8,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "National Institute of Technology Arunachal Pradesh"
   },
   {
     "institute_code": "NIT-IIEST",
@@ -1564,11 +1567,12 @@
     "nirf_rank": 43,
     "placement_median_lpa": 10,
     "city_tier": 1,
-    "campus_rating": 4
+    "campus_rating": 4,
+    "institute_name": "Indian Institute of Engineering Science and Technology, Shibpur"
   },
   {
     "institute_code": "GFTI-SIL",
-    "short_name": "Assam University, Silchar...",
+    "short_name": "Assam University, Silchar",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1577,11 +1581,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Assam University, Silchar"
   },
   {
     "institute_code": "GFTI-RAN",
-    "short_name": "Birla Institute of Technology,...",
+    "short_name": "National Institute of Advanced Manufacturing Technology, Ranchi",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1590,11 +1595,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "National Institute of Advanced Manufacturing Technology, Ranchi"
   },
   {
     "institute_code": "GFTI-HAR",
-    "short_name": "Gurukula Kangri Vishwavidyalay...",
+    "short_name": "Central University of Haryana",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1603,11 +1609,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Central University of Haryana"
   },
   {
     "institute_code": "GFTI-BHA",
-    "short_name": "Indian Institute of Carpet Tec...",
+    "short_name": "Indian Institute of Carpet Technology, Bhadohi",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1616,11 +1623,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Indian Institute of Carpet Technology, Bhadohi"
   },
   {
     "institute_code": "GFTI-MAN",
-    "short_name": "Institute of Infrastructure, T...",
+    "short_name": "Indian Institute of Technology Mandi",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1629,11 +1637,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Indian Institute of Technology Mandi"
   },
   {
     "institute_code": "GFTI-BIL",
-    "short_name": "School of Studies of Engineeri...",
+    "short_name": "School of Studies of Engineering and Technology, Guru Ghasidas Vishwavidyalaya, Bilaspur",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1642,11 +1651,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "School of Studies of Engineering and Technology, Guru Ghasidas Vishwavidyalaya, Bilaspur"
   },
   {
     "institute_code": "GFTI-ALL",
-    "short_name": "J.K. Institute of Applied Phys...",
+    "short_name": "J.K. Institute of Applied Physics & Technology, Department of Electronics & Communication, University of Allahabad- Allahabad",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1655,11 +1665,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "J.K. Institute of Applied Physics & Technology, Department of Electronics & Communication, University of Allahabad- Allahabad"
   },
   {
     "institute_code": "GFTI-(MA",
-    "short_name": "National Institute of Electron...",
+    "short_name": "National Institute of Electronics and Information Technology, Aurangabad (Maharashtra)",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1668,11 +1679,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "National Institute of Electronics and Information Technology, Aurangabad (Maharashtra)"
   },
   {
     "institute_code": "GFTI-TEC",
-    "short_name": "Sant Longowal Institute of Eng...",
+    "short_name": "Sant Longowal Institute of Engineering and Technology",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1681,11 +1693,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Sant Longowal Institute of Engineering and Technology"
   },
   {
     "institute_code": "GFTI-AIZ",
-    "short_name": "Mizoram University, Aizawl...",
+    "short_name": "Mizoram University, Aizawl",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1694,11 +1707,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Mizoram University, Aizawl"
   },
   {
     "institute_code": "GFTI-TEZ",
-    "short_name": "School of Engineering, Tezpur ...",
+    "short_name": "School of Engineering, Tezpur University, Napaam, Tezpur",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1707,11 +1721,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "School of Engineering, Tezpur University, Napaam, Tezpur"
   },
   {
     "institute_code": "GFTI-BHO",
-    "short_name": "School of Planning & Architect...",
+    "short_name": "School of Planning & Architecture, Bhopal",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1720,11 +1735,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "School of Planning & Architecture, Bhopal"
   },
   {
     "institute_code": "GFTI-DEL",
-    "short_name": "School of Planning & Architect...",
+    "short_name": "Indian Institute of Technology Delhi",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1733,11 +1749,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Indian Institute of Technology Delhi"
   },
   {
     "institute_code": "GFTI-VIJ",
-    "short_name": "School of Planning & Architect...",
+    "short_name": "School of Planning & Architecture: Vijayawada",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1746,11 +1763,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "School of Planning & Architecture: Vijayawada"
   },
   {
     "institute_code": "GFTI-KAS",
-    "short_name": "Shri Mata Vaishno Devi Univers...",
+    "short_name": "Islamic University of Science and Technology Kashmir",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1759,11 +1777,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Islamic University of Science and Technology Kashmir"
   },
   {
     "institute_code": "GFTI-RAI",
-    "short_name": "International Institute of Inf...",
+    "short_name": "International Institute of Information Technology, Naya Raipur",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1772,11 +1791,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "International Institute of Information Technology, Naya Raipur"
   },
   {
     "institute_code": "GFTI-HYD",
-    "short_name": "University of Hyderabad...",
+    "short_name": "Indian Institute of Technology Hyderabad",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1785,11 +1805,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Indian Institute of Technology Hyderabad"
   },
   {
     "institute_code": "GFTI-CHA",
-    "short_name": "Punjab Engineering College, Ch...",
+    "short_name": "Punjab Engineering College, Chandigarh",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1798,11 +1819,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Punjab Engineering College, Chandigarh"
   },
   {
     "institute_code": "GFTI-BHU",
-    "short_name": "International Institute of Inf...",
+    "short_name": "Indian Institute of Technology Bhubaneswar",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1811,11 +1833,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Indian Institute of Technology Bhubaneswar"
   },
   {
     "institute_code": "GFTI-ASS",
-    "short_name": "Central institute of Technolog...",
+    "short_name": "Central institute of Technology Kokrajar, Assam",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1824,11 +1847,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Central institute of Technology Kokrajar, Assam"
   },
   {
     "institute_code": "GFTI-PUD",
-    "short_name": "Puducherry Technological Unive...",
+    "short_name": "Puducherry Technological University, Puducherry",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1837,11 +1861,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Puducherry Technological University, Puducherry"
   },
   {
     "institute_code": "GFTI-BEN",
-    "short_name": "Ghani Khan Choudhary Institute...",
+    "short_name": "Ghani Khan Choudhary Institute of Engineering and Technology, Malda, West Bengal",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1850,11 +1875,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Ghani Khan Choudhary Institute of Engineering and Technology, Malda, West Bengal"
   },
   {
     "institute_code": "GFTI-RAJ",
-    "short_name": "Central University of Rajastha...",
+    "short_name": "Central University of Rajasthan, Rajasthan",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1863,11 +1889,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Central University of Rajasthan, Rajasthan"
   },
   {
     "institute_code": "GFTI-KUN",
-    "short_name": "National Institute of Food Tec...",
+    "short_name": "National Institute of Food Technology Entrepreneurship and Management, Kundli",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1876,11 +1903,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "National Institute of Food Technology Entrepreneurship and Management, Kundli"
   },
   {
     "institute_code": "GFTI-THA",
-    "short_name": "National Institute of Food Tec...",
+    "short_name": "National Institute of Food Technology Entrepreneurship and Management, Thanjavur",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1889,11 +1917,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "National Institute of Food Technology Entrepreneurship and Management, Thanjavur"
   },
   {
     "institute_code": "GFTI-PRA",
-    "short_name": "North Eastern Regional Institu...",
+    "short_name": "North Eastern Regional Institute of Science and Technology, Nirjuli-791109 (Itanagar),Arunachal Pradesh",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1902,11 +1931,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "North Eastern Regional Institute of Science and Technology, Nirjuli-791109 (Itanagar),Arunachal Pradesh"
   },
   {
     "institute_code": "GFTI-VAR",
-    "short_name": "Indian Institute of Handloom T...",
+    "short_name": "Indian Institute of Technology (BHU) Varanasi",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1915,11 +1945,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Indian Institute of Technology (BHU) Varanasi"
   },
   {
     "institute_code": "GFTI-BHI",
-    "short_name": "Chhattisgarh Swami Vivekanada ...",
+    "short_name": "Indian Institute of Technology Bhilai",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1928,11 +1959,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Indian Institute of Technology Bhilai"
   },
   {
     "institute_code": "GFTI-SHI",
-    "short_name": "North-Eastern Hill University,...",
+    "short_name": "North-Eastern Hill University, Shillong",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1941,11 +1973,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "North-Eastern Hill University, Shillong"
   },
   {
     "institute_code": "GFTI-JAM",
-    "short_name": "Central University of Jammu...",
+    "short_name": "Indian Institute of Technology Jammu",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1954,11 +1987,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Indian Institute of Technology Jammu"
   },
   {
     "institute_code": "GFTI-UNI",
-    "short_name": "Institute of Engineering and T...",
+    "short_name": "Institute of Engineering and Technology, Dr. H. S. Gour University. Sagar (A Central University)",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1967,11 +2001,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Institute of Engineering and Technology, Dr. H. S. Gour University. Sagar (A Central University)"
   },
   {
     "institute_code": "GFTI-OFF",
-    "short_name": "Birla Institute of Technology,...",
+    "short_name": "Birla Institute of Technology, Patna Off-Campus",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1980,11 +2015,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Birla Institute of Technology, Patna Off-Campus"
   },
   {
     "institute_code": "GFTI-SAL",
-    "short_name": "Indian Institute of Handloom T...",
+    "short_name": "Indian Institute of Handloom Technology, Salem",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -1993,11 +2029,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Indian Institute of Handloom Technology, Salem"
   },
   {
     "institute_code": "GFTI-VAD",
-    "short_name": "Gati Shakti Vishwavidyalaya, V...",
+    "short_name": "Gati Shakti Vishwavidyalaya, Vadodara",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -2006,11 +2043,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Gati Shakti Vishwavidyalaya, Vadodara"
   },
   {
     "institute_code": "GFTI-JHA",
-    "short_name": "CU Jharkhand...",
+    "short_name": "CU Jharkhand",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -2019,11 +2057,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "CU Jharkhand"
   },
   {
     "institute_code": "GFTI-(PU",
-    "short_name": "National Institute of Electron...",
+    "short_name": "National Institute of Electronics and Information Technology, Ropar (Punjab)",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -2032,11 +2071,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "National Institute of Electronics and Information Technology, Ropar (Punjab)"
   },
   {
     "institute_code": "GFTI-(BI",
-    "short_name": "National Institute of Electron...",
+    "short_name": "National Institute of Electronics and Information Technology, Patna (Bihar)",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -2045,11 +2085,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "National Institute of Electronics and Information Technology, Patna (Bihar)"
   },
   {
     "institute_code": "GFTI-(RA",
-    "short_name": "National Institute of Electron...",
+    "short_name": "National Institute of Electronics and Information Technology, Ajmer (Rajasthan)",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -2058,11 +2099,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "National Institute of Electronics and Information Technology, Ajmer (Rajasthan)"
   },
   {
     "institute_code": "GFTI-(UP",
-    "short_name": "National Institute of Electron...",
+    "short_name": "Rajiv Gandhi National Aviation University, Fursatganj, Amethi (UP)",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -2071,11 +2113,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Rajiv Gandhi National Aviation University, Fursatganj, Amethi (UP)"
   },
   {
     "institute_code": "GFTI-IND",
-    "short_name": "Shri G. S. Institute of Techno...",
+    "short_name": "Indian Institute of Technology Indore",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -2084,11 +2127,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 6,
     "city_tier": 3,
-    "campus_rating": 3
+    "campus_rating": 3,
+    "institute_name": "Indian Institute of Technology Indore"
   },
   {
     "institute_code": "GFTI-BOM",
-    "short_name": "Indian Institute of Technology...",
+    "short_name": "Indian Institute of Technology Bombay",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -2097,11 +2141,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 15,
     "city_tier": 2,
-    "campus_rating": 4
+    "campus_rating": 4,
+    "institute_name": "Indian Institute of Technology Bombay"
   },
   {
     "institute_code": "GFTI-KHA",
-    "short_name": "Indian Institute of Technology...",
+    "short_name": "Indian Institute of Technology Kharagpur",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -2110,11 +2155,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 15,
     "city_tier": 2,
-    "campus_rating": 4
+    "campus_rating": 4,
+    "institute_name": "Indian Institute of Technology Kharagpur"
   },
   {
     "institute_code": "GFTI-JOD",
-    "short_name": "Indian Institute of Technology...",
+    "short_name": "Indian Institute of Technology Jodhpur",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -2123,11 +2169,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 15,
     "city_tier": 2,
-    "campus_rating": 4
+    "campus_rating": 4,
+    "institute_name": "Indian Institute of Technology Jodhpur"
   },
   {
     "institute_code": "GFTI-KAN",
-    "short_name": "Indian Institute of Technology...",
+    "short_name": "Indian Institute of Technology Kanpur",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -2136,11 +2183,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 15,
     "city_tier": 2,
-    "campus_rating": 4
+    "campus_rating": 4,
+    "institute_name": "Indian Institute of Technology Kanpur"
   },
   {
     "institute_code": "GFTI-MAD",
-    "short_name": "Indian Institute of Technology...",
+    "short_name": "Indian Institute of Technology Madras",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -2149,11 +2197,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 15,
     "city_tier": 2,
-    "campus_rating": 4
+    "campus_rating": 4,
+    "institute_name": "Indian Institute of Technology Madras"
   },
   {
     "institute_code": "GFTI-GAN",
-    "short_name": "Indian Institute of Technology...",
+    "short_name": "Indian Institute of Technology Gandhinagar",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -2162,11 +2211,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 15,
     "city_tier": 2,
-    "campus_rating": 4
+    "campus_rating": 4,
+    "institute_name": "Indian Institute of Technology Gandhinagar"
   },
   {
     "institute_code": "GFTI-PAT",
-    "short_name": "Indian Institute of Technology...",
+    "short_name": "Indian Institute of Technology Patna",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -2175,11 +2225,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 15,
     "city_tier": 2,
-    "campus_rating": 4
+    "campus_rating": 4,
+    "institute_name": "Indian Institute of Technology Patna"
   },
   {
     "institute_code": "GFTI-ROO",
-    "short_name": "Indian Institute of Technology...",
+    "short_name": "Indian Institute of Technology Roorkee",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -2188,11 +2239,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 15,
     "city_tier": 2,
-    "campus_rating": 4
+    "campus_rating": 4,
+    "institute_name": "Indian Institute of Technology Roorkee"
   },
   {
     "institute_code": "GFTI-DHA",
-    "short_name": "Indian Institute of Technology...",
+    "short_name": "Indian Institute of Technology Dharwad",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -2201,11 +2253,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 15,
     "city_tier": 2,
-    "campus_rating": 4
+    "campus_rating": 4,
+    "institute_name": "Indian Institute of Technology Dharwad"
   },
   {
     "institute_code": "GFTI-ROP",
-    "short_name": "Indian Institute of Technology...",
+    "short_name": "Indian Institute of Technology Ropar",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -2214,11 +2267,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 15,
     "city_tier": 2,
-    "campus_rating": 4
+    "campus_rating": 4,
+    "institute_name": "Indian Institute of Technology Ropar"
   },
   {
     "institute_code": "GFTI-GUW",
-    "short_name": "Indian Institute of Technology...",
+    "short_name": "Indian Institute of Technology Guwahati",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -2227,11 +2281,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 15,
     "city_tier": 2,
-    "campus_rating": 4
+    "campus_rating": 4,
+    "institute_name": "Indian Institute of Technology Guwahati"
   },
   {
     "institute_code": "GFTI-GOA",
-    "short_name": "Indian Institute of Technology...",
+    "short_name": "Indian Institute of Technology Goa",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -2240,11 +2295,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 15,
     "city_tier": 2,
-    "campus_rating": 4
+    "campus_rating": 4,
+    "institute_name": "Indian Institute of Technology Goa"
   },
   {
     "institute_code": "GFTI-PAL",
-    "short_name": "Indian Institute of Technology...",
+    "short_name": "Indian Institute of Technology Palakkad",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -2253,11 +2309,12 @@
     "nirf_rank": null,
     "placement_median_lpa": 15,
     "city_tier": 2,
-    "campus_rating": 4
+    "campus_rating": 4,
+    "institute_name": "Indian Institute of Technology Palakkad"
   },
   {
     "institute_code": "GFTI-TIR",
-    "short_name": "Indian Institute of Technology...",
+    "short_name": "Indian Institute of Technology Tirupati",
     "type": "GFTI",
     "city": "Unknown",
     "state": "Unknown",
@@ -2266,7 +2323,8 @@
     "nirf_rank": null,
     "placement_median_lpa": 15,
     "city_tier": 2,
-    "campus_rating": 4
+    "campus_rating": 4,
+    "institute_name": "Indian Institute of Technology Tirupati"
   },
   {
     "institute_code": "BITS_PILANI",
