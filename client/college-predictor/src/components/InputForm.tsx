@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import {
   GraduationCap,
   User,
@@ -32,6 +33,8 @@ const STEPS = [
 ];
 
 export default function InputForm({ onSubmit, loading, onReset, hasResults }: InputFormProps) {
+  const { executeRecaptcha } = useGoogleReCaptcha();
+  const [isValidating, setIsValidating] = useState(false);
   const [step, setStep] = useState(1);
   const [jeeMainsRank, setJeeMainsRank] = useState("");
   const [jeeAdvancedRank, setJeeAdvancedRank] = useState("");
@@ -52,19 +55,46 @@ export default function InputForm({ onSubmit, loading, onReset, hasResults }: In
   const canProceedStep1 = jeeMainsRank || jeeAdvancedRank;
   const canProceedStep2 = homeState !== "";
 
-  function handleSubmit() {
-    const input: UserInput = {
-      jee_mains_rank: jeeMainsRank ? parseInt(jeeMainsRank) : null,
-      jee_advanced_rank: jeeAdvancedRank ? parseInt(jeeAdvancedRank) : null,
-      category: category as UserInput["category"],
-      gender: gender as UserInput["gender"],
-      home_state: homeState,
-      is_pwd: isPwd,
-      round: round ? parseInt(round) : null,
-      branch_preferences: useMarketRanking ? [] : selectedBranches,
-      college_preferences: collegePrefs,
-    };
-    onSubmit(input);
+  async function handleSubmit() {
+    if (!executeRecaptcha) {
+      alert("Security check is still loading. Please try again in a moment.");
+      return;
+    }
+
+    setIsValidating(true);
+    try {
+      const token = await executeRecaptcha("predict");
+      const res = await fetch("/api/verify-captcha", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token })
+      });
+      const data = await res.json();
+      
+      if (!data.success) {
+        alert("Bot verification failed. Please try again.");
+        setIsValidating(false);
+        return;
+      }
+
+      const input: UserInput = {
+        jee_mains_rank: jeeMainsRank ? parseInt(jeeMainsRank) : null,
+        jee_advanced_rank: jeeAdvancedRank ? parseInt(jeeAdvancedRank) : null,
+        category: category as UserInput["category"],
+        gender: gender as UserInput["gender"],
+        home_state: homeState,
+        is_pwd: isPwd,
+        round: round ? parseInt(round) : null,
+        branch_preferences: useMarketRanking ? [] : selectedBranches,
+        college_preferences: collegePrefs,
+      };
+      onSubmit(input);
+    } catch (err) {
+      console.error(err);
+      alert("Error verifying security check. Please try again.");
+    } finally {
+      setIsValidating(false);
+    }
   }
 
   function toggleBranch(branch: string) {
@@ -549,13 +579,13 @@ export default function InputForm({ onSubmit, loading, onReset, hasResults }: In
           ) : (
             <button
               onClick={handleSubmit}
-              disabled={loading}
+              disabled={loading || isValidating}
               className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-500 via-cyan-500 to-violet-500 text-white rounded-xl font-bold text-sm hover:shadow-lg hover:shadow-blue-500/25 transition-all pulse-glow disabled:opacity-60"
             >
-              {loading ? (
+              {loading || isValidating ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Predicting...
+                  {isValidating ? "Verifying..." : "Predicting..."}
                 </>
               ) : (
                 <>
