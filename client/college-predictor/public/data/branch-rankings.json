@@ -1,0 +1,156 @@
+[
+  {
+    "category": "Computer Science and Engineering",
+    "keywords": ["computer science", "cse", "cs ", "computer engineering", "information technology", " it "],
+    "market_score": 100,
+    "growth_trend": "stable",
+    "description": "Highest demand, best packages across all tiers"
+  },
+  {
+    "category": "Artificial Intelligence and Machine Learning",
+    "keywords": ["artificial intelligence", "machine learning", "ai ", " ml", "ai&ml", "aiml"],
+    "market_score": 97,
+    "growth_trend": "rising",
+    "description": "Fastest growing field, massive industry demand"
+  },
+  {
+    "category": "Data Science",
+    "keywords": ["data science", "data engineering", "data analytics"],
+    "market_score": 95,
+    "growth_trend": "rising",
+    "description": "High demand in analytics and big data"
+  },
+  {
+    "category": "Mathematics and Computing",
+    "keywords": ["mathematics and computing", "math and computing", "maths & computing", "mathematics & computing"],
+    "market_score": 93,
+    "growth_trend": "rising",
+    "description": "Quant finance, tech, and research opportunities"
+  },
+  {
+    "category": "Electronics and Communication Engineering",
+    "keywords": ["electronics and communication", "ece", "electronics & communication", "electronics engineering"],
+    "market_score": 85,
+    "growth_trend": "stable",
+    "description": "Strong overlap with tech + semiconductor boom"
+  },
+  {
+    "category": "Electrical Engineering",
+    "keywords": ["electrical engineering", "electrical and electronics", "ee ", "eee"],
+    "market_score": 78,
+    "growth_trend": "rising",
+    "description": "EV revolution, power sector, renewable energy growth"
+  },
+  {
+    "category": "Engineering Physics",
+    "keywords": ["engineering physics", "applied physics"],
+    "market_score": 75,
+    "growth_trend": "stable",
+    "description": "Research-oriented, semiconductor and quantum computing"
+  },
+  {
+    "category": "Mechanical Engineering",
+    "keywords": ["mechanical engineering", "mechanical", "mech"],
+    "market_score": 62,
+    "growth_trend": "stable",
+    "description": "Manufacturing revival, automation, robotics"
+  },
+  {
+    "category": "Aerospace Engineering",
+    "keywords": ["aerospace", "aeronautical", "aviation"],
+    "market_score": 68,
+    "growth_trend": "rising",
+    "description": "ISRO, defense, and private space sector growth"
+  },
+  {
+    "category": "Chemical Engineering",
+    "keywords": ["chemical engineering", "chemical"],
+    "market_score": 55,
+    "growth_trend": "stable",
+    "description": "Niche but stable demand in pharma and petrochemicals"
+  },
+  {
+    "category": "Biomedical Engineering",
+    "keywords": ["biomedical", "bio-medical", "bioengineering"],
+    "market_score": 50,
+    "growth_trend": "rising",
+    "description": "Healthcare tech growing, but niche market"
+  },
+  {
+    "category": "Civil Engineering",
+    "keywords": ["civil engineering", "civil"],
+    "market_score": 45,
+    "growth_trend": "stable",
+    "description": "Infrastructure development, government jobs"
+  },
+  {
+    "category": "Biotechnology",
+    "keywords": ["biotechnology", "biotech"],
+    "market_score": 42,
+    "growth_trend": "rising",
+    "description": "Long-term potential in pharma and biotech sector"
+  },
+  {
+    "category": "Production and Industrial Engineering",
+    "keywords": ["production", "industrial engineering", "manufacturing"],
+    "market_score": 48,
+    "growth_trend": "stable",
+    "description": "Factory automation, supply chain management"
+  },
+  {
+    "category": "Metallurgical and Materials Engineering",
+    "keywords": ["metallurgical", "materials engineering", "metallurgy", "materials science"],
+    "market_score": 40,
+    "growth_trend": "stable",
+    "description": "Steel, mining sectors, specialized niche"
+  },
+  {
+    "category": "Mining Engineering",
+    "keywords": ["mining engineering", "mining"],
+    "market_score": 35,
+    "growth_trend": "declining",
+    "description": "Specialized field, limited but stable demand"
+  },
+  {
+    "category": "Agricultural Engineering",
+    "keywords": ["agricultural", "food engineering", "agriculture"],
+    "market_score": 32,
+    "growth_trend": "stable",
+    "description": "AgriTech growing, but traditional demand lower"
+  },
+  {
+    "category": "Ocean and Naval Engineering",
+    "keywords": ["ocean engineering", "naval architecture", "marine"],
+    "market_score": 30,
+    "growth_trend": "stable",
+    "description": "Defense and shipbuilding sector"
+  },
+  {
+    "category": "Textile Engineering",
+    "keywords": ["textile", "fashion technology"],
+    "market_score": 28,
+    "growth_trend": "declining",
+    "description": "Very niche, limited tech opportunities"
+  },
+  {
+    "category": "Architecture",
+    "keywords": ["architecture", "planning"],
+    "market_score": 38,
+    "growth_trend": "stable",
+    "description": "Urban planning, smart cities, but different career path"
+  },
+  {
+    "category": "Ceramic Engineering",
+    "keywords": ["ceramic", "glass technology"],
+    "market_score": 25,
+    "growth_trend": "declining",
+    "description": "Highly specialized, very few opportunities"
+  },
+  {
+    "category": "Other Engineering",
+    "keywords": [],
+    "market_score": 35,
+    "growth_trend": "stable",
+    "description": "Catch-all for unmatched programs"
+  }
+]
