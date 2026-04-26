@@ -202,8 +202,8 @@ export default function Home() {
         <div className="max-w-4xl mx-auto flex flex-col items-center text-center">
           <img src="/vayl-logo.png" alt="Vayl Logo" className="w-8 h-8 object-contain mb-3 opacity-80" />
           <p className="text-xs text-gray-500 mb-3">
-            Cutoff data sourced from JoSAA & CSAB 2024/2025. Results are predictive
-            and based on previous year trends. Actual cutoffs may vary.
+            Cutoff data sourced from JoSAA & CSAB. Results are predictive
+            and based on historical trends. Actual cutoffs may vary.
           </p>
           <div className="flex gap-4 text-xs text-gray-500 mb-3">
             <a href="/privacy" className="hover:text-blue-400 transition-colors">Privacy Policy</a>

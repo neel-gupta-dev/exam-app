@@ -15,7 +15,7 @@ export default function PrivacyPolicy() {
     <div className="min-h-screen py-16 px-4">
       <div className="max-w-3xl mx-auto glass-card p-8 sm:p-12">
         <h1 className="text-3xl font-bold text-white mb-6 font-[family-name:var(--font-heading)]">Privacy Policy</h1>
-        <p className="text-gray-400 text-sm mb-8">Last updated: April 2026</p>
+        <p className="text-gray-400 text-sm mb-8">Last updated: April</p>
 
         <div className="space-y-8 text-gray-300">
           <section>

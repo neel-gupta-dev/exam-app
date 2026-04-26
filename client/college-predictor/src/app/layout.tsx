@@ -20,13 +20,13 @@ const SITE_URL = "https://predictor.vayl.in";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "JEE College Predictor 2025 — IIT, NIT, IIIT, BITS | Vayl",
+    default: "JEE College Predictor — IIT, NIT, IIIT, BITS | Vayl",
     template: "%s | Vayl College Predictor",
   },
   description:
-    "Free JEE College Predictor 2025. Predict your best IIT, NIT, IIIT, GFTI and BITS college based on your JEE Mains rank, JEE Advanced rank or BITSAT score. Uses real JoSAA & CSAB 2024 cutoff data with AI-based branch and college scoring.",
+    "Free JEE College Predictor. Predict your best IIT, NIT, IIIT, GFTI and BITS college based on your JEE Mains rank, JEE Advanced rank or BITSAT score. Uses real JoSAA & CSAB cutoff data with AI-based branch and college scoring.",
   keywords: [
-    "JEE college predictor 2025",
+    "JEE college predictor",
     "JEE Mains college predictor",
     "JEE Advanced college predictor",
     "NIT predictor",
@@ -34,13 +34,13 @@ export const metadata: Metadata = {
     "IIIT predictor",
     "BITS predictor",
     "BITSAT college predictor",
-    "JoSAA cutoff 2024",
-    "CSAB cutoff 2024",
+    "JoSAA cutoff",
+    "CSAB cutoff",
     "college predictor rank wise",
     "best college for JEE rank",
     "JEE rank to college",
-    "NIT cutoff 2025",
-    "IIT cutoff 2025",
+    "NIT cutoff",
+    "IIT cutoff",
     "GFTI predictor",
     "Vayl predictor",
   ],
@@ -66,21 +66,21 @@ export const metadata: Metadata = {
     locale: "en_IN",
     url: SITE_URL,
     siteName: "Vayl College Predictor",
-    title: "JEE College Predictor 2025 — IIT, NIT, IIIT, BITS | Vayl",
+    title: "JEE College Predictor — IIT, NIT, IIIT, BITS | Vayl",
     description:
-      "Free JEE College Predictor 2025. Enter your JEE Mains rank, Advanced rank or BITSAT score and get instant, AI-ranked college predictions with real cutoff data.",
+      "Free JEE College Predictor. Enter your JEE Mains rank, Advanced rank or BITSAT score and get instant, AI-ranked college predictions with real cutoff data.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Vayl JEE College Predictor 2025",
+        alt: "Vayl JEE College Predictor",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "JEE College Predictor 2025 — IIT, NIT, IIIT, BITS | Vayl",
+    title: "JEE College Predictor — IIT, NIT, IIIT, BITS | Vayl",
     description:
       "Free JEE College Predictor. Enter your rank and get instant predictions for IITs, NITs, IIITs, GFTIs & BITS.",
     images: ["/og-image.png"],
@@ -118,7 +118,7 @@ export default function RootLayout({
                   url: SITE_URL,
                   name: "Vayl College Predictor",
                   description:
-                    "Free JEE College Predictor 2025. Predict IIT, NIT, IIIT, GFTI and BITS colleges using real JoSAA & CSAB cutoff data.",
+                    "Free JEE College Predictor. Predict IIT, NIT, IIIT, GFTI and BITS colleges using real JoSAA & CSAB cutoff data.",
                   publisher: {
                     "@type": "Organization",
                     name: "Vayl",
@@ -140,12 +140,12 @@ export default function RootLayout({
                 {
                   "@type": "WebApplication",
                   "@id": `${SITE_URL}/#app`,
-                  name: "JEE College Predictor 2025",
+                  name: "JEE College Predictor",
                   url: SITE_URL,
                   applicationCategory: "EducationalApplication",
                   operatingSystem: "All",
                   description:
-                    "Enter your JEE Mains rank, JEE Advanced rank, or BITSAT score to get ranked college predictions for IITs, NITs, IIITs, GFTIs and BITS using real JoSAA 2024 and CSAB 2024 cutoff data.",
+                    "Enter your JEE Mains rank, JEE Advanced rank, or BITSAT score to get ranked college predictions for IITs, NITs, IIITs, GFTIs and BITS using real JoSAA and CSAB cutoff data.",
                   offers: {
                     "@type": "Offer",
                     price: "0",
@@ -167,7 +167,7 @@ export default function RootLayout({
                       name: "How does the JEE college predictor work?",
                       acceptedAnswer: {
                         "@type": "Answer",
-                        text: "Enter your JEE Mains rank, JEE Advanced rank, or BITSAT score along with your category and preferences. Our algorithm matches your rank against real JoSAA 2024 and CSAB 2024 closing ranks to calculate your admission probability for each college and branch.",
+                        text: "Enter your JEE Mains rank, JEE Advanced rank, or BITSAT score along with your category and preferences. Our algorithm matches your rank against real JoSAA and CSAB closing ranks to calculate your admission probability for each college and branch.",
                       },
                     },
                     {
@@ -183,7 +183,7 @@ export default function RootLayout({
                       name: "Which colleges does this predictor cover?",
                       acceptedAnswer: {
                         "@type": "Answer",
-                        text: "This predictor covers all 23 IITs, 31 NITs, 25 IIITs, 30+ GFTIs, and all BITS Pilani campuses (Pilani, Goa, Hyderabad), using real JoSAA and CSAB 2024 cutoff data.",
+                        text: "This predictor covers all 23 IITs, 31 NITs, 25 IIITs, 30+ GFTIs, and all BITS Pilani campuses (Pilani, Goa, Hyderabad), using real JoSAA and CSAB cutoff data.",
                       },
                     },
                     {
@@ -191,7 +191,7 @@ export default function RootLayout({
                       name: "What is the cutoff data based on?",
                       acceptedAnswer: {
                         "@type": "Answer",
-                        text: "All cutoff data is sourced from official JoSAA 2024 and CSAB 2024 closing ranks across all categories (OPEN, EWS, OBC-NCL, SC, ST) and seat types.",
+                        text: "All cutoff data is sourced from official JoSAA and CSAB closing ranks across all categories (OPEN, EWS, OBC-NCL, SC, ST) and seat types.",
                       },
                     },
                   ],
