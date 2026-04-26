@@ -223,6 +223,13 @@ function classifyChance(
 ): { level: ChanceLevel; percentage: number } | null {
   const ratio = userRank / closingRank;
 
+  // Prevent showing colleges that are far below the student's standard (too "safe")
+  // A college is hidden if its cutoff is >3x the user's rank AND the rank gap is >30k.
+  // e.g. User 32k will not see 300k cutoffs, but will see up to ~96k as backups.
+  if (ratio < 0.33 && (closingRank - userRank) > 30000) {
+    return null;
+  }
+
   if (ratio <= CHANCE_THRESHOLDS.safe) {
     // Safe: 80-100% chance score
     const percentage = Math.round(100 - (ratio / CHANCE_THRESHOLDS.safe) * 20);
