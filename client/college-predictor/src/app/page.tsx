@@ -48,7 +48,7 @@ export default function Home() {
 
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in';
 
-        fetch(`${apiUrl}/api/public/predictor-lead`, {
+        fetch(`${apiUrl}/public/predictor-lead`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
