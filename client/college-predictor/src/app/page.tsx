@@ -46,7 +46,12 @@ export default function Home() {
           device_info: deviceInfo,
         };
 
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+        if (!apiUrl) {
+          console.error("NEXT_PUBLIC_API_URL is not set");
+          return;
+        }
 
         fetch(`${apiUrl}/public/predictor-lead`, {
           method: 'POST',
