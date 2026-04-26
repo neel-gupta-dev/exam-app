@@ -20,15 +20,21 @@ interface ResultsViewProps {
 }
 
 type TabKey = "all" | "safe" | "moderate" | "low";
-type ExamTab = "both" | "mains" | "advanced";
+type ExamTab = "both" | "mains" | "advanced" | "bitsat";
 
 export default function ResultsView({ output }: ResultsViewProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("all");
+  const hasAdvanced = output.advanced_results?.length > 0;
+  const hasMains = output.mains_results?.length > 0;
+  const hasBitsat = output.bitsat_results?.length > 0;
+
   const [examTab, setExamTab] = useState<ExamTab>(
-    output.advanced_results.length > 0 && output.mains_results.length > 0
+    (hasAdvanced ? 1 : 0) + (hasMains ? 1 : 0) + (hasBitsat ? 1 : 0) > 1
       ? "both"
-      : output.advanced_results.length > 0
+      : hasAdvanced
       ? "advanced"
+      : hasBitsat
+      ? "bitsat"
       : "mains"
   );
   const [filters, setFilters] = useState<ResultFilters>({
@@ -43,10 +49,13 @@ export default function ResultsView({ output }: ResultsViewProps) {
   const combinedResults = useMemo(() => {
     let results: PredictionResult[] = [];
     if (examTab === "both" || examTab === "advanced") {
-      results = [...results, ...output.advanced_results];
+      results = [...results, ...(output.advanced_results || [])];
     }
     if (examTab === "both" || examTab === "mains") {
-      results = [...results, ...output.mains_results];
+      results = [...results, ...(output.mains_results || [])];
+    }
+    if (examTab === "both" || examTab === "bitsat") {
+      results = [...results, ...(output.bitsat_results || [])];
     }
     // Sort by composite score
     return results.sort((a, b) => b.composite_score - a.composite_score);
@@ -67,9 +76,6 @@ export default function ResultsView({ output }: ResultsViewProps) {
   const safeCount = combinedResults.filter((r) => r.chance === "safe").length;
   const moderateCount = combinedResults.filter((r) => r.chance === "moderate").length;
   const lowCount = combinedResults.filter((r) => r.chance === "low").length;
-
-  const hasAdvanced = output.advanced_results.length > 0;
-  const hasMains = output.mains_results.length > 0;
 
   const tabs: { key: TabKey; label: string; count: number; icon: React.ReactNode; color: string }[] = [
     {
@@ -130,14 +136,15 @@ export default function ResultsView({ output }: ResultsViewProps) {
         </div>
       </motion.div>
 
-      {/* Exam Type Tabs (if both ranks provided) */}
-      {hasAdvanced && hasMains && (
-        <div className="flex items-center gap-2 mb-4">
+      {/* Exam Type Tabs (if multiple exams provided) */}
+      {(hasAdvanced ? 1 : 0) + (hasMains ? 1 : 0) + (hasBitsat ? 1 : 0) > 1 && (
+        <div className="flex flex-wrap items-center gap-2 mb-4">
           {(
             [
               { key: "both" as const, label: "All Colleges", icon: <LayoutGrid className="w-3.5 h-3.5" /> },
-              { key: "advanced" as const, label: "IITs (Advanced)", icon: <GraduationCap className="w-3.5 h-3.5" /> },
-              { key: "mains" as const, label: "NITs/IIITs/GFTIs (Mains)", icon: <School className="w-3.5 h-3.5" /> },
+              ...(hasAdvanced ? [{ key: "advanced" as const, label: "IITs (Advanced)", icon: <GraduationCap className="w-3.5 h-3.5" /> }] : []),
+              ...(hasMains ? [{ key: "mains" as const, label: "NITs/IIITs/GFTIs", icon: <School className="w-3.5 h-3.5" /> }] : []),
+              ...(hasBitsat ? [{ key: "bitsat" as const, label: "BITS (BITSAT)", icon: <School className="w-3.5 h-3.5" /> }] : []),
             ] as const
           ).map((tab) => (
             <button

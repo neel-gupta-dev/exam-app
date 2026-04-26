@@ -2267,5 +2267,50 @@
     "placement_median_lpa": 15,
     "city_tier": 2,
     "campus_rating": 4
+  },
+  {
+    "institute_code": "BITS_PILANI",
+    "institute_name": "Birla Institute of Technology and Science, Pilani",
+    "short_name": "BITS Pilani",
+    "type": "BITS",
+    "city": "Pilani",
+    "state": "Rajasthan",
+    "city_tier": 3,
+    "nirf_rank": 20,
+    "placement_median_lpa": 18,
+    "placement_highest_lpa": 60,
+    "campus_rating": 4.8,
+    "established_year": 1964,
+    "website": "https://www.bits-pilani.ac.in/"
+  },
+  {
+    "institute_code": "BITS_GOA",
+    "institute_name": "BITS Pilani - K.K. Birla Goa Campus",
+    "short_name": "BITS Goa",
+    "type": "BITS",
+    "city": "Zuarinagar",
+    "state": "Goa",
+    "city_tier": 2,
+    "nirf_rank": null,
+    "placement_median_lpa": 16,
+    "placement_highest_lpa": 50,
+    "campus_rating": 4.7,
+    "established_year": 2004,
+    "website": "https://www.bits-pilani.ac.in/goa/"
+  },
+  {
+    "institute_code": "BITS_HYD",
+    "institute_name": "BITS Pilani - Hyderabad Campus",
+    "short_name": "BITS Hyderabad",
+    "type": "BITS",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "city_tier": 1,
+    "nirf_rank": null,
+    "placement_median_lpa": 15.5,
+    "placement_highest_lpa": 50,
+    "campus_rating": 4.6,
+    "established_year": 2008,
+    "website": "https://www.bits-pilani.ac.in/hyderabad/"
   }
 ]

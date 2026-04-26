@@ -21,7 +21,7 @@ export default function FilterBar({ results, filters, onFilterChange }: FilterBa
   const [showAdvanced, setShowAdvanced] = useState(false);
   const states = useMemo(() => getUniqueStates(results), [results]);
 
-  function toggleInstituteType(type: "IIT" | "NIT" | "IIIT" | "GFTI") {
+  function toggleInstituteType(type: "IIT" | "NIT" | "IIIT" | "GFTI" | "BITS") {
     const current = filters.institute_types;
     const next = current.includes(type)
       ? current.filter((t) => t !== type)
@@ -124,7 +124,7 @@ export default function FilterBar({ results, filters, onFilterChange }: FilterBa
               Institute Type
             </p>
             <div className="flex flex-wrap gap-2">
-              {(["IIT", "NIT", "IIIT", "GFTI"] as const).map((type) => (
+              {(["IIT", "NIT", "IIIT", "GFTI", "BITS"] as const).map((type) => (
                 <button
                   key={type}
                   onClick={() => toggleInstituteType(type)}

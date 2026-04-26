@@ -15,7 +15,7 @@ export interface CutoffEntry {
   closing_rank: number;
   round: number;
   year: number;
-  counseling: "JOSAA" | "CSAB";
+  counseling: "JOSAA" | "CSAB" | "BITSAT";
 }
 
 /** Institute metadata with college life info */
@@ -23,7 +23,7 @@ export interface InstituteMetadata {
   institute_code: string;
   institute_name: string;
   short_name: string;
-  type: "IIT" | "NIT" | "IIIT" | "GFTI";
+  type: "IIT" | "NIT" | "IIIT" | "GFTI" | "BITS";
   city: string;
   state: string;
   city_tier: 1 | 2 | 3;
@@ -48,6 +48,7 @@ export interface BranchRanking {
 export interface UserInput {
   jee_mains_rank: number | null;
   jee_advanced_rank: number | null;
+  bitsat_score: number | null;
   category: Category;
   gender: Gender;
   home_state: string;
@@ -84,6 +85,7 @@ export type ChanceLevel = "safe" | "moderate" | "low";
 export interface PredictionOutput {
   mains_results: PredictionResult[];
   advanced_results: PredictionResult[];
+  bitsat_results: PredictionResult[];
   total_safe: number;
   total_moderate: number;
   total_low: number;
@@ -107,7 +109,7 @@ export type Gender = "Male" | "Female";
 
 /** Filter state for results */
 export interface ResultFilters {
-  institute_types: ("IIT" | "NIT" | "IIIT" | "GFTI")[];
+  institute_types: ("IIT" | "NIT" | "IIIT" | "GFTI" | "BITS")[];
   chance_levels: ChanceLevel[];
   branches: string[];
   states: string[];

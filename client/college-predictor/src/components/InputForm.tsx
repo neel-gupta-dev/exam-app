@@ -38,6 +38,7 @@ export default function InputForm({ onSubmit, loading, onReset, hasResults }: In
   const [step, setStep] = useState(1);
   const [jeeMainsRank, setJeeMainsRank] = useState("");
   const [jeeAdvancedRank, setJeeAdvancedRank] = useState("");
+  const [bitsatScore, setBitsatScore] = useState("");
   const [category, setCategory] = useState("OPEN");
   const [gender, setGender] = useState("Male");
   const [homeState, setHomeState] = useState("");
@@ -52,7 +53,7 @@ export default function InputForm({ onSubmit, loading, onReset, hasResults }: In
     campus_life: 50,
   });
 
-  const canProceedStep1 = jeeMainsRank || jeeAdvancedRank;
+  const canProceedStep1 = jeeMainsRank || jeeAdvancedRank || bitsatScore;
   const canProceedStep2 = homeState !== "";
 
   async function handleSubmit() {
@@ -80,6 +81,7 @@ export default function InputForm({ onSubmit, loading, onReset, hasResults }: In
       const input: UserInput = {
         jee_mains_rank: jeeMainsRank ? parseInt(jeeMainsRank) : null,
         jee_advanced_rank: jeeAdvancedRank ? parseInt(jeeAdvancedRank) : null,
+        bitsat_score: bitsatScore ? parseInt(bitsatScore) : null,
         category: category as UserInput["category"],
         gender: gender as UserInput["gender"],
         home_state: homeState,
@@ -172,11 +174,35 @@ export default function InputForm({ onSubmit, loading, onReset, hasResults }: In
                 Enter Your Ranks
               </h2>
               <p className="text-gray-400 mb-6 text-sm">
-                Enter at least one rank. If you have both, we&apos;ll show
-                results for IITs and NITs/IIITs/GFTIs simultaneously.
+                Enter at least one rank or score. We'll show results across all applicable exams simultaneously.
               </p>
 
               <div className="space-y-5">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-300">
+                    BITSAT Score (out of 390)
+                    <span className="ml-2 text-xs text-gray-500">
+                      For BITS Pilani, Goa, Hyderabad
+                    </span>
+                  </label>
+                  <input
+                    id="bitsat-score"
+                    type="number"
+                    placeholder="e.g., 250"
+                    value={bitsatScore}
+                    onChange={(e) => setBitsatScore(e.target.value)}
+                    className="w-full px-4 py-3 bg-navy-800 border border-navy-600 rounded-xl text-white placeholder:text-gray-500 transition-all"
+                    min={1}
+                    max={390}
+                  />
+                </div>
+
+                <div className="flex items-center gap-4 my-2">
+                  <div className="h-px bg-navy-700 flex-1"></div>
+                  <span className="text-xs text-gray-500 uppercase tracking-widest font-semibold">AND / OR</span>
+                  <div className="h-px bg-navy-700 flex-1"></div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-300">
                     JEE Mains Rank (AIR)

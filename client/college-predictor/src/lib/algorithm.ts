@@ -37,6 +37,7 @@ export function predictColleges(
 ): PredictionOutput {
   const mainsResults: PredictionResult[] = [];
   const advancedResults: PredictionResult[] = [];
+  const bitsatResults: PredictionResult[] = [];
 
   // Determine which seat types to filter by
   const seatTypes = getSeatTypes(input.category, input.is_pwd);
@@ -45,6 +46,31 @@ export function predictColleges(
   for (const cutoff of cutoffs) {
     const institute = institutes.get(cutoff.institute_code);
     if (!institute) continue;
+
+    // ─── BITSAT Branch ───
+    if (institute.type === "BITS") {
+      if (input.bitsat_score === null || input.bitsat_score === undefined) continue;
+
+      const chanceResult = classifyScoreChance(input.bitsat_score, cutoff.closing_rank);
+      if (!chanceResult) continue;
+
+      const branchScore = calculateBranchPreferenceScore(cutoff.program_name, input.branch_preferences);
+      const collegePrefScore = calculateCollegePreferenceScore(institute, input.college_preferences);
+      const instituteTypeScore = INSTITUTE_TYPE_SCORES[institute.type] || 50;
+      const compositeScore = calculateCompositeScore(chanceResult.percentage, branchScore, collegePrefScore, instituteTypeScore);
+
+      bitsatResults.push({
+        institute,
+        cutoff,
+        chance: chanceResult.level,
+        chance_percentage: chanceResult.percentage,
+        branch_score: branchScore,
+        college_pref_score: collegePrefScore,
+        composite_score: compositeScore,
+        rank_delta: cutoff.closing_rank - input.bitsat_score, // Negative is safer
+      });
+      continue;
+    }
 
     // Determine if this cutoff is for Mains or Advanced
     const isAdvanced = institute.type === "IIT";
@@ -102,23 +128,29 @@ export function predictColleges(
   // Sort each result set by composite score (descending)
   const sortedMains = sortResults(mainsResults);
   const sortedAdvanced = sortResults(advancedResults);
+  const sortedBitsat = sortResults(bitsatResults);
 
   // Deduplicate: keep only best round per institute+program combination
   const dedupedMains = deduplicateResults(sortedMains);
   const dedupedAdvanced = deduplicateResults(sortedAdvanced);
+  const dedupedBitsat = deduplicateResults(sortedBitsat);
 
   return {
     mains_results: dedupedMains,
     advanced_results: dedupedAdvanced,
+    bitsat_results: dedupedBitsat,
     total_safe:
       dedupedMains.filter((r) => r.chance === "safe").length +
-      dedupedAdvanced.filter((r) => r.chance === "safe").length,
+      dedupedAdvanced.filter((r) => r.chance === "safe").length +
+      dedupedBitsat.filter((r) => r.chance === "safe").length,
     total_moderate:
       dedupedMains.filter((r) => r.chance === "moderate").length +
-      dedupedAdvanced.filter((r) => r.chance === "moderate").length,
+      dedupedAdvanced.filter((r) => r.chance === "moderate").length +
+      dedupedBitsat.filter((r) => r.chance === "moderate").length,
     total_low:
       dedupedMains.filter((r) => r.chance === "low").length +
-      dedupedAdvanced.filter((r) => r.chance === "low").length,
+      dedupedAdvanced.filter((r) => r.chance === "low").length +
+      dedupedBitsat.filter((r) => r.chance === "low").length,
   };
 }
 
@@ -214,6 +246,38 @@ function classifyChance(
   }
 
   // Beyond 120% — not shown
+  return null;
+}
+
+/**
+ * Classify admission chance based on user score vs cutoff score (e.g. BITSAT).
+ */
+function classifyScoreChance(
+  userScore: number,
+  closingScore: number
+): { level: ChanceLevel; percentage: number } | null {
+  const margin = userScore - closingScore;
+  
+  if (margin >= 0) {
+    // Safe: 80-100%
+    const percentage = Math.min(100, Math.round(80 + (margin / 20) * 20));
+    return { level: "safe", percentage: Math.max(80, percentage) };
+  }
+  
+  if (margin >= -10) {
+    // Moderate: 50-79%
+    const pos = (margin + 10) / 10;
+    const percentage = Math.round(50 + pos * 29);
+    return { level: "moderate", percentage };
+  }
+  
+  if (margin >= -25) {
+    // Low: 20-49%
+    const pos = (margin + 25) / 15;
+    const percentage = Math.round(20 + pos * 29);
+    return { level: "low", percentage };
+  }
+
   return null;
 }
 

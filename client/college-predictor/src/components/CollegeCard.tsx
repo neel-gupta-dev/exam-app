@@ -35,6 +35,10 @@ export default function CollegeCard({ result, index }: CollegeCardProps) {
     declining: { icon: "↘", color: "text-red-400" },
   }[trend];
 
+  const isBits = result.institute.type === "BITS";
+  const displayDelta = isBits ? -result.rank_delta : result.rank_delta;
+  const isSafer = result.rank_delta < 0;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -94,10 +98,10 @@ export default function CollegeCard({ result, index }: CollegeCardProps) {
             <BarChart3 className="w-3.5 h-3.5 text-gray-500" />
             <div>
               <p className="text-[10px] text-gray-500 uppercase">
-                Closing Rank
+                {isBits ? "Cutoff Score" : "Closing Rank"}
               </p>
               <p className="text-sm font-medium text-gray-200">
-                {formatNumber(result.cutoff.closing_rank)}
+                {isBits ? result.cutoff.closing_rank : formatNumber(result.cutoff.closing_rank)}
               </p>
             </div>
           </div>
@@ -241,14 +245,14 @@ export default function CollegeCard({ result, index }: CollegeCardProps) {
               </span>
               <span>•</span>
               <span>
-                Rank Delta:{" "}
+                {isBits ? "Score Margin" : "Rank Delta"}:{" "}
                 <span
                   className={
-                    result.rank_delta < 0 ? "text-emerald-400" : "text-red-400"
+                    isSafer ? "text-emerald-400" : "text-red-400"
                   }
                 >
-                  {result.rank_delta > 0 ? "+" : ""}
-                  {formatNumber(result.rank_delta)}
+                  {displayDelta > 0 ? "+" : ""}
+                  {isBits ? displayDelta : formatNumber(displayDelta)}
                 </span>
               </span>
             </div>
