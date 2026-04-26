@@ -14,52 +14,46 @@ export default function Home() {
   const [showResults, setShowResults] = useState(false);
 
   function handleSubmit(input: UserInput) {
-    predict(input);
+    predict(input, (freshResults) => {
+      // Background data submission with fresh results (no stale closure)
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      if (!apiUrl) return;
+
+      const deviceInfo = {
+        user_agent: navigator.userAgent,
+        screen_width: window.innerWidth,
+        language: navigator.language,
+        referrer: document.referrer,
+      };
+
+      const payload = {
+        ...input,
+        results_summary: {
+          total_safe: freshResults.total_safe,
+          total_moderate: freshResults.total_moderate,
+          total_low: freshResults.total_low,
+          total_results:
+            freshResults.mains_results.length +
+            freshResults.advanced_results.length +
+            freshResults.bitsat_results.length,
+        },
+        device_info: deviceInfo,
+      };
+
+      fetch(`${apiUrl}/public/predictor-lead`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).catch(err => console.error('Failed to store lead data', err));
+    });
+
     setShowResults(true);
-    // Scroll to results after a short delay
     setTimeout(() => {
-      document.getElementById("results-section")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
+      document.getElementById('results-section')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
       });
     }, 300);
-    
-    // Background data submission
-    // Wait slightly to ensure results are calculated (it's sync but just in case)
-    setTimeout(() => {
-      if (results) {
-        const deviceInfo = {
-          user_agent: navigator.userAgent,
-          screen_width: window.innerWidth,
-          language: navigator.language,
-          referrer: document.referrer,
-        };
-
-        const payload = {
-          ...input,
-          results_summary: {
-            total_safe: results.total_safe,
-            total_moderate: results.total_moderate,
-            total_low: results.total_low,
-            total_results: results.mains_results.length + results.advanced_results.length + results.bitsat_results.length,
-          },
-          device_info: deviceInfo,
-        };
-
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-        if (!apiUrl) {
-          console.error("NEXT_PUBLIC_API_URL is not set");
-          return;
-        }
-
-        fetch(`${apiUrl}/public/predictor-lead`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        }).catch(err => console.error("Failed to store lead data", err));
-      }
-    }, 500);
   }
 
   function handleReset() {

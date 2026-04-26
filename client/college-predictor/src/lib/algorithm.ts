@@ -54,7 +54,10 @@ export function predictColleges(
       const chanceResult = classifyScoreChance(input.bitsat_score, cutoff.closing_rank);
       if (!chanceResult) continue;
 
-      const branchScore = calculateBranchPreferenceScore(cutoff.program_name, input.branch_preferences);
+      const branchScore = calculateBranchPreferenceScore(
+        cutoff.program_name,
+        input.use_market_ranking ? [] : input.branch_preferences
+      );
       const collegePrefScore = calculateCollegePreferenceScore(institute, input.college_preferences);
       const instituteTypeScore = INSTITUTE_TYPE_SCORES[institute.type] || 50;
       const compositeScore = calculateCompositeScore(chanceResult.percentage, branchScore, collegePrefScore, instituteTypeScore);
@@ -86,10 +89,9 @@ export function predictColleges(
     const chanceResult = classifyChance(userRank, cutoff.closing_rank);
     if (!chanceResult) continue; // Beyond 120% threshold
 
-    // ─── Step 3: Branch Score ───
     const branchScore = calculateBranchPreferenceScore(
       cutoff.program_name,
-      input.branch_preferences
+      input.use_market_ranking ? [] : input.branch_preferences
     );
 
     // ─── Step 4: College Pref Score ───

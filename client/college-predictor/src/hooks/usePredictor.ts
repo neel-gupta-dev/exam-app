@@ -78,7 +78,7 @@ export function usePredictor(
   const [predicting, setPredicting] = useState(false);
 
   const predict = useCallback(
-    (input: UserInput) => {
+    (input: UserInput, onDone?: (output: PredictionOutput) => void) => {
       setPredicting(true);
 
       // Run prediction in a timeout to avoid blocking main thread
@@ -86,6 +86,7 @@ export function usePredictor(
         const output = predictColleges(cutoffs, institutes, input);
         setResults(output);
         setPredicting(false);
+        onDone?.(output);
       }, 100);
     },
     [cutoffs, institutes]
