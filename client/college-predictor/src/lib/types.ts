@@ -44,8 +44,9 @@ export interface BranchRanking {
   description: string;
 }
 
-/** User input form data */
+/** Represents the user's input from the frontend form */
 export interface UserInput {
+  name: string;
   jee_mains_rank: number | null;
   jee_advanced_rank: number | null;
   bitsat_score: number | null;
@@ -54,7 +55,8 @@ export interface UserInput {
   home_state: string;
   is_pwd: boolean;
   round: number | null; // null = best chance (last round)
-  branch_preferences: string[]; // ordered by preference, empty = market ranking
+  branch_preferences: string[];
+  use_market_ranking: boolean;
   college_preferences: CollegePreferences;
 }
 

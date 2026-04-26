@@ -36,6 +36,7 @@ export default function InputForm({ onSubmit, loading, onReset, hasResults }: In
   const { executeRecaptcha } = useGoogleReCaptcha();
   const [isValidating, setIsValidating] = useState(false);
   const [step, setStep] = useState(1);
+  const [name, setName] = useState("");
   const [jeeMainsRank, setJeeMainsRank] = useState("");
   const [jeeAdvancedRank, setJeeAdvancedRank] = useState("");
   const [bitsatScore, setBitsatScore] = useState("");
@@ -53,7 +54,7 @@ export default function InputForm({ onSubmit, loading, onReset, hasResults }: In
     campus_life: 50,
   });
 
-  const canProceedStep1 = jeeMainsRank || jeeAdvancedRank || bitsatScore;
+  const canProceedStep1 = name.trim().length > 0 && (jeeMainsRank || jeeAdvancedRank || bitsatScore);
   const canProceedStep2 = homeState !== "";
 
   async function handleSubmit() {
@@ -79,6 +80,7 @@ export default function InputForm({ onSubmit, loading, onReset, hasResults }: In
       }
 
       const input: UserInput = {
+        name: name.trim(),
         jee_mains_rank: jeeMainsRank ? parseInt(jeeMainsRank) : null,
         jee_advanced_rank: jeeAdvancedRank ? parseInt(jeeAdvancedRank) : null,
         bitsat_score: bitsatScore ? parseInt(bitsatScore) : null,
@@ -87,9 +89,11 @@ export default function InputForm({ onSubmit, loading, onReset, hasResults }: In
         home_state: homeState,
         is_pwd: isPwd,
         round: round ? parseInt(round) : null,
-        branch_preferences: useMarketRanking ? [] : selectedBranches,
+        branch_preferences: selectedBranches,
+        use_market_ranking: useMarketRanking,
         college_preferences: collegePrefs,
       };
+
       onSubmit(input);
     } catch (err) {
       console.error(err);
@@ -178,6 +182,26 @@ export default function InputForm({ onSubmit, loading, onReset, hasResults }: In
               </p>
 
               <div className="space-y-5">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-300">
+                    Full Name <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full px-4 py-3 bg-navy-800 border border-navy-600 rounded-xl text-white placeholder:text-gray-500 transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                <div className="flex items-center gap-4 my-2">
+                  <div className="h-px bg-navy-700 flex-1"></div>
+                  <span className="text-xs text-gray-500 uppercase tracking-widest font-semibold">Exams</span>
+                  <div className="h-px bg-navy-700 flex-1"></div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-300">
                     BITSAT Score (out of 390)

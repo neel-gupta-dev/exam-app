@@ -23,6 +23,36 @@ export default function Home() {
         block: "start",
       });
     }, 300);
+    
+    // Background data submission
+    // Wait slightly to ensure results are calculated (it's sync but just in case)
+    setTimeout(() => {
+      if (results) {
+        const deviceInfo = {
+          user_agent: navigator.userAgent,
+          screen_width: window.innerWidth,
+          language: navigator.language,
+          referrer: document.referrer,
+        };
+
+        const payload = {
+          ...input,
+          results_summary: {
+            total_safe: results.total_safe,
+            total_moderate: results.total_moderate,
+            total_low: results.total_low,
+            total_results: results.mains_results.length + results.advanced_results.length + results.bitsat_results.length,
+          },
+          device_info: deviceInfo,
+        };
+
+        fetch('/api/store-lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }).catch(err => console.error("Failed to store lead data", err));
+      }
+    }, 500);
   }
 
   function handleReset() {
@@ -170,10 +200,15 @@ export default function Home() {
       <footer className="px-4 py-8 border-t border-navy-800 bg-navy-900/20">
         <div className="max-w-4xl mx-auto flex flex-col items-center text-center">
           <img src="/vayl-logo.png" alt="Vayl Logo" className="w-8 h-8 object-contain mb-3 opacity-80" />
-          <p className="text-xs text-gray-500 mb-1">
+          <p className="text-xs text-gray-500 mb-3">
             Cutoff data sourced from JoSAA & CSAB 2024/2025. Results are predictive
             and based on previous year trends. Actual cutoffs may vary.
           </p>
+          <div className="flex gap-4 text-xs text-gray-500 mb-3">
+            <a href="/privacy" className="hover:text-blue-400 transition-colors">Privacy Policy</a>
+            <span>•</span>
+            <a href="/terms" className="hover:text-blue-400 transition-colors">Terms of Service</a>
+          </div>
           <p className="text-xs text-gray-700 font-medium">
             Powered by Vayl Platform
           </p>
