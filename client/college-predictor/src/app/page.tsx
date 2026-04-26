@@ -46,7 +46,9 @@ export default function Home() {
           device_info: deviceInfo,
         };
 
-        fetch('/api/store-lead', {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in';
+
+        fetch(`${apiUrl}/api/public/predictor-lead`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),

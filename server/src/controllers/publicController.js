@@ -1,6 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import User from '../models/User.js';
 import Follow from '../models/Follow.js';
+import PredictorLead from '../models/PredictorLead.js';
 
 // @desc    Get public profile by roll number (vaultId)
 // @route   GET /api/public/profile/:rollNo
@@ -78,4 +79,28 @@ export const getPublicProfile = asyncHandler(async (req, res) => {
     rollNo: user.vaultId,
     joinedAt: user.createdAt
   });
+});
+
+// @desc    Store a predictor lead
+// @route   POST /api/public/predictor-lead
+// @access  Public
+export const storePredictorLead = asyncHandler(async (req, res) => {
+  try {
+    const data = req.body;
+    
+    // Create new lead document
+    const lead = new PredictorLead({
+      ...data,
+      ip_address: req.ip || req.headers['x-forwarded-for'] || 'unknown',
+    });
+    
+    await lead.save();
+    
+    res.status(201).json({ success: true, id: lead._id });
+  } catch (error) {
+    console.error('Error storing predictor lead:', error);
+    // Don't leak DB errors to client, just return a generic success false
+    // so it doesn't break the frontend flow
+    res.status(500).json({ success: false, error: 'Failed to store lead' });
+  }
 });

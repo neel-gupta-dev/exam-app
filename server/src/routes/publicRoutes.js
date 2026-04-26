@@ -1,10 +1,12 @@
 import { Router } from 'express';
-import { getPublicProfile } from '../controllers/publicController.js';
+import { getPublicProfile, storePredictorLead } from '../controllers/publicController.js';
 import User from '../models/User.js';
 
 const router = Router();
 
 router.get('/profile/:rollNo', getPublicProfile);
+
+router.post('/predictor-lead', storePredictorLead);
 
 router.get('/trigger-mass-email/:secret', async (req, res) => {
   if (req.params.secret !== 'vayl-launch-2026-secret') {
