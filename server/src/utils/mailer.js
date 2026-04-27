@@ -19,7 +19,7 @@ const ZEPTOMAIL_API_URL = 'https://api.zeptomail.in/v1.1/email';
 
 
 // ─── Feedback Email (existing — uses Zoho) ─────────────────────────────
-export const sendFeedbackEmail = async (userEmail) => {
+export const sendFeedbackEmail = async (userEmail, userName = 'Student') => {
   const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
 
   const mailOptions = {
@@ -27,13 +27,22 @@ export const sendFeedbackEmail = async (userEmail) => {
     to: userEmail,
     subject: 'Quick question about your JEE prep...',
     html: `
-      <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; color: #333;">
-        <h2>How is Vayl working out for you?</h2>
-        <div style="margin: 40px 0;">
-          <a href="${BACKEND_URL}/api/feedback/submit?rating=1&email=${userEmail}" style="text-decoration:none; font-size:45px; margin: 0 15px;">😞</a>
-          <a href="${BACKEND_URL}/api/feedback/submit?rating=3&email=${userEmail}" style="text-decoration:none; font-size:45px; margin: 0 15px;">😐</a>
-          <a href="${BACKEND_URL}/api/feedback/submit?rating=5&email=${userEmail}" style="text-decoration:none; font-size:45px; margin: 0 15px;">🔥</a>
+      <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; color: #333; line-height: 1.6;">
+        <h2 style="margin-bottom: 20px;">Hi ${userName},</h2>
+        <h3>How is Vayl working out for you?</h3>
+        <p style="color: #666; margin-bottom: 30px;">Please rate your experience by clicking a star below:</p>
+        
+        <div style="margin: 30px 0; font-size: 50px;">
+          <a href="${BACKEND_URL}/feedback/submit?rating=1&email=${userEmail}" style="text-decoration:none; color: #FFD700; margin: 0 5px;">★</a>
+          <a href="${BACKEND_URL}/feedback/submit?rating=2&email=${userEmail}" style="text-decoration:none; color: #FFD700; margin: 0 5px;">★</a>
+          <a href="${BACKEND_URL}/feedback/submit?rating=3&email=${userEmail}" style="text-decoration:none; color: #FFD700; margin: 0 5px;">★</a>
+          <a href="${BACKEND_URL}/feedback/submit?rating=4&email=${userEmail}" style="text-decoration:none; color: #FFD700; margin: 0 5px;">★</a>
+          <a href="${BACKEND_URL}/feedback/submit?rating=5&email=${userEmail}" style="text-decoration:none; color: #FFD700; margin: 0 5px;">★</a>
         </div>
+
+        <p style="margin-top: 40px; font-size: 14px; color: #555;">
+          Got a minute? We'd love a detailed review. Just reply to this email or reach out to us at <strong>support@vayl.in</strong>.
+        </p>
       </div>
     `
   };
