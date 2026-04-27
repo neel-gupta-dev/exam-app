@@ -48,9 +48,33 @@ export function useCutoffData() {
 
         const metaData: InstituteMetadata[] = await metaRes.json();
         const branchData: BranchRanking[] = await branchRes.json();
-        const cutoffData: CutoffEntry[] = await cutoffRes.json();
+        const rawCutoffs: any[] = await cutoffRes.json();
         const statsData: ProgramStats[] = await statsRes.json();
         const demandData: DemandIndex = await demandRes.json();
+
+        // Build institute lookup map and inflate cutoffs
+        const instituteMap = new Map<string, InstituteMetadata>();
+        for (const inst of metaData) {
+          instituteMap.set(inst.institute_code, inst);
+        }
+        
+        const cutoffData: CutoffEntry[] = rawCutoffs.map(c => {
+          const institute_name = instituteMap.get(c[0])?.institute_name || "";
+          return {
+            institute_code: c[0],
+            institute_name: institute_name,
+            program_code: c[1],
+            program_name: c[2],
+            quota: c[3],
+            seat_type: c[4],
+            gender: c[5] === "F" ? "Female-only (including Supernumerary)" : "Gender-Neutral",
+            opening_rank: c[6],
+            closing_rank: c[7],
+            round: c[8],
+            year: c[9],
+            counseling: c[10]
+          };
+        });
 
         // Initialize scoring engines
         loadBranchRankings(branchData);
@@ -58,11 +82,6 @@ export function useCutoffData() {
         initNormalization(metaData);
         loadProgramStats(statsData);
 
-        // Build institute lookup map
-        const instituteMap = new Map<string, InstituteMetadata>();
-        for (const inst of metaData) {
-          instituteMap.set(inst.institute_code, inst);
-        }
         setInstitutes(instituteMap);
         setCutoffs(cutoffData);
 
