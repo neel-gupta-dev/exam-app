@@ -311,20 +311,7 @@ function calculateCompositeScore(
  * Sort results by: chance level priority, then composite score.
  */
 function sortResults(results: PredictionResult[]): PredictionResult[] {
-  const chancePriority: Record<ChanceLevel, number> = {
-    safe: 0,
-    moderate: 1,
-    low: 2,
-  };
-
-  return results.sort((a, b) => {
-    // First sort by chance priority (safe > moderate > low)
-    const priorityDiff = chancePriority[a.chance] - chancePriority[b.chance];
-    if (priorityDiff !== 0) return priorityDiff;
-
-    // Then sort by composite score (highest first)
-    return b.composite_score - a.composite_score;
-  });
+  return results.sort((a, b) => b.composite_score - a.composite_score);
 }
 
 /**
