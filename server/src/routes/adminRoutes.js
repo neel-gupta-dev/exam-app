@@ -15,7 +15,18 @@ const escapeRegex = (str) => String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const router = Router();
 
-// ─── EMAIL BLAST (TEMPORARILY OPEN) ─────────────────────────────────────────
+// All admin routes require auth + admin role
+router.use(protectAdmin);
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+
+/**
+ * GET /api/admin/stats
+ * Returns aggregate counts for the dashboard overview.
+ */
+router.get('/stats', getDashboardStats);
+
+// ─── EMAIL BLAST ─────────────────────────────────────────────────────────────
 
 /**
  * GET /api/admin/trigger-feedback-blast
@@ -43,17 +54,6 @@ router.get('/trigger-feedback-blast', asyncHandler(async (req, res) => {
     res.status(500).json({ message: 'Failed to send blast', error: err.message });
   }
 }));
-
-// All admin routes require auth + admin role
-router.use(protectAdmin);
-
-// ─── DASHBOARD ────────────────────────────────────────────────────────────────
-
-/**
- * GET /api/admin/stats
- * Returns aggregate counts for the dashboard overview.
- */
-router.get('/stats', getDashboardStats);
 
 // ─── USERS ────────────────────────────────────────────────────────────────────
 
