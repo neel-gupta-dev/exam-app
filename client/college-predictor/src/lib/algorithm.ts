@@ -68,7 +68,7 @@ interface ScoreWeights {
 }
 
 function calculateAdaptiveWeights(prefs: CollegePreferences): ScoreWeights {
-  const BASE = { chance: 0.35, branch: 0.25, college: 0.25, type: 0.15 };
+  const BASE = { chance: 0.30, branch: 0.25, college: 0.30, type: 0.15 };
 
   // Calculate how opinionated the user is (spread of slider values)
   const values = [prefs.city_life, prefs.placements, prefs.reputation, prefs.campus_life];
@@ -76,13 +76,14 @@ function calculateAdaptiveWeights(prefs: CollegePreferences): ScoreWeights {
   const minSlider = Math.min(...values);
   const spread = (maxSlider - minSlider) / 100; // 0 = all equal, 1 = max spread
 
-  // When spread is high, boost college_pref weight at the expense of chance
-  const boost = spread * 0.15; // Up to 15% shift
+  // When spread is high, boost college_pref weight significantly
+  // If user sets a slider to 100, they REALLY care about that specific life factor.
+  const boost = spread * 0.30; // Up to 30% shift
 
   return {
-    chance: Math.max(0.20, BASE.chance - boost),
+    chance: Math.max(0.15, BASE.chance - boost),
     branch_preference: BASE.branch,
-    college_preference: Math.min(0.40, BASE.college + boost),
+    college_preference: Math.min(0.60, BASE.college + boost),
     institute_type: BASE.type,
   };
 }
@@ -128,7 +129,15 @@ export function predictColleges(
       );
       const collegePrefScore = calculateCollegePreferenceScore(institute, input.college_preferences);
       const instituteTypeScore = INSTITUTE_TYPE_SCORES[institute.type] || 50;
-      const compositeScore = calculateCompositeScore(chanceResult.percentage, branchScore, collegePrefScore, instituteTypeScore, weights);
+      const compositeScore = calculateCompositeScore(
+        chanceResult.percentage, 
+        branchScore, 
+        collegePrefScore, 
+        instituteTypeScore, 
+        weights,
+        institute,
+        input.college_preferences
+      );
 
       bitsatResults.push({
         institute,
@@ -176,7 +185,9 @@ export function predictColleges(
       branchScore,
       collegePrefScore,
       instituteTypeScore,
-      weights
+      weights,
+      institute,
+      input.college_preferences
     );
 
     const result: PredictionResult = {
@@ -400,20 +411,36 @@ function classifyScoreChance(
 
 /**
  * Calculate composite score from all factors using adaptive weights.
+ * Also applies a "Preference Penalty" if a college performs poorly in a high-priority area.
  */
 function calculateCompositeScore(
   chancePercentage: number,
   branchScore: number,
   collegePrefScore: number,
   instituteTypeScore: number,
-  weights: ScoreWeights
+  weights: ScoreWeights,
+  institute: InstituteMetadata,
+  prefs: CollegePreferences
 ): number {
-  return Math.round(
+  let score = 
     chancePercentage * weights.chance +
     branchScore * weights.branch_preference +
     collegePrefScore * weights.college_preference +
-    instituteTypeScore * weights.institute_type
-  );
+    instituteTypeScore * weights.institute_type;
+
+  // ─── Preference Penalty (The "Almost Perfect" Upgrade) ───
+  // If user sets a preference to > 80, and the college scores < 40 in that factor,
+  // we apply a heavy exponential penalty to push it down the rankings.
+  
+  if (prefs.placements > 80 && (institute.placement_median_lpa || 0) < 6) {
+    score *= 0.6; // Heavy penalty for low placements when priority is high
+  }
+  
+  if (prefs.reputation > 80 && (institute.nirf_rank || 500) > 100) {
+    score *= 0.8; // Penalty for low reputation
+  }
+
+  return Math.round(score);
 }
 
 /**
