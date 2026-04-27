@@ -19,32 +19,29 @@ const router = Router();
 
 /**
  * GET /api/admin/trigger-feedback-blast
- * Sends a mass feedback request email to all users in the background.
+ * Sends a mass feedback request email to all users.
  */
 router.get('/trigger-feedback-blast', asyncHandler(async (req, res) => {
-  res.json({ message: 'Feedback email blast started in the background. This may take several minutes.' });
-  
-  // Background execution to prevent Vercel/Railway HTTP timeouts
-  setTimeout(async () => {
-    try {
-      // Find all users (including admins)
-      const users = await User.find({ email: { $exists: true, $ne: '' } }).select('email name');
-      
-      console.log(`[Email Blast] Starting blast to ${users.length} users.`);
-      let successCount = 0;
-      
-      for (const user of users) {
-        const success = await sendFeedbackEmail(user.email, user.name);
-        if (success) successCount++;
-        // 1-second delay to respect Zoho/SMTP rate limits
-        await new Promise(r => setTimeout(r, 1000));
-      }
-      
-      console.log(`[Email Blast] Completed. Successfully sent ${successCount}/${users.length} emails.`);
-    } catch (err) {
-      console.error('[Email Blast] Failed:', err);
+  try {
+    // Find all users (including admins)
+    const users = await User.find({ email: { $exists: true, $ne: '' } }).select('email name');
+    
+    console.log(`[Email Blast] Starting blast to ${users.length} users.`);
+    let successCount = 0;
+    
+    for (const user of users) {
+      const success = await sendFeedbackEmail(user.email, user.name);
+      if (success) successCount++;
+      // 100ms delay to prevent overwhelming ZeptoMail
+      await new Promise(r => setTimeout(r, 100));
     }
-  }, 0);
+    
+    console.log(`[Email Blast] Completed. Successfully sent ${successCount}/${users.length} emails.`);
+    res.json({ message: `Blast completed! Sent ${successCount} out of ${users.length} emails.` });
+  } catch (err) {
+    console.error('[Email Blast] Failed:', err);
+    res.status(500).json({ message: 'Failed to send blast', error: err.message });
+  }
 }));
 
 // All admin routes require auth + admin role
