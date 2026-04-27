@@ -15,18 +15,7 @@ const escapeRegex = (str) => String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const router = Router();
 
-// All admin routes require auth + admin role
-router.use(protectAdmin);
-
-// ─── DASHBOARD ────────────────────────────────────────────────────────────────
-
-/**
- * GET /api/admin/stats
- * Returns aggregate counts for the dashboard overview.
- */
-router.get('/stats', getDashboardStats);
-
-// ─── EMAIL BLAST ─────────────────────────────────────────────────────────────
+// ─── EMAIL BLAST (TEMPORARILY OPEN) ─────────────────────────────────────────
 
 /**
  * GET /api/admin/trigger-feedback-blast
@@ -57,6 +46,17 @@ router.get('/trigger-feedback-blast', asyncHandler(async (req, res) => {
     }
   }, 0);
 }));
+
+// All admin routes require auth + admin role
+router.use(protectAdmin);
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+
+/**
+ * GET /api/admin/stats
+ * Returns aggregate counts for the dashboard overview.
+ */
+router.get('/stats', getDashboardStats);
 
 // ─── USERS ────────────────────────────────────────────────────────────────────
 

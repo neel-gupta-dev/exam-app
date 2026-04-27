@@ -48,10 +48,39 @@ export const sendFeedbackEmail = async (userEmail, userName = 'Student') => {
   };
 
   try {
-    await zohoTransporter.sendMail(mailOptions);
+    let apiKey = process.env.ZEPTOMAIL_PASS || '';
+    if (apiKey.startsWith('"') && apiKey.endsWith('"')) {
+      apiKey = apiKey.slice(1, -1);
+    }
+    if (apiKey.startsWith("'") && apiKey.endsWith("'")) {
+      apiKey = apiKey.slice(1, -1);
+    }
+
+    const response = await fetch(ZEPTOMAIL_API_URL, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': `Zoho-enczapikey ${apiKey}`
+      },
+      body: JSON.stringify({
+        from: { "address": "noreply@vayl.in", "name": "Vayl Study OS" },
+        to: [{ "email_address": { "address": userEmail } }],
+        subject: mailOptions.subject,
+        htmlbody: mailOptions.html
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`[ZeptoMail REST Error - Feedback] ${response.status} - ${errText}`);
+      return false;
+    }
+
+    console.log(`[ZeptoMail] Feedback email successfully sent to ${userEmail}`);
     return true;
   } catch (error) {
-    console.error("Zoho error:", error);
+    console.error("[ZeptoMail - Feedback] Failed to send feedback email:", error.message);
     return false;
   }
 };
