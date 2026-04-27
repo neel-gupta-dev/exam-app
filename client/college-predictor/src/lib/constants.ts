@@ -76,24 +76,17 @@ export const SEAT_TYPE_MAP: Record<string, string[]> = {
   "EWS (PwD)": ["EWS (PwD)"],
 };
 
-/** Chance thresholds (as ratio of user_rank / closing_rank) */
+/** Chance thresholds (used as fallback when Z-score stats unavailable) */
 export const CHANCE_THRESHOLDS = {
   safe: 0.8,      // rank ≤ 80% of closing rank
   moderate: 1.0,  // rank between 80%-100%
   low: 1.2,       // rank between 100%-120%
 } as const;
 
-/** Composite score weights */
-export const SCORE_WEIGHTS = {
-  chance: 0.40,
-  branch_preference: 0.25,
-  college_preference: 0.25,
-  institute_type: 0.10,
-} as const;
-
 /** Institute type base scores */
 export const INSTITUTE_TYPE_SCORES: Record<string, number> = {
   IIT: 100,
+  BITS: 90,
   NIT: 75,
   IIIT: 70,
   GFTI: 50,

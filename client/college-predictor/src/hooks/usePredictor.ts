@@ -1,5 +1,9 @@
 // ============================================================
-// Custom Hooks — Data Loading & Prediction
+// Custom Hooks — Data Loading & Prediction (v2)
+// ============================================================
+//
+// Now loads pre-computed program stats and demand index
+// alongside cutoff data and metadata.
 // ============================================================
 
 "use client";
@@ -11,9 +15,11 @@ import {
   BranchRanking,
   UserInput,
   PredictionOutput,
+  ProgramStats,
+  DemandIndex,
 } from "../lib/types";
-import { predictColleges } from "../lib/algorithm";
-import { loadBranchRankings } from "../lib/branchRanker";
+import { predictColleges, loadProgramStats } from "../lib/algorithm";
+import { loadBranchRankings, loadDemandIndex } from "../lib/branchRanker";
 import { initNormalization } from "../lib/collegeScorer";
 
 
@@ -31,17 +37,26 @@ export function useCutoffData() {
       try {
         setLoading(true);
 
-        // Load institute metadata
-        const metaRes = await fetch("/data/institute-metadata.json");
-        const metaData: InstituteMetadata[] = await metaRes.json();
+        // Load all data in parallel
+        const [metaRes, branchRes, cutoffRes, statsRes, demandRes] = await Promise.all([
+          fetch("/data/institute-metadata.json"),
+          fetch("/data/branch-rankings.json"),
+          fetch("/data/cutoffs-all.json"),
+          fetch("/data/program-stats.json"),
+          fetch("/data/demand-index.json"),
+        ]);
 
-        // Load branch rankings
-        const branchRes = await fetch("/data/branch-rankings.json");
+        const metaData: InstituteMetadata[] = await metaRes.json();
         const branchData: BranchRanking[] = await branchRes.json();
+        const cutoffData: CutoffEntry[] = await cutoffRes.json();
+        const statsData: ProgramStats[] = await statsRes.json();
+        const demandData: DemandIndex = await demandRes.json();
 
         // Initialize scoring engines
         loadBranchRankings(branchData);
+        loadDemandIndex(demandData);
         initNormalization(metaData);
+        loadProgramStats(statsData);
 
         // Build institute lookup map
         const instituteMap = new Map<string, InstituteMetadata>();
@@ -49,11 +64,7 @@ export function useCutoffData() {
           instituteMap.set(inst.institute_code, inst);
         }
         setInstitutes(instituteMap);
-
-        // Load real cutoff data
-        const cutoffRes = await fetch("/data/cutoffs-all.json");
-        const realCutoffs = await cutoffRes.json();
-        setCutoffs(realCutoffs);
+        setCutoffs(cutoffData);
 
         setLoading(false);
       } catch (err) {

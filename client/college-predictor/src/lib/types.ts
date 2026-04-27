@@ -35,7 +35,7 @@ export interface InstituteMetadata {
   website: string;
 }
 
-/** Branch market demand ranking */
+/** Branch market demand ranking (legacy, used for keyword matching) */
 export interface BranchRanking {
   category: string;
   keywords: string[];
@@ -43,6 +43,25 @@ export interface BranchRanking {
   growth_trend: "rising" | "stable" | "declining";
   description: string;
 }
+
+/** Pre-computed program statistics for Z-score probability */
+export interface ProgramStats {
+  k: string;  // key: "institute_code|program_code|quota|seat_type|gender"
+  m: number;  // closing_rank_mean
+  s: number;  // closing_rank_std
+  l: number;  // closing_rank_latest
+}
+
+/** Data-driven branch demand entry */
+export interface DemandEntry {
+  demand_percentile: number;
+  avg_demand_ratio: number;
+  sample_size: number;
+}
+
+/** Full demand index (category → stats) */
+export type DemandIndex = Record<string, DemandEntry>;
+
 
 /** Represents the user's input from the frontend form */
 export interface UserInput {

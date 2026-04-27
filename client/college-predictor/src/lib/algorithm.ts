@@ -1,13 +1,18 @@
 // ============================================================
-// College Predictor — Core Prediction Algorithm
+// College Predictor — Core Prediction Algorithm (v2)
 // ============================================================
 //
-// 5-step pipeline:
+// UPGRADED 5-step pipeline:
 // 1. Filter by eligibility (category, gender, quota, round)
-// 2. Classify admission chance (safe / moderate / low)
-// 3. Score branch preference (user prefs or market demand)
-// 4. Score college life preferences (city, placements, reputation, campus)
-// 5. Compute composite score and rank results
+// 2. Z-score based admission probability (uses normalCDF)
+// 3. Score branch preference (data-driven demand index or user prefs)
+// 4. Score college life preferences (percentile-normalized)
+// 5. Adaptive composite score and rank results
+//
+// Key improvements over v1:
+// - Z-score probability replaces naive rank/closingRank ratio
+// - Adaptive weighting respects user slider intensity
+// - Pre-computed stats (mean, σ) enable statistical rigor
 // ============================================================
 
 import {
@@ -17,14 +22,74 @@ import {
   PredictionResult,
   PredictionOutput,
   ChanceLevel,
+  CollegePreferences,
+  ProgramStats,
 } from "./types";
 import {
-  CHANCE_THRESHOLDS,
-  SCORE_WEIGHTS,
   INSTITUTE_TYPE_SCORES,
 } from "./constants";
 import { calculateBranchPreferenceScore } from "./branchRanker";
 import { calculateCollegePreferenceScore } from "./collegeScorer";
+
+// ────────────────────────────────────────────────────
+// Program Stats Cache (loaded from pre-computed JSON)
+// ────────────────────────────────────────────────────
+let programStatsMap = new Map<string, ProgramStats>();
+
+/** Load pre-computed program statistics */
+export function loadProgramStats(stats: ProgramStats[]) {
+  programStatsMap = new Map();
+  for (const s of stats) {
+    programStatsMap.set(s.k, s);
+  }
+}
+
+// ────────────────────────────────────────────────────
+// Normal CDF (Abramowitz & Stegun approximation)
+// ────────────────────────────────────────────────────
+function normalCDF(x: number): number {
+  const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741;
+  const a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+  const sign = x < 0 ? -1 : 1;
+  const absX = Math.abs(x) / Math.SQRT2;
+  const t = 1.0 / (1.0 + p * absX);
+  const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-absX * absX);
+  return 0.5 * (1.0 + sign * y);
+}
+
+// ────────────────────────────────────────────────────
+// Adaptive Weighting
+// ────────────────────────────────────────────────────
+interface ScoreWeights {
+  chance: number;
+  branch_preference: number;
+  college_preference: number;
+  institute_type: number;
+}
+
+function calculateAdaptiveWeights(prefs: CollegePreferences): ScoreWeights {
+  const BASE = { chance: 0.35, branch: 0.25, college: 0.25, type: 0.15 };
+
+  // Calculate how opinionated the user is (spread of slider values)
+  const values = [prefs.city_life, prefs.placements, prefs.reputation, prefs.campus_life];
+  const maxSlider = Math.max(...values);
+  const minSlider = Math.min(...values);
+  const spread = (maxSlider - minSlider) / 100; // 0 = all equal, 1 = max spread
+
+  // When spread is high, boost college_pref weight at the expense of chance
+  const boost = spread * 0.15; // Up to 15% shift
+
+  return {
+    chance: Math.max(0.20, BASE.chance - boost),
+    branch_preference: BASE.branch,
+    college_preference: Math.min(0.40, BASE.college + boost),
+    institute_type: BASE.type,
+  };
+}
+
+// ────────────────────────────────────────────────────
+// Main Prediction Function
+// ────────────────────────────────────────────────────
 
 /**
  * Main prediction function. Takes all cutoff data, institute metadata,
@@ -38,6 +103,9 @@ export function predictColleges(
   const mainsResults: PredictionResult[] = [];
   const advancedResults: PredictionResult[] = [];
   const bitsatResults: PredictionResult[] = [];
+
+  // Calculate adaptive weights based on user's slider preferences
+  const weights = calculateAdaptiveWeights(input.college_preferences);
 
   // Determine which seat types to filter by
   const seatTypes = getSeatTypes(input.category, input.is_pwd);
@@ -60,7 +128,7 @@ export function predictColleges(
       );
       const collegePrefScore = calculateCollegePreferenceScore(institute, input.college_preferences);
       const instituteTypeScore = INSTITUTE_TYPE_SCORES[institute.type] || 50;
-      const compositeScore = calculateCompositeScore(chanceResult.percentage, branchScore, collegePrefScore, instituteTypeScore);
+      const compositeScore = calculateCompositeScore(chanceResult.percentage, branchScore, collegePrefScore, instituteTypeScore, weights);
 
       bitsatResults.push({
         institute,
@@ -70,7 +138,7 @@ export function predictColleges(
         branch_score: branchScore,
         college_pref_score: collegePrefScore,
         composite_score: compositeScore,
-        rank_delta: cutoff.closing_rank - input.bitsat_score, // Negative is safer
+        rank_delta: cutoff.closing_rank - input.bitsat_score,
       });
       continue;
     }
@@ -85,10 +153,11 @@ export function predictColleges(
     // ─── Step 1: Filter by Eligibility ───
     if (!isEligible(cutoff, input, seatTypes, genderFilter, institute)) continue;
 
-    // ─── Step 2: Classify Chance ───
-    const chanceResult = classifyChance(userRank, cutoff.closing_rank);
-    if (!chanceResult) continue; // Beyond 120% threshold
+    // ─── Step 2: Z-Score Admission Probability ───
+    const chanceResult = classifyChanceZScore(userRank, cutoff);
+    if (!chanceResult) continue;
 
+    // ─── Step 3: Branch Preference Score ───
     const branchScore = calculateBranchPreferenceScore(
       cutoff.program_name,
       input.use_market_ranking ? [] : input.branch_preferences
@@ -100,13 +169,14 @@ export function predictColleges(
       input.college_preferences
     );
 
-    // ─── Step 5: Composite Score ───
+    // ─── Step 5: Adaptive Composite Score ───
     const instituteTypeScore = INSTITUTE_TYPE_SCORES[institute.type] || 50;
     const compositeScore = calculateCompositeScore(
       chanceResult.percentage,
       branchScore,
       collegePrefScore,
-      instituteTypeScore
+      instituteTypeScore,
+      weights
     );
 
     const result: PredictionResult = {
@@ -217,71 +287,109 @@ function isEligible(
 }
 
 /**
- * Classify admission chance based on rank vs closing rank.
+ * Z-Score based admission chance classification.
+ * Uses pre-computed program statistics (mean, σ) when available.
+ * Falls back to simple ratio-based classification otherwise.
  */
-function classifyChance(
+function classifyChanceZScore(
+  userRank: number,
+  cutoff: CutoffEntry
+): { level: ChanceLevel; percentage: number } | null {
+  // Build the stats lookup key
+  const statsKey = `${cutoff.institute_code}|${cutoff.program_code}|${cutoff.quota}|${cutoff.seat_type}|${cutoff.gender}`;
+  const stats = programStatsMap.get(statsKey);
+
+  if (stats && stats.s > 0) {
+    // ─── Z-Score Path ───
+    // Use the latest closing rank as the reference point
+    const refCutoff = stats.l;
+    const effectiveStd = Math.max(stats.s, refCutoff * 0.03);
+
+    // Z-score: positive means user rank is worse (higher number) than cutoff
+    const z = (userRank - refCutoff) / effectiveStd;
+
+    // P(admitted) = Φ(-z) because lower rank = better chance
+    const probability = normalCDF(-z) * 100;
+
+    // Prevent showing colleges far below student's level
+    if (probability > 99.5 && (refCutoff - userRank) > 30000) {
+      return null;
+    }
+
+    // Classify
+    if (probability >= 75) {
+      return { level: "safe", percentage: Math.min(99, Math.round(probability)) };
+    }
+    if (probability >= 40) {
+      return { level: "moderate", percentage: Math.round(probability) };
+    }
+    if (probability >= 12) {
+      return { level: "low", percentage: Math.round(probability) };
+    }
+
+    return null; // Below 12% — don't show
+  }
+
+  // ─── Fallback: Ratio-based (for entries without stats) ───
+  return classifyChanceFallback(userRank, cutoff.closing_rank);
+}
+
+/**
+ * Fallback chance classification using simple rank ratio.
+ * Used when pre-computed stats aren't available for a program tuple.
+ */
+function classifyChanceFallback(
   userRank: number,
   closingRank: number
 ): { level: ChanceLevel; percentage: number } | null {
   const ratio = userRank / closingRank;
 
-  // Prevent showing colleges that are far below the student's standard (too "safe")
-  // A college is hidden if its cutoff is >3x the user's rank AND the rank gap is >30k.
-  // e.g. User 32k will not see 300k cutoffs, but will see up to ~96k as backups.
+  // Prevent showing colleges far below student's standard
   if (ratio < 0.33 && (closingRank - userRank) > 30000) {
     return null;
   }
 
-  if (ratio <= CHANCE_THRESHOLDS.safe) {
-    // Safe: 80-100% chance score
-    const percentage = Math.round(100 - (ratio / CHANCE_THRESHOLDS.safe) * 20);
+  if (ratio <= 0.8) {
+    const percentage = Math.round(100 - (ratio / 0.8) * 20);
     return { level: "safe", percentage: Math.max(80, percentage) };
   }
 
-  if (ratio <= CHANCE_THRESHOLDS.moderate) {
-    // Moderate: 50-79% chance score
-    const range = CHANCE_THRESHOLDS.moderate - CHANCE_THRESHOLDS.safe;
-    const pos = (ratio - CHANCE_THRESHOLDS.safe) / range;
+  if (ratio <= 1.0) {
+    const pos = (ratio - 0.8) / 0.2;
     const percentage = Math.round(79 - pos * 29);
     return { level: "moderate", percentage: Math.max(50, percentage) };
   }
 
-  if (ratio <= CHANCE_THRESHOLDS.low) {
-    // Low: 20-49% chance score
-    const range = CHANCE_THRESHOLDS.low - CHANCE_THRESHOLDS.moderate;
-    const pos = (ratio - CHANCE_THRESHOLDS.moderate) / range;
+  if (ratio <= 1.2) {
+    const pos = (ratio - 1.0) / 0.2;
     const percentage = Math.round(49 - pos * 29);
     return { level: "low", percentage: Math.max(20, percentage) };
   }
 
-  // Beyond 120% — not shown
   return null;
 }
 
 /**
- * Classify admission chance based on user score vs cutoff score (e.g. BITSAT).
+ * Classify admission chance for score-based exams (BITSAT).
  */
 function classifyScoreChance(
   userScore: number,
   closingScore: number
 ): { level: ChanceLevel; percentage: number } | null {
   const margin = userScore - closingScore;
-  
+
   if (margin >= 0) {
-    // Safe: 80-100%
-    const percentage = Math.min(100, Math.round(80 + (margin / 20) * 20));
+    const percentage = Math.min(99, Math.round(80 + (margin / 20) * 20));
     return { level: "safe", percentage: Math.max(80, percentage) };
   }
-  
+
   if (margin >= -10) {
-    // Moderate: 50-79%
     const pos = (margin + 10) / 10;
     const percentage = Math.round(50 + pos * 29);
     return { level: "moderate", percentage };
   }
-  
+
   if (margin >= -25) {
-    // Low: 20-49%
     const pos = (margin + 25) / 15;
     const percentage = Math.round(20 + pos * 29);
     return { level: "low", percentage };
@@ -291,24 +399,25 @@ function classifyScoreChance(
 }
 
 /**
- * Calculate composite score from all factors.
+ * Calculate composite score from all factors using adaptive weights.
  */
 function calculateCompositeScore(
   chancePercentage: number,
   branchScore: number,
   collegePrefScore: number,
-  instituteTypeScore: number
+  instituteTypeScore: number,
+  weights: ScoreWeights
 ): number {
   return Math.round(
-    chancePercentage * SCORE_WEIGHTS.chance +
-      branchScore * SCORE_WEIGHTS.branch_preference +
-      collegePrefScore * SCORE_WEIGHTS.college_preference +
-      instituteTypeScore * SCORE_WEIGHTS.institute_type
+    chancePercentage * weights.chance +
+    branchScore * weights.branch_preference +
+    collegePrefScore * weights.college_preference +
+    instituteTypeScore * weights.institute_type
   );
 }
 
 /**
- * Sort results by: chance level priority, then composite score.
+ * Sort results by composite score (descending).
  */
 function sortResults(results: PredictionResult[]): PredictionResult[] {
   return results.sort((a, b) => b.composite_score - a.composite_score);

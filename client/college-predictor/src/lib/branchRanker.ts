@@ -1,37 +1,29 @@
 // ============================================================
 // Branch Ranker — Market Demand Scoring Engine
 // ============================================================
+//
+// Upgraded: Uses a DATA-DRIVEN demand percentile index computed
+// from actual cutoff competitiveness, instead of hardcoded scores.
+// Falls back to keyword-based scoring from branch-rankings.json.
+// ============================================================
 
-import { BranchRanking } from "./types";
+import { BranchRanking, DemandIndex } from "./types";
 
 let branchRankings: BranchRanking[] = [];
+let demandIndex: DemandIndex = {};
 
-/** Load branch rankings from JSON data */
+/** Load branch rankings from JSON data (keyword matcher) */
 export function loadBranchRankings(data: BranchRanking[]) {
   branchRankings = data;
 }
 
-/**
- * Match a program name to a branch category and return its market score.
- * Uses keyword matching with case-insensitive search.
- */
-export function getBranchScore(programName: string): number {
-  const lowerName = programName.toLowerCase();
-
-  for (const branch of branchRankings) {
-    for (const keyword of branch.keywords) {
-      if (lowerName.includes(keyword.toLowerCase())) {
-        return branch.market_score;
-      }
-    }
-  }
-
-  // Fallback: "Other Engineering" score
-  return 35;
+/** Load the pre-computed demand index */
+export function loadDemandIndex(data: DemandIndex) {
+  demandIndex = data;
 }
 
 /**
- * Get the branch category name for a program.
+ * Match a program name to a branch category using keyword matching.
  */
 export function getBranchCategory(programName: string): string {
   const lowerName = programName.toLowerCase();
@@ -45,6 +37,33 @@ export function getBranchCategory(programName: string): string {
   }
 
   return "Other Engineering";
+}
+
+/**
+ * Get the data-driven demand score for a program.
+ * Uses the pre-computed demand percentile index.
+ * Falls back to the legacy hardcoded market_score if the index is empty.
+ */
+export function getBranchScore(programName: string): number {
+  const category = getBranchCategory(programName);
+
+  // Use data-driven demand index if available
+  const demand = demandIndex[category];
+  if (demand) {
+    return demand.demand_percentile;
+  }
+
+  // Fallback to legacy hardcoded score
+  const lowerName = programName.toLowerCase();
+  for (const branch of branchRankings) {
+    for (const keyword of branch.keywords) {
+      if (lowerName.includes(keyword.toLowerCase())) {
+        return branch.market_score;
+      }
+    }
+  }
+
+  return 35;
 }
 
 /**
@@ -67,7 +86,7 @@ export function getBranchTrend(programName: string): "rising" | "stable" | "decl
 /**
  * Calculate branch preference score based on user's preferences.
  * If user has set preferences, score is based on position in their list.
- * If no preferences, use market demand scores.
+ * If no preferences, use data-driven market demand scores.
  */
 export function calculateBranchPreferenceScore(
   programName: string,
@@ -85,7 +104,7 @@ export function calculateBranchPreferenceScore(
   for (let i = 0; i < userPreferences.length; i++) {
     const pref = userPreferences[i].toLowerCase();
     if (lowerName.includes(pref) || pref.includes(lowerName.split("(")[0].trim())) {
-      // Score from 100 (top preference) to  minimum based on position
+      // Score from 100 (top preference) to minimum based on position
       return Math.round(100 - (i / totalPrefs) * 70);
     }
   }

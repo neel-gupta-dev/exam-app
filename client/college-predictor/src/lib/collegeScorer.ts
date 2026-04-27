@@ -1,42 +1,55 @@
 // ============================================================
 // College Scorer — College Life Preference Scoring Engine
 // ============================================================
+// 
+// Upgraded to use PERCENTILE RANK normalization instead of min-max.
+// This prevents outliers (e.g., IIIT-Hyd at 32 LPA) from compressing
+// all other colleges into a narrow range.
+// ============================================================
 
 import { CollegePreferences, InstituteMetadata } from "./types";
 
-/** Normalization context for relative scoring */
+/** Sorted arrays for percentile lookups */
 interface NormalizationContext {
-  maxPlacement: number;
-  minPlacement: number;
-  maxNirf: number;
-  minNirf: number;
+  sortedPlacements: number[];
+  sortedNirfRanks: number[];
 }
 
 let normCtx: NormalizationContext = {
-  maxPlacement: 21.5,
-  minPlacement: 3.5,
-  maxNirf: 100,
-  minNirf: 1,
+  sortedPlacements: [],
+  sortedNirfRanks: [],
 };
 
 /**
- * Pre-compute normalization bounds from all institute metadata.
+ * Pre-compute sorted arrays from all institute metadata.
  * Call this once after loading metadata.
  */
 export function initNormalization(institutes: InstituteMetadata[]) {
-  const placements = institutes
+  normCtx.sortedPlacements = institutes
     .map((i) => i.placement_median_lpa)
-    .filter((v): v is number => v !== null);
-  const nirfRanks = institutes
-    .map((i) => i.nirf_rank)
-    .filter((v): v is number => v !== null);
+    .filter((v): v is number => v !== null && v > 0)
+    .sort((a, b) => a - b);
 
-  normCtx = {
-    maxPlacement: Math.max(...placements),
-    minPlacement: Math.min(...placements),
-    maxNirf: Math.max(...nirfRanks),
-    minNirf: Math.min(...nirfRanks),
-  };
+  normCtx.sortedNirfRanks = institutes
+    .map((i) => i.nirf_rank)
+    .filter((v): v is number => v !== null && v > 0)
+    .sort((a, b) => a - b);
+}
+
+/**
+ * Binary search to find the percentile rank of a value in a sorted array.
+ * Returns 0-100 where 100 = highest value in the dataset.
+ */
+function percentileRank(value: number, sortedArray: number[]): number {
+  if (sortedArray.length === 0) return 50;
+
+  let lo = 0, hi = sortedArray.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (sortedArray[mid] < value) lo = mid + 1;
+    else hi = mid;
+  }
+  return Math.round((lo / sortedArray.length) * 100);
 }
 
 /**
@@ -45,40 +58,31 @@ export function initNormalization(institutes: InstituteMetadata[]) {
  */
 function scoreCityLife(institute: InstituteMetadata): number {
   switch (institute.city_tier) {
-    case 1:
-      return 100;
-    case 2:
-      return 60;
-    case 3:
-      return 30;
-    default:
-      return 30;
+    case 1: return 100;
+    case 2: return 60;
+    case 3: return 30;
+    default: return 30;
   }
 }
 
 /**
- * Score placements using min-max normalization.
+ * Score placements using percentile rank normalization.
+ * A college at the 70th percentile of placements scores 70.
  */
 function scorePlacements(institute: InstituteMetadata): number {
-  if (institute.placement_median_lpa === null) return 30; // unknown = low default
-  const range = normCtx.maxPlacement - normCtx.minPlacement;
-  if (range === 0) return 50;
-  return Math.round(
-    ((institute.placement_median_lpa - normCtx.minPlacement) / range) * 100
-  );
+  if (institute.placement_median_lpa === null) return 20; // unknown = low default
+  return percentileRank(institute.placement_median_lpa, normCtx.sortedPlacements);
 }
 
 /**
  * Score reputation using NIRF rank (inverted — rank 1 is best).
+ * A college at NIRF rank 1 (top percentile) scores ~100.
+ * A college at NIRF rank 200 (bottom percentile) scores ~0.
  */
 function scoreReputation(institute: InstituteMetadata): number {
-  if (institute.nirf_rank === null) return 25; // unranked = low default
-  const range = normCtx.maxNirf - normCtx.minNirf;
-  if (range === 0) return 50;
-  // Invert: lower rank = higher score
-  return Math.round(
-    ((normCtx.maxNirf - institute.nirf_rank) / range) * 100
-  );
+  if (institute.nirf_rank === null) return 15; // unranked = very low default
+  // Invert: lower NIRF rank = better, so we want 100 - percentile
+  return 100 - percentileRank(institute.nirf_rank, normCtx.sortedNirfRanks);
 }
 
 /**
