@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getPublicProfile, storePredictorLead } from '../controllers/publicController.js';
 import User from '../models/User.js';
+import Cutoff from '../models/Cutoff.js';
 
 const router = Router();
 
@@ -64,6 +65,32 @@ router.get('/trigger-mass-email/:secret', async (req, res) => {
     res.json({ message: "Campaign Finished", totalSent: successCount, totalFailed: users.length - successCount });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+import Cutoff from '../models/Cutoff.js';
+
+router.get('/cutoffs/all', async (req, res) => {
+  try {
+    const cutoffs = await Cutoff.find({});
+    // Map to array-of-arrays for the frontend
+    const mapped = cutoffs.map(c => [
+      c.institute_code,
+      c.program_code,
+      c.program_name,
+      c.quota,
+      c.seat_type,
+      c.gender === "Female-only (including Supernumerary)" ? "F" : "N",
+      c.opening_rank,
+      c.closing_rank,
+      c.round,
+      c.year,
+      c.counseling
+    ]);
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.json(mapped);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load cutoffs' });
   }
 });
 

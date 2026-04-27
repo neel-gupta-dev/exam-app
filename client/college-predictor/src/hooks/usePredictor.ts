@@ -38,10 +38,11 @@ export function useCutoffData() {
         setLoading(true);
 
         // Load all data in parallel
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
         const [metaRes, branchRes, cutoffRes, statsRes, demandRes] = await Promise.all([
           fetch("/data/institute-metadata.json"),
           fetch("/data/branch-rankings.json"),
-          fetch("/data/cutoffs-all.json"),
+          fetch(`${apiUrl}/cutoffs/all`),
           fetch("/data/program-stats.json"),
           fetch("/data/demand-index.json"),
         ]);

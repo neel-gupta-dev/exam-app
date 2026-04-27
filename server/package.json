@@ -35,7 +35,8 @@
     "passport-google-oauth20": "^2.0.0",
     "pdf-parse": "^1.1.4",
     "redis": "^5.0.0",
-    "serve-static": "^2.2.1"
+    "serve-static": "^2.2.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/nodemailer": "^7.0.11",

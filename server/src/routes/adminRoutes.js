@@ -9,6 +9,11 @@ import asyncHandler from 'express-async-handler';
 import mongoose from 'mongoose';
 import { getDashboardStats, getUserAnalytics } from '../controllers/adminController.js';
 import { sendFeedbackEmail } from '../utils/mailer.js';
+import multer from 'multer';
+import Cutoff from '../models/Cutoff.js';
+import { parseExcelBuffer } from '../utils/excelParser.js';
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 /** Escape special regex characters in user input to prevent ReDoS */
 const escapeRegex = (str) => String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -233,6 +238,48 @@ router.delete('/feedback/:id', asyncHandler(async (req, res) => {
   const f = await Feedback.findByIdAndDelete(req.params.id);
   if (!f) { res.status(404); throw new Error('Feedback not found'); }
   res.json({ message: 'Feedback deleted.' });
+}));
+
+// ─── CUTOFFS UPLOAD ──────────────────────────────────────────────────────────
+
+/**
+ * POST /api/admin/cutoffs/upload
+ * Upload an excel file of cutoffs
+ */
+router.post('/cutoffs/upload', upload.single('file'), asyncHandler(async (req, res) => {
+  if (!req.file) {
+    res.status(400); throw new Error('No file provided');
+  }
+
+  const { year, counseling, round, instituteType } = req.body;
+  
+  if (!year || !counseling || !round || !instituteType) {
+    res.status(400); throw new Error('Missing year, counseling, round, or instituteType');
+  }
+
+  const numYear = Number(year);
+  const numRound = Number(round);
+
+  // Check for duplicates
+  const existing = await Cutoff.findOne({ year: numYear, counseling, round: numRound });
+  if (existing) {
+    res.status(400); throw new Error('Overlapping Data: Data for this year, counseling, and round already exists.');
+  }
+
+  try {
+    const entries = parseExcelBuffer(req.file.buffer, instituteType, numRound, counseling, numYear);
+    
+    if (entries.length === 0) {
+      res.status(400); throw new Error('No valid entries found in the Excel file.');
+    }
+
+    await Cutoff.insertMany(entries);
+    
+    res.json({ message: `Successfully uploaded ${entries.length} cutoff entries.` });
+  } catch (error) {
+    console.error('Error processing excel file:', error);
+    res.status(500); throw new Error('Failed to parse and save excel data');
+  }
 }));
 
 export default router;
