@@ -453,25 +453,36 @@ function calculateCompositeScore(
   institute: InstituteMetadata,
   prefs: CollegePreferences
 ): number {
+  // Apply a slight exponential curve to punish mediocrity and reward excellence (creates more spread)
+  const curve = (val: number) => Math.pow(val / 100, 1.3) * 100;
+
   let score = 
-    chancePercentage * weights.chance +
-    branchScore * weights.branch_preference +
-    collegePrefScore * weights.college_preference +
-    instituteTypeScore * weights.institute_type;
+    curve(chancePercentage) * weights.chance +
+    curve(branchScore) * weights.branch_preference +
+    curve(collegePrefScore) * weights.college_preference +
+    curve(instituteTypeScore) * weights.institute_type;
 
   // ─── Preference Penalty (The "Almost Perfect" Upgrade) ───
   // If user sets a preference to > 80, and the college scores < 40 in that factor,
   // we apply a heavy exponential penalty to push it down the rankings.
   
   if (prefs.placements > 80 && (institute.placement_median_lpa || 0) < 6) {
-    score *= 0.6; // Heavy penalty for low placements when priority is high
+    score *= 0.5; // Heavy penalty for low placements when priority is high
   }
   
   if (prefs.reputation > 80 && (institute.nirf_rank || 500) > 100) {
-    score *= 0.8; // Penalty for low reputation
+    score *= 0.7; // Penalty for low reputation
   }
 
-  return Math.round(score);
+  // ─── Dynamic Range Stretch ───
+  // Pre-stretch scores typically cluster tightly between 45-80. 
+  // We map the [40, 85] range to [20, 98] to create massive visual distinction between good and great.
+  let stretched = ((score - 40) / (85 - 40)) * 78 + 20;
+  
+  // Hard clamp between 1 and 99
+  stretched = Math.max(1, Math.min(99, stretched));
+
+  return Math.round(stretched);
 }
 
 /**

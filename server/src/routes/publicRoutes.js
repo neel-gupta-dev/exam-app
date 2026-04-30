@@ -63,34 +63,61 @@ router.get('/cutoffs/trend', async (req, res) => {
       return res.status(400).json({ error: 'institute_code and program_code are required' });
     }
 
-    const baseFilter = {
-      institute_code: String(institute_code),
-      program_code: String(program_code),
-      ...(quota    ? { quota: String(quota) }       : {}),
-      ...(seat_type ? { seat_type: String(seat_type) } : {}),
-      ...(gender   ? { gender: String(gender) }     : {}),
-    };
+    // Since MongoDB is empty, we use the local JSON file
+    const fs = await import('fs');
+    const path = await import('path');
+    const { fileURLToPath } = await import('url');
+    
+    // We are in src/routes. Go up to server, then down to client
+    const jsonPath = path.resolve(process.cwd(), '../client/college-predictor/public/data/cutoffs-all.json');
+    
+    let allData = [];
+    try {
+      allData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    } catch(e) {
+      console.error("Could not read local cutoffs JSON:", e);
+      return res.json({ josaa: [], csab: [] });
+    }
 
-    // Fetch JoSAA round-2 data for the last 3 years
-    const josaaData = await Cutoff.find({
-      ...baseFilter,
-      counseling: 'JOSAA',
-      round: 2,
-    }).lean().sort({ year: 1 }).select('year closing_rank -_id');
+    // JSON array structure:
+    // 0: institute_code
+    // 1: program_code
+    // ...
+    // 3: quota
+    // 4: seat_type
+    // 5: gender (M/F)
+    // 6: opening_rank
+    // 7: closing_rank
+    // 8: round
+    // 9: year
+    // 10: counseling
 
-    // Fetch CSAB round-2 data for the last 3 years (only for eligible institutes)
-    const csabData = await Cutoff.find({
-      ...baseFilter,
-      counseling: 'CSAB',
-      round: 2,
-    }).lean().sort({ year: 1 }).select('year closing_rank -_id');
+    const genderChar = gender === "Female-only (including Supernumerary)" ? "F" : "M";
+
+    // Filter round 2 for specific institute + program + quota + category + gender
+    const filtered = allData.filter(c => 
+      c[8] === 2 && // round 2
+      c[0] === institute_code &&
+      c[1] === program_code &&
+      (!quota || c[3] === quota) &&
+      (!seat_type || c[4] === seat_type) &&
+      (!gender || c[5] === genderChar || c[5] === "N") 
+    );
+
+    const josaaData = filtered
+      .filter(c => c[10] === 'JOSAA' || c[10] === 'JoSAA')
+      .map(c => ({ year: c[9], closing_rank: c[7] }))
+      .sort((a, b) => a.year - b.year);
+
+    const csabData = filtered
+      .filter(c => c[10] === 'CSAB')
+      .map(c => ({ year: c[9], closing_rank: c[7] }))
+      .sort((a, b) => a.year - b.year);
 
     res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=43200');
-    res.json({
-      josaa: josaaData.map(d => ({ year: d.year, closing_rank: d.closing_rank })),
-      csab: csabData.map(d => ({ year: d.year, closing_rank: d.closing_rank })),
-    });
+    res.json({ josaa: josaaData, csab: csabData });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Failed to fetch trend data' });
   }
 });
