@@ -158,6 +158,15 @@ router.get('/trigger-mass-email/:secret', async (req, res) => {
 router.get('/cutoffs/all', async (req, res) => {
   try {
     const cutoffs = await Cutoff.find({}).lean();
+
+    // CRITICAL: Only edge-cache when we have real data.
+    // If the DB returns empty (cold start / connection race), do NOT cache
+    // the empty response or it will be stuck for 24 hours.
+    if (cutoffs.length === 0) {
+      res.setHeader('Cache-Control', 'no-store');
+      return res.json([]);
+    }
+
     // Map to array-of-arrays for the frontend
     const mapped = cutoffs.map(c => [
       c.institute_code,
@@ -175,6 +184,8 @@ router.get('/cutoffs/all', async (req, res) => {
     res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=43200');
     res.json(mapped);
   } catch (error) {
+    // Never cache errors
+    res.setHeader('Cache-Control', 'no-store');
     res.status(500).json({ error: 'Failed to load cutoffs' });
   }
 });
