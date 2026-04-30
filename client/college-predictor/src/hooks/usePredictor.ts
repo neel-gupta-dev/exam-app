@@ -42,7 +42,7 @@ export function useCutoffData() {
         const [metaRes, branchRes, cutoffRes, statsRes, demandRes] = await Promise.all([
           fetch("/data/institute-metadata.json"),
           fetch("/data/branch-rankings.json"),
-          fetch(`${apiUrl}/public/cutoffs/all?v=2`),
+          fetch("/data/cutoffs-all.json"),
           fetch("/data/program-stats.json"),
           fetch("/data/demand-index.json"),
         ]);
