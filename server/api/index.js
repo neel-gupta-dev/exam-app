@@ -3,6 +3,7 @@
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 import basicAuth from 'express-basic-auth';
 import { createRequire } from 'module';
@@ -89,13 +90,8 @@ app.use(
         return callback(null, true);
       }
 
-      // Allow any vayl.in subdomains (e.g. www.vayl.in)
-      if (origin === 'https://vayl.in' || origin.endsWith('.vayl.in')) {
-        return callback(null, true);
-      }
-
-      // Keep allowing Vercel preview deploys for this project
-      if (origin.endsWith('.vercel.app')) {
+      // Allow exact vayl.in domain and subdomains securely
+      if (origin === 'https://vayl.in' || /^https:\/\/[a-zA-Z0-9-]+\.vayl\.in$/.test(origin)) {
         return callback(null, true);
       }
 
@@ -138,15 +134,27 @@ app.use(async (req, res, next) => {
     await connectDB();
     next();
   } catch (error) {
+    const errorMsg = process.env.NODE_ENV === 'development' ? error.message : 'Database Connection Failed';
     if (req.path === '/health' || req.path === '/api/health') {
-       return res.json({ database: { status: 'failed', error: error.message } });
+       return res.json({ database: { status: 'failed', error: errorMsg } });
     }
-    res.status(503).json({ message: 'Database Connection Failed', error: error.message });
+    res.status(503).json({ message: 'Database Connection Failed', error: errorMsg });
   }
 });
 
 // Passport initialization
 app.use(passport.initialize());
+
+// --- Global Rate Limiter ---
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100, // 100 requests per IP per minute
+  message: { error: 'Too many requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(globalLimiter);
+
 // --- API Routes ---
 const apiRouter = express.Router();
 apiRouter.get('/health', getHealth);

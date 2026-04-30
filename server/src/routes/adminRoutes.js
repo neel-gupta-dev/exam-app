@@ -13,7 +13,10 @@ import multer from 'multer';
 import Cutoff from '../models/Cutoff.js';
 import { parseExcelBuffer } from '../utils/excelParser.js';
 
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 16 * 1024 * 1024 } // 16 MB limit
+});
 
 /** Escape special regex characters in user input to prevent ReDoS */
 const escapeRegex = (str) => String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -76,8 +79,8 @@ router.get('/users', asyncHandler(async (req, res) => {
     const re = new RegExp(escapeRegex(req.query.search), 'i');
     filter.$or = [{ name: re }, { email: re }, { vaultId: re }];
   }
-  if (req.query.role) filter.role = req.query.role;
-  if (req.query.authMethod) filter.authMethod = req.query.authMethod;
+  if (req.query.role) filter.role = String(req.query.role);
+  if (req.query.authMethod) filter.authMethod = String(req.query.authMethod);
 
   const [users, total] = await Promise.all([
     User.find(filter)
@@ -180,7 +183,7 @@ router.get('/sessions', asyncHandler(async (req, res) => {
   const filter = {};
   if (req.query.active === 'true') filter.logoutAt = null;
   if (req.query.active === 'false') filter.logoutAt = { $ne: null };
-  if (req.query.userId) filter.userId = req.query.userId;
+  if (req.query.userId) filter.userId = String(req.query.userId);
 
   const [sessions, total] = await Promise.all([
     Session.find(filter).populate('userId', 'name email').sort({ loginAt: -1 }).skip(skip).limit(limit),
@@ -203,7 +206,7 @@ router.get('/resources', asyncHandler(async (req, res) => {
   const limit = Math.min(100, parseInt(req.query.limit) || 25);
   const skip = (page - 1) * limit;
   const filter = {};
-  if (req.query.type) filter.type = req.query.type;
+  if (req.query.type) filter.type = String(req.query.type);
   if (req.query.search) {
     const re = new RegExp(escapeRegex(req.query.search), 'i');
     filter.$or = [{ title: re }, { folderName: re }];
