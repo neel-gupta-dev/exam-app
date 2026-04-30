@@ -14,6 +14,8 @@ import { PredictionOutput, PredictionResult, ResultFilters } from "../lib/types"
 import { filterResults } from "../lib/utils";
 import CollegeCard from "./CollegeCard";
 import FilterBar from "./FilterBar";
+import ShortlistDrawer from "./ShortlistDrawer";
+import { useShortlist } from "../hooks/useShortlist";
 
 interface ResultsViewProps {
   output: PredictionOutput;
@@ -25,8 +27,10 @@ type ExamTab = "both" | "mains" | "advanced" | "bitsat";
 export default function ResultsView({ output }: ResultsViewProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const hasAdvanced = output.advanced_results?.length > 0;
-  const hasMains = output.mains_results?.length > 0;
-  const hasBitsat = output.bitsat_results?.length > 0;
+  const hasMains    = output.mains_results?.length > 0;
+  const hasBitsat   = output.bitsat_results?.length > 0;
+
+  const { items: shortlistItems, isShortlisted, toggleShortlist, removeFromShortlist } = useShortlist();
 
   const [examTab, setExamTab] = useState<ExamTab>(
     (hasAdvanced ? 1 : 0) + (hasMains ? 1 : 0) + (hasBitsat ? 1 : 0) > 1
@@ -212,6 +216,8 @@ export default function ResultsView({ output }: ResultsViewProps) {
               key={`${result.cutoff.institute_code}-${result.cutoff.program_code}-${result.cutoff.quota}-${result.cutoff.seat_type}`}
               result={result}
               index={index}
+              isShortlisted={isShortlisted(result.cutoff.institute_code, result.cutoff.program_code)}
+              onToggleShortlist={toggleShortlist}
             />
           ))}
         </div>
@@ -223,6 +229,9 @@ export default function ResultsView({ output }: ResultsViewProps) {
           </p>
         </div>
       )}
+
+      {/* Shortlist floating drawer */}
+      <ShortlistDrawer items={shortlistItems} onRemove={removeFromShortlist} />
     </div>
   );
 }

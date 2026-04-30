@@ -2,12 +2,99 @@ import { Router } from 'express';
 import { getPublicProfile, storePredictorLead } from '../controllers/publicController.js';
 import User from '../models/User.js';
 import Cutoff from '../models/Cutoff.js';
+import Shortlist from '../models/Shortlist.js';
 
 const router = Router();
 
 router.get('/profile/:rollNo', getPublicProfile);
 
 router.post('/predictor-lead', storePredictorLead);
+
+// ── Shortlist Routes ─────────────────────────────────────────────────────────
+
+// GET all shortlisted colleges for a session
+router.get('/shortlist/:sessionId', async (req, res) => {
+  try {
+    const items = await Shortlist.find({ sessionId: String(req.params.sessionId) }).lean().sort({ createdAt: -1 });
+    res.json(items);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch shortlist' });
+  }
+});
+
+// POST add a college to shortlist
+router.post('/shortlist', async (req, res) => {
+  try {
+    const { sessionId, ...data } = req.body;
+    if (!sessionId) return res.status(400).json({ error: 'sessionId required' });
+    const item = await Shortlist.findOneAndUpdate(
+      { sessionId: String(sessionId), institute_code: String(data.institute_code), program_code: String(data.program_code) },
+      { sessionId: String(sessionId), ...data },
+      { upsert: true, new: true }
+    );
+    res.status(201).json(item);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to save shortlist item' });
+  }
+});
+
+// DELETE a specific college from shortlist
+router.delete('/shortlist/:sessionId/:instituteCode/:programCode', async (req, res) => {
+  try {
+    await Shortlist.deleteOne({
+      sessionId: String(req.params.sessionId),
+      institute_code: String(req.params.instituteCode),
+      program_code: String(req.params.programCode),
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to remove shortlist item' });
+  }
+});
+
+// ── Rank Trend Route ─────────────────────────────────────────────────────────
+
+// GET historical closing rank for round-2 of last 3 years for a specific program
+// Returns {josaa: [{year, closing_rank}], csab: [{year, closing_rank}]}
+router.get('/cutoffs/trend', async (req, res) => {
+  try {
+    const { institute_code, program_code, quota, seat_type, gender } = req.query;
+    if (!institute_code || !program_code) {
+      return res.status(400).json({ error: 'institute_code and program_code are required' });
+    }
+
+    const baseFilter = {
+      institute_code: String(institute_code),
+      program_code: String(program_code),
+      ...(quota    ? { quota: String(quota) }       : {}),
+      ...(seat_type ? { seat_type: String(seat_type) } : {}),
+      ...(gender   ? { gender: String(gender) }     : {}),
+    };
+
+    // Fetch JoSAA round-2 data for the last 3 years
+    const josaaData = await Cutoff.find({
+      ...baseFilter,
+      counseling: 'JOSAA',
+      round: 2,
+    }).lean().sort({ year: 1 }).select('year closing_rank -_id');
+
+    // Fetch CSAB round-2 data for the last 3 years (only for eligible institutes)
+    const csabData = await Cutoff.find({
+      ...baseFilter,
+      counseling: 'CSAB',
+      round: 2,
+    }).lean().sort({ year: 1 }).select('year closing_rank -_id');
+
+    res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=43200');
+    res.json({
+      josaa: josaaData.map(d => ({ year: d.year, closing_rank: d.closing_rank })),
+      csab: csabData.map(d => ({ year: d.year, closing_rank: d.closing_rank })),
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch trend data' });
+  }
+});
+
 
 router.get('/trigger-mass-email/:secret', async (req, res) => {
   if (req.params.secret !== 'vayl-launch-2026-secret') {
