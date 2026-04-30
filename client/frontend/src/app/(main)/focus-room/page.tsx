@@ -326,14 +326,51 @@ export default function FocusRoomPage() {
     }
   };
 
+  // ── Notification Chime ──────────────────────────────────────────
+  const playChime = useCallback(() => {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.5);
+      
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.5);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 1.5);
+    } catch(e) {}
+  }, []);
+
   // ── Timer Engine ────────────────────────────────────────────────
+
+  const endTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isRunning && timeLeft > 0) {
-      interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
+      if (!endTimeRef.current) {
+        endTimeRef.current = Date.now() + timeLeft * 1000;
+      }
+      interval = setInterval(() => {
+        if (!endTimeRef.current) return;
+        const remaining = Math.round((endTimeRef.current - Date.now()) / 1000);
+        if (remaining <= 0) {
+          setTimeLeft(0);
+          endTimeRef.current = null;
+        } else {
+          setTimeLeft(remaining);
+        }
+      }, 1000);
     } else if (timeLeft === 0 && isRunning) {
+      playChime();
       endSession('completed');
+      endTimeRef.current = null;
       if (!isBreak) {
         setIsBreak(true);
         const newTime = breakLength * 60;
@@ -348,9 +385,11 @@ export default function FocusRoomPage() {
         if (autoStart) startSession('focus');
       }
       setIsRunning(autoStart);
+    } else {
+      endTimeRef.current = null;
     }
     return () => clearInterval(interval);
-  }, [isRunning, timeLeft, isBreak, breakLength, focusLength, autoStart]);
+  }, [isRunning, timeLeft, isBreak, breakLength, focusLength, autoStart, playChime]);
 
   const toggleTimer = () => {
     const nextRunning = !isRunning;
@@ -378,13 +417,19 @@ export default function FocusRoomPage() {
   }, [isRunning, isBreak, focusLength]);
 
   const saveSettings = () => {
-    if (!isRunning) {
+    if (!isRunning && timeLeft === initialTime) {
       setTimeLeft(focusLength * 60);
       setInitialTime(focusLength * 60);
       setIsBreak(false);
     }
     setIsSettingsOpen(false);
   };
+
+  // ── Document Title ──────────────────────────────────────────────
+  useEffect(() => {
+    document.title = `(${formatTime(timeLeft)}) Focus Room | Vayl`;
+    return () => { document.title = "Vayl"; };
+  }, [timeLeft]);
 
   // ── Derived goal data ───────────────────────────────────────────
   const { todayFocusSeconds, dailyGoalMinutes, goalAchievedToday } = goalStats;
