@@ -94,9 +94,8 @@ router.get('/cutoffs/trend', async (req, res) => {
 
     const genderChar = gender === "Female-only (including Supernumerary)" ? "F" : "M";
 
-    // Filter round 2 for specific institute + program + quota + category + gender
-    const filtered = allData.filter(c => 
-      c[8] === 2 && // round 2
+    // Filter for specific institute + program + quota + category + gender
+    const baseFiltered = allData.filter(c => 
       c[0] === institute_code &&
       c[1] === program_code &&
       (!quota || c[3] === quota) &&
@@ -104,12 +103,36 @@ router.get('/cutoffs/trend', async (req, res) => {
       (!gender || c[5] === genderChar || c[5] === "N") 
     );
 
-    const josaaData = filtered
-      .filter(c => c[10] === 'JOSAA' || c[10] === 'JoSAA')
+    // Group by year and counseling to find the best round (prefer round 2, then max round)
+    const bestByYear = new Map();
+    
+    for (const c of baseFiltered) {
+      const year = c[9];
+      const counseling = c[10].toUpperCase() === 'JOSAA' ? 'JOSAA' : c[10];
+      const key = `${year}-${counseling}`;
+      const round = c[8];
+      
+      const currentBest = bestByYear.get(key);
+      if (!currentBest) {
+        bestByYear.set(key, c);
+      } else {
+        // If we already have one, prefer round 2. If neither is round 2, prefer higher round.
+        if (round === 2 && currentBest[8] !== 2) {
+          bestByYear.set(key, c);
+        } else if (currentBest[8] !== 2 && round > currentBest[8]) {
+          bestByYear.set(key, c);
+        }
+      }
+    }
+
+    const finalFiltered = Array.from(bestByYear.values());
+
+    const josaaData = finalFiltered
+      .filter(c => c[10] === 'JOSAA' || c[10] === 'JoSAA' || c[10] === 'BITSAT')
       .map(c => ({ year: c[9], closing_rank: c[7] }))
       .sort((a, b) => a.year - b.year);
 
-    const csabData = filtered
+    const csabData = finalFiltered
       .filter(c => c[10] === 'CSAB')
       .map(c => ({ year: c[9], closing_rank: c[7] }))
       .sort((a, b) => a.year - b.year);
