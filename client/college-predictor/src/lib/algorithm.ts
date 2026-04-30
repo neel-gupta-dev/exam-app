@@ -112,6 +112,11 @@ export function predictColleges(
   const seatTypes = getSeatTypes(input.category, input.is_pwd);
   const genderFilter = getGenderFilter(input.gender);
 
+  // Initialize O(1) caches to prevent redundant calculations
+  const collegePrefCache = new Map<string, number>();
+  const branchPrefCache = new Map<string, number>();
+  const instituteTypeCache = new Map<string, number>();
+
   for (const cutoff of cutoffs) {
     const institute = institutes.get(cutoff.institute_code);
     if (!institute) continue;
@@ -120,15 +125,30 @@ export function predictColleges(
     if (institute.type === "BITS") {
       if (input.bitsat_score === null || input.bitsat_score === undefined) continue;
 
+      // Filter BITSAT branches by eligibility
+      if (!isEligible(cutoff, input, seatTypes, genderFilter, institute)) continue;
+
       const chanceResult = classifyScoreChance(input.bitsat_score, cutoff.closing_rank);
       if (!chanceResult) continue;
 
-      const branchScore = calculateBranchPreferenceScore(
-        cutoff.program_name,
-        input.use_market_ranking ? [] : input.branch_preferences
-      );
-      const collegePrefScore = calculateCollegePreferenceScore(institute, input.college_preferences);
-      const instituteTypeScore = INSTITUTE_TYPE_SCORES[institute.type] || 50;
+      if (!branchPrefCache.has(cutoff.program_name)) {
+        branchPrefCache.set(cutoff.program_name, calculateBranchPreferenceScore(
+          cutoff.program_name,
+          input.use_market_ranking ? [] : input.branch_preferences
+        ));
+      }
+      const branchScore = branchPrefCache.get(cutoff.program_name)!;
+
+      if (!collegePrefCache.has(institute.institute_code)) {
+        collegePrefCache.set(institute.institute_code, calculateCollegePreferenceScore(institute, input.college_preferences));
+      }
+      const collegePrefScore = collegePrefCache.get(institute.institute_code)!;
+
+      if (!instituteTypeCache.has(institute.type)) {
+        instituteTypeCache.set(institute.type, INSTITUTE_TYPE_SCORES[institute.type] || 50);
+      }
+      const instituteTypeScore = instituteTypeCache.get(institute.type)!;
+
       const compositeScore = calculateCompositeScore(
         chanceResult.percentage, 
         branchScore, 
@@ -167,19 +187,25 @@ export function predictColleges(
     if (!chanceResult) continue;
 
     // ─── Step 3: Branch Preference Score ───
-    const branchScore = calculateBranchPreferenceScore(
-      cutoff.program_name,
-      input.use_market_ranking ? [] : input.branch_preferences
-    );
+    if (!branchPrefCache.has(cutoff.program_name)) {
+      branchPrefCache.set(cutoff.program_name, calculateBranchPreferenceScore(
+        cutoff.program_name,
+        input.use_market_ranking ? [] : input.branch_preferences
+      ));
+    }
+    const branchScore = branchPrefCache.get(cutoff.program_name)!;
 
     // ─── Step 4: College Pref Score ───
-    const collegePrefScore = calculateCollegePreferenceScore(
-      institute,
-      input.college_preferences
-    );
+    if (!collegePrefCache.has(institute.institute_code)) {
+      collegePrefCache.set(institute.institute_code, calculateCollegePreferenceScore(institute, input.college_preferences));
+    }
+    const collegePrefScore = collegePrefCache.get(institute.institute_code)!;
 
     // ─── Step 5: Adaptive Composite Score ───
-    const instituteTypeScore = INSTITUTE_TYPE_SCORES[institute.type] || 50;
+    if (!instituteTypeCache.has(institute.type)) {
+      instituteTypeCache.set(institute.type, INSTITUTE_TYPE_SCORES[institute.type] || 50);
+    }
+    const instituteTypeScore = instituteTypeCache.get(institute.type)!;
     const compositeScore = calculateCompositeScore(
       chanceResult.percentage,
       branchScore,
@@ -388,6 +414,11 @@ function classifyScoreChance(
   closingScore: number
 ): { level: ChanceLevel; percentage: number } | null {
   const margin = userScore - closingScore;
+
+  // Prevent showing colleges far below student's standard
+  if (margin > 80) {
+    return null;
+  }
 
   if (margin >= 0) {
     const percentage = Math.min(99, Math.round(80 + (margin / 20) * 20));
