@@ -68,8 +68,6 @@ router.get('/trigger-mass-email/:secret', async (req, res) => {
   }
 });
 
-import Cutoff from '../models/Cutoff.js';
-
 router.get('/cutoffs/all', async (req, res) => {
   try {
     const cutoffs = await Cutoff.find({});
