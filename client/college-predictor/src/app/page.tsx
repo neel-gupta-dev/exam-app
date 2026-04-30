@@ -14,6 +14,11 @@ export default function Home() {
   const [showResults, setShowResults] = useState(false);
 
   function handleSubmit(input: UserInput) {
+    if (dataLoading) {
+      alert("The college dataset is still loading in the background. Please wait a few seconds and try again!");
+      return;
+    }
+
     predict(input, (freshResults) => {
       // Background data submission with fresh results (no stale closure)
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -126,22 +131,19 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── Loading State ─── */}
+      {/* ─── Background Loading Indicator ─── */}
       {dataLoading && (
-        <div className="flex flex-col items-center justify-center py-20 px-4">
-          <div className="relative w-16 h-16 mb-4">
-            <div className="absolute inset-0 rounded-full border-2 border-navy-700" />
-            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-blue-500 animate-spin" />
-          </div>
-          <p className="text-gray-400 text-sm">Loading cutoff data...</p>
+        <div className="fixed bottom-6 right-6 bg-navy-800/90 border border-blue-500/30 px-4 py-2.5 rounded-full flex items-center gap-3 text-sm text-blue-400 z-50 backdrop-blur-md shadow-lg shadow-blue-900/20">
+          <div className="w-4 h-4 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+          Fetching dataset...
         </div>
       )}
 
       {/* ─── Error State ─── */}
       {error && (
-        <div className="max-w-lg mx-auto px-4 py-8">
-          <div className="glass-card p-6 text-center">
-            <p className="text-red-400 mb-2">{error}</p>
+        <div className="max-w-lg mx-auto px-4 pb-8">
+          <div className="glass-card p-4 text-center border-red-500/20 bg-red-500/5">
+            <p className="text-red-400 text-sm mb-2">{error}</p>
             <button
               onClick={() => window.location.reload()}
               className="text-blue-400 text-sm hover:text-blue-300 transition-colors"
@@ -153,22 +155,20 @@ export default function Home() {
       )}
 
       {/* ─── Input Form ─── */}
-      {!dataLoading && !error && (
-        <section className="px-4 pb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            <InputForm
-              onSubmit={handleSubmit}
-              loading={predicting}
-              onReset={handleReset}
-              hasResults={showResults}
-            />
-          </motion.div>
-        </section>
-      )}
+      <section className="px-4 pb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
+          <InputForm
+            onSubmit={handleSubmit}
+            loading={predicting}
+            onReset={handleReset}
+            hasResults={showResults}
+          />
+        </motion.div>
+      </section>
 
       {/* ─── Results Section ─── */}
       <AnimatePresence>
