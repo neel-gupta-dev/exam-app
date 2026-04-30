@@ -70,7 +70,7 @@ router.get('/trigger-mass-email/:secret', async (req, res) => {
 
 router.get('/cutoffs/all', async (req, res) => {
   try {
-    const cutoffs = await Cutoff.find({});
+    const cutoffs = await Cutoff.find({}).lean();
     // Map to array-of-arrays for the frontend
     const mapped = cutoffs.map(c => [
       c.institute_code,
@@ -85,7 +85,7 @@ router.get('/cutoffs/all', async (req, res) => {
       c.year,
       c.counseling
     ]);
-    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=43200');
     res.json(mapped);
   } catch (error) {
     res.status(500).json({ error: 'Failed to load cutoffs' });
