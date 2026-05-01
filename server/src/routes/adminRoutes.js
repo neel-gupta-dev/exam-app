@@ -11,6 +11,7 @@ import { getDashboardStats, getUserAnalytics } from '../controllers/adminControl
 import { sendFeedbackEmail } from '../utils/mailer.js';
 import multer from 'multer';
 import Cutoff from '../models/Cutoff.js';
+import BattleQuestion from '../models/BattleQuestion.js';
 import { parseExcelBuffer } from '../utils/excelParser.js';
 
 const upload = multer({ 
@@ -283,6 +284,52 @@ router.post('/cutoffs/upload', upload.single('file'), asyncHandler(async (req, r
     console.error('Error processing excel file:', error);
     res.status(500); throw new Error('Failed to parse and save excel data');
   }
+}));
+
+// ─── BATTLE QUESTIONS ────────────────────────────────────────────────────────
+
+/**
+ * GET /api/admin/battle-questions
+ * List all battle questions.
+ */
+router.get('/battle-questions', asyncHandler(async (req, res) => {
+  const questions = await BattleQuestion.find().sort({ createdAt: -1 });
+  res.json(questions);
+}));
+
+/**
+ * POST /api/admin/battle-questions
+ * Create a new battle question.
+ */
+router.post('/battle-questions', asyncHandler(async (req, res) => {
+  const { subject, questionText, options, difficulty, explanation, imageUrl } = req.body;
+  
+  if (!subject || !questionText || !options || options.length < 2) {
+    res.status(400); throw new Error('Subject, question text, and at least 2 options are required.');
+  }
+
+  const question = await BattleQuestion.create({
+    subject,
+    questionText,
+    options,
+    difficulty,
+    explanation,
+    imageUrl
+  });
+
+  res.status(201).json(question);
+}));
+
+/**
+ * DELETE /api/admin/battle-questions/:id
+ * Delete a battle question.
+ */
+router.delete('/battle-questions/:id', asyncHandler(async (req, res) => {
+  const question = await BattleQuestion.findByIdAndDelete(req.params.id);
+  if (!question) {
+    res.status(404); throw new Error('Question not found');
+  }
+  res.json({ message: 'Question deleted successfully' });
 }));
 
 export default router;

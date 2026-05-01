@@ -214,6 +214,11 @@ if (ADMIN_PATH && ADMIN_USER && ADMIN_PASS) {
   // Serve static admin panel files
   app.use(ADMIN_PATH, express.static(adminStaticDir));
 
+  // Battle Question Manager (dedicated route to ensure it's not caught by SPA splat)
+  app.get(`${ADMIN_PATH}/battle-questions`, (req, res) => {
+    res.sendFile(path.join(adminStaticDir, 'battle-questions.html'));
+  });
+
   // SPA fallback — send index.html for all sub-routes (React Router handles them)
   app.get(`${ADMIN_PATH}/*splat`, (req, res) => {
     res.sendFile(path.join(adminStaticDir, 'index.html'));

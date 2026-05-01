@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JEE Battle — Question Bank Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #0f1115;
+            color: #ffffff;
+        }
+        .glass {
+            background: rgba(22, 25, 31, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.5);
+        }
+        input, select, textarea {
+            background: rgba(0, 0, 0, 0.2) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            transition: all 0.2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: rgba(99, 102, 241, 0.5) !important;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2) !important;
+            outline: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+    <div class="max-w-6xl mx-auto space-y-8">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 glass rounded-3xl p-6 md:p-8 shadow-2xl">
+            <div class="space-y-1">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-indigo-500/20 rounded-xl">
+                        <i data-lucide="database" class="w-6 h-6 text-indigo-400"></i>
+                    </div>
+                    <h1 class="text-3xl font-extrabold tracking-tight">Question <span class="gradient-text">Bank</span></h1>
+                </div>
+                <p class="text-gray-400 text-sm">Manage the pool of questions for JEE Battle duels</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button id="add-btn" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2">
+                    <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                    Add Question
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Add/Edit Form (Sticky) -->
+            <aside id="form-container" class="lg:col-span-1 hidden lg:block">
+                <div class="glass rounded-3xl p-6 space-y-6 sticky top-8 border border-white/5">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xl font-bold flex items-center gap-2">
+                            <i data-lucide="edit-3" class="w-5 h-5 text-indigo-400"></i>
+                            <span id="form-title">Create Question</span>
+                        </h2>
+                        <button id="close-form" class="lg:hidden text-gray-500 hover:text-white">
+                            <i data-lucide="x" class="w-6 h-6"></i>
+                        </button>
+                    </div>
+
+                    <form id="question-form" class="space-y-5">
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Subject</label>
+                            <select id="subject" class="w-full rounded-xl px-4 py-3 text-sm font-medium">
+                                <option value="Physics">Physics</option>
+                                <option value="Chemistry">Chemistry</option>
+                                <option value="Mathematics">Mathematics</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Difficulty Level</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="difficulty" value="Easy" class="hidden peer">
+                                    <div class="text-center py-2 rounded-xl border border-white/10 peer-checked:bg-emerald-500/20 peer-checked:border-emerald-500/50 peer-checked:text-emerald-400 transition-all text-xs font-bold text-gray-500">Easy</div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="difficulty" value="Medium" checked class="hidden peer">
+                                    <div class="text-center py-2 rounded-xl border border-white/10 peer-checked:bg-amber-500/20 peer-checked:border-amber-500/50 peer-checked:text-amber-400 transition-all text-xs font-bold text-gray-500">Medium</div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="difficulty" value="Hard" class="hidden peer">
+                                    <div class="text-center py-2 rounded-xl border border-white/10 peer-checked:bg-red-500/20 peer-checked:border-red-500/50 peer-checked:text-red-400 transition-all text-xs font-bold text-gray-500">Hard</div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Question Text</label>
+                            <textarea id="questionText" rows="3" class="w-full rounded-xl px-4 py-3 text-sm" placeholder="Enter question description..."></textarea>
+                        </div>
+
+                        <div class="space-y-3">
+                            <label class="text-xs font-bold text-gray-400 uppercase tracking-wider flex justify-between">
+                                Options
+                                <span class="text-[10px] lowercase font-normal italic">Select the radio for correct answer</span>
+                            </label>
+                            <div id="options-list" class="space-y-3">
+                                <!-- Option inputs will be generated here -->
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Explanation (Optional)</label>
+                            <textarea id="explanation" rows="2" class="w-full rounded-xl px-4 py-3 text-sm" placeholder="Why is this answer correct?"></textarea>
+                        </div>
+
+                        <button type="submit" id="submit-btn" class="w-full py-4 bg-white text-gray-900 rounded-xl font-black uppercase tracking-widest text-xs hover:bg-gray-200 transition-all shadow-xl active:scale-[0.98]">
+                            Save Question
+                        </button>
+                    </form>
+                </div>
+            </aside>
+
+            <!-- Question List -->
+            <main class="lg:col-span-2 space-y-6">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold flex items-center gap-2">
+                        <i data-lucide="layers" class="w-5 h-5 text-indigo-400"></i>
+                        Questions Pool
+                        <span id="question-count" class="text-sm font-medium text-indigo-400 bg-indigo-400/10 px-2 py-0.5 rounded-full">0</span>
+                    </h3>
+                    <div class="flex items-center gap-2">
+                        <select id="filter-subject" class="rounded-lg px-3 py-1.5 text-xs font-bold border-none outline-none">
+                            <option value="All">All Subjects</option>
+                            <option value="Physics">Physics</option>
+                            <option value="Chemistry">Chemistry</option>
+                            <option value="Mathematics">Maths</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="questions-grid" class="grid grid-cols-1 gap-4 overflow-y-auto max-h-[80vh] pr-2 custom-scrollbar">
+                    <!-- Questions will be rendered here -->
+                    <div class="animate-pulse space-y-4">
+                        <div class="h-32 bg-white/5 rounded-2xl"></div>
+                        <div class="h-32 bg-white/5 rounded-2xl"></div>
+                        <div class="h-32 bg-white/5 rounded-2xl"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-8 right-8 px-6 py-3 rounded-2xl glass border-indigo-500/50 text-white font-bold translate-y-20 opacity-0 transition-all duration-300 z-50">
+        Notification message
+    </div>
+
+    <script>
+        // --- State ---
+        let questions = [];
+        let editingId = null;
+        const token = localStorage.getItem('kv_token');
+        const apiUrl = '/api/admin';
+
+        // --- DOM Elements ---
+        const formContainer = document.getElementById('form-container');
+        const questionForm = document.getElementById('question-form');
+        const questionsGrid = document.getElementById('questions-grid');
+        const optionsList = document.getElementById('options-list');
+        const addBtn = document.getElementById('add-btn');
+        const filterSubject = document.getElementById('filter-subject');
+        const questionCount = document.getElementById('question-count');
+
+        // --- Init ---
+        lucide.createIcons();
+        renderOptionInputs();
+        fetchQuestions();
+
+        // --- Event Listeners ---
+        addBtn.addEventListener('click', () => {
+            editingId = null;
+            document.getElementById('form-title').innerText = 'Create Question';
+            questionForm.reset();
+            renderOptionInputs();
+            formContainer.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        document.getElementById('close-form').addEventListener('click', () => {
+            formContainer.classList.add('hidden');
+        });
+
+        filterSubject.addEventListener('change', renderQuestions);
+
+        questionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = getFormData();
+            if (!validateForm(formData)) return;
+
+            const btn = document.getElementById('submit-btn');
+            const originalText = btn.innerText;
+            btn.innerText = 'Processing...';
+            btn.disabled = true;
+
+            try {
+                const method = editingId ? 'PUT' : 'POST';
+                const url = editingId ? `${apiUrl}/battle-questions/${editingId}` : `${apiUrl}/battle-questions`;
+                
+                const res = await fetch(url, {
+                    method,
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    throw new Error(data.message || 'Action failed');
+                }
+
+                showToast(editingId ? 'Question updated!' : 'Question added to bank!', 'success');
+                questionForm.reset();
+                renderOptionInputs();
+                editingId = null;
+                document.getElementById('form-title').innerText = 'Create Question';
+                fetchQuestions();
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // --- Functions ---
+        function renderOptionInputs(data = null) {
+            optionsList.innerHTML = '';
+            for (let i = 0; i < 4; i++) {
+                const opt = data ? data[i] : null;
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-3';
+                div.innerHTML = `
+                    <input type="radio" name="isCorrect" value="${i}" ${opt?.isCorrect ? 'checked' : ''} class="w-4 h-4 text-indigo-600 focus:ring-indigo-500">
+                    <input type="text" placeholder="Option ${String.fromCharCode(65 + i)}" value="${opt?.text || ''}" class="flex-1 rounded-xl px-4 py-2 text-sm option-text">
+                `;
+                optionsList.appendChild(div);
+            }
+        }
+
+        async function fetchQuestions() {
+            try {
+                const res = await fetch(`${apiUrl}/battle-questions`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error('Failed to fetch questions');
+                questions = await res.json();
+                renderQuestions();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        function renderQuestions() {
+            const subject = filterSubject.value;
+            const filtered = subject === 'All' ? questions : questions.filter(q => q.subject === subject);
+            
+            questionCount.innerText = filtered.length;
+            
+            if (filtered.length === 0) {
+                questionsGrid.innerHTML = `
+                    <div class="glass rounded-3xl p-12 text-center space-y-4">
+                        <div class="flex justify-center"><i data-lucide="inbox" class="w-12 h-12 text-gray-600"></i></div>
+                        <p class="text-gray-500 font-medium">No questions found in the bank.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            questionsGrid.innerHTML = filtered.map(q => `
+                <div class="glass rounded-2xl p-5 border border-white/5 hover:border-indigo-500/30 transition-all group relative">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-black uppercase tracking-tighter px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400">${q.subject}</span>
+                            <span class="text-[10px] font-black uppercase tracking-tighter px-2 py-0.5 rounded ${getDifficultyClass(q.difficulty)}">${q.difficulty}</span>
+                        </div>
+                        <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="deleteQuestion('${q._id}')" class="p-1.5 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-sm font-medium mb-4 line-clamp-3 leading-relaxed text-gray-200">
+                        ${q.questionText}
+                    </p>
+                    <div class="grid grid-cols-2 gap-2 text-[11px]">
+                        ${q.options.map((opt, i) => `
+                            <div class="flex items-center gap-2 p-2 rounded-lg ${opt.isCorrect ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-black/20 text-gray-500'}">
+                                <span class="font-bold">${String.fromCharCode(65 + i)}.</span>
+                                <span class="truncate">${opt.text}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        async function deleteQuestion(id) {
+            if (!confirm('Are you sure you want to delete this question?')) return;
+            try {
+                const res = await fetch(`${apiUrl}/battle-questions/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error('Delete failed');
+                showToast('Question deleted!', 'success');
+                fetchQuestions();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        function getFormData() {
+            const isCorrectIdx = parseInt(document.querySelector('input[name="isCorrect"]:checked')?.value || '0');
+            const optionInputs = document.querySelectorAll('.option-text');
+            const options = Array.from(optionInputs).map((input, i) => ({
+                text: input.value,
+                isCorrect: i === isCorrectIdx
+            }));
+
+            return {
+                subject: document.getElementById('subject').value,
+                difficulty: document.querySelector('input[name="difficulty"]:checked').value,
+                questionText: document.getElementById('questionText').value,
+                explanation: document.getElementById('explanation').value,
+                options
+            };
+        }
+
+        function validateForm(data) {
+            if (!data.questionText.trim()) { showToast('Question text is required', 'error'); return false; }
+            if (data.options.some(o => !o.text.trim())) { showToast('All options must have text', 'error'); return false; }
+            return true;
+        }
+
+        function getDifficultyClass(diff) {
+            if (diff === 'Easy') return 'bg-emerald-500/10 text-emerald-400';
+            if (diff === 'Medium') return 'bg-amber-500/10 text-amber-400';
+            return 'bg-red-500/10 text-red-400';
+        }
+
+        function showToast(msg, type) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.className = `fixed bottom-8 right-8 px-6 py-3 rounded-2xl glass border font-bold z-50 transition-all duration-300 ${type === 'error' ? 'border-red-500 text-red-400' : 'border-indigo-500 text-indigo-400'}`;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
