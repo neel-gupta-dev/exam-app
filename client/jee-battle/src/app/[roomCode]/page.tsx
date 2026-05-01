@@ -16,6 +16,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
   const [submitting, setSubmitting] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(60);
   const [copied, setCopied] = useState(false);
+  const [soloStarting, setSoloStarting] = useState(false);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in';
 
@@ -111,6 +112,28 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
     }
   };
 
+  const soloStart = async () => {
+    if (!token) return;
+    setSoloStarting(true);
+    try {
+      const res = await fetch(`${apiUrl}/battle/solo-start`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ roomCode })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      // Trigger immediate state refresh
+      await fetchState();
+    } catch (err: any) {
+      alert(err.message);
+      setSoloStarting(false);
+    }
+  };
+
   const copyCode = () => {
     navigator.clipboard.writeText(roomCode.toUpperCase());
     setCopied(true);
@@ -163,6 +186,21 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
           <button onClick={() => router.push('/')} className="text-gray-500 hover:text-gray-300 text-sm transition-colors">
             ← Cancel and return to lobby
           </button>
+
+          {battleState.isAdmin && (
+            <div className="border-t border-white/5 pt-4">
+              <p className="text-xs text-amber-500/70 mb-3 uppercase tracking-wider font-bold">⚙ Admin Testing</p>
+              <button
+                onClick={soloStart}
+                disabled={soloStarting}
+                className="w-full py-3 rounded-xl text-sm font-bold transition-all
+                  bg-amber-500/10 text-amber-400 border border-amber-500/20
+                  hover:bg-amber-500/20 hover:border-amber-500/40 disabled:opacity-40"
+              >
+                {soloStarting ? 'Starting...' : '⚡ Start Solo (Admin Only)'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );

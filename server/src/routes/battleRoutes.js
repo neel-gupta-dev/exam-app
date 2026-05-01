@@ -40,7 +40,7 @@ router.post('/queue', protect, async (req, res) => {
     });
 
     if (existingBattle) {
-      return res.json({ roomCode: existingBattle.roomCode, status: existingBattle.status });
+      return res.json({ roomCode: existingBattle.roomCode, status: existingBattle.status, isAdmin: req.user.role === 'admin' });
     }
 
     // Try to find a random waiting room (not created by this user)
@@ -55,7 +55,7 @@ router.post('/queue', protect, async (req, res) => {
       waitingBattle.questions = questions.map(q => q._id);
       
       await waitingBattle.save();
-      return res.json({ roomCode: waitingBattle.roomCode, status: 'active' });
+      return res.json({ roomCode: waitingBattle.roomCode, status: 'active', isAdmin: req.user.role === 'admin' });
     } else {
       const roomCode = await uniqueRoomCode();
       const newBattle = await Battle.create({
@@ -63,7 +63,7 @@ router.post('/queue', protect, async (req, res) => {
         player1: userId,
         status: 'waiting'
       });
-      return res.json({ roomCode: newBattle.roomCode, status: 'waiting' });
+      return res.json({ roomCode: newBattle.roomCode, status: 'waiting', isAdmin: req.user.role === 'admin' });
     }
   } catch (error) {
     console.error(error);
@@ -110,6 +110,37 @@ router.post('/join', protect, async (req, res) => {
 });
 
 /**
+ * POST /battle/solo-start
+ * Admin only: force-start a waiting room without an opponent (for testing).
+ */
+router.post('/solo-start', protect, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin only' });
+    }
+
+    const { roomCode } = req.body;
+    const battle = await Battle.findOne({ roomCode: roomCode.toUpperCase(), status: 'waiting' });
+
+    if (!battle) {
+      return res.status(404).json({ error: 'Waiting room not found' });
+    }
+
+    battle.status = 'active';
+    battle.startedAt = new Date();
+
+    const questions = await BattleQuestion.aggregate([{ $sample: { size: 10 } }]);
+    battle.questions = questions.map(q => q._id);
+
+    await battle.save();
+    res.json({ roomCode: battle.roomCode, status: 'active' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to solo-start battle' });
+  }
+});
+
+/**
  * GET /battle/:roomCode
  * Polling route — fetch current match state by room code.
  */
@@ -144,6 +175,7 @@ router.get('/:roomCode', protect, async (req, res) => {
       myAnswers: isPlayer1 ? battle.player1Answers : battle.player2Answers,
       winner: battle.winner,
       startedAt: battle.startedAt,
+      isAdmin: req.user.role === 'admin',
     });
   } catch (error) {
     console.error(error);
