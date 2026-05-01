@@ -12,7 +12,7 @@ import path from 'path';
 import connectDB from '../src/config/db.js';
 import { notFound, errorHandler } from '../src/middlewares/errorMiddleware.js';
 import authRoutes from '../src/routes/authRoutes.js';
-import feedbackRoutes from '../src/routes/feedback.js'
+import feedbackRoutes from '../src/routes/feedback.js';
 import resourceRoutes from '../src/routes/resourceRoutes.js';
 import userRoutes from '../src/routes/userRoutes.js';
 import noteRoutes from '../src/routes/noteRoutes.js';
@@ -23,6 +23,7 @@ import analyticsRoutes from '../src/routes/analyticsRoutes.js';
 import classroomRoutes from '../src/routes/classroomRoutes.js';
 import performanceRoutes from '../src/routes/performanceRoutes.js';
 import calendarRoutes from '../src/routes/calendarRoutes.js';
+import battleRoutes from '../src/routes/battleRoutes.js';
 import { getHealth } from '../src/controllers/healthController.js';
 import { closeExpiredSessions } from '../src/services/authService.js';
 import { startEvaluationWorker } from '../src/workers/evaluationWorker.js';
@@ -181,6 +182,7 @@ apiRouter.use('/coaching', coachingAdminRoutes);
 apiRouter.use('/attempts', attemptRoutes);
 apiRouter.use('/cheatsheet', cheatsheetRoutes);
 apiRouter.use('/assessment', assessmentRoutes);
+apiRouter.use('/battle', battleRoutes);
 
 // Mount the API router
 app.use('/api', apiRouter); // Legacy/Admin Panel support
