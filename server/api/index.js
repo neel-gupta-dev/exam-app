@@ -6,6 +6,7 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 import basicAuth from 'express-basic-auth';
+import cookieParser from 'cookie-parser';
 import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import path from 'path';
@@ -142,6 +143,9 @@ app.use(async (req, res, next) => {
     res.status(503).json({ message: 'Database Connection Failed', error: errorMsg });
   }
 });
+
+// Cookie parser (needed for OAuth origin tracking)
+app.use(cookieParser());
 
 // Passport initialization
 app.use(passport.initialize());

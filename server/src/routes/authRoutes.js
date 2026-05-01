@@ -28,14 +28,20 @@ router.get('/google', (req, res, next) => {
     );
   }
 
-  // Pass origin in state so callback knows where to redirect
-  const state = req.query.origin || 'main';
+  // Store the origin in a short-lived cookie so the callback knows where to redirect.
+  // We cannot use Google's `state` param because Passport consumes it for CSRF.
+  const origin = req.query.origin || 'main';
+  res.cookie('oauth_origin', origin, {
+    httpOnly: true,
+    maxAge: 5 * 60 * 1000, // 5 minutes — more than enough for the OAuth round trip
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+  });
 
   passport.authenticate('google', { 
     scope,
     accessType: 'offline',
     prompt: req.query.classroom === 'true' ? 'consent' : undefined,
-    state,
   })(req, res, next);
 });
 
@@ -48,10 +54,14 @@ router.get('/google/callback',
   passport.authenticate('google', { session: false, failureRedirect: FRONTEND_URL }),
   (req, res) => {
     const token = generateToken(req.user._id);
-    const origin = req.query.state;
+
+    // Read origin from the cookie we set before the redirect
+    const origin = req.cookies?.oauth_origin;
+
+    // Clear the cookie immediately — single use
+    res.clearCookie('oauth_origin');
 
     if (origin === 'battle') {
-      // Redirect back to battle frontend with the token
       return res.redirect(`${BATTLE_FRONTEND_URL}/?token=${token}`);
     }
 
