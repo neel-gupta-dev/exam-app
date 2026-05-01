@@ -2,50 +2,68 @@ import express from 'express';
 import { protect } from '../middlewares/authMiddleware.js';
 import Battle from '../models/Battle.js';
 import BattleQuestion from '../models/BattleQuestion.js';
-import User from '../models/User.js';
 
 const router = express.Router();
 
+/** Generate a random 5-letter uppercase code */
+function generateRoomCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // No I or O to avoid confusion with 1/0
+  let code = '';
+  for (let i = 0; i < 5; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+/** Generate a unique room code (retry on collision) */
+async function uniqueRoomCode() {
+  for (let i = 0; i < 10; i++) {
+    const code = generateRoomCode();
+    const existing = await Battle.findOne({ roomCode: code, status: { $in: ['waiting', 'active'] } });
+    if (!existing) return code;
+  }
+  throw new Error('Failed to generate unique room code');
+}
+
 /**
  * POST /battle/queue
- * Enters matchmaking. Finds an available room or creates one.
+ * Random matchmaking — finds a waiting room or creates one.
  */
 router.post('/queue', protect, async (req, res) => {
   try {
     const userId = req.user._id;
 
     // Check if user is already in an active or waiting battle
-    let existingBattle = await Battle.findOne({
+    const existingBattle = await Battle.findOne({
       $or: [{ player1: userId }, { player2: userId }],
       status: { $in: ['waiting', 'active'] }
     });
 
     if (existingBattle) {
-      return res.json({ roomId: existingBattle._id, status: existingBattle.status });
+      return res.json({ roomCode: existingBattle.roomCode, status: existingBattle.status });
     }
 
-    // Try to find a waiting room
+    // Try to find a random waiting room (not created by this user)
     const waitingBattle = await Battle.findOne({ status: 'waiting', player1: { $ne: userId } });
 
     if (waitingBattle) {
-      // Join as player 2
       waitingBattle.player2 = userId;
       waitingBattle.status = 'active';
       waitingBattle.startedAt = new Date();
       
-      // Pull 10 random questions
       const questions = await BattleQuestion.aggregate([{ $sample: { size: 10 } }]);
       waitingBattle.questions = questions.map(q => q._id);
       
       await waitingBattle.save();
-      return res.json({ roomId: waitingBattle._id, status: 'active' });
+      return res.json({ roomCode: waitingBattle.roomCode, status: 'active' });
     } else {
-      // Create a new waiting room
+      const roomCode = await uniqueRoomCode();
       const newBattle = await Battle.create({
+        roomCode,
         player1: userId,
         status: 'waiting'
       });
-      return res.json({ roomId: newBattle._id, status: 'waiting' });
+      return res.json({ roomCode: newBattle.roomCode, status: 'waiting' });
     }
   } catch (error) {
     console.error(error);
@@ -54,21 +72,58 @@ router.post('/queue', protect, async (req, res) => {
 });
 
 /**
- * GET /battle/:roomId
- * Polling route to fetch current match state.
+ * POST /battle/join
+ * Join a specific room by code (friend battles).
  */
-router.get('/:roomId', protect, async (req, res) => {
+router.post('/join', protect, async (req, res) => {
   try {
-    const battle = await Battle.findById(req.params.roomId)
-      .populate('player1', 'name avatar elo')
-      .populate('player2', 'name avatar elo')
-      .populate('questions', '-options.isCorrect -explanation'); // Hide answers from client
+    const userId = req.user._id;
+    const { roomCode } = req.body;
+
+    if (!roomCode || roomCode.length !== 5) {
+      return res.status(400).json({ error: 'Invalid room code' });
+    }
+
+    const battle = await Battle.findOne({ roomCode: roomCode.toUpperCase(), status: 'waiting' });
+
+    if (!battle) {
+      return res.status(404).json({ error: 'Room not found or already started' });
+    }
+
+    if (battle.player1.toString() === userId.toString()) {
+      return res.status(400).json({ error: 'You cannot join your own room' });
+    }
+
+    battle.player2 = userId;
+    battle.status = 'active';
+    battle.startedAt = new Date();
+
+    const questions = await BattleQuestion.aggregate([{ $sample: { size: 10 } }]);
+    battle.questions = questions.map(q => q._id);
+
+    await battle.save();
+    return res.json({ roomCode: battle.roomCode, status: 'active' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to join room' });
+  }
+});
+
+/**
+ * GET /battle/:roomCode
+ * Polling route — fetch current match state by room code.
+ */
+router.get('/:roomCode', protect, async (req, res) => {
+  try {
+    const battle = await Battle.findOne({ roomCode: req.params.roomCode.toUpperCase() })
+      .populate('player1', 'name avatar')
+      .populate('player2', 'name avatar')
+      .populate('questions', '-options.isCorrect -explanation');
       
     if (!battle) {
       return res.status(404).json({ error: 'Battle not found' });
     }
 
-    // Determine who is requesting
     const isPlayer1 = battle.player1 && battle.player1._id.toString() === req.user._id.toString();
     const isPlayer2 = battle.player2 && battle.player2._id.toString() === req.user._id.toString();
 
@@ -76,16 +131,14 @@ router.get('/:roomId', protect, async (req, res) => {
       return res.status(403).json({ error: 'Not authorized for this battle' });
     }
 
-    // For polling efficiency, we can return just the state
     res.json({
-      _id: battle._id,
+      roomCode: battle.roomCode,
       status: battle.status,
       questions: battle.questions,
       player1: battle.player1,
       player2: battle.player2,
       player1Score: battle.player1Score,
       player2Score: battle.player2Score,
-      // Only send opponent's progress (number of answered questions), not actual answers
       opponentProgress: isPlayer1 ? battle.player2Answers.length : battle.player1Answers.length,
       myProgress: isPlayer1 ? battle.player1Answers.length : battle.player2Answers.length,
       myAnswers: isPlayer1 ? battle.player1Answers : battle.player2Answers,
@@ -100,14 +153,14 @@ router.get('/:roomId', protect, async (req, res) => {
 
 /**
  * POST /battle/submit
- * Submits an answer for the current question
+ * Submit an answer for the current question.
  */
 router.post('/submit', protect, async (req, res) => {
   try {
-    const { roomId, questionId, selectedOptionIndex, timeTakenSeconds } = req.body;
+    const { roomCode, questionId, selectedOptionIndex, timeTakenSeconds } = req.body;
     const userId = req.user._id;
 
-    const battle = await Battle.findById(roomId);
+    const battle = await Battle.findOne({ roomCode: roomCode.toUpperCase() });
     if (!battle || battle.status !== 'active') {
       return res.status(400).json({ error: 'Invalid battle or battle not active' });
     }
@@ -119,13 +172,11 @@ router.post('/submit', protect, async (req, res) => {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
-    // Check if already answered
     const existingAnswers = isPlayer1 ? battle.player1Answers : battle.player2Answers;
     if (existingAnswers.some(a => a.questionId.toString() === questionId)) {
       return res.status(400).json({ error: 'Already answered this question' });
     }
 
-    // Verify answer
     const question = await BattleQuestion.findById(questionId);
     if (!question) {
       return res.status(404).json({ error: 'Question not found' });
@@ -138,8 +189,6 @@ router.post('/submit', protect, async (req, res) => {
       const option = question.options[selectedOptionIndex];
       if (option && option.isCorrect) {
         isCorrect = true;
-        // Points calculation: Base 100 + Time Bonus (up to 50 points if answered in < 5 seconds)
-        // Assume max time per question is 60s
         const timeBonus = Math.max(0, Math.floor((60 - timeTakenSeconds) * (50 / 60)));
         points = 100 + timeBonus;
       }
@@ -161,7 +210,6 @@ router.post('/submit', protect, async (req, res) => {
       battle.player2Score += points;
     }
 
-    // Check if both players have finished all questions
     const totalQuestions = battle.questions.length;
     const p1Finished = battle.player1Answers.length === totalQuestions;
     const p2Finished = battle.player2Answers.length === totalQuestions;
@@ -174,13 +222,17 @@ router.post('/submit', protect, async (req, res) => {
       } else if (battle.player2Score > battle.player1Score) {
         battle.winner = battle.player2;
       }
-      
-      // We could update User ELO here
     }
 
     await battle.save();
 
-    res.json({ success: true, isCorrect, points, currentScore: isPlayer1 ? battle.player1Score : battle.player2Score, matchFinished: battle.status === 'finished' });
+    res.json({
+      success: true,
+      isCorrect,
+      points,
+      currentScore: isPlayer1 ? battle.player1Score : battle.player2Score,
+      matchFinished: battle.status === 'finished'
+    });
 
   } catch (error) {
     console.error(error);

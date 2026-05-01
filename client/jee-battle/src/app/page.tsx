@@ -10,6 +10,10 @@ function LobbyContent() {
   const [status, setStatus] = useState<'idle' | 'searching'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
+  const [joinCode, setJoinCode] = useState('');
+  const [joining, setJoining] = useState(false);
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in';
 
   useEffect(() => {
     const urlToken = searchParams.get('token');
@@ -20,16 +24,12 @@ function LobbyContent() {
       setChecking(false);
     } else {
       const storedToken = localStorage.getItem('kv_token');
-      if (storedToken) {
-        setToken(storedToken);
-      }
+      if (storedToken) setToken(storedToken);
       setChecking(false);
     }
   }, [searchParams, router]);
 
   const handleGoogleLogin = () => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in';
-    // Redirect to backend Google OAuth with origin=battle so it comes back here
     window.location.href = `${apiUrl}/auth/google?origin=battle`;
   };
 
@@ -38,23 +38,42 @@ function LobbyContent() {
     setStatus('searching');
     setError(null);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in';
       const res = await fetch(`${apiUrl}/battle/queue`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
-      
       if (!res.ok) throw new Error(data.error || 'Failed to queue');
-      
-      if (data.roomId) {
-        router.push(`/${data.roomId}`);
+      if (data.roomCode) {
+        router.push(`/${data.roomCode}`);
       }
     } catch (err: any) {
       setError(err.message);
       setStatus('idle');
+    }
+  };
+
+  const joinRoom = async () => {
+    if (!token || !joinCode.trim()) return;
+    setJoining(true);
+    setError(null);
+    try {
+      const res = await fetch(`${apiUrl}/battle/join`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ roomCode: joinCode.trim().toUpperCase() })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to join');
+      if (data.roomCode) {
+        router.push(`/${data.roomCode}`);
+      }
+    } catch (err: any) {
+      setError(err.message);
+      setJoining(false);
     }
   };
 
@@ -67,18 +86,19 @@ function LobbyContent() {
   }
 
   return (
-    <div className="max-w-md w-full bg-[#16191f] rounded-2xl border border-white/5 p-8 text-center space-y-6 shadow-2xl">
-      <div>
-        <div className="text-5xl mb-4">⚔️</div>
+    <div className="max-w-md w-full space-y-6">
+      {/* Hero Card */}
+      <div className="bg-[#16191f] rounded-2xl border border-white/5 p-8 text-center space-y-4 shadow-2xl">
+        <div className="text-5xl mb-2">⚔️</div>
         <h1 className="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">
           JEE Battle
         </h1>
-        <p className="text-gray-400 mt-2 text-sm">Compete head-to-head. Prove your speed and accuracy.</p>
+        <p className="text-gray-400 text-sm">Compete head-to-head. Prove your speed and accuracy.</p>
       </div>
 
       {!token ? (
-        /* Not logged in — show Google sign-in */
-        <div className="py-6 space-y-4">
+        /* Not logged in */
+        <div className="bg-[#16191f] rounded-2xl border border-white/5 p-8 text-center space-y-4 shadow-2xl">
           <p className="text-gray-500 text-sm">Sign in to start battling</p>
           <button
             onClick={handleGoogleLogin}
@@ -94,24 +114,24 @@ function LobbyContent() {
             </svg>
             Continue with Google
           </button>
-          <p className="text-gray-600 text-xs">
-            New here? We'll create your account automatically.
-          </p>
+          <p className="text-gray-600 text-xs">New here? We'll create your account automatically.</p>
         </div>
       ) : (
-        /* Logged in — show Find Match */
         <>
           {error && (
             <div className="bg-red-500/10 text-red-400 p-4 rounded-xl text-sm border border-red-500/20">
               {error}
             </div>
           )}
-          <div className="py-6">
+
+          {/* Find Random Match */}
+          <div className="bg-[#16191f] rounded-2xl border border-white/5 p-6 shadow-2xl">
             <button
               onClick={findMatch}
               disabled={status === 'searching'}
               className="w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 disabled:opacity-50
-                bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_30px_rgba(79,70,229,0.5)] active:scale-[0.98]"
+                bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 
+                shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_30px_rgba(79,70,229,0.5)] active:scale-[0.98]"
             >
               {status === 'searching' ? (
                 <span className="flex items-center justify-center gap-2">
@@ -121,18 +141,51 @@ function LobbyContent() {
                   </svg>
                   Finding Opponent...
                 </span>
-              ) : '⚔️ Find Match'}
+              ) : '⚔️ Find Random Match'}
             </button>
           </div>
-          <button
-            onClick={() => {
-              localStorage.removeItem('kv_token');
-              setToken(null);
-            }}
-            className="text-gray-600 hover:text-gray-400 text-xs transition-colors"
-          >
-            Sign out
-          </button>
+
+          {/* Divider */}
+          <div className="flex items-center gap-4">
+            <div className="flex-1 h-px bg-white/10"></div>
+            <span className="text-xs text-gray-500 uppercase tracking-widest font-bold">or</span>
+            <div className="flex-1 h-px bg-white/10"></div>
+          </div>
+
+          {/* Join by Code */}
+          <div className="bg-[#16191f] rounded-2xl border border-white/5 p-6 shadow-2xl space-y-4">
+            <p className="text-sm text-gray-400 text-center font-medium">Join a friend's room</p>
+            <div className="flex gap-3">
+              <input
+                type="text"
+                maxLength={5}
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z]/g, ''))}
+                placeholder="ABCDE"
+                className="flex-1 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-center text-2xl 
+                  font-mono tracking-[0.3em] placeholder:text-gray-700 placeholder:tracking-[0.3em]
+                  focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
+              />
+              <button
+                onClick={joinRoom}
+                disabled={joinCode.length !== 5 || joining}
+                className="px-6 py-3 rounded-xl font-bold transition-all duration-200 disabled:opacity-30
+                  bg-white/10 hover:bg-white/20 border border-white/10 active:scale-[0.97]"
+              >
+                {joining ? '...' : 'Join'}
+              </button>
+            </div>
+          </div>
+
+          {/* Sign out */}
+          <div className="text-center">
+            <button
+              onClick={() => { localStorage.removeItem('kv_token'); setToken(null); }}
+              className="text-gray-600 hover:text-gray-400 text-xs transition-colors"
+            >
+              Sign out
+            </button>
+          </div>
         </>
       )}
     </div>

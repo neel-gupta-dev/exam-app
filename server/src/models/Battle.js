@@ -1,6 +1,12 @@
 import mongoose from 'mongoose';
 
 const BattleSchema = new mongoose.Schema({
+  roomCode: {
+    type: String,
+    unique: true,
+    uppercase: true,
+    index: true,
+  },
   player1: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -19,7 +25,6 @@ const BattleSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'BattleQuestion',
   }],
-  // Array of answers for player 1
   player1Answers: [{
     questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'BattleQuestion' },
     selectedOptionIndex: Number,
@@ -27,7 +32,6 @@ const BattleSchema = new mongoose.Schema({
     timeTakenSeconds: Number,
     points: Number,
   }],
-  // Array of answers for player 2
   player2Answers: [{
     questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'BattleQuestion' },
     selectedOptionIndex: Number,

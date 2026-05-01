@@ -3,19 +3,21 @@
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function BattleRoom({ params }: { params: Promise<{ roomId: string }> }) {
+export default function BattleRoom({ params }: { params: Promise<{ roomCode: string }> }) {
   const router = useRouter();
-  const { roomId } = use(params);
+  const { roomCode } = use(params);
   const [token, setToken] = useState<string | null>(null);
   const [battleState, setBattleState] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Game UI State
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(60); // 60 seconds per question
+  const [timeRemaining, setTimeRemaining] = useState(60);
+  const [copied, setCopied] = useState(false);
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in';
 
   useEffect(() => {
     const storedToken = localStorage.getItem('kv_token');
@@ -29,8 +31,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomId: strin
   const fetchState = async () => {
     if (!token) return;
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in';
-      const res = await fetch(`${apiUrl}/battle/${roomId}`, {
+      const res = await fetch(`${apiUrl}/battle/${roomCode}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -38,7 +39,6 @@ export default function BattleRoom({ params }: { params: Promise<{ roomId: strin
       
       setBattleState(data);
       
-      // If active, sync current question index based on myProgress
       if (data.status === 'active' && data.myProgress !== undefined) {
         if (data.myProgress < data.questions.length) {
           setCurrentQuestionIndex(data.myProgress);
@@ -51,24 +51,20 @@ export default function BattleRoom({ params }: { params: Promise<{ roomId: strin
     }
   };
 
-  // Initial fetch and 5-second polling loop
   useEffect(() => {
     if (!token) return;
     fetchState();
     const interval = setInterval(fetchState, 5000);
     return () => clearInterval(interval);
-  }, [token, roomId]);
+  }, [token, roomCode]);
 
-  // Timer countdown
   useEffect(() => {
     if (battleState?.status !== 'active' || currentQuestionIndex >= battleState?.questions?.length) return;
     
-    // Reset timer when question changes
     setTimeRemaining(60);
     const timerInterval = setInterval(() => {
       setTimeRemaining(prev => {
         if (prev <= 1) {
-          // Time up! Auto-submit wrong answer (index -1)
           submitAnswer(-1);
           return 0;
         }
@@ -87,7 +83,6 @@ export default function BattleRoom({ params }: { params: Promise<{ roomId: strin
     const timeTaken = 60 - timeRemaining;
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in';
       const res = await fetch(`${apiUrl}/battle/submit`, {
         method: 'POST',
         headers: {
@@ -95,7 +90,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomId: strin
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          roomId,
+          roomCode,
           questionId,
           selectedOptionIndex: optionIndex,
           timeTakenSeconds: timeTaken
@@ -105,63 +100,88 @@ export default function BattleRoom({ params }: { params: Promise<{ roomId: strin
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       
-      // Move to next question immediately
       setSelectedOption(null);
       setCurrentQuestionIndex(prev => prev + 1);
-      
-      // Instantly trigger a state fetch to sync backend changes
       await fetchState();
       
     } catch (err: any) {
       console.error(err);
-      alert(err.message);
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-[#0f1115] flex items-center justify-center text-white"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div></div>;
-  if (error) return <div className="min-h-screen bg-[#0f1115] flex items-center justify-center text-red-500">{error}</div>;
+  const copyCode = () => {
+    navigator.clipboard.writeText(roomCode.toUpperCase());
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (loading) return (
+    <div className="min-h-screen bg-[#0f1115] flex items-center justify-center text-white">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+    </div>
+  );
+
+  if (error) return (
+    <div className="min-h-screen bg-[#0f1115] flex items-center justify-center">
+      <div className="text-center space-y-4">
+        <p className="text-red-400">{error}</p>
+        <button onClick={() => router.push('/')} className="text-indigo-400 hover:underline text-sm">Back to Lobby</button>
+      </div>
+    </div>
+  );
+
   if (!battleState) return null;
 
+  // ── Waiting Screen ──
   if (battleState.status === 'waiting') {
     return (
-      <div className="min-h-screen bg-[#0f1115] text-white flex flex-col items-center justify-center">
-        <div className="animate-pulse space-y-4 text-center">
-          <div className="text-6xl mb-4">⚔️</div>
-          <h2 className="text-2xl font-bold">Waiting for opponent...</h2>
-          <p className="text-gray-400">Share room ID: <span className="font-mono bg-white/10 px-2 py-1 rounded">{roomId}</span></p>
+      <div className="min-h-screen bg-[#0f1115] text-white flex flex-col items-center justify-center p-4">
+        <div className="max-w-md w-full bg-[#16191f] rounded-2xl border border-white/5 p-8 text-center space-y-6 shadow-2xl">
+          <div className="animate-pulse">
+            <div className="text-6xl mb-4">⚔️</div>
+            <h2 className="text-2xl font-bold">Waiting for opponent...</h2>
+          </div>
+          
+          <div className="space-y-3">
+            <p className="text-gray-400 text-sm">Share this code with a friend:</p>
+            <button
+              onClick={copyCode}
+              className="inline-flex items-center gap-3 px-6 py-4 bg-black/40 rounded-xl border border-white/10 
+                hover:border-indigo-500/50 transition-all group cursor-pointer"
+            >
+              <span className="text-4xl font-mono font-black tracking-[0.4em] text-indigo-400">
+                {roomCode.toUpperCase()}
+              </span>
+              <span className="text-xs text-gray-500 group-hover:text-indigo-400 transition-colors">
+                {copied ? '✓ Copied!' : '📋 Copy'}
+              </span>
+            </button>
+          </div>
+
+          <button onClick={() => router.push('/')} className="text-gray-500 hover:text-gray-300 text-sm transition-colors">
+            ← Cancel and return to lobby
+          </button>
         </div>
       </div>
     );
   }
 
+  // ── Finished Screen ──
   if (battleState.status === 'finished') {
-    const isWinner = battleState.winner && battleState.winner === battleState.player1?._id ? true : false; 
-    // Wait, the API doesn't tell us who 'we' are directly. We know our token.
-    // The API sends player1, player2. Let's just compare scores.
-    let myScore = battleState.player1Score;
-    let oppScore = battleState.player2Score;
-    let myName = battleState.player1?.name;
-    let oppName = battleState.player2?.name;
-
-    // We can infer who we are based on myProgress match, or just use myScore/oppScore directly from API if we updated the API. 
-    // Actually the API returns myAnswers. length.
-    
     return (
       <div className="min-h-screen bg-[#0f1115] text-white flex flex-col items-center justify-center p-4">
         <div className="max-w-lg w-full bg-[#16191f] rounded-2xl border border-white/5 p-8 text-center space-y-8 shadow-2xl">
-          <h1 className="text-5xl font-black mb-2">
-             Match Finished!
-          </h1>
+          <h1 className="text-5xl font-black">Match Finished!</h1>
           
           <div className="flex justify-between items-center bg-black/30 p-6 rounded-xl">
-             <div className="text-center">
+             <div className="text-center flex-1">
                <div className="text-sm text-gray-400 mb-1">{battleState.player1?.name || 'Player 1'}</div>
                <div className="text-3xl font-bold text-indigo-400">{battleState.player1Score}</div>
              </div>
-             <div className="text-2xl font-bold text-gray-600">VS</div>
-             <div className="text-center">
+             <div className="text-2xl font-bold text-gray-600 px-4">VS</div>
+             <div className="text-center flex-1">
                <div className="text-sm text-gray-400 mb-1">{battleState.player2?.name || 'Player 2'}</div>
                <div className="text-3xl font-bold text-blue-400">{battleState.player2Score}</div>
              </div>
@@ -175,44 +195,43 @@ export default function BattleRoom({ params }: { params: Promise<{ roomId: strin
     );
   }
 
-  // Active Game UI
+  // ── Waiting for opponent to finish ──
   const totalQuestions = battleState.questions.length;
   
   if (currentQuestionIndex >= totalQuestions) {
     return (
       <div className="min-h-screen bg-[#0f1115] text-white flex flex-col items-center justify-center">
         <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-500 mx-auto"></div>
           <h2 className="text-2xl font-bold">Waiting for opponent to finish...</h2>
-          <p className="text-gray-400">You completed all questions! We'll show results once they finish.</p>
+          <p className="text-gray-400">You completed all questions! Results incoming.</p>
         </div>
       </div>
     );
   }
 
+  // ── Active Game ──
   const currentQuestion = battleState.questions[currentQuestionIndex];
 
   return (
     <div className="min-h-screen bg-[#0f1115] text-white flex flex-col items-center p-4 md:p-8">
       {/* Header */}
       <div className="w-full max-w-4xl flex justify-between items-center mb-8 bg-[#16191f] p-4 rounded-xl border border-white/5">
-        <div className="flex gap-4 items-center">
-           <div>
-             <div className="text-xs text-gray-400 uppercase tracking-wider">Opponent Progress</div>
-             <div className="font-bold">{battleState.opponentProgress} / {totalQuestions}</div>
-           </div>
+        <div>
+          <div className="text-xs text-gray-400 uppercase tracking-wider">Opponent</div>
+          <div className="font-bold">{battleState.opponentProgress} / {totalQuestions}</div>
         </div>
         
         <div className="text-center">
-          <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">
+          <div className={`text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r 
+            ${timeRemaining <= 10 ? 'from-red-500 to-red-400 animate-pulse' : 'from-orange-400 to-amber-400'}`}>
             {timeRemaining}s
           </div>
         </div>
 
-        <div className="flex gap-4 items-center text-right">
-           <div>
-             <div className="text-xs text-gray-400 uppercase tracking-wider">Your Progress</div>
-             <div className="font-bold text-indigo-400">{currentQuestionIndex + 1} / {totalQuestions}</div>
-           </div>
+        <div className="text-right">
+          <div className="text-xs text-gray-400 uppercase tracking-wider">You</div>
+          <div className="font-bold text-indigo-400">{currentQuestionIndex + 1} / {totalQuestions}</div>
         </div>
       </div>
 
@@ -222,7 +241,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomId: strin
           {currentQuestion.subject}
         </div>
         
-        <h2 className="text-2xl md:text-3xl font-medium leading-relaxed mb-8">
+        <h2 className="text-xl md:text-2xl font-medium leading-relaxed mb-8">
           {currentQuestion.questionText}
         </h2>
         
@@ -235,7 +254,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomId: strin
                 submitAnswer(idx);
               }}
               disabled={submitting}
-              className={`text-left p-6 rounded-xl border transition-all duration-200
+              className={`text-left p-5 rounded-xl border transition-all duration-200
                 ${selectedOption === idx 
                   ? 'bg-indigo-600 border-indigo-500 shadow-[0_0_15px_rgba(79,70,229,0.4)]' 
                   : 'bg-black/20 border-white/10 hover:border-indigo-500/50 hover:bg-white/5'}
@@ -246,7 +265,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomId: strin
                 <span className="flex-shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center font-bold text-sm">
                   {String.fromCharCode(65 + idx)}
                 </span>
-                <span className="text-lg">{opt.text}</span>
+                <span className="text-base">{opt.text}</span>
               </div>
             </button>
           ))}
