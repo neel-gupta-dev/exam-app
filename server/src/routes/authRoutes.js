@@ -28,19 +28,34 @@ router.get('/google', (req, res, next) => {
     );
   }
 
+  // Pass origin in state so callback knows where to redirect
+  const state = req.query.origin || 'main';
+
   passport.authenticate('google', { 
     scope,
     accessType: 'offline',
-    prompt: req.query.classroom === 'true' ? 'consent' : undefined
+    prompt: req.query.classroom === 'true' ? 'consent' : undefined,
+    state,
   })(req, res, next);
 });
 
 import { FRONTEND_URL } from '../config/index.js';
 
+const BATTLE_FRONTEND_URL = process.env.BATTLE_FRONTEND_URL || 
+  (process.env.NODE_ENV === 'production' ? 'https://battle.vayl.in' : 'http://localhost:3001');
+
 router.get('/google/callback', 
   passport.authenticate('google', { session: false, failureRedirect: FRONTEND_URL }),
   (req, res) => {
     const token = generateToken(req.user._id);
+    const origin = req.query.state;
+
+    if (origin === 'battle') {
+      // Redirect back to battle frontend with the token
+      return res.redirect(`${BATTLE_FRONTEND_URL}/?token=${token}`);
+    }
+
+    // Default: redirect to main frontend
     res.redirect(`${FRONTEND_URL}/login?token=${token}`);
   }
 );
