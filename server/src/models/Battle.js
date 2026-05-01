@@ -47,6 +47,10 @@ const BattleSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  isCustomRoom: {
+    type: Boolean,
+    default: false,
+  },
   winner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

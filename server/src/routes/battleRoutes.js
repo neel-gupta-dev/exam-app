@@ -25,13 +25,47 @@ async function uniqueRoomCode() {
   throw new Error('Failed to generate unique room code');
 }
 
+/** Auto-abandon stale waiting rooms older than 10 minutes */
+async function cleanupStaleRooms() {
+  const staleThreshold = new Date(Date.now() - 10 * 60 * 1000); // 10 min
+  await Battle.updateMany(
+    { status: 'waiting', createdAt: { $lt: staleThreshold } },
+    { $set: { status: 'abandoned' } }
+  );
+}
+
+/**
+ * GET /battle/online-count
+ * Returns count of players currently in waiting/active battles (rough online indicator).
+ */
+router.get('/online-count', protect, async (_req, res) => {
+  try {
+    await cleanupStaleRooms();
+
+    const waitingCount = await Battle.countDocuments({ status: 'waiting' });
+    const activeCount = await Battle.countDocuments({ status: 'active' });
+
+    // Each waiting room has 1 player, each active room has 2
+    const onlinePlayers = waitingCount + (activeCount * 2);
+
+    res.json({ onlinePlayers, waitingRooms: waitingCount });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to get online count' });
+  }
+});
+
 /**
  * POST /battle/queue
  * Random matchmaking — finds a waiting room or creates one.
+ * Uses atomic findOneAndUpdate to prevent race conditions.
  */
 router.post('/queue', protect, async (req, res) => {
   try {
     const userId = req.user._id;
+
+    // Cleanup stale waiting rooms first
+    await cleanupStaleRooms();
 
     // Check if user is already in an active or waiting battle
     const existingBattle = await Battle.findOne({
@@ -43,31 +77,82 @@ router.post('/queue', protect, async (req, res) => {
       return res.json({ roomCode: existingBattle.roomCode, status: existingBattle.status, isAdmin: req.user.role === 'admin' });
     }
 
-    // Try to find a random waiting room (not created by this user)
-    const waitingBattle = await Battle.findOne({ status: 'waiting', player1: { $ne: userId } });
-
-    if (waitingBattle) {
-      waitingBattle.player2 = userId;
-      waitingBattle.status = 'active';
-      waitingBattle.startedAt = new Date();
-      
-      const questions = await BattleQuestion.aggregate([{ $sample: { size: 10 } }]);
-      waitingBattle.questions = questions.map(q => q._id);
-      
-      await waitingBattle.save();
-      return res.json({ roomCode: waitingBattle.roomCode, status: 'active', isAdmin: req.user.role === 'admin' });
-    } else {
-      const roomCode = await uniqueRoomCode();
-      const newBattle = await Battle.create({
-        roomCode,
-        player1: userId,
-        status: 'waiting'
-      });
-      return res.json({ roomCode: newBattle.roomCode, status: 'waiting', isAdmin: req.user.role === 'admin' });
+    // Fetch questions ahead of time
+    const questions = await BattleQuestion.aggregate([{ $sample: { size: 10 } }]);
+    if (questions.length === 0) {
+      return res.status(500).json({ error: 'No battle questions available in the database' });
     }
+
+    // Atomically find a waiting room and join it (prevents race conditions)
+    const matchedBattle = await Battle.findOneAndUpdate(
+      {
+        status: 'waiting',
+        player1: { $ne: userId },
+        isCustomRoom: { $ne: true } // Don't match custom/private rooms
+      },
+      {
+        $set: {
+          player2: userId,
+          status: 'active',
+          startedAt: new Date(),
+          questions: questions.map(q => q._id)
+        }
+      },
+      { new: true }
+    );
+
+    if (matchedBattle) {
+      return res.json({ roomCode: matchedBattle.roomCode, status: 'active', matched: true, isAdmin: req.user.role === 'admin' });
+    }
+
+    // No waiting room found — create a new one
+    const roomCode = await uniqueRoomCode();
+    const newBattle = await Battle.create({
+      roomCode,
+      player1: userId,
+      status: 'waiting',
+      isCustomRoom: false
+    });
+    return res.json({ roomCode: newBattle.roomCode, status: 'waiting', matched: false, isAdmin: req.user.role === 'admin' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Matchmaking failed' });
+  }
+});
+
+/**
+ * POST /battle/create
+ * Create a custom/private room with a shareable code.
+ */
+router.post('/create', protect, async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Cleanup stale waiting rooms first
+    await cleanupStaleRooms();
+
+    // Check if user is already in an active or waiting battle
+    const existingBattle = await Battle.findOne({
+      $or: [{ player1: userId }, { player2: userId }],
+      status: { $in: ['waiting', 'active'] }
+    });
+
+    if (existingBattle) {
+      return res.json({ roomCode: existingBattle.roomCode, status: existingBattle.status, isAdmin: req.user.role === 'admin' });
+    }
+
+    const roomCode = await uniqueRoomCode();
+    const newBattle = await Battle.create({
+      roomCode,
+      player1: userId,
+      status: 'waiting',
+      isCustomRoom: true // Mark as custom so random queue won't pick it up
+    });
+
+    return res.json({ roomCode: newBattle.roomCode, status: 'waiting', isAdmin: req.user.role === 'admin' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to create room' });
   }
 });
 
@@ -84,28 +169,73 @@ router.post('/join', protect, async (req, res) => {
       return res.status(400).json({ error: 'Invalid room code' });
     }
 
-    const battle = await Battle.findOne({ roomCode: roomCode.toUpperCase(), status: 'waiting' });
+    // Fetch questions
+    const questions = await BattleQuestion.aggregate([{ $sample: { size: 10 } }]);
+    if (questions.length === 0) {
+      return res.status(500).json({ error: 'No battle questions available' });
+    }
+
+    // Atomically join to prevent race conditions
+    const battle = await Battle.findOneAndUpdate(
+      {
+        roomCode: roomCode.toUpperCase(),
+        status: 'waiting',
+        player1: { $ne: userId } // Can't join your own room
+      },
+      {
+        $set: {
+          player2: userId,
+          status: 'active',
+          startedAt: new Date(),
+          questions: questions.map(q => q._id)
+        }
+      },
+      { new: true }
+    );
 
     if (!battle) {
+      // Check if the room exists but user is player1
+      const ownRoom = await Battle.findOne({ roomCode: roomCode.toUpperCase(), player1: userId, status: 'waiting' });
+      if (ownRoom) {
+        return res.status(400).json({ error: 'You cannot join your own room' });
+      }
       return res.status(404).json({ error: 'Room not found or already started' });
     }
 
-    if (battle.player1.toString() === userId.toString()) {
-      return res.status(400).json({ error: 'You cannot join your own room' });
-    }
-
-    battle.player2 = userId;
-    battle.status = 'active';
-    battle.startedAt = new Date();
-
-    const questions = await BattleQuestion.aggregate([{ $sample: { size: 10 } }]);
-    battle.questions = questions.map(q => q._id);
-
-    await battle.save();
     return res.json({ roomCode: battle.roomCode, status: 'active' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to join room' });
+  }
+});
+
+/**
+ * POST /battle/cancel
+ * Cancel a waiting room (abandon it before anyone joins).
+ */
+router.post('/cancel', protect, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { roomCode } = req.body;
+
+    const battle = await Battle.findOneAndUpdate(
+      {
+        roomCode: roomCode.toUpperCase(),
+        player1: userId,
+        status: 'waiting'
+      },
+      { $set: { status: 'abandoned' } },
+      { new: true }
+    );
+
+    if (!battle) {
+      return res.status(404).json({ error: 'Waiting room not found' });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to cancel room' });
   }
 });
 

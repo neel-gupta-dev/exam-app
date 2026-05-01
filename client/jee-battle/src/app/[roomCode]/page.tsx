@@ -159,6 +159,23 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
 
   // ── Waiting Screen ──
   if (battleState.status === 'waiting') {
+    const cancelRoom = async () => {
+      if (!token) return;
+      try {
+        await fetch(`${apiUrl}/battle/cancel`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ roomCode })
+        });
+      } catch {
+        // Best effort
+      }
+      router.push('/');
+    };
+
     return (
       <div className="min-h-screen bg-[#0f1115] text-white flex flex-col items-center justify-center p-4">
         <div className="max-w-md w-full bg-[#16191f] rounded-2xl border border-white/5 p-8 text-center space-y-6 shadow-2xl">
@@ -183,8 +200,8 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
             </button>
           </div>
 
-          <button onClick={() => router.push('/')} className="text-gray-500 hover:text-gray-300 text-sm transition-colors">
-            ← Cancel and return to lobby
+          <button onClick={cancelRoom} className="text-red-400/60 hover:text-red-400 text-sm transition-colors font-medium">
+            ✕ Cancel and return to lobby
           </button>
 
           {battleState.isAdmin && (

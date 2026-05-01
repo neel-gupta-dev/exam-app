@@ -1,17 +1,24 @@
 "use client";
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 function LobbyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [token, setToken] = useState<string | null>(null);
-  const [status, setStatus] = useState<'idle' | 'searching'>('idle');
+  const [status, setStatus] = useState<'idle' | 'searching' | 'waiting'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
   const [joinCode, setJoinCode] = useState('');
   const [joining, setJoining] = useState(false);
+  const [onlineCount, setOnlineCount] = useState<number | null>(null);
+  const [waitingRoomCode, setWaitingRoomCode] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [creating, setCreating] = useState(false);
+
+  // Track polling interval for cleanup
+  const pollRef = useRef<NodeJS.Timeout | null>(null);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in';
 
@@ -29,6 +36,62 @@ function LobbyContent() {
     }
   }, [searchParams, router]);
 
+  // Fetch online player count periodically
+  const fetchOnlineCount = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${apiUrl}/battle/online-count`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setOnlineCount(data.onlinePlayers);
+      }
+    } catch {
+      // Silently fail — this is non-critical
+    }
+  }, [token, apiUrl]);
+
+  useEffect(() => {
+    if (!token) return;
+    fetchOnlineCount();
+    const interval = setInterval(fetchOnlineCount, 15000);
+    return () => clearInterval(interval);
+  }, [token, fetchOnlineCount]);
+
+  // Poll waiting room for opponent joining
+  const pollForOpponent = useCallback(async (roomCode: string) => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${apiUrl}/battle/${roomCode}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+
+      if (data.status === 'active') {
+        // Opponent joined! Navigate to room
+        if (pollRef.current) clearInterval(pollRef.current);
+        router.push(`/${roomCode}`);
+      } else if (data.status === 'abandoned') {
+        // Room was abandoned
+        if (pollRef.current) clearInterval(pollRef.current);
+        setStatus('idle');
+        setWaitingRoomCode(null);
+        setError('Room expired. Try again.');
+      }
+    } catch {
+      // Ignore polling errors
+    }
+  }, [token, apiUrl, router]);
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, []);
+
   const handleGoogleLogin = () => {
     window.location.href = `${apiUrl}/auth/google?origin=battle`;
   };
@@ -44,12 +107,64 @@ function LobbyContent() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to queue');
+
+      if (data.status === 'active') {
+        // Instantly matched with someone!
+        router.push(`/${data.roomCode}`);
+      } else if (data.status === 'waiting') {
+        // Created a waiting room — start polling
+        setStatus('waiting');
+        setWaitingRoomCode(data.roomCode);
+        pollRef.current = setInterval(() => pollForOpponent(data.roomCode), 3000);
+      }
+    } catch (err: any) {
+      setError(err.message);
+      setStatus('idle');
+    }
+  };
+
+  const cancelSearch = async () => {
+    if (!token || !waitingRoomCode) return;
+    if (pollRef.current) clearInterval(pollRef.current);
+
+    try {
+      await fetch(`${apiUrl}/battle/cancel`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ roomCode: waitingRoomCode })
+      });
+    } catch {
+      // Best effort
+    }
+    setStatus('idle');
+    setWaitingRoomCode(null);
+  };
+
+  const createRoom = async () => {
+    if (!token) return;
+    setCreating(true);
+    setError(null);
+    try {
+      const res = await fetch(`${apiUrl}/battle/create`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create room');
+
       if (data.roomCode) {
         router.push(`/${data.roomCode}`);
       }
     } catch (err: any) {
       setError(err.message);
-      setStatus('idle');
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -77,6 +192,13 @@ function LobbyContent() {
     }
   };
 
+  const copyCode = () => {
+    if (!waitingRoomCode) return;
+    navigator.clipboard.writeText(waitingRoomCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   if (checking) {
     return (
       <div className="max-w-md w-full flex items-center justify-center py-16">
@@ -94,6 +216,19 @@ function LobbyContent() {
           JEE Battle
         </h1>
         <p className="text-gray-400 text-sm">Compete head-to-head. Prove your speed and accuracy.</p>
+
+        {/* Online indicator */}
+        {token && onlineCount !== null && (
+          <div className="flex items-center justify-center gap-2 pt-1">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <span className="text-xs text-emerald-400/80 font-medium">
+              {onlineCount} player{onlineCount !== 1 ? 's' : ''} online
+            </span>
+          </div>
+        )}
       </div>
 
       {!token ? (
@@ -116,10 +251,51 @@ function LobbyContent() {
           </button>
           <p className="text-gray-600 text-xs">New here? We'll create your account automatically.</p>
         </div>
+      ) : status === 'waiting' && waitingRoomCode ? (
+        /* Waiting for opponent — inline waiting UI */
+        <div className="bg-[#16191f] rounded-2xl border border-white/5 p-8 text-center space-y-6 shadow-2xl">
+          <div className="animate-pulse">
+            <div className="flex justify-center mb-4">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-full border-4 border-indigo-500/30 flex items-center justify-center">
+                  <svg className="animate-spin h-8 w-8 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <h2 className="text-xl font-bold text-white">Searching for opponent...</h2>
+            <p className="text-gray-500 text-sm mt-1">This may take a moment</p>
+          </div>
+
+          <div className="space-y-3">
+            <p className="text-gray-400 text-xs">Or share this code with a friend:</p>
+            <button
+              onClick={copyCode}
+              className="inline-flex items-center gap-3 px-5 py-3 bg-black/40 rounded-xl border border-white/10 
+                hover:border-indigo-500/50 transition-all group cursor-pointer"
+            >
+              <span className="text-2xl font-mono font-black tracking-[0.3em] text-indigo-400">
+                {waitingRoomCode}
+              </span>
+              <span className="text-xs text-gray-500 group-hover:text-indigo-400 transition-colors">
+                {copied ? '✓ Copied!' : '📋 Copy'}
+              </span>
+            </button>
+          </div>
+
+          <button
+            onClick={cancelSearch}
+            className="text-red-400/60 hover:text-red-400 text-sm transition-colors font-medium"
+          >
+            ✕ Cancel Search
+          </button>
+        </div>
       ) : (
         <>
           {error && (
-            <div className="bg-red-500/10 text-red-400 p-4 rounded-xl text-sm border border-red-500/20">
+            <div className="bg-red-500/10 text-red-400 p-4 rounded-xl text-sm border border-red-500/20 text-center">
               {error}
             </div>
           )}
@@ -141,20 +317,43 @@ function LobbyContent() {
                   </svg>
                   Finding Opponent...
                 </span>
-              ) : '⚔️ Find Random Match'}
+              ) : '⚔️ Find Opponent'}
             </button>
+          </div>
+
+          {/* Create Custom Room */}
+          <div className="bg-[#16191f] rounded-2xl border border-white/5 p-6 shadow-2xl space-y-3">
+            <button
+              onClick={createRoom}
+              disabled={creating}
+              className="w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 disabled:opacity-50
+                bg-gradient-to-r from-emerald-600/80 to-teal-600/80 hover:from-emerald-500/80 hover:to-teal-500/80
+                shadow-[0_0_20px_rgba(16,185,129,0.15)] hover:shadow-[0_0_30px_rgba(16,185,129,0.3)] active:scale-[0.98]
+                border border-emerald-500/20"
+            >
+              {creating ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Creating Room...
+                </span>
+              ) : '🏠 Create Custom Room'}
+            </button>
+            <p className="text-gray-500 text-xs text-center">Create a private room and share the code with a friend</p>
           </div>
 
           {/* Divider */}
           <div className="flex items-center gap-4">
             <div className="flex-1 h-px bg-white/10"></div>
-            <span className="text-xs text-gray-500 uppercase tracking-widest font-bold">or</span>
+            <span className="text-xs text-gray-500 uppercase tracking-widest font-bold">or join</span>
             <div className="flex-1 h-px bg-white/10"></div>
           </div>
 
           {/* Join by Code */}
           <div className="bg-[#16191f] rounded-2xl border border-white/5 p-6 shadow-2xl space-y-4">
-            <p className="text-sm text-gray-400 text-center font-medium">Join a friend's room</p>
+            <p className="text-sm text-gray-400 text-center font-medium">Join a friend&apos;s room</p>
             <div className="flex gap-3">
               <input
                 type="text"
