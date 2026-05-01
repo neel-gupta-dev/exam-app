@@ -2,6 +2,7 @@ import express from 'express';
 import { protect } from '../middlewares/authMiddleware.js';
 import Battle from '../models/Battle.js';
 import BattleQuestion from '../models/BattleQuestion.js';
+import User from '../models/User.js';
 
 const router = express.Router();
 
@@ -36,19 +37,24 @@ async function cleanupStaleRooms() {
 
 /**
  * GET /battle/online-count
- * Returns count of players currently in waiting/active battles (rough online indicator).
+ * Heartbeat endpoint — stamps caller as "seen", returns count of players
+ * who have been on the lobby in the last 45 seconds.
  */
-router.get('/online-count', protect, async (_req, res) => {
+router.get('/online-count', protect, async (req, res) => {
   try {
-    await cleanupStaleRooms();
+    // Stamp this user as online right now (upsert-style, no version conflicts)
+    await User.updateOne(
+      { _id: req.user._id },
+      { $set: { battleLastSeen: new Date() } }
+    );
 
-    const waitingCount = await Battle.countDocuments({ status: 'waiting' });
-    const activeCount = await Battle.countDocuments({ status: 'active' });
+    // Count all users seen in the last 45 seconds
+    const cutoff = new Date(Date.now() - 45 * 1000);
+    const onlinePlayers = await User.countDocuments({
+      battleLastSeen: { $gte: cutoff }
+    });
 
-    // Each waiting room has 1 player, each active room has 2
-    const onlinePlayers = waitingCount + (activeCount * 2);
-
-    res.json({ onlinePlayers, waitingRooms: waitingCount });
+    res.json({ onlinePlayers });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to get online count' });

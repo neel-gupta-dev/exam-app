@@ -192,6 +192,18 @@ const userSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
+    /**
+     * battleLastSeen — Battle Lobby Heartbeat
+     *
+     * Updated every time a user polls /battle/online-count from the lobby.
+     * Used to count "online" players on the battle platform.
+     * A user is considered online if seen within the last 45 seconds.
+     */
+    battleLastSeen: {
+      type: Date,
+      default: null,
+      index: true,
+    },
   },
   { 
     timestamps: true,
