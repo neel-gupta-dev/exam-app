@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  Swords,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -41,6 +42,7 @@ const navItems = [
 
 const externalNavItems = [
   { href: "https://predictor.vayl.in", label: "College Predictor", icon: GraduationCap },
+  { href: "https://battle.vayl.in", label: "JEE Battle", icon: Swords },
 ];
 
 /** Demo persona shown in the sidebar when no user is logged in */
@@ -216,6 +218,17 @@ export default function Sidebar() {
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={(e) => {
+                    if (item.label === 'JEE Battle') {
+                      e.preventDefault();
+                      const token = localStorage.getItem('kv_token');
+                      // In dev, route to localhost:3001 if the current origin is localhost
+                      const baseUrl = window.location.hostname === 'localhost' 
+                        ? 'http://localhost:3001' 
+                        : item.href;
+                      window.open(`${baseUrl}/?token=${token}`, '_blank');
+                    }
+                  }}
                   className={`flex items-center ${isCollapsed ? 'justify-center p-2' : 'gap-3 px-3 py-2'} rounded-md transition-all duration-200 text-on-surface-variant hover:text-on-surface hover:bg-surface-bright`}
                   title={isCollapsed ? item.label : undefined}
                 >

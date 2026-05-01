@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { 
   Archive, Brain, Layers, GraduationCap, Menu, X, 
   User as UserIcon, Settings, BarChart2, BarChart3, 
-  FolderLock, Sun, Moon, Lock, LogOut 
+  FolderLock, Sun, Moon, Lock, LogOut, Swords
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { isDemoAllowedPath } from "@/lib/demo";
@@ -24,6 +24,7 @@ const secondaryNavItems = [
   { href: "/chapters", label: "Chapter List", icon: Layers },
   { href: "/performance", label: "Performance", icon: BarChart2 },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "https://battle.vayl.in", label: "JEE Battle", icon: Swords },
   { href: "/settings", label: "Settings", icon: Settings },
   { href: "/profile", label: "Profile", icon: UserIcon },
 ];
@@ -153,6 +154,26 @@ export default function MobileBottomNav() {
                     const isLocked = isDemo && !isDemoAllowedPath(item.href);
                     const Icon = item.icon;
                     const demoHref = isDemo && item.href !== '/' ? `${item.href}?demo=true` : (isDemo && item.href === '/' ? '/?demo=true' : item.href);
+
+                    if (item.label === 'JEE Battle') {
+                      return (
+                        <button
+                          key={item.href}
+                          onClick={() => {
+                             const token = localStorage.getItem('kv_token');
+                             const baseUrl = window.location.hostname === 'localhost' 
+                               ? 'http://localhost:3001' 
+                               : item.href;
+                             window.open(`${baseUrl}/?token=${token}`, '_blank');
+                             setIsMenuOpen(false);
+                          }}
+                          className="flex items-center gap-3 p-3.5 rounded-xl bg-surface-container hover:bg-surface-bright text-on-surface-variant hover:text-primary transition-colors text-left"
+                        >
+                          <Icon className="w-5 h-5 shrink-0" />
+                          <span className="text-sm font-medium truncate">{item.label}</span>
+                        </button>
+                      );
+                    }
 
                     return isLocked ? (
                        <button
