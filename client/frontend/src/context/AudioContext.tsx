@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
 interface AudioContextType {
   isPlaying: boolean;
@@ -51,56 +51,13 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, []);
 
-  // ── Media Session (Control Center Integration) ──────────────────
-  useEffect(() => {
-    if (typeof window !== "undefined" && "mediaSession" in navigator) {
-      const trackMetadata: Record<string, { title: string; artist: string }> = {
-        rain: { title: "Steady Rain", artist: "DRAGON-STUDIO" },
-        forest: { title: "Peaceful Forest", artist: "AudioPapkin" },
-      };
-
-      const info = trackMetadata[currentTrack] || { title: "Focus Track", artist: "Vayl" };
-
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: info.title,
-        artist: info.artist,
-        album: "Vayl",
-        artwork: [
-          { src: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
-          { src: "/icon-512x512.png", sizes: "512x512", type: "image/png" },
-        ],
-      });
-
-      const handlers = [
-        ['play', togglePlay],
-        ['pause', togglePlay],
-        ['previoustrack', () => setTrack(currentTrack === 'rain' ? 'forest' : 'rain')],
-        ['nexttrack', () => setTrack(currentTrack === 'rain' ? 'forest' : 'rain')],
-        ['seekbackward', (details: any) => {
-          if (audioRef.current) audioRef.current.currentTime -= (details.seekOffset || 10);
-        }],
-        ['seekforward', (details: any) => {
-          if (audioRef.current) audioRef.current.currentTime += (details.seekOffset || 10);
-        }],
-      ];
-
-      for (const [action, handler] of handlers) {
-        try {
-          navigator.mediaSession.setActionHandler(action as any, handler as any);
-        } catch (error) {
-          console.log(`Media session action "${action}" not supported.`);
-        }
-      }
-    }
-  }, [currentTrack, isPlaying]);
-
   useEffect(() => {
     if (typeof window !== "undefined" && "mediaSession" in navigator) {
       navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
     }
   }, [isPlaying]);
 
-  const togglePlay = async () => {
+  const togglePlay = useCallback(async () => {
     if (!audioRef.current) return;
 
     if (isPlaying) {
@@ -116,7 +73,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setIsBlocked(true);
       }
     }
-  };
+  }, [isPlaying]);
 
   const setVolume = (newVolume: number) => {
     const v = Math.min(1, Math.max(0, newVolume));
@@ -179,7 +136,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const setTrack = (track: 'rain' | 'forest') => {
+  const setTrack = useCallback((track: 'rain' | 'forest') => {
     if (!audioRef.current) return;
 
     const wasPlaying = isPlaying;
@@ -195,7 +152,51 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setIsBlocked(true);
       });
     }
-  };
+  }, [isPlaying]);
+
+  // ── Media Session (Control Center Integration) ──────────────────
+  useEffect(() => {
+    if (typeof window !== "undefined" && "mediaSession" in navigator) {
+      const trackMetadata: Record<string, { title: string; artist: string }> = {
+        rain: { title: "Steady Rain", artist: "DRAGON-STUDIO" },
+        forest: { title: "Peaceful Forest", artist: "AudioPapkin" },
+      };
+
+      const info = trackMetadata[currentTrack] || { title: "Focus Track", artist: "Vayl" };
+
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: info.title,
+        artist: info.artist,
+        album: "Vayl",
+        artwork: [
+          { src: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
+          { src: "/icon-512x512.png", sizes: "512x512", type: "image/png" },
+        ],
+      });
+
+      const switchTrack = () => setTrack(currentTrack === 'rain' ? 'forest' : 'rain');
+      const seekBy = (offset: number) => {
+        if (audioRef.current) audioRef.current.currentTime += offset;
+      };
+
+      const handlers: Array<[MediaSessionAction, MediaSessionActionHandler]> = [
+        ['play', togglePlay],
+        ['pause', togglePlay],
+        ['previoustrack', switchTrack],
+        ['nexttrack', switchTrack],
+        ['seekbackward', (details) => seekBy(-(details.seekOffset || 10))],
+        ['seekforward', (details) => seekBy(details.seekOffset || 10)],
+      ];
+
+      for (const [action, handler] of handlers) {
+        try {
+          navigator.mediaSession.setActionHandler(action, handler);
+        } catch {
+          console.log(`Media session action "${action}" not supported.`);
+        }
+      }
+    }
+  }, [currentTrack, setTrack, togglePlay]);
 
   return (
     <AudioContext.Provider

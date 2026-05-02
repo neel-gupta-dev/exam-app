@@ -1,40 +1,41 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
 // Global single audio context to prevent crashing limit of hardware contexts (usually ~6 allowed)
 let globalAudioCtx: AudioContext | null = null;
 
+type WebAudioWindow = Window & typeof globalThis & {
+  webkitAudioContext?: typeof AudioContext;
+};
+
+function isAppleDevice() {
+  if (typeof window === 'undefined') return false;
+  const platform = window.navigator.platform?.toLowerCase() || '';
+  const userAgent = window.navigator.userAgent?.toLowerCase() || '';
+  const isIpadOS = platform === 'macintel' && navigator.maxTouchPoints > 1;
+  return (
+    platform.includes('mac') ||
+    platform.includes('iphone') ||
+    platform.includes('ipad') ||
+    platform.includes('ipod') ||
+    userAgent.includes('mac') ||
+    userAgent.includes('iphone') ||
+    isIpadOS
+  );
+}
+
 export function useHaptics() {
   const { hapticsEnabled } = useAuth();
-  const [isApple, setIsApple] = useState(false);
-
-  useEffect(() => {
-    // Determine if device is Apple (Mac, iPhone, iPad, iPod) because they block navigator.vibrate
-    const platform = window.navigator.platform?.toLowerCase() || '';
-    const userAgent = window.navigator.userAgent?.toLowerCase() || '';
-    
-    // iPadOS 13+ platform returns "MacIntel" but maxTouchPoints > 0
-    const isIpadOS = platform === 'macintel' && navigator.maxTouchPoints > 1;
-    
-    if (
-      platform.includes('mac') || 
-      platform.includes('iphone') || 
-      platform.includes('ipad') || 
-      platform.includes('ipod') ||
-      userAgent.includes('mac') ||
-      userAgent.includes('iphone') ||
-      isIpadOS
-    ) {
-      setIsApple(true);
-    }
-  }, []);
+  const [isApple] = useState(isAppleDevice);
 
   const playTapticClick = useCallback((duration: number = 0.1) => {
     try {
       if (!globalAudioCtx) {
-        globalAudioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const AudioContextCtor = window.AudioContext || (window as WebAudioWindow).webkitAudioContext;
+        if (!AudioContextCtor) return;
+        globalAudioCtx = new AudioContextCtor();
       }
       
       // Resume if browser suspended it due to lack of initial user interaction
@@ -57,7 +58,7 @@ export function useHaptics() {
 
       oscillator.start();
       oscillator.stop(globalAudioCtx.currentTime + duration);
-    } catch (error) {
+    } catch {
       // Ignore: audio context may be completely blocked by strict browser policy 
     }
   }, []);

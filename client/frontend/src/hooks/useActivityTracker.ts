@@ -10,9 +10,8 @@ import { useAuth } from '@/context/AuthContext';
  */
 export function useActivityTracker() {
   const { user, token } = useAuth();
-  const authenticated = !!user && !!token;
   const [isFocusingGlobal, setIsFocusingGlobal] = useState(false);
-  const lastActivityRef = useRef<number>(Date.now());
+  const lastActivityRef = useRef<number>(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Throttle heartbeat to every 30 seconds
@@ -22,6 +21,7 @@ export function useActivityTracker() {
 
   useEffect(() => {
     if (!token || !user) return;
+    lastActivityRef.current = Date.now();
 
     const handleActivity = () => {
       lastActivityRef.current = Date.now();

@@ -38,13 +38,13 @@ export default function HomePage() {
          const name = window.prompt("Welcome to Demo Mode! What's your name?", "Scholar");
          localStorage.setItem('vayl_demo_name', name?.trim() || "Scholar");
       }
-      setIsDemo(true);
+      queueMicrotask(() => setIsDemo(true));
     } else {
       // If the user manually removes ?demo=true from the URL, immediately exit demo mode
       localStorage.removeItem('vayl_demo_mode');
-      setIsDemo(false);
+      queueMicrotask(() => setIsDemo(false));
     }
-    setDemoChecked(true);
+    queueMicrotask(() => setDemoChecked(true));
   }, []);
 
   if (isLoading || !demoChecked) {

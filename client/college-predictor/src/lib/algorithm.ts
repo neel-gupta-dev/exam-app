@@ -332,21 +332,34 @@ function classifyChanceZScore(
   userRank: number,
   cutoff: CutoffEntry
 ): { level: ChanceLevel; percentage: number } | null {
+  const cutoffAnchoredChance = classifyChanceFallback(userRank, cutoff.closing_rank);
+  if (!cutoffAnchoredChance) return null;
+
   // Build the stats lookup key
-  const statsKey = `${cutoff.institute_code}|${cutoff.program_code}|${cutoff.quota}|${cutoff.seat_type}|${cutoff.gender}`;
+  const statsKey = [
+    cutoff.institute_code,
+    cutoff.program_code,
+    cutoff.quota,
+    cutoff.seat_type,
+    cutoff.gender,
+    normalizeCounseling(cutoff.counseling),
+  ].join("|");
   const stats = programStatsMap.get(statsKey);
 
-  if (stats && stats.s > 0) {
+  if (stats && isUsableStats(stats, cutoff.closing_rank)) {
     // ─── Z-Score Path ───
     // Use the latest closing rank as the reference point
-    const refCutoff = stats.l;
-    const effectiveStd = Math.max(stats.s, refCutoff * 0.03);
+    const refCutoff = cutoff.closing_rank;
+    const effectiveStd = Math.min(
+      Math.max(stats.s, refCutoff * 0.03, 10),
+      Math.max(refCutoff * 0.25, 25)
+    );
 
     // Z-score: positive means user rank is worse (higher number) than cutoff
     const z = (userRank - refCutoff) / effectiveStd;
 
     // P(admitted) = Φ(-z) because lower rank = better chance
-    const probability = normalCDF(-z) * 100;
+    const probability = Math.min(normalCDF(-z) * 100, cutoffAnchoredChance.percentage);
 
     // Prevent showing colleges far below student's level
     if (probability > 99.5 && (refCutoff - userRank) > 30000) {
@@ -368,7 +381,23 @@ function classifyChanceZScore(
   }
 
   // ─── Fallback: Ratio-based (for entries without stats) ───
-  return classifyChanceFallback(userRank, cutoff.closing_rank);
+  return cutoffAnchoredChance;
+}
+
+function normalizeCounseling(counseling: string): string {
+  const normalized = counseling.toUpperCase();
+  return normalized === "JOSAA" ? "JOSAA" : normalized;
+}
+
+function isUsableStats(stats: ProgramStats, closingRank: number): boolean {
+  if (!Number.isFinite(stats.s) || stats.s <= 0) return false;
+  if (!Number.isFinite(stats.l) || stats.l <= 0) return false;
+
+  const latestDrift = Math.abs(stats.l - closingRank) / Math.max(closingRank, 1);
+  if (latestDrift > 0.35) return false;
+
+  const volatilityRatio = stats.s / Math.max(closingRank, 1);
+  return volatilityRatio <= 0.6;
 }
 
 /**

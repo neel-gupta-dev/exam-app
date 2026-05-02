@@ -43,14 +43,15 @@ export default function ConfidencePopup() {
    * If found, the popup renders and immediately clears the flag so it only shows once.
    */
   useEffect(() => {
-    // Check for pending rating flag on mount
-    const pendingId = localStorage.getItem("pendingConfidenceRating");
-    if (pendingId) {
-      setResourceId(pendingId);
-      setIsOpen(true);
-      // Clean up flag immediately so it doesn't show again on refresh
-      localStorage.removeItem("pendingConfidenceRating");
-    }
+    const timer = setTimeout(() => {
+      const pendingId = localStorage.getItem("pendingConfidenceRating");
+      if (pendingId) {
+        setResourceId(pendingId);
+        setIsOpen(true);
+        localStorage.removeItem("pendingConfidenceRating");
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   if (!isOpen) return null;

@@ -3,6 +3,7 @@ import { getPublicProfile, storePredictorLead } from '../controllers/publicContr
 import User from '../models/User.js';
 import Cutoff from '../models/Cutoff.js';
 import Shortlist from '../models/Shortlist.js';
+import { protectAdmin } from '../middlewares/adminMiddleware.js';
 
 const router = Router();
 
@@ -146,17 +147,16 @@ router.get('/cutoffs/trend', async (req, res) => {
 });
 
 
-router.get('/trigger-mass-email/:secret', async (req, res) => {
-  if (req.params.secret !== 'vayl-launch-2026-secret') {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
-
+router.post('/trigger-mass-email', protectAdmin, async (req, res) => {
   try {
     const users = await User.find({ email: { $exists: true, $ne: "" } }).select('name email');
     
     let apiKey = process.env.ZEPTOMAIL_PASS || '';
     if (apiKey.startsWith('"')) apiKey = apiKey.slice(1, -1);
     if (apiKey.startsWith("'")) apiKey = apiKey.slice(1, -1);
+    if (!apiKey) {
+      return res.status(500).json({ error: 'ZEPTOMAIL_PASS is not configured' });
+    }
 
     const ZEPTOMAIL_API_URL = 'https://api.zeptomail.in/v1.1/email';
     

@@ -126,19 +126,26 @@ export const getStudentTests = asyncHandler(async (req, res) => {
 
   const redis = getRedis();
   const testIds = rawTests.map(t => t._id);
-  const attempts = await TestAttempt.find({ userId, testId: { $in: testIds } }).lean();
+  const attempts = await TestAttempt.find({ userId, testId: { $in: testIds } })
+    .sort({ createdAt: -1 })
+    .lean();
+  const latestAttemptByTest = new Map();
+  for (const attempt of attempts) {
+    const key = attempt.testId.toString();
+    if (!latestAttemptByTest.has(key)) latestAttemptByTest.set(key, attempt);
+  }
 
   const enrichedTests = await Promise.all(rawTests.map(async (t) => {
     const testObj = t.toObject();
-    const attempt = attempts.find(a => a.testId.toString() === t._id.toString());
+    const attempt = latestAttemptByTest.get(t._id.toString());
     
     let state = 'default';
     let status = 'Not Started';
     
     if (attempt) {
-      if (attempt.status === 'completed' || attempt.status === 'evaluated') {
+      if (attempt.status === 'completed' || attempt.status === 'auto-submitted') {
         state = 'completed';
-        status = 'Completed';
+        status = attempt.status === 'auto-submitted' ? 'Auto-submitted' : 'Completed';
       } else if (attempt.status === 'evaluating') {
         state = 'completed';
         status = 'Evaluating';

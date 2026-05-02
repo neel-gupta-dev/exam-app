@@ -1,24 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 type OS = 'macos' | 'windows' | 'linux' | 'other';
 
 export function useModifierKey() {
-  const [os, setOs] = useState<OS>('other');
-
-  useEffect(() => {
+  const [os] = useState<OS>(() => {
+    if (typeof window === 'undefined') return 'other';
     const platform = window.navigator.platform.toLowerCase();
     if (platform.includes('mac')) {
-      setOs('macos');
-    } else if (platform.includes('win')) {
-      setOs('windows');
-    } else if (platform.includes('linux')) {
-      setOs('linux');
-    } else {
-      setOs('other');
+      return 'macos';
     }
-  }, []);
+    if (platform.includes('win')) {
+      return 'windows';
+    }
+    if (platform.includes('linux')) {
+      return 'linux';
+    }
+    return 'other';
+  });
 
   const isMac = os === 'macos';
   const modifierKey = isMac ? 'metaKey' : 'ctrlKey';

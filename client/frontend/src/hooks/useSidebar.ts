@@ -9,12 +9,12 @@ import { useState, useEffect } from "react";
  * synchronization across isolated layout components (TopNav, Sidebar, DashboardLayout).
  */
 export function useSidebar() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('sidebar_collapsed') === 'true';
+  });
 
   useEffect(() => {
-    // Initial read on mount
-    setIsCollapsed(localStorage.getItem('sidebar_collapsed') === 'true');
-
     // Listener for cross-component updates
     const handler = () => setIsCollapsed(localStorage.getItem('sidebar_collapsed') === 'true');
     window.addEventListener('sidebarToggled', handler);

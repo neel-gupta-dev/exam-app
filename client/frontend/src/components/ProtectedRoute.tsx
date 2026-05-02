@@ -22,20 +22,22 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   const isDemoAllowed = isDemoAllowedPath(pathname);
 
   useEffect(() => {
-    let timer: any;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     if (isLoading) {
       timer = setTimeout(() => setShowRetry(true), 7000);
     } else {
-      setShowRetry(false);
+      queueMicrotask(() => setShowRetry(false));
     }
-    return () => clearTimeout(timer);
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [isLoading]);
 
   // Show the "locked" modal then redirect non-authed users away from private pages
   useEffect(() => {
     if (!isLoading && !token) {
       if (!isDemoAllowed) {
-        setShowLockedModal(true);
+        queueMicrotask(() => setShowLockedModal(true));
       } else if (pathname !== '/' && !isDemoUrl) {
         // If they are on a sub-page but lack the ?demo=true flag, kick to landing page
         router.push('/');

@@ -34,49 +34,57 @@ const processQueue = async () => {
            continue; // Skip, don't crash
         }
 
+        const questionMap = new Map(questions.map((q) => [q._id.toString(), q]));
         let totalScore = 0;
-        let correctCount = 0;
-        let incorrectCount = 0;
-        let skippedCount = 0;
         let maxPossibleScore = 0;
+        const sectionScores = {};
 
-        // Grade map using rawAnswers
-        questions.forEach(q => {
-          maxPossibleScore += (q.positiveMarks ?? test.defaultPositiveMarks);
-          
-          const rawAnswerObj = attempt.rawAnswers && attempt.rawAnswers[q._id.toString()];
-          // Check if answered or not
-          if (!rawAnswerObj || !rawAnswerObj.selectedOption || rawAnswerObj.selectedOption.length === 0) {
-            skippedCount++;
-            return;
+        for (const answer of attempt.answers || []) {
+          const question = questionMap.get(answer.questionId.toString());
+          if (!question) continue;
+
+          const pos = question.positiveMarks ?? test.defaultPositiveMarks;
+          const neg = question.negativeMarks ?? test.defaultNegativeMarks;
+          const section = question.section || 'General';
+          maxPossibleScore += pos;
+
+          if (!sectionScores[section]) {
+            sectionScores[section] = { correct: 0, wrong: 0, unattempted: 0, score: 0 };
           }
 
-          const pos = q.positiveMarks ?? test.defaultPositiveMarks;
-          const neg = q.negativeMarks ?? test.defaultNegativeMarks;
+          const selectedAnswer = answer.selectedAnswer || [];
+          if (selectedAnswer.length === 0) {
+            sectionScores[section].unattempted += 1;
+            continue;
+          }
 
-          // Validate exact array match (Multi/Single/Integer safely)
-          const isCorrect = 
-            rawAnswerObj.selectedOption.length === q.correctAnswer.length &&
-            rawAnswerObj.selectedOption.every(opt => q.correctAnswer.includes(opt));
+          const expected = [...(question.correctAnswer || [])].sort();
+          const selected = [...selectedAnswer].sort();
+          const isCorrect =
+            selected.length === expected.length &&
+            selected.every((opt, idx) => opt === expected[idx]);
 
           if (isCorrect) {
             totalScore += pos;
-            correctCount++;
+            sectionScores[section].correct += 1;
+            sectionScores[section].score += pos;
           } else {
             totalScore -= neg;
-            incorrectCount++;
+            sectionScores[section].wrong += 1;
+            sectionScores[section].score -= neg;
           }
-        });
+        }
 
-        const percentage = Math.max(0, (totalScore / maxPossibleScore) * 100);
+        const percentage = maxPossibleScore > 0
+          ? Math.round((totalScore / maxPossibleScore) * 10000) / 100
+          : 0;
 
         // Commit grade
-        attempt.score = totalScore;
+        attempt.totalScore = totalScore;
         attempt.maxPossibleScore = maxPossibleScore;
         attempt.percentage = percentage;
-        attempt.correctCount = correctCount;
-        attempt.incorrectCount = incorrectCount;
-        attempt.skippedCount = skippedCount;
+        attempt.sectionScores = sectionScores;
+        attempt.submittedAt = attempt.submittedAt || new Date();
         attempt.status = 'completed';
 
         await attempt.save();

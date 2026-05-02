@@ -1,10 +1,9 @@
 /**
  * compute-program-stats.js
  * 
- * Pre-computes per-program statistical data for Z-score based admission probability:
- * - Weighted closing rank mean (from last round per year, or inter-round if single year)
- * - Standard deviation (from inter-round variance)
- * - Trend slope
+ * Pre-computes per-program statistical data for conservative admission probability.
+ * The public cutoff file is stored as compact arrays:
+ * [institute_code, program_code, program_name, quota, seat_type, gender, opening_rank, closing_rank, round, year, counseling]
  * 
  * Output: public/data/program-stats.json
  */
@@ -15,14 +14,22 @@ const CUTOFFS_PATH = path.join(__dirname, '../client/college-predictor/public/da
 const OUTPUT_PATH = path.join(__dirname, '../client/college-predictor/public/data/program-stats.json');
 
 function computeStats() {
-  const cutoffs = JSON.parse(fs.readFileSync(CUTOFFS_PATH, 'utf-8'));
+  const rawCutoffs = JSON.parse(fs.readFileSync(CUTOFFS_PATH, 'utf-8'));
+  const cutoffs = rawCutoffs.map(normalizeCutoff).filter(Boolean);
   
   // Group cutoffs by unique program tuple
-  // Key: institute_code|program_code|quota|seat_type|gender
+  // Key: institute_code|program_code|quota|seat_type|gender|counseling
   const groups = new Map();
   
   for (const c of cutoffs) {
-    const key = `${c.institute_code}|${c.program_code}|${c.quota}|${c.seat_type}|${c.gender}`;
+    const key = [
+      c.institute_code,
+      c.program_code,
+      c.quota,
+      c.seat_type,
+      c.gender,
+      c.counseling,
+    ].join('|');
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(c);
   }
@@ -30,69 +37,85 @@ function computeStats() {
   const stats = [];
   
   for (const [key, entries] of groups) {
-    // Sort entries by round (ascending)
-    entries.sort((a, b) => a.round - b.round);
-    
-    const parts = key.split('|');
-    const closingRanks = entries.map(e => e.closing_rank);
-    const rounds = entries.map(e => e.round);
-    const years = [...new Set(entries.map(e => e.year))];
-    
-    // Use the LAST round's closing rank as the primary reference (most relaxed cutoff)
-    const latestClosing = closingRanks[closingRanks.length - 1];
-    
-    // Compute mean of closing ranks across all rounds
-    const mean = closingRanks.reduce((s, v) => s + v, 0) / closingRanks.length;
-    
-    // Compute standard deviation from inter-round variance
-    let std;
+    entries.sort((a, b) => a.year - b.year || a.round - b.round);
+
+    const finalByYear = new Map();
+    for (const entry of entries) {
+      const current = finalByYear.get(entry.year);
+      if (!current || entry.round > current.round) {
+        finalByYear.set(entry.year, entry);
+      }
+    }
+
+    const yearlyFinals = Array.from(finalByYear.values())
+      .sort((a, b) => a.year - b.year);
+    const latestEntry = yearlyFinals[yearlyFinals.length - 1];
+    const latestClosing = latestEntry.closing_rank;
+    const closingRanks = yearlyFinals.map(e => e.closing_rank);
+
+    const mean = closingRanks.reduce((sum, value) => sum + value, 0) / closingRanks.length;
+    let std = latestClosing * 0.05;
     if (closingRanks.length >= 2) {
-      const variance = closingRanks.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / closingRanks.length;
+      const variance = closingRanks.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / closingRanks.length;
       std = Math.sqrt(variance);
-    } else {
-      // Single data point — use 5% of the closing rank as a conservative estimate
-      std = latestClosing * 0.05;
     }
-    
-    // Floor: minimum σ is 3% of mean to prevent division by tiny numbers
-    std = Math.max(std, mean * 0.03);
-    
-    // Round volatility: spread between first and last round
-    const roundVolatility = closingRanks.length >= 2 
-      ? closingRanks[closingRanks.length - 1] - closingRanks[0]
-      : 0;
-    
-    // Trend slope: for single year, use inter-round trend
-    // For multi-year, would use year-over-year regression
-    let trendSlope = 0;
-    if (closingRanks.length >= 2) {
-      // Simple slope: (last - first) / number of intervals
-      trendSlope = (closingRanks[closingRanks.length - 1] - closingRanks[0]) / (closingRanks.length - 1);
-    }
+
+    // Keep historical volatility helpful but never dominant over the real latest cutoff.
+    std = Math.max(std, latestClosing * 0.03, 10);
+    std = Math.min(std, Math.max(latestClosing * 0.25, 25));
     
     stats.push({
-      key,
-      institute_code: parts[0],
-      program_code: parts[1],
-      quota: parts[2],
-      seat_type: parts[3],
-      gender: parts[4],
-      closing_rank_mean: Math.round(mean),
-      closing_rank_std: Math.round(std),
-      closing_rank_latest: latestClosing,
-      trend_slope: Math.round(trendSlope),
-      round_volatility: roundVolatility,
-      rounds_available: rounds,
-      years_of_data: years.length,
+      k: key,
+      m: Math.round(mean),
+      s: Math.round(std),
+      l: latestClosing,
     });
   }
   
   fs.writeFileSync(OUTPUT_PATH, JSON.stringify(stats));
   
   console.log(`✅ Computed stats for ${stats.length} program tuples`);
-  console.log(`   Average σ: ${Math.round(stats.reduce((s, v) => s + v.closing_rank_std, 0) / stats.length)}`);
-  console.log(`   Tuples with >1 round: ${stats.filter(s => s.rounds_available.length > 1).length}`);
+  console.log(`   Average σ: ${Math.round(stats.reduce((s, v) => s + v.s, 0) / stats.length)}`);
   console.log(`   Output: ${OUTPUT_PATH} (${(fs.statSync(OUTPUT_PATH).size / 1024).toFixed(0)} KB)`);
+}
+
+function normalizeCutoff(c) {
+  if (Array.isArray(c)) {
+    return {
+      institute_code: c[0],
+      program_code: c[1],
+      quota: c[3],
+      seat_type: c[4],
+      gender: c[5] === 'F' ? 'Female-only (including Supernumerary)' : 'Gender-Neutral',
+      opening_rank: Number(c[6]),
+      closing_rank: Number(c[7]),
+      round: Number(c[8]),
+      year: Number(c[9]),
+      counseling: normalizeCounseling(c[10]),
+    };
+  }
+
+  if (c && typeof c === 'object') {
+    return {
+      institute_code: c.institute_code,
+      program_code: c.program_code,
+      quota: c.quota,
+      seat_type: c.seat_type,
+      gender: c.gender,
+      opening_rank: Number(c.opening_rank),
+      closing_rank: Number(c.closing_rank),
+      round: Number(c.round),
+      year: Number(c.year),
+      counseling: normalizeCounseling(c.counseling),
+    };
+  }
+
+  return null;
+}
+
+function normalizeCounseling(counseling) {
+  const normalized = String(counseling || '').toUpperCase();
+  return normalized === 'JOSAA' ? 'JOSAA' : normalized;
 }
 
 computeStats();

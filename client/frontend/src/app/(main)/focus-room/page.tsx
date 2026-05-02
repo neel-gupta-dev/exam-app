@@ -58,7 +58,7 @@ function GoalRing({ progress, size = 56, strokeWidth = 4, achieved }: {
  * Goal completion celebration modal
  */
 function GoalCelebrationModal({ onClose }: { onClose: () => void }) {
-  const msg = GOAL_MESSAGES[Math.floor(Math.random() * GOAL_MESSAGES.length)];
+  const msg = GOAL_MESSAGES[0];
 
   useEffect(() => {
     const timer = setTimeout(onClose, 8000);

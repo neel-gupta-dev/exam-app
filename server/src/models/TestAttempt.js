@@ -51,6 +51,10 @@ const testAttemptSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    durationUsedMinutes: {
+      type: Number,
+      default: null,
+    },
     /**
      * Per-question answer state.
      * During live test, this is synced from Redis periodically.

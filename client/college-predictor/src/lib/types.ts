@@ -46,7 +46,7 @@ export interface BranchRanking {
 
 /** Pre-computed program statistics for Z-score probability */
 export interface ProgramStats {
-  k: string;  // key: "institute_code|program_code|quota|seat_type|gender"
+  k: string;  // key: "institute_code|program_code|quota|seat_type|gender|counseling"
   m: number;  // closing_rank_mean
   s: number;  // closing_rank_std
   l: number;  // closing_rank_latest

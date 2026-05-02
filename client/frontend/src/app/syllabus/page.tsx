@@ -19,7 +19,6 @@ const SYLLABUS_STEPS = [
 
 export default function SyllabusLoadingPage() {
   const [progress, setProgress] = useState(0);
-  const [stepIndex, setStepIndex] = useState(0);
 
   useEffect(() => {
     const duration = 15000; // 15 seconds to reach 99%
@@ -39,16 +38,10 @@ export default function SyllabusLoadingPage() {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    // Change step text based on progress thresholds
-    const newIndex = Math.min(
-      Math.floor((progress / 100) * SYLLABUS_STEPS.length),
-      SYLLABUS_STEPS.length - 1
-    );
-    if (newIndex !== stepIndex) {
-      setStepIndex(newIndex);
-    }
-  }, [progress, stepIndex]);
+  const stepIndex = Math.min(
+    Math.floor((progress / 100) * SYLLABUS_STEPS.length),
+    SYLLABUS_STEPS.length - 1
+  );
 
   return (
     <div className="min-h-screen bg-[#0a0a0c] text-white flex flex-col items-center justify-center p-6 font-sans selection:bg-primary/30">

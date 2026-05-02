@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
@@ -155,10 +156,10 @@ export default function SubjectPage({ params }: { params: Promise<{ subject: str
       {/* Breadcrumbs */}
       <div className="mb-10">
         <nav className="flex items-center gap-2 text-[11px] font-bold text-on-surface-variant mb-6 tracking-widest uppercase">
-          <a href="/" className="hover:text-primary transition-colors flex items-center gap-1">
+          <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1">
             <Home className="w-3 h-3" />
             Vault
-          </a>
+          </Link>
           <ChevronRight className="w-3 h-3" />
           <span className="text-on-surface">{subjectTitle}</span>
         </nav>

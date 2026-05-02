@@ -11,9 +11,14 @@ export async function POST(request: Request) {
     const secretKey = process.env.RECAPTCHA_SECRET_KEY;
     
     if (!secretKey) {
-      // If no secret key is provided, we fail open for local dev or misconfiguration
-      // In production, this should ideally fail closed.
-      console.warn("RECAPTCHA_SECRET_KEY is missing. Passing verification by default.");
+      if (process.env.NODE_ENV === 'production') {
+        console.error("RECAPTCHA_SECRET_KEY is missing. Failing verification in production.");
+        return NextResponse.json(
+          { success: false, error: 'Captcha verification is not configured' },
+          { status: 500 }
+        );
+      }
+      console.warn("RECAPTCHA_SECRET_KEY is missing. Passing verification for local development.");
       return NextResponse.json({ success: true, score: 0.9 });
     }
 

@@ -18,6 +18,11 @@ const protect = asyncHandler(async (req, res, next) => {
       const decoded = jwt.verify(token, JWT_SECRET);
       req.user = await User.findById(decoded.id).select('-password');
 
+      if (!req.user) {
+        res.status(401);
+        throw new Error('Not authorized, user not found');
+      }
+
       // Fire-and-forget: stamp lastActiveAt without blocking the request chain.
       // Using updateOne bypasses Mongoose hooks for maximum performance.
       User.updateOne(

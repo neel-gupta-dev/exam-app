@@ -106,19 +106,8 @@ export const startSession = async (testId, user) => {
   let attempt = await TestAttempt.findOne({
     userId: user._id,
     testId,
+    status: 'in-progress',
   });
-
-  if (attempt && attempt.status === 'completed') {
-    const err = new Error('You have already submitted this test');
-    err.statusCode = 400;
-    throw err;
-  }
-
-  if (attempt && attempt.status === 'auto-submitted') {
-    const err = new Error('This test was auto-submitted due to violations');
-    err.statusCode = 400;
-    throw err;
-  }
 
   if (!attempt) {
     // Initialize a fresh attempt with all questions set to 'unanswered'
@@ -227,7 +216,7 @@ export const syncSession = async (attemptId, userId, { answers, tabSwitchCount, 
  * Fetches the REAL answers from MongoDB (with correctAnswer),
  * compares against the student's selections, and calculates scores.
  */
-export const submitSession = async (attemptId, userId) => {
+export const submitSession = async (attemptId, userId, finalStatus = 'completed') => {
   const attempt = await TestAttempt.findOne({ _id: attemptId, userId });
   if (!attempt) {
     const err = new Error('Attempt not found');
@@ -312,7 +301,7 @@ export const submitSession = async (attemptId, userId) => {
   attempt.percentage = maxPossible > 0 ? Math.round((totalScore / maxPossible) * 10000) / 100 : 0;
   attempt.sectionScores = sectionScores;
   attempt.submittedAt = new Date();
-  attempt.status = 'completed';
+  attempt.status = finalStatus;
 
   await attempt.save();
 
@@ -339,17 +328,11 @@ export const forceSubmit = async (attemptId, userId) => {
   const attempt = await TestAttempt.findOne({ _id: attemptId, userId });
   if (!attempt || attempt.status !== 'in-progress') return null;
 
-  attempt.status = 'auto-submitted';
   attempt.warnings.push({ type: 'auto-submit-cheat', timestamp: new Date() });
-  attempt.submittedAt = new Date();
+  await attempt.save();
 
   // Grade it same as normal submit
-  const result = await submitSession(attemptId, userId);
-
-  // Override status back to auto-submitted
-  await TestAttempt.updateOne({ _id: attemptId }, { status: 'auto-submitted' });
-
-  return result;
+  return submitSession(attemptId, userId, 'auto-submitted');
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────

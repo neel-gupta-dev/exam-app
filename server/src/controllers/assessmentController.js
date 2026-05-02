@@ -124,6 +124,22 @@ export const submitAssessment = asyncHandler(async (req, res) => {
 
   const endTime = new Date();
   const durationUsedMinutes = Math.round((endTime.getTime() - new Date(startTime).getTime()) / 60000);
+  const questions = await Question.find({ testId }).select('_id').lean();
+  const answerRows = questions.map((question) => {
+    const answer = answers?.[question._id.toString()] || {};
+    const selected = answer.selectedOption || answer.selectedAnswer || [];
+    const selectedAnswer = Array.isArray(selected)
+      ? selected
+      : selected === null || selected === undefined || selected === ''
+      ? []
+      : [String(selected)];
+    return {
+      questionId: question._id,
+      selectedAnswer,
+      status: answer.status || (selectedAnswer.length ? 'answered' : 'unanswered'),
+      timeSpentSeconds: answer.timeSpentSeconds || 0,
+    };
+  });
 
   // Store raw result for background evaluation queue
   const attempt = await TestAttempt.create({
@@ -131,7 +147,7 @@ export const submitAssessment = asyncHandler(async (req, res) => {
     testId,
     status: 'evaluating', // Pushed to queue
     durationUsedMinutes,
-    rawAnswers: answers, // Stores exactly what the user selected + review state
+    answers: answerRows,
   });
 
   // Cleanup Redis
