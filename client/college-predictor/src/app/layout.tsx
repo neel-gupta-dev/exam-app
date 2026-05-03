@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { CaptchaProvider } from "../components/CaptchaProvider";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next"
+import Script from "next/script";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -218,7 +220,7 @@ export default function RootLayout({
             }}
           />
         </div>
-        
+
         {/* Nav Header */}
         <header className="w-full border-b border-navy-800/50 bg-navy-900/40 backdrop-blur-md sticky top-0 z-50">
           <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -234,6 +236,24 @@ export default function RootLayout({
         <CaptchaProvider>
           {children}
         </CaptchaProvider>
+
+        {process.env.NODE_ENV === 'production' && (
+          <>
+            <Analytics />
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}');
+              `}
+            </Script>
+          </>
+        )}
       </body>
     </html>
   );
