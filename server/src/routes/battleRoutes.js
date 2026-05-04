@@ -2,7 +2,13 @@ import express from 'express';
 import { protect } from '../middlewares/authMiddleware.js';
 import Battle from '../models/Battle.js';
 import BattleQuestion from '../models/BattleQuestion.js';
+import BattleLeaderboard from '../models/BattleLeaderboard.js';
 import User from '../models/User.js';
+
+/** Get today's date string in IST ("YYYY-MM-DD") */
+function getTodayIST() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+}
 
 const router = express.Router();
 
@@ -284,6 +290,50 @@ router.post('/solo-start', protect, async (req, res) => {
 });
 
 /**
+ * GET /battle/leaderboard
+ * Public endpoint — returns top 50 players for a given day (defaults to today IST).
+ * Query params: ?date=YYYY-MM-DD (optional)
+ */
+router.get('/leaderboard', async (req, res) => {
+  try {
+    const date = req.query.date || getTodayIST();
+
+    const entries = await BattleLeaderboard.find({ date })
+      .sort({ points: -1 })
+      .limit(50)
+      .lean();
+
+    // Populate user info
+    const userIds = entries.map(e => e.userId);
+    const users = await User.find({ _id: { $in: userIds } })
+      .select('name avatar')
+      .lean();
+
+    const userMap = {};
+    users.forEach(u => { userMap[u._id.toString()] = u; });
+
+    const leaderboard = entries.map((entry, i) => {
+      const user = userMap[entry.userId.toString()] || {};
+      return {
+        rank: i + 1,
+        userId: entry.userId,
+        name: user.name || 'Unknown',
+        avatar: user.avatar || null,
+        points: entry.points,
+        gamesPlayed: entry.gamesPlayed,
+        correctAnswers: entry.correctAnswers,
+        wrongAnswers: entry.wrongAnswers,
+      };
+    });
+
+    res.json({ date, leaderboard });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch leaderboard' });
+  }
+});
+
+/**
  * GET /battle/:roomCode
  * Polling route — fetch current match state by room code.
  */
@@ -411,6 +461,39 @@ router.post('/submit', protect, async (req, res) => {
     }
 
     await battle.save();
+
+    // ── Leaderboard tracking ──
+    // +4 correct, -1 wrong, 0 skipped (timeout / index -1)
+    let lbPoints = 0;
+    let lbCorrect = 0;
+    let lbWrong = 0;
+    if (isCorrect) {
+      lbPoints = 4;
+      lbCorrect = 1;
+    } else if (selectedOptionIndex !== undefined && selectedOptionIndex !== null && selectedOptionIndex !== -1) {
+      lbPoints = -1;
+      lbWrong = 1;
+    }
+
+    const todayIST = getTodayIST();
+    const lbUpdate = {
+      $inc: {
+        points: lbPoints,
+        correctAnswers: lbCorrect,
+        wrongAnswers: lbWrong,
+      },
+    };
+    // Increment gamesPlayed only when the user finishes all questions in a battle
+    const userFinished = isPlayer1 ? p1Finished : (battle.player2 ? p2Finished : false);
+    if (userFinished) {
+      lbUpdate.$inc.gamesPlayed = 1;
+    }
+
+    await BattleLeaderboard.findOneAndUpdate(
+      { userId, date: todayIST },
+      lbUpdate,
+      { upsert: true, new: true }
+    );
 
     res.json({
       success: true,

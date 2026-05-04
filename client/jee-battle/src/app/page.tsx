@@ -3,6 +3,16 @@
 import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+/** Parse user ID from a JWT token (no verification — just decode payload) */
+function getUserIdFromToken(token: string): string | null {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.id || payload._id || payload.sub || null;
+  } catch {
+    return null;
+  }
+}
+
 function LobbyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -17,10 +27,61 @@ function LobbyContent() {
   const [copied, setCopied] = useState(false);
   const [creating, setCreating] = useState(false);
 
+  // Leaderboard state
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [lbLoading, setLbLoading] = useState(true);
+  const [countdown, setCountdown] = useState('');
+
   // Track polling interval for cleanup
   const pollRef = useRef<NodeJS.Timeout | null>(null);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in';
+
+  // Decode current user ID from token
+  const currentUserId = token ? getUserIdFromToken(token) : null;
+
+  // Fetch leaderboard (public, no auth needed)
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        const res = await fetch(`${apiUrl}/battle/leaderboard`);
+        if (res.ok) {
+          const data = await res.json();
+          setLeaderboard(data.leaderboard || []);
+        }
+      } catch {
+        // Non-critical
+      } finally {
+        setLbLoading(false);
+      }
+    };
+    fetchLeaderboard();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchLeaderboard, 30000);
+    return () => clearInterval(interval);
+  }, [apiUrl]);
+
+  // Countdown to midnight IST
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date();
+      // Get current time in IST
+      const istOffset = 5.5 * 60 * 60 * 1000;
+      const istNow = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + istOffset);
+      // Next midnight IST
+      const nextMidnight = new Date(istNow);
+      nextMidnight.setHours(24, 0, 0, 0);
+      const diff = nextMidnight.getTime() - istNow.getTime();
+
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setCountdown(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
+    };
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const urlToken = searchParams.get('token');
@@ -387,6 +448,124 @@ function LobbyContent() {
           </div>
         </>
       )}
+
+      {/* ── Daily Leaderboard ── */}
+      <div className="bg-[#16191f] rounded-2xl border border-white/5 shadow-2xl overflow-hidden mt-2">
+        {/* Header */}
+        <div className="p-6 pb-4 border-b border-white/5">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🏆</span>
+              <h2 className="text-lg font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-500">
+                Today&apos;s Leaderboard
+              </h2>
+            </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <p className="text-gray-500 text-xs">Resets daily at midnight IST</p>
+            {countdown && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Resets in</span>
+                <span className="text-xs font-mono font-bold text-amber-400/80 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/10">
+                  {countdown}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="max-h-[420px] overflow-y-auto">
+          {lbLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-amber-500"></div>
+            </div>
+          ) : leaderboard.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600 text-sm">No battles played today yet.</p>
+              <p className="text-gray-700 text-xs mt-1">Be the first to play! 🚀</p>
+            </div>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="text-[10px] uppercase tracking-widest text-gray-500 border-b border-white/5">
+                  <th className="py-3 px-4 text-left font-bold">#</th>
+                  <th className="py-3 px-4 text-left font-bold">Player</th>
+                  <th className="py-3 px-4 text-right font-bold">Pts</th>
+                  <th className="py-3 px-4 text-right font-bold hidden sm:table-cell">W/L</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leaderboard.map((entry: any) => {
+                  const isMe = currentUserId && entry.userId === currentUserId;
+                  const rankBadge = entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : null;
+                  return (
+                    <tr
+                      key={entry.userId}
+                      className={`border-b border-white/[0.03] transition-colors ${
+                        isMe
+                          ? 'bg-indigo-500/10 border-indigo-500/20'
+                          : 'hover:bg-white/[0.02]'
+                      }`}
+                    >
+                      <td className="py-3 px-4">
+                        {rankBadge ? (
+                          <span className="text-lg">{rankBadge}</span>
+                        ) : (
+                          <span className={`text-sm font-bold ${isMe ? 'text-indigo-400' : 'text-gray-600'}`}>
+                            {entry.rank}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-sm font-semibold truncate max-w-[140px] ${
+                            isMe ? 'text-indigo-300' : 'text-gray-300'
+                          }`}>
+                            {entry.name}
+                          </span>
+                          {isMe && (
+                            <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-500/15 px-1.5 py-0.5 rounded">
+                              You
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-gray-600 mt-0.5">
+                          {entry.gamesPlayed} game{entry.gamesPlayed !== 1 ? 's' : ''}
+                        </p>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <span className={`text-lg font-black ${
+                          entry.points > 0 ? 'text-emerald-400' : entry.points < 0 ? 'text-red-400' : 'text-gray-500'
+                        }`}>
+                          {entry.points > 0 ? '+' : ''}{entry.points}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right hidden sm:table-cell">
+                        <span className="text-xs text-gray-500">
+                          <span className="text-emerald-500">{entry.correctAnswers}</span>
+                          <span className="text-gray-700 mx-0.5">/</span>
+                          <span className="text-red-500">{entry.wrongAnswers}</span>
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Scoring legend */}
+        <div className="px-6 py-3 border-t border-white/5 flex items-center justify-center gap-4">
+          <span className="text-[10px] text-gray-600 flex items-center gap-1">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Correct = +4
+          </span>
+          <span className="text-[10px] text-gray-600 flex items-center gap-1">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500"></span> Wrong = −1
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

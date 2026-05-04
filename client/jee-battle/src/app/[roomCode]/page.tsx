@@ -252,6 +252,20 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
 
   // ── Finished Screen ──
   if (battleState.status === 'finished') {
+    // Compute leaderboard points earned in this battle (+4 correct, -1 wrong, 0 skip)
+    const computeLbPoints = (answers: any[]) => {
+      let pts = 0;
+      let correct = 0;
+      let wrong = 0;
+      (answers || []).forEach((a: any) => {
+        if (a.isCorrect) { pts += 4; correct++; }
+        else if (a.selectedOptionIndex !== -1 && a.selectedOptionIndex !== null && a.selectedOptionIndex !== undefined) { pts -= 1; wrong++; }
+      });
+      return { pts, correct, wrong };
+    };
+
+    const myLb = computeLbPoints(battleState.myAnswers);
+
     return (
       <div className="min-h-screen bg-[#0f1115] text-white flex flex-col items-center justify-center p-4">
         <div className="max-w-lg w-full bg-[#16191f] rounded-2xl border border-white/5 p-8 text-center space-y-8 shadow-2xl">
@@ -268,10 +282,41 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
                <div className="text-3xl font-bold text-blue-400">{battleState.player2Score}</div>
              </div>
           </div>
-          
-          <button onClick={() => router.push('/')} className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl transition font-bold">
-            Return to Lobby
-          </button>
+
+          {/* Leaderboard Points Earned */}
+          <div className="bg-black/20 rounded-xl p-4 border border-white/5 space-y-2">
+            <p className="text-[10px] uppercase tracking-widest text-amber-500/70 font-bold">Leaderboard Points Earned</p>
+            <div className="flex items-center justify-center gap-3">
+              <span className={`text-3xl font-black ${myLb.pts > 0 ? 'text-emerald-400' : myLb.pts < 0 ? 'text-red-400' : 'text-gray-500'}`}>
+                {myLb.pts > 0 ? '+' : ''}{myLb.pts}
+              </span>
+              <span className="text-xs text-gray-500">pts</span>
+            </div>
+            <div className="flex items-center justify-center gap-4 text-xs text-gray-500">
+              <span className="flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                {myLb.correct} correct (+{myLb.correct * 4})
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                {myLb.wrong} wrong (−{myLb.wrong})
+              </span>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button onClick={() => router.push('/')} className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition font-bold">
+              Return to Lobby
+            </button>
+            <button
+              onClick={() => router.push('/')}
+              className="flex-1 py-3 rounded-xl font-bold transition-all
+                bg-gradient-to-r from-amber-600/80 to-yellow-600/80 hover:from-amber-500/80 hover:to-yellow-500/80
+                border border-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.15)]"
+            >
+              🏆 Leaderboard
+            </button>
+          </div>
         </div>
       </div>
     );
