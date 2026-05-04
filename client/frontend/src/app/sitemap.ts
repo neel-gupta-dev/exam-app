@@ -4,30 +4,48 @@ import { MetadataRoute } from 'next'
  * Dynamic Sitemap Generator for Vayl
  * Automatically generates sitemap.xml for SEO and Adsense crawlers.
  */
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://vayl.in';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-  // List of public-facing routes that should be indexed
-  const routes = [
-    '',
-    '/about',
-    '/contact',
-    '/privacy-policy',
-    '/terms',
-    '/login',
-    '/signup',
-    '/blogs',
-    '/blogs/the-jee-2026-roadmap',
-    '/blogs/deep-work-for-aspirants',
-    '/blogs/mastering-organic-chemistry',
-    '/blogs/physics-high-yield-mechanics',
-    '/blogs/exam-anxiety-protocol',
-  ].map((route) => ({
-    url: `${baseUrl}${route}`,
+  // Base static routes
+  const staticRoutes = [
+    { path: '', priority: 1.0 },
+    { path: '/about', priority: 0.8 },
+    { path: '/contact', priority: 0.8 },
+    { path: '/privacy-policy', priority: 0.5 },
+    { path: '/terms', priority: 0.5 },
+    { path: '/login', priority: 0.7 },
+    { path: '/signup', priority: 0.7 },
+    { path: '/blogs', priority: 0.9 },
+  ];
+
+  const routes: MetadataRoute.Sitemap = staticRoutes.map((route) => ({
+    url: `${baseUrl}${route.path}`,
     lastModified: new Date().toISOString(),
-    changeFrequency: 'weekly' as const,
-    priority: route === '' ? 1 : 0.8,
+    changeFrequency: 'weekly',
+    priority: route.priority,
   }));
+
+  // Fetch dynamic blogs
+  try {
+    const res = await fetch(`${apiUrl}/blogs`, { next: { revalidate: 3600 } });
+    if (res.ok) {
+      const data = await res.json();
+      const blogs = Array.isArray(data) ? data : data.blogs || [];
+
+      blogs.forEach((blog: any) => {
+        routes.push({
+          url: `${baseUrl}/blogs/${blog.slug}`,
+          lastModified: new Date(blog.updatedAt || blog.createdAt || new Date()).toISOString(),
+          changeFrequency: 'monthly',
+          priority: 0.9, // Priority of 0.9 for blog posts as requested
+        });
+      });
+    }
+  } catch (error) {
+    console.error('[Sitemap] Failed to fetch dynamic blogs:', error);
+  }
 
   return routes;
 }

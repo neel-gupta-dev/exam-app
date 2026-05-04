@@ -88,7 +88,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   // (otherwise '/' is the Landing Page and should NOT have the sidebar).
   const isDemoPath = isDemoAllowedPath(pathname);
   const isPublicPage = pathname.startsWith('/p/');
-  const showShell = !isPublicPage && (isAuthenticated || (isDemoPath && (pathname !== '/' || isDemoMode)));
+  const isBlogPage = pathname.startsWith('/blogs');
+  const showShell = !isPublicPage && !isBlogPage && (isAuthenticated || (isDemoPath && (pathname !== '/' || isDemoMode)));
 
   return (
     <>
