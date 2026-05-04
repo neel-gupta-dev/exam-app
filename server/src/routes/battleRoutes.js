@@ -100,7 +100,9 @@ router.post('/queue', protect, async (req, res) => {
         $set: {
           player2: userId,
           status: 'active',
-          startedAt: new Date(),
+          startedAt: new Date(Date.now() + 5000),
+          player1LastAnswerAt: new Date(Date.now() + 5000),
+          player2LastAnswerAt: new Date(Date.now() + 5000),
           questions: questions.map(q => q._id)
         }
       },
@@ -192,7 +194,9 @@ router.post('/join', protect, async (req, res) => {
         $set: {
           player2: userId,
           status: 'active',
-          startedAt: new Date(),
+          startedAt: new Date(Date.now() + 5000),
+          player1LastAnswerAt: new Date(Date.now() + 5000),
+          player2LastAnswerAt: new Date(Date.now() + 5000),
           questions: questions.map(q => q._id)
         }
       },
@@ -262,8 +266,11 @@ router.post('/solo-start', protect, async (req, res) => {
       return res.status(404).json({ error: 'Waiting room not found' });
     }
 
+    const startDelay = new Date(Date.now() + 5000);
     battle.status = 'active';
-    battle.startedAt = new Date();
+    battle.startedAt = startDelay;
+    battle.player1LastAnswerAt = startDelay;
+    battle.player2LastAnswerAt = startDelay;
 
     const questions = await BattleQuestion.aggregate([{ $sample: { size: 10 } }]);
     battle.questions = questions.map(q => q._id);
@@ -312,6 +319,7 @@ router.get('/:roomCode', protect, async (req, res) => {
       winner: battle.winner,
       startedAt: battle.startedAt,
       isAdmin: req.user.role === 'admin',
+      serverNow: Date.now(),
     });
   } catch (error) {
     console.error(error);
@@ -350,6 +358,10 @@ router.post('/submit', protect, async (req, res) => {
       return res.status(404).json({ error: 'Question not found' });
     }
 
+    const lastAnswerAt = isPlayer1 ? battle.player1LastAnswerAt : battle.player2LastAnswerAt;
+    const serverTimeTakenSeconds = lastAnswerAt ? Math.max(0, (Date.now() - lastAnswerAt.getTime()) / 1000) : timeTakenSeconds;
+    const actualTimeTaken = Math.min(60, serverTimeTakenSeconds);
+
     let isCorrect = false;
     let points = 0;
 
@@ -357,16 +369,22 @@ router.post('/submit', protect, async (req, res) => {
       const option = question.options[selectedOptionIndex];
       if (option && option.isCorrect) {
         isCorrect = true;
-        const timeBonus = Math.max(0, Math.floor((60 - timeTakenSeconds) * (50 / 60)));
+        const timeBonus = Math.max(0, Math.floor((60 - actualTimeTaken) * (50 / 60)));
         points = 100 + timeBonus;
       }
+    }
+
+    if (isPlayer1) {
+      battle.player1LastAnswerAt = new Date();
+    } else {
+      battle.player2LastAnswerAt = new Date();
     }
 
     const answerRecord = {
       questionId,
       selectedOptionIndex,
       isCorrect,
-      timeTakenSeconds,
+      timeTakenSeconds: actualTimeTaken,
       points
     };
 
@@ -380,7 +398,7 @@ router.post('/submit', protect, async (req, res) => {
 
     const totalQuestions = battle.questions.length;
     const p1Finished = battle.player1Answers.length === totalQuestions;
-    const p2Finished = battle.player2Answers.length === totalQuestions;
+    const p2Finished = battle.player2 ? (battle.player2Answers.length === totalQuestions) : true;
 
     if (p1Finished && p2Finished) {
       battle.status = 'finished';

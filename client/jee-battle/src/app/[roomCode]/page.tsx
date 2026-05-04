@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState, use, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function BattleRoom({ params }: { params: Promise<{ roomCode: string }> }) {
@@ -17,6 +17,9 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
   const [timeRemaining, setTimeRemaining] = useState(60);
   const [copied, setCopied] = useState(false);
   const [soloStarting, setSoloStarting] = useState(false);
+  
+  const lastSubmittedIndex = useRef<number>(-1);
+  const [countdownMs, setCountdownMs] = useState<number>(0);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in';
 
@@ -44,6 +47,12 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
         if (data.myProgress < data.questions.length) {
           setCurrentQuestionIndex(data.myProgress);
         }
+        if (data.startedAt && data.serverNow) {
+          const deltaMs = new Date(data.startedAt).getTime() - data.serverNow;
+          if (deltaMs > 0 && countdownMs === 0) {
+            setCountdownMs(deltaMs);
+          }
+        }
       }
       setLoading(false);
     } catch (err: any) {
@@ -60,13 +69,24 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
   }, [token, roomCode]);
 
   useEffect(() => {
-    if (battleState?.status !== 'active' || currentQuestionIndex >= battleState?.questions?.length) return;
+    if (countdownMs <= 0) return;
+    const interval = setInterval(() => {
+      setCountdownMs(prev => Math.max(0, prev - 100));
+    }, 100);
+    return () => clearInterval(interval);
+  }, [countdownMs]);
+
+  useEffect(() => {
+    if (battleState?.status !== 'active' || currentQuestionIndex >= battleState?.questions?.length || countdownMs > 0) return;
     
     setTimeRemaining(60);
     const timerInterval = setInterval(() => {
       setTimeRemaining(prev => {
         if (prev <= 1) {
-          submitAnswer(-1);
+          if (lastSubmittedIndex.current !== currentQuestionIndex) {
+            lastSubmittedIndex.current = currentQuestionIndex;
+            submitAnswer(-1);
+          }
           return 0;
         }
         return prev - 1;
@@ -74,7 +94,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
     }, 1000);
     
     return () => clearInterval(timerInterval);
-  }, [currentQuestionIndex, battleState?.status]);
+  }, [currentQuestionIndex, battleState?.status, countdownMs]);
 
   const submitAnswer = async (optionIndex: number) => {
     if (!token || !battleState || submitting) return;
@@ -103,6 +123,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
       
       setSelectedOption(null);
       setCurrentQuestionIndex(prev => prev + 1);
+      lastSubmittedIndex.current = -1;
       await fetchState();
       
     } catch (err: any) {
@@ -260,6 +281,21 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
           <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-500 mx-auto"></div>
           <h2 className="text-2xl font-bold">Waiting for opponent to finish...</h2>
           <p className="text-gray-400">You completed all questions! Results incoming.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Countdown Screen ──
+  if (battleState.status === 'active' && countdownMs > 0) {
+    return (
+      <div className="min-h-screen bg-[#0f1115] text-white flex flex-col items-center justify-center p-4">
+        <div className="max-w-md w-full bg-[#16191f] rounded-2xl border border-white/5 p-8 text-center space-y-6 shadow-2xl">
+          <h2 className="text-3xl font-black text-indigo-400">Match Starting In</h2>
+          <div className="text-8xl font-black text-white">
+            {Math.ceil(countdownMs / 1000)}
+          </div>
+          <p className="text-gray-400">Get ready!</p>
         </div>
       </div>
     );

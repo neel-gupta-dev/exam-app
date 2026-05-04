@@ -60,6 +60,12 @@ const BattleSchema = new mongoose.Schema({
   },
   finishedAt: {
     type: Date,
+  },
+  player1LastAnswerAt: {
+    type: Date,
+  },
+  player2LastAnswerAt: {
+    type: Date,
   }
 }, { timestamps: true });
 
