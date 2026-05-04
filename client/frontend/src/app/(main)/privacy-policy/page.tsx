@@ -78,7 +78,6 @@ export default function PrivacyPolicy() {
                   </li>
                 </ul>
               </div>
-              </div>
               <div className="bg-surface-container-low p-6 rounded-2xl border border-outline-variant/10 hover:border-primary/20 transition-colors">
                 <h3 className="font-heading font-bold text-primary mb-3 text-sm uppercase tracking-wider">1.3 User-Generated Content</h3>
                 <ul className="space-y-3 text-on-surface-variant text-sm">

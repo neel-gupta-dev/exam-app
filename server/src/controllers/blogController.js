@@ -58,11 +58,11 @@ export const getBlogBySlug = asyncHandler(async (req, res) => {
  * Create a new blog post. Protected by protectAdmin middleware.
  */
 export const createBlog = asyncHandler(async (req, res) => {
-  const { title, slug, content, coverImageUrl, author, category, readTime } = req.body;
+  const { title, slug, content, coverImageUrl, author, category, readTime, isPublished } = req.body;
 
-  if (!title || !content || !author) {
+  if (!title || !author) {
     res.status(400);
-    throw new Error('Title, content, and author are required.');
+    throw new Error('Title and author are required.');
   }
 
   // Check for slug collision
@@ -77,14 +77,91 @@ export const createBlog = asyncHandler(async (req, res) => {
   const blog = await Blog.create({
     title,
     slug: slug || undefined, // let pre-validate hook generate if empty
-    content,
+    content: content || '',
     coverImageUrl: coverImageUrl || '',
     author,
     category: category || 'General',
     readTime: readTime || '5 min',
+    isPublished: isPublished === true,
   });
 
   res.status(201).json(blog);
+});
+
+/**
+ * GET /api/blogs/all
+ * Fetch all blogs (published and drafts) for the Studio dashboard. Protected.
+ */
+export const getAllBlogs = asyncHandler(async (req, res) => {
+  const blogs = await Blog.find()
+    .select('title slug isPublished createdAt updatedAt author')
+    .sort({ createdAt: -1 })
+    .lean();
+  res.json(blogs);
+});
+
+/**
+ * GET /api/blogs/id/:id
+ * Fetch a single blog by its ID (for the Editor). Protected.
+ */
+export const getBlogById = asyncHandler(async (req, res) => {
+  const blog = await Blog.findById(req.params.id).lean();
+  if (!blog) {
+    res.status(404);
+    throw new Error('Blog post not found');
+  }
+  res.json(blog);
+});
+
+/**
+ * PUT /api/blogs/:id
+ * Update an existing blog post (Content, Title, Status). Protected.
+ */
+export const updateBlog = asyncHandler(async (req, res) => {
+  const { title, slug, content, coverImageUrl, category, readTime, isPublished } = req.body;
+
+  const blog = await Blog.findById(req.params.id);
+  if (!blog) {
+    res.status(404);
+    throw new Error('Blog post not found');
+  }
+
+  // Check slug collision if slug changed
+  if (slug && slug !== blog.slug) {
+    const existing = await Blog.findOne({ slug });
+    if (existing) {
+      res.status(409);
+      throw new Error(`A blog post with slug "${slug}" already exists.`);
+    }
+  }
+
+  blog.title = title || blog.title;
+  if (slug !== undefined) blog.slug = slug || undefined;
+  if (content !== undefined) blog.content = content;
+  if (coverImageUrl !== undefined) blog.coverImageUrl = coverImageUrl;
+  if (category !== undefined) blog.category = category;
+  if (readTime !== undefined) blog.readTime = readTime;
+  if (isPublished !== undefined) blog.isPublished = isPublished === true;
+
+  const updatedBlog = await blog.save();
+  res.json(updatedBlog);
+});
+
+/**
+ * DELETE /api/blogs/:id
+ * Delete a blog post. Protected.
+ */
+export const deleteBlog = asyncHandler(async (req, res) => {
+  const blog = await Blog.findByIdAndDelete(req.params.id);
+  if (!blog) {
+    res.status(404);
+    throw new Error('Blog post not found');
+  }
+  
+  // Optionally delete all comments associated with it
+  await Comment.deleteMany({ blogId: req.params.id });
+  
+  res.json({ message: 'Blog post deleted' });
 });
 
 /**

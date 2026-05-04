@@ -4,8 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, Share2, Clock, User, Send, MessageCircle } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import DOMPurify from 'isomorphic-dompurify';
 import api from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
@@ -216,26 +215,26 @@ export default function ArticleClient({ slug }: { slug: string }) {
           </div>
         )}
 
-        {/* Markdown Content */}
-        <div className="prose prose-neutral dark:prose-invert max-w-none
-          prose-headings:font-heading prose-headings:font-bold prose-headings:text-on-surface prose-headings:tracking-tight
-          prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4
-          prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
-          prose-p:text-on-surface-variant prose-p:leading-relaxed prose-p:text-[16px]
-          prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-          prose-strong:text-on-surface prose-strong:font-bold
-          prose-blockquote:border-primary/50 prose-blockquote:bg-primary/5 prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:rounded-xl prose-blockquote:not-italic prose-blockquote:text-on-surface-variant
-          prose-code:bg-surface-variant/50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-primary prose-code:text-sm prose-code:font-mono
-          prose-pre:bg-surface-container-high prose-pre:border prose-pre:border-outline-variant/20 prose-pre:rounded-xl
-          prose-li:text-on-surface-variant prose-li:marker:text-primary
-          prose-img:rounded-xl prose-img:border prose-img:border-outline-variant/10
-          prose-hr:border-outline-variant/20
-          prose-table:border-collapse prose-th:bg-surface-variant/30 prose-th:border prose-th:border-outline-variant/20 prose-th:px-4 prose-th:py-2 prose-td:border prose-td:border-outline-variant/20 prose-td:px-4 prose-td:py-2
-        ">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {blog.content}
-          </ReactMarkdown>
-        </div>
+        {/* HTML Content (Sanitized) */}
+        <div 
+          className="prose prose-neutral dark:prose-invert max-w-none
+            prose-headings:font-heading prose-headings:font-bold prose-headings:text-on-surface prose-headings:tracking-tight
+            prose-h1:text-3xl prose-h1:mt-14 prose-h1:mb-6
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+            prose-p:text-on-surface-variant prose-p:leading-relaxed prose-p:text-[16px]
+            prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+            prose-strong:text-on-surface prose-strong:font-bold
+            prose-blockquote:border-primary/50 prose-blockquote:bg-primary/5 prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:rounded-xl prose-blockquote:not-italic prose-blockquote:text-on-surface-variant
+            prose-code:bg-surface-variant/50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-primary prose-code:text-sm prose-code:font-mono
+            prose-pre:bg-surface-container-high prose-pre:border prose-pre:border-outline-variant/20 prose-pre:rounded-xl
+            prose-li:text-on-surface-variant prose-li:marker:text-primary
+            prose-img:rounded-xl prose-img:border prose-img:border-outline-variant/10
+            prose-hr:border-outline-variant/20
+            prose-table:border-collapse prose-th:bg-surface-variant/30 prose-th:border prose-th:border-outline-variant/20 prose-th:px-4 prose-th:py-2 prose-td:border prose-td:border-outline-variant/20 prose-td:px-4 prose-td:py-2
+          "
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(blog.content) }}
+        />
 
         {/* --- Comment Section --- */}
         <section className="mt-20 pt-12 border-t border-outline-variant/20">
