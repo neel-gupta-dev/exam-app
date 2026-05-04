@@ -10,6 +10,7 @@ const NAV = [
   { to: '/b2b',       label: '🏢 B2B Coaching' },
   { section: 'Data' },
   { to: '/users',     label: '👤 Users' },
+  { to: '/writers',   label: '✍️ Writers' },
   { to: '/cutoffs',   label: '📈 Predictor Cutoffs' },
   { to: '/cheatsheets',label: '📋 Cheatsheets' },
   { to: '/sessions',  label: '🔐 Sessions' },

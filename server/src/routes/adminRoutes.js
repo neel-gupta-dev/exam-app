@@ -5,6 +5,7 @@ import Session from '../models/Session.js';
 import Resource from '../models/Resource.js';
 import Feedback from '../models/Feedback.js';
 import Note from '../models/Note.js';
+import Blog from '../models/Blog.js';
 import asyncHandler from 'express-async-handler';
 import mongoose from 'mongoose';
 import { getDashboardStats, getUserAnalytics } from '../controllers/adminController.js';
@@ -93,6 +94,31 @@ router.get('/users', asyncHandler(async (req, res) => {
   ]);
 
   res.json({ users, total, page, pages: Math.ceil(total / limit) });
+}));
+
+/**
+ * GET /api/admin/writers
+ * List all users with the 'writer' or 'admin' role along with their post counts.
+ */
+router.get('/writers', asyncHandler(async (req, res) => {
+  // Find users who have either writer or admin roles
+  const writers = await User.find({ role: { $in: ['writer', 'admin'] } })
+    .select('name email role createdAt lastActiveAt');
+
+  // For each writer, fetch their total published blog count.
+  // We match based on author name for now, as Blog uses `author` string.
+  // Ideally, Blog model should have a `userId` reference, but since it has `author` (String):
+  const writerStats = await Promise.all(
+    writers.map(async (writer) => {
+      const postCount = await Blog.countDocuments({ author: writer.name });
+      return {
+        ...writer.toObject(),
+        postCount
+      };
+    })
+  );
+
+  res.json(writerStats);
 }));
 
 /**

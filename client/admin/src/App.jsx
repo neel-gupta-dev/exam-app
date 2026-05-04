@@ -3,6 +3,7 @@ import { useState, useEffect, createContext, useContext } from 'react';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
+import Writers from './pages/Writers';
 import UserDetail from './pages/UserDetail';
 import Sessions from './pages/Sessions';
 import Resources from './pages/Resources';
@@ -46,6 +47,7 @@ export default function App() {
           <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/users" element={<Users />} />
+            <Route path="/writers" element={<Writers />} />
             <Route path="/users/:id" element={<UserDetail />} />
             <Route path="/sessions" element={<Sessions />} />
             <Route path="/resources" element={<Resources />} />
