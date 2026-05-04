@@ -1,13 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
-  variable: "--font-inter",
-  display: "swap",
-});
 
 const SITE_URL = "https://battle.vayl.in";
 const TITLE = "JEE Battle — 1v1 Real-Time Quiz Duels";
@@ -104,9 +96,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} h-full antialiased`}
+      className="h-full antialiased"
     >
       <head>
+        <link
+          href="https://api.fontshare.com/v2/css?f[]=clash-grotesk@200,300,400,500,600,700&display=swap"
+          rel="stylesheet"
+        />
         {/* Structured Data — WebApplication */}
         <script
           type="application/ld+json"
@@ -133,7 +129,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-[#0f1115] text-white font-[var(--font-inter)]">
+      <body className="min-h-full flex flex-col bg-[#0f1115] text-white font-['Clash_Grotesk',sans-serif]">
         <MathProvider>
           {children}
         </MathProvider>
