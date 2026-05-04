@@ -1,8 +1,24 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
-import { MathJax } from 'better-react-mathjax';
+import { MathJax, MathJaxContext } from 'better-react-mathjax';
+
+const mathJaxConfig = {
+  loader: { load: ["input/tex", "output/chtml"] },
+  tex: {
+    inlineMath: [["$", "$"], ["\\(", "\\)"]],
+    displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+  },
+};
 
 export default function BattleQuestions() {
+  return (
+    <MathJaxContext config={mathJaxConfig}>
+      <BattleQuestionsContent />
+    </MathJaxContext>
+  );
+}
+
+function BattleQuestionsContent() {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -266,3 +282,4 @@ export default function BattleQuestions() {
     </div>
   );
 }
+
