@@ -31,7 +31,7 @@ export default function TermsOfService() {
             Terms of Service
           </h1>
           <p className="text-on-surface-variant font-interface text-sm uppercase tracking-[0.2em] font-medium opacity-70">
-            Effective Date: April 8, 2026
+            Effective Date: May 4, 2026
           </p>
         </header>
 
@@ -99,6 +99,28 @@ export default function TermsOfService() {
           <section className="space-y-6">
             <h2 className="text-2xl font-heading font-bold text-on-surface flex items-center gap-3">
               <span className="w-8 h-8 rounded-lg bg-tertiary/20 flex items-center justify-center text-tertiary text-sm font-black">4</span>
+              User-Generated Content
+            </h2>
+            <div className="bg-surface-container-low p-6 rounded-2xl border border-outline-variant/10 space-y-4">
+              <p className="text-on-surface-variant text-sm">
+                Users may post comments and authorized writers may publish blogs. By posting content, you agree:
+              </p>
+              <ul className="space-y-3 text-on-surface-variant text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="material-symbols-outlined text-tertiary text-[10px] mt-1">circle</span>
+                  <span>You will not post spam, hate speech, or content that violates intellectual property rights.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="material-symbols-outlined text-tertiary text-[10px] mt-1">circle</span>
+                  <span>We reserve the right to moderate, edit, or delete any user-generated content at our sole discretion.</span>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          <section className="space-y-6">
+            <h2 className="text-2xl font-heading font-bold text-on-surface flex items-center gap-3">
+              <span className="w-8 h-8 rounded-lg bg-tertiary/20 flex items-center justify-center text-tertiary text-sm font-black">5</span>
               Institutional Verification
             </h2>
             <p className="text-on-surface-variant text-sm">
@@ -108,7 +130,7 @@ export default function TermsOfService() {
 
           <section className="space-y-6">
             <h2 className="text-2xl font-heading font-bold text-on-surface flex items-center gap-3">
-              <span className="w-8 h-8 rounded-lg bg-tertiary/20 flex items-center justify-center text-tertiary text-sm font-black">5</span>
+              <span className="w-8 h-8 rounded-lg bg-tertiary/20 flex items-center justify-center text-tertiary text-sm font-black">6</span>
               Intellectual Property
             </h2>
             <div className="space-y-4">
@@ -129,7 +151,7 @@ export default function TermsOfService() {
 
           <section className="space-y-6">
             <h2 className="text-2xl font-heading font-bold text-on-surface flex items-center gap-3">
-              <span className="w-8 h-8 rounded-lg bg-tertiary/20 flex items-center justify-center text-tertiary text-sm font-black">6</span>
+              <span className="w-8 h-8 rounded-lg bg-tertiary/20 flex items-center justify-center text-tertiary text-sm font-black">7</span>
               Vulnerability Disclosure
             </h2>
             <div className="bg-tertiary/5 rounded-2xl p-6 border border-tertiary/10">
