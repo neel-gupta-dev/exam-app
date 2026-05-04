@@ -2,6 +2,12 @@
 
 import { useEffect, useState, use, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { MathJax } from 'better-react-mathjax';
+import { 
+  Trophy, Users, Timer, ArrowRight, 
+  CheckCircle2, XCircle, Sword, LogOut, 
+  Share2, Copy, Zap
+} from 'lucide-react';
 
 export default function BattleRoom({ params }: { params: Promise<{ roomCode: string }> }) {
   const router = useRouter();
@@ -305,62 +311,112 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
   const currentQuestion = battleState.questions[currentQuestionIndex];
 
   return (
-    <div className="min-h-screen bg-[#0f1115] text-white flex flex-col items-center p-4 md:p-8">
-      {/* Header */}
-      <div className="w-full max-w-4xl flex justify-between items-center mb-8 bg-[#16191f] p-4 rounded-xl border border-white/5">
-        <div>
-          <div className="text-xs text-gray-400 uppercase tracking-wider">Opponent</div>
-          <div className="font-bold">{battleState.opponentProgress} / {totalQuestions}</div>
-        </div>
-        
-        <div className="text-center">
-          <div className={`text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r 
-            ${timeRemaining <= 10 ? 'from-red-500 to-red-400 animate-pulse' : 'from-orange-400 to-amber-400'}`}>
-            {timeRemaining}s
+    <div className="min-h-screen bg-[#0f1115] text-white flex flex-col items-center justify-center p-4 md:p-8 overflow-x-hidden">
+      <div className="max-w-2xl w-full space-y-6">
+        {/* Progress & Scores */}
+        <div className="flex items-center justify-between gap-4 bg-[#16191f] p-4 rounded-2xl border border-white/5 shadow-xl">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
+              <span className="text-lg font-bold text-indigo-400">{battleState.player1Score}</span>
+            </div>
+            <div className="hidden sm:block">
+              <p className="text-[10px] uppercase font-black tracking-widest text-indigo-400">You</p>
+              <div className="flex gap-1 mt-1">
+                {battleState.questions.map((_: any, i: number) => (
+                  <div key={i} className={`w-3 h-1.5 rounded-full ${i < battleState.myProgress ? (battleState.myAnswers[i]?.isCorrect ? 'bg-green-500' : 'bg-red-500') : 'bg-white/10'}`} />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center">
+            <div className={`flex items-center gap-2 font-black italic ${timeRemaining <= 10 ? 'text-red-500 animate-pulse' : 'text-yellow-500'}`}>
+              <Timer className="w-5 h-5" />
+              <span className="text-xl">{timeRemaining}s</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 text-right">
+            <div className="hidden sm:block">
+              <p className="text-[10px] uppercase font-black tracking-widest text-rose-400">{battleState.player2?.name || 'Opponent'}</p>
+              <div className="flex gap-1 mt-1 justify-end">
+                {battleState.questions.map((_: any, i: number) => (
+                  <div key={i} className={`w-3 h-1.5 rounded-full ${i < battleState.opponentProgress ? 'bg-rose-500/50' : 'bg-white/10'}`} />
+                ))}
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center border border-rose-500/30">
+              <span className="text-lg font-bold text-rose-400">{battleState.player2Score}</span>
+            </div>
           </div>
         </div>
 
-        <div className="text-right">
-          <div className="text-xs text-gray-400 uppercase tracking-wider">You</div>
-          <div className="font-bold text-indigo-400">{currentQuestionIndex + 1} / {totalQuestions}</div>
-        </div>
-      </div>
+        {/* Question Card */}
+        <div className="bg-[#16191f] rounded-3xl border border-white/5 shadow-2xl overflow-hidden relative">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-rose-500" />
+          
+          <div className="p-8">
+            <div className="flex items-center justify-between mb-6">
+              <span className="px-3 py-1 bg-indigo-500/10 text-indigo-400 text-[10px] font-black uppercase tracking-widest rounded-full border border-indigo-500/20">
+                Question {currentQuestionIndex + 1} / 10
+              </span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/40">
+                {currentQuestion.subject}
+              </span>
+            </div>
 
-      {/* Question Card */}
-      <div className="w-full max-w-4xl bg-[#16191f] rounded-2xl border border-white/5 p-6 md:p-10 shadow-2xl">
-        <div className="inline-block px-3 py-1 bg-indigo-500/20 text-indigo-400 rounded-lg text-sm font-bold mb-6">
-          {currentQuestion.subject}
+            <div className="text-xl sm:text-2xl font-medium leading-relaxed mb-8 min-h-[4rem]">
+              <MathJax>{currentQuestion.questionText}</MathJax>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              {currentQuestion.options.map((option: any, index: number) => (
+                <button
+                  key={index}
+                  onClick={() => !submitting && setSelectedOption(index)}
+                  disabled={submitting}
+                  className={`group relative p-5 rounded-2xl border transition-all text-left flex items-center gap-4 ${
+                    selectedOption === index 
+                      ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-500/20 -translate-y-1' 
+                      : 'bg-[#1c2128] border-white/5 text-gray-300 hover:border-white/20 hover:bg-[#252b35]'
+                  }`}
+                >
+                  <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-black transition-colors ${
+                    selectedOption === index ? 'bg-white text-indigo-600' : 'bg-white/5 text-white/40 group-hover:bg-white/10'
+                  }`}>
+                    {String.fromCharCode(65 + index)}
+                  </span>
+                  <span className="text-lg font-medium">
+                    <MathJax>{option.text}</MathJax>
+                  </span>
+                  {selectedOption === index && (
+                    <Zap className="w-4 h-4 text-white absolute top-4 right-4 animate-bounce" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-        
-        <h2 className="text-xl md:text-2xl font-medium leading-relaxed mb-8">
-          {currentQuestion.questionText}
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {currentQuestion.options.map((opt: any, idx: number) => (
-            <button
-              key={idx}
-              onClick={() => {
-                setSelectedOption(idx);
-                submitAnswer(idx);
-              }}
-              disabled={submitting}
-              className={`text-left p-5 rounded-xl border transition-all duration-200
-                ${selectedOption === idx 
-                  ? 'bg-indigo-600 border-indigo-500 shadow-[0_0_15px_rgba(79,70,229,0.4)]' 
-                  : 'bg-black/20 border-white/10 hover:border-indigo-500/50 hover:bg-white/5'}
-                ${submitting ? 'opacity-50 cursor-not-allowed' : ''}
-              `}
-            >
-              <div className="flex items-center gap-4">
-                <span className="flex-shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center font-bold text-sm">
-                  {String.fromCharCode(65 + idx)}
-                </span>
-                <span className="text-base">{opt.text}</span>
-              </div>
-            </button>
-          ))}
-        </div>
+
+        {/* Submit Button */}
+        <button
+          onClick={() => selectedOption !== null && submitAnswer(selectedOption)}
+          disabled={selectedOption === null || submitting}
+          className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all ${
+            selectedOption !== null && !submitting
+              ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xl shadow-indigo-600/20 hover:scale-[1.02] active:scale-[0.98]'
+              : 'bg-white/5 text-white/20 cursor-not-allowed'
+          }`}
+        >
+          {submitting ? (
+            <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+          ) : (
+            <>
+              {selectedOption !== null ? 'Confirm Answer' : 'Select an Option'}
+              <ArrowRight className="w-5 h-5" />
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

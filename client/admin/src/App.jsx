@@ -16,7 +16,18 @@ import Cheatsheets from './pages/Cheatsheets';
 import CutoffsManagement from './pages/CutoffsManagement';
 import Layout from './components/Layout';
 
+import { MathJaxContext } from 'better-react-mathjax';
+import BattleQuestions from './pages/BattleQuestions';
+
 export const AuthCtx = createContext(null);
+
+const mathJaxConfig = {
+  loader: { load: ["input/tex", "output/chtml"] },
+  tex: {
+    inlineMath: [["$", "$"], ["\\(", "\\)"]],
+    displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+  },
+};
 
 function PrivateRoute({ children }) {
   const { user } = useContext(AuthCtx);
@@ -41,27 +52,30 @@ export default function App() {
 
   return (
     <AuthCtx.Provider value={{ user, login, logout }}>
-      <BrowserRouter basename={import.meta.env.VITE_ADMIN_BASE || '/sys-9f3k-ctrl'}>
-        <Routes>
-          <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
-          <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/users" element={<Users />} />
-            <Route path="/writers" element={<Writers />} />
-            <Route path="/users/:id" element={<UserDetail />} />
-            <Route path="/sessions" element={<Sessions />} />
-            <Route path="/resources" element={<Resources />} />
-            <Route path="/feedback" element={<FeedbackPage />} />
-            <Route path="/tests" element={<TestManagement />} />
-            <Route path="/b2b" element={<B2BManagement />} />
-            <Route path="/cheatsheets" element={<Cheatsheets />} />
-            <Route path="/cutoffs" element={<CutoffsManagement />} />
-            <Route path="/health" element={<Health />} />
-            <Route path="/settings" element={<Settings />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </BrowserRouter>
+      <MathJaxContext config={mathJaxConfig}>
+        <BrowserRouter basename={import.meta.env.VITE_ADMIN_BASE || '/sys-9f3k-ctrl'}>
+          <Routes>
+            <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+            <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/users" element={<Users />} />
+              <Route path="/writers" element={<Writers />} />
+              <Route path="/users/:id" element={<UserDetail />} />
+              <Route path="/sessions" element={<Sessions />} />
+              <Route path="/resources" element={<Resources />} />
+              <Route path="/feedback" element={<FeedbackPage />} />
+              <Route path="/tests" element={<TestManagement />} />
+              <Route path="/b2b" element={<B2BManagement />} />
+              <Route path="/cheatsheets" element={<Cheatsheets />} />
+              <Route path="/cutoffs" element={<CutoffsManagement />} />
+              <Route path="/battle-questions" element={<BattleQuestions />} />
+              <Route path="/health" element={<Health />} />
+              <Route path="/settings" element={<Settings />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </MathJaxContext>
     </AuthCtx.Provider>
   );
 }

@@ -94,6 +94,8 @@ export const metadata: Metadata = {
   category: "education",
 };
 
+import MathProvider from "@/components/MathProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -132,7 +134,9 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col bg-[#0f1115] text-white font-[var(--font-inter)]">
-        {children}
+        <MathProvider>
+          {children}
+        </MathProvider>
       </body>
     </html>
   );

@@ -8,6 +8,7 @@ const NAV = [
   { section: 'Exam Platform' },
   { to: '/tests',     label: '📝 Test Management' },
   { to: '/b2b',       label: '🏢 B2B Coaching' },
+  { to: '/battle-questions', label: '⚔️ Battle Questions' },
   { section: 'Data' },
   { to: '/users',     label: '👤 Users' },
   { to: '/writers',   label: '✍️ Writers' },
