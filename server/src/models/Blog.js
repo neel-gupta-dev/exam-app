@@ -52,7 +52,7 @@ const blogSchema = new mongoose.Schema(
  * Converts to lowercase, replaces spaces/special chars with hyphens,
  * and strips trailing hyphens.
  */
-blogSchema.pre('validate', function (next) {
+blogSchema.pre('validate', function () {
   if (!this.slug && this.title) {
     this.slug = this.title
       .toLowerCase()
@@ -61,7 +61,6 @@ blogSchema.pre('validate', function (next) {
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '');
   }
-  next();
 });
 
 const Blog = mongoose.model('Blog', blogSchema);
