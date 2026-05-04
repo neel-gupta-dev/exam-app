@@ -52,9 +52,12 @@ export default function Users() {
     }
   };
 
-  const roleBadge = (role) => role === 'admin'
-    ? <span className="badge badge-red">Admin</span>
-    : <span className="badge badge-gray">Student</span>;
+  const roleBadge = (role) => {
+    if (role === 'admin') return <span className="badge badge-red">Admin</span>;
+    if (role === 'writer') return <span className="badge badge-blue">Writer</span>;
+    if (role === 'coachingAdmin') return <span className="badge badge-purple">Coach Admin</span>;
+    return <span className="badge badge-gray">Student</span>;
+  };
 
   const authBadge = (method) => method === 'google'
     ? <span className="badge badge-blue">Google</span>
@@ -87,7 +90,9 @@ export default function Users() {
         <select value={role} onChange={e => { setRole(e.target.value); setPage(1); }}>
           <option value="">All Roles</option>
           <option value="student">Student</option>
+          <option value="writer">Writer</option>
           <option value="admin">Admin</option>
+          <option value="coachingAdmin">Coach Admin</option>
         </select>
         <select value={authMethod} onChange={e => { setAuthMethod(e.target.value); setPage(1); }}>
           <option value="">All Auth Methods</option>
@@ -136,7 +141,9 @@ export default function Users() {
                             title="Change role"
                           >
                             <option value="student">Student</option>
+                            <option value="writer">Writer</option>
                             <option value="admin">Admin</option>
+                            <option value="coachingAdmin">Coach Admin</option>
                           </select>
                           <button className="btn btn-sm btn-danger" onClick={() => deleteUser(u)}>Del</button>
                         </div>
