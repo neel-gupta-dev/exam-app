@@ -1,24 +1,47 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../api';
-import { MathJax, MathJaxContext } from 'better-react-mathjax';
 
-const mathJaxConfig = {
-  loader: { load: ["input/tex", "output/chtml"] },
-  tex: {
-    inlineMath: [["$", "$"], ["\\(", "\\)"]],
-    displayMath: [["$$", "$$"], ["\\[", "\\]"]],
-  },
-};
-
-export default function BattleQuestions() {
-  return (
-    <MathJaxContext config={mathJaxConfig}>
-      <BattleQuestionsContent />
-    </MathJaxContext>
-  );
+/**
+ * Loads the MathJax 3 CDN script once globally.
+ * Returns a promise that resolves when MathJax is ready.
+ */
+let mathjaxPromise = null;
+function ensureMathJax() {
+  if (mathjaxPromise) return mathjaxPromise;
+  mathjaxPromise = new Promise((resolve) => {
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      resolve();
+      return;
+    }
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+      },
+      startup: { ready: () => { window.MathJax.startup.defaultReady(); resolve(); } },
+    };
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js';
+    script.async = true;
+    document.head.appendChild(script);
+  });
+  return mathjaxPromise;
 }
 
-function BattleQuestionsContent() {
+/** Hook: typeset a container element whenever deps change */
+function useTypeset(ref, deps) {
+  useEffect(() => {
+    if (!ref.current) return;
+    ensureMathJax().then(() => {
+      if (window.MathJax?.typesetPromise) {
+        window.MathJax.typesetClear?.([ref.current]);
+        window.MathJax.typesetPromise([ref.current]).catch(() => {});
+      }
+    });
+  }, deps);
+}
+
+export default function BattleQuestions() {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -36,11 +59,14 @@ function BattleQuestionsContent() {
   const [difficulty, setDifficulty] = useState('Medium');
   const [explanation, setExplanation] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showPreview, setShowPreview] = useState(true);
 
-  useEffect(() => {
-    fetchQuestions();
-  }, []);
+  const previewRef = useRef(null);
+  const listRef = useRef(null);
+
+  useTypeset(previewRef, [questionText, options, subject, difficulty]);
+  useTypeset(listRef, [questions]);
+
+  useEffect(() => { fetchQuestions(); }, []);
 
   const fetchQuestions = async () => {
     try {
@@ -60,11 +86,7 @@ function BattleQuestionsContent() {
   };
 
   const handleCorrectOptionChange = (index) => {
-    const newOptions = options.map((opt, i) => ({
-      ...opt,
-      isCorrect: i === index
-    }));
-    setOptions(newOptions);
+    setOptions(options.map((opt, i) => ({ ...opt, isCorrect: i === index })));
   };
 
   const handleSubmit = async (e) => {
@@ -80,14 +102,9 @@ function BattleQuestionsContent() {
 
     try {
       const { data } = await api.post('/admin/battle-questions', {
-        subject,
-        questionText,
-        options,
-        difficulty,
-        explanation
+        subject, questionText, options, difficulty, explanation
       });
       setQuestions([data, ...questions]);
-      // Reset form
       setQuestionText('');
       setExplanation('');
       setOptions([
@@ -130,7 +147,7 @@ function BattleQuestionsContent() {
       {success && <div className="alert alert-success">{success}</div>}
 
       <div className="two-col" style={{ alignItems: 'flex-start' }}>
-        {/* FORM SECTION */}
+        {/* ── FORM ── */}
         <div className="card">
           <div className="card-header">Add New Question</div>
           <div className="card-body">
@@ -155,20 +172,21 @@ function BattleQuestionsContent() {
               </div>
 
               <div className="form-group" style={{ marginBottom: 12 }}>
-                <label className="form-label">Question Text (LaTeX Supported with $...$)</label>
+                <label className="form-label">Question Text (LaTeX supported: $...$)</label>
                 <textarea
                   value={questionText}
                   onChange={(e) => setQuestionText(e.target.value)}
-                  placeholder="e.g. Evaluate $\int_{0}^{1} x^2 dx$"
+                  placeholder={'e.g. Evaluate $\\\\int_{0}^{1} x^2 \\\\, dx$'}
                   rows={4}
+                  style={{ width: '100%' }}
                   required
                 />
               </div>
 
               <div className="form-group" style={{ marginBottom: 12 }}>
-                <label className="form-label">Options (Select correct one)</label>
+                <label className="form-label">Options (select the correct one)</label>
                 {options.map((opt, idx) => (
-                  <div key={idx} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+                  <div key={idx} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
                     <input
                       type="radio"
                       name="correctOption"
@@ -189,85 +207,85 @@ function BattleQuestionsContent() {
               </div>
 
               <div className="form-group" style={{ marginBottom: 20 }}>
-                <label className="form-label">Explanation (Optional)</label>
+                <label className="form-label">Explanation (optional)</label>
                 <textarea
                   value={explanation}
                   onChange={(e) => setExplanation(e.target.value)}
                   placeholder="Explain the solution..."
                   rows={3}
+                  style={{ width: '100%' }}
                 />
               </div>
 
-              <button type="submit" className="btn btn-primary" disabled={isSubmitting} style={{ width: '100%', padding: '10px' }}>
+              <button type="submit" className="btn btn-primary" disabled={isSubmitting} style={{ width: '100%', padding: 10 }}>
                 {isSubmitting ? 'Saving...' : 'Save Question'}
               </button>
             </form>
           </div>
         </div>
 
-        {/* PREVIEW AND LIST SECTION */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          
-          {/* Live Preview Card */}
-          {showPreview && (
-            <div className="card" style={{ border: '2px dashed var(--accent)' }}>
-              <div className="card-header" style={{ background: '#fff', color: 'var(--accent)' }}>Live Preview</div>
-              <div className="card-body">
-                <div style={{ marginBottom: '16px' }}>
-                  <span className="badge badge-blue">{subject}</span> <span className="badge badge-gray">{difficulty}</span>
-                </div>
-                <div style={{ fontSize: '15px', marginBottom: '16px' }}>
-                  <MathJax>{questionText || 'Your question will appear here...'}</MathJax>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {options.map((opt, i) => (
-                    <div key={i} style={{ 
-                      padding: '10px', 
-                      border: opt.isCorrect ? '1px solid var(--success)' : '1px solid var(--border)', 
-                      borderRadius: '3px',
-                      background: opt.isCorrect ? '#f0fdf4' : '#fff'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <span style={{ fontWeight: 'bold', color: 'var(--text-muted)' }}>{String.fromCharCode(65+i)}</span>
-                        <MathJax>{opt.text || `Option ${String.fromCharCode(65+i)}`}</MathJax>
-                      </div>
+        {/* ── PREVIEW + LIST ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+          {/* Live preview */}
+          <div className="card" style={{ border: '2px dashed var(--accent)' }} ref={previewRef}>
+            <div className="card-header" style={{ background: '#fff', color: 'var(--accent)' }}>Live Preview</div>
+            <div className="card-body">
+              <div style={{ marginBottom: 16 }}>
+                <span className="badge badge-blue">{subject}</span>{' '}
+                <span className="badge badge-gray">{difficulty}</span>
+              </div>
+              <div style={{ fontSize: 15, marginBottom: 16 }}>
+                {questionText || 'Your question will appear here...'}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {options.map((opt, i) => (
+                  <div key={i} style={{
+                    padding: 10,
+                    border: opt.isCorrect ? '1px solid var(--success)' : '1px solid var(--border)',
+                    borderRadius: 3,
+                    background: opt.isCorrect ? '#f0fdf4' : '#fff'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <span style={{ fontWeight: 'bold', color: 'var(--text-muted)' }}>{String.fromCharCode(65 + i)}</span>
+                      <span>{opt.text || `Option ${String.fromCharCode(65 + i)}`}</span>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             </div>
-          )}
+          </div>
 
-          {/* List Card */}
-          <div className="card">
+          {/* Existing questions */}
+          <div className="card" ref={listRef}>
             <div className="card-header">Existing Questions ({questions.length})</div>
-            <div className="card-body" style={{ maxHeight: '500px', overflowY: 'auto' }}>
+            <div className="card-body" style={{ maxHeight: 500, overflowY: 'auto' }}>
               {questions.length === 0 ? (
-                <div className="text-muted text-center" style={{ padding: '20px' }}>No questions found.</div>
+                <div className="text-muted text-center" style={{ padding: 20 }}>No questions found.</div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {questions.map((q) => (
-                    <div key={q._id} style={{ border: '1px solid var(--border)', borderRadius: '3px', padding: '12px', position: 'relative' }}>
-                      <button 
-                        className="btn btn-sm btn-danger" 
-                        style={{ position: 'absolute', top: '12px', right: '12px' }}
+                    <div key={q._id} style={{ border: '1px solid var(--border)', borderRadius: 3, padding: 12, position: 'relative' }}>
+                      <button
+                        className="btn btn-sm btn-danger"
+                        style={{ position: 'absolute', top: 12, right: 12 }}
                         onClick={() => handleDelete(q._id)}
                       >
                         Delete
                       </button>
-                      <div style={{ marginBottom: '8px' }}>
-                        <span className="badge badge-blue" style={{ marginRight: '4px' }}>{q.subject}</span>
+                      <div style={{ marginBottom: 8 }}>
+                        <span className="badge badge-blue" style={{ marginRight: 4 }}>{q.subject}</span>
                         <span className="badge badge-gray">{q.difficulty}</span>
                       </div>
-                      <div style={{ fontWeight: '500', marginBottom: '12px', paddingRight: '60px' }}>
-                        <MathJax>{q.questionText}</MathJax>
+                      <div style={{ fontWeight: 500, marginBottom: 12, paddingRight: 60 }}>
+                        {q.questionText}
                       </div>
-                      <div style={{ display: 'flex', gap: '8px' }}>
+                      <div style={{ display: 'flex', gap: 8 }}>
                         {q.options.map((o, idx) => (
                           <div key={idx} style={{
-                            width: '12px', height: '12px', borderRadius: '50%',
+                            width: 12, height: 12, borderRadius: '50%',
                             background: o.isCorrect ? 'var(--success)' : '#e5e7eb'
-                          }} title={o.isCorrect ? 'Correct Option' : 'Incorrect Option'} />
+                          }} title={o.isCorrect ? 'Correct' : 'Incorrect'} />
                         ))}
                       </div>
                     </div>
@@ -282,4 +300,3 @@ function BattleQuestionsContent() {
     </div>
   );
 }
-
