@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 const SITE_URL = "https://battle.vayl.in";
@@ -91,6 +92,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+  const isProd = process.env.NODE_ENV === 'production';
+
   return (
     <html
       lang="en"
@@ -128,6 +132,22 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col bg-[#0f1115] text-white font-['Clash_Grotesk',sans-serif]">
+        {isProd && GA_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_ID}');
+              `}
+            </Script>
+          </>
+        )}
         <MathProvider>
           {children}
         </MathProvider>
