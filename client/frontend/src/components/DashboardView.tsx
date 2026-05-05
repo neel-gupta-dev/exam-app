@@ -13,6 +13,7 @@ import { useSearch } from "@/context/SearchContext";
 import { sendGAEvent } from '@next/third-parties/google';
 import MonthlyGoalWidget from "@/components/MonthlyGoalWidget";
 import DailyGoalWidget from "@/components/DailyGoalWidget";
+import ExamTrackerWidget from "@/components/ExamTrackerWidget";
 
 /**
  * Progress Widget Component
@@ -276,6 +277,7 @@ export default function DashboardView() {
         <aside className="w-full lg:w-[30%] space-y-6">
           {/* Daily Goal — most prominent widget */}
           <DailyGoalWidget />
+          <ExamTrackerWidget />
           <ProgressWidget 
             resourceCount={resourceCount} 
             heatmapData={heatmapData} 

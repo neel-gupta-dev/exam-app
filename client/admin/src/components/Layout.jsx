@@ -13,6 +13,7 @@ const NAV = [
   { to: '/users',     label: '👤 Users' },
   { to: '/writers',   label: '✍️ Writers' },
   { to: '/cutoffs',   label: '📈 Predictor Cutoffs' },
+  { to: '/exams',     label: '📅 Track Exams' },
   { to: '/cheatsheets',label: '📋 Cheatsheets' },
   { to: '/sessions',  label: '🔐 Sessions' },
   { to: '/resources', label: '📁 Resources' },

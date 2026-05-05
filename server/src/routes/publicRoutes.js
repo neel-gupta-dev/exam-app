@@ -3,6 +3,7 @@ import { getPublicProfile, storePredictorLead } from '../controllers/publicContr
 import User from '../models/User.js';
 import Cutoff from '../models/Cutoff.js';
 import Shortlist from '../models/Shortlist.js';
+import UpcomingExam from '../models/UpcomingExam.js';
 import { protectAdmin } from '../middlewares/adminMiddleware.js';
 
 const router = Router();
@@ -10,6 +11,15 @@ const router = Router();
 router.get('/profile/:rollNo', getPublicProfile);
 
 router.post('/predictor-lead', storePredictorLead);
+
+router.get('/exams', async (req, res) => {
+  try {
+    const exams = await UpcomingExam.find({ date: { $gte: new Date() } }).sort({ date: 1 });
+    res.json(exams);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch exams' });
+  }
+});
 
 // ── Shortlist Routes ─────────────────────────────────────────────────────────
 

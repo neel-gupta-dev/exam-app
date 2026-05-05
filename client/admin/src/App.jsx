@@ -14,6 +14,7 @@ import TestManagement from './pages/TestManagement';
 import B2BManagement from './pages/B2BManagement';
 import Cheatsheets from './pages/Cheatsheets';
 import CutoffsManagement from './pages/CutoffsManagement';
+import ExamManagement from './pages/ExamManagement';
 import Layout from './components/Layout';
 
 import BattleQuestions from './pages/BattleQuestions';
@@ -58,6 +59,7 @@ export default function App() {
             <Route path="/b2b" element={<B2BManagement />} />
             <Route path="/cheatsheets" element={<Cheatsheets />} />
             <Route path="/cutoffs" element={<CutoffsManagement />} />
+            <Route path="/exams" element={<ExamManagement />} />
             <Route path="/battle-questions" element={<BattleQuestions />} />
             <Route path="/health" element={<Health />} />
             <Route path="/settings" element={<Settings />} />

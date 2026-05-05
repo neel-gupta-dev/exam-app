@@ -13,6 +13,7 @@ import { sendFeedbackEmail } from '../utils/mailer.js';
 import multer from 'multer';
 import Cutoff from '../models/Cutoff.js';
 import BattleQuestion from '../models/BattleQuestion.js';
+import UpcomingExam from '../models/UpcomingExam.js';
 import { parseExcelBuffer } from '../utils/excelParser.js';
 
 const upload = multer({ 
@@ -356,6 +357,54 @@ router.delete('/battle-questions/:id', asyncHandler(async (req, res) => {
     res.status(404); throw new Error('Question not found');
   }
   res.json({ message: 'Question deleted successfully' });
+}));
+
+// ─── UPCOMING EXAMS ──────────────────────────────────────────────────────────
+
+/**
+ * GET /api/admin/exams
+ * List all upcoming exams.
+ */
+router.get('/exams', asyncHandler(async (req, res) => {
+  const exams = await UpcomingExam.find().sort({ date: 1 });
+  res.json(exams);
+}));
+
+/**
+ * POST /api/admin/exams
+ * Create or update an exam.
+ */
+router.post('/exams', asyncHandler(async (req, res) => {
+  const { id, name, date, description, registrationLink, category, icon } = req.body;
+  
+  if (!name || !date) {
+    res.status(400); throw new Error('Name and date are required.');
+  }
+
+  if (id) {
+    const exam = await UpcomingExam.findByIdAndUpdate(id, {
+      name, date, description, registrationLink, category, icon
+    }, { new: true });
+    return res.json(exam);
+  }
+
+  const exam = await UpcomingExam.create({
+    name, date, description, registrationLink, category, icon
+  });
+
+  res.status(201).json(exam);
+}));
+
+/**
+ * DELETE /api/admin/exams/:id
+ * Delete an exam.
+ */
+router.delete('/exams/:id', asyncHandler(async (req, res) => {
+  const exam = await UpcomingExam.findByIdAndDelete(req.params.id);
+  if (!exam) {
+    res.status(404); throw new Error('Exam not found');
+  }
+  res.json({ message: 'Exam deleted successfully' });
 }));
 
 export default router;
