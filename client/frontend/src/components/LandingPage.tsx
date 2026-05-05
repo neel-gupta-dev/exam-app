@@ -42,31 +42,10 @@ const MagneticButton = ({ children, className, onClick, href }: { children: Reac
 };
 
 const TiltCard = ({ children, className }: { children: React.ReactNode, className?: string }) => {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  const rotateX = useSpring(useTransform(y, [-100, 100], [15, -15]), { stiffness: 100, damping: 30 });
-  const rotateY = useSpring(useTransform(x, [-100, 100], [-15, 15]), { stiffness: 100, damping: 30 });
-
-  function handleMouse(event: React.MouseEvent) {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    x.set(event.clientX - centerX);
-    y.set(event.clientY - centerY);
-  }
-
   return (
-    <motion.div
-      onMouseMove={handleMouse}
-      onMouseLeave={() => { x.set(0); y.set(0); }}
-      style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-      className={className}
-    >
-      <div style={{ transform: "translateZ(50px)" }}>
-        {children}
-      </div>
-    </motion.div>
+    <div className={className}>
+      {children}
+    </div>
   );
 };
 
@@ -158,9 +137,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group relative">
             <motion.div
-              animate={{ rotate: [0, 5, -5, 0] }}
-              transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-              className="w-12 h-12 flex items-center justify-center group-hover:scale-110 transition-transform relative"
+              className="w-12 h-12 flex items-center justify-center relative"
             >
               <Image
                 src="/vayl-logo.png"
@@ -200,7 +177,7 @@ export default function LandingPage() {
               <Link
                 href="/signup"
                 onClick={() => sendGAEvent({ event: 'cta_click', value: 'nav_join_now' })}
-                className="bg-primary text-on-primary px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest hover:scale-105 transition-transform shadow-lg shadow-primary/20"
+                className="bg-primary text-on-primary px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-transform shadow-lg shadow-primary/20"
               >
                 Join Now
               </Link>
@@ -354,7 +331,7 @@ export default function LandingPage() {
               width={1200}
               height={700}
               priority
-              className="w-full h-auto object-contain transform transition duration-700 group-hover:scale-[1.01]"
+              className="w-full h-auto object-contain"
             />
             <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-surface to-transparent opacity-20 pointer-events-none" />
           </TiltCard>
@@ -466,7 +443,7 @@ export default function LandingPage() {
                 alt="Focus Room"
                 width={800}
                 height={450}
-                className="w-full h-auto hover:scale-105 transition-transform duration-700"
+                className="w-full h-auto"
               />
             </div>
           </TiltCard>
@@ -482,7 +459,7 @@ export default function LandingPage() {
                 alt="Vault Analytics"
                 width={800}
                 height={450}
-                className="w-full h-auto hover:scale-105 transition-transform duration-700"
+                className="w-full h-auto"
               />
             </div>
           </TiltCard>
@@ -529,7 +506,7 @@ export default function LandingPage() {
                 alt="Public Profile"
                 width={800}
                 height={500}
-                className="w-full h-auto object-contain hover:scale-105 transition-transform duration-700"
+                className="w-full h-auto object-contain"
               />
             </div>
           </TiltCard>
