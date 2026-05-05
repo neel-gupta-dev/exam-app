@@ -1,0 +1,200 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-dim: var(--surface-dim);
+  --color-surface-bright: var(--surface-bright);
+  --color-surface-variant: var(--surface-variant);
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-on-surface: var(--on-surface);
+  --color-on-surface-variant: var(--on-surface-variant);
+  --color-background: var(--background);
+  --color-on-background: var(--on-background);
+  --color-primary: var(--primary);
+  --color-primary-dim: var(--primary-dim);
+  --color-primary-container: var(--primary-container);
+  --color-primary-fixed: var(--primary-fixed);
+  --color-primary-fixed-dim: var(--primary-fixed-dim);
+  --color-on-primary: var(--on-primary);
+  --color-on-primary-container: var(--on-primary-container);
+  --color-on-primary-fixed: var(--on-primary-fixed);
+  --color-on-primary-fixed-variant: var(--on-primary-fixed-variant);
+  --color-inverse-primary: var(--inverse-primary);
+  --color-secondary: var(--secondary);
+  --color-secondary-dim: var(--secondary-dim);
+  --color-secondary-container: var(--secondary-container);
+  --color-secondary-fixed: var(--secondary-fixed);
+  --color-secondary-fixed-dim: var(--secondary-fixed-dim);
+  --color-on-secondary: var(--on-secondary);
+  --color-on-secondary-container: var(--on-secondary-container);
+  --color-on-secondary-fixed: var(--on-secondary-fixed);
+  --color-on-secondary-fixed-variant: var(--on-secondary-fixed-variant);
+  --color-tertiary: var(--tertiary);
+  --color-tertiary-dim: var(--tertiary-dim);
+  --color-tertiary-container: var(--tertiary-container);
+  --color-tertiary-fixed: var(--tertiary-fixed);
+  --color-tertiary-fixed-dim: var(--tertiary-fixed-dim);
+  --color-on-tertiary: var(--on-tertiary);
+  --color-on-tertiary-container: var(--on-tertiary-container);
+  --color-on-tertiary-fixed: var(--on-tertiary-fixed);
+  --color-on-tertiary-fixed-variant: var(--on-tertiary-fixed-variant);
+  --color-error: var(--error);
+  --color-error-dim: var(--error-dim);
+  --color-error-container: var(--error-container);
+  --color-on-error: var(--on-error);
+  --color-on-error-container: var(--on-error-container);
+  --color-outline: var(--outline);
+  --color-outline-variant: var(--outline-variant);
+  --color-surface-tint: var(--surface-tint);
+  --color-inverse-surface: var(--inverse-surface);
+  --color-inverse-on-surface: var(--inverse-on-surface);
+  
+  --font-heading: var(--font-montserrat), sans-serif;
+  --font-interface: var(--font-poppins), sans-serif;
+  --font-body: var(--font-hanken), sans-serif;
+}
+
+:root {
+  --surface: #eff3f8;
+  --surface-dim: #e1e8ef;
+  --surface-bright: #f8fafc;
+  --surface-variant: #e1e8f0;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f8fafc;
+  --surface-container: #eff3f8;
+  --surface-container-high: #e2e8f0;
+  --surface-container-highest: #d1d9e6;
+  --on-surface: #1e2531;
+  --on-surface-variant: #475569;
+  --background: #eff3f8;
+  --on-background: #1e2531;
+  --primary: #4f46e5;
+  --primary-dim: #4338ca;
+  --primary-container: #e0e7ff;
+  --on-primary: #ffffff;
+  --on-primary-container: #3730a3;
+  --primary-fixed: #e0e7ff;
+  --primary-fixed-dim: #c7d2fe;
+  --on-primary-fixed: #312e81;
+  --on-primary-fixed-variant: #4338ca;
+  --inverse-primary: #c7d2fe;
+  --secondary: #475569;
+  --secondary-dim: #334155;
+  --secondary-container: #f1f5f9;
+  --on-secondary: #ffffff;
+  --on-secondary-container: #1e293b;
+  --tertiary: #4f46e5;
+  --tertiary-dim: #4338ca;
+  --tertiary-container: #e0e7ff;
+  --on-tertiary: #ffffff;
+  --error: #dc2626;
+  --error-dim: #b91c1c;
+  --error-container: #fee2e2;
+  --on-error: #ffffff;
+  --on-error-container: #991b1b;
+  --outline: #94a3b8;
+  --outline-variant: #cbd5e1;
+  --surface-tint: #4f46e5;
+  --inverse-surface: #1e293b;
+  --inverse-on-surface: #f8fafc;
+
+  --orb-opacity: 0.15;
+  --orb-blur: 100px;
+  --mesh-opacity: 0.05;
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.05);
+  --glass-shadow: rgba(31, 38, 135, 0.07);
+}
+
+.dark {
+  --surface: #0b0e11;
+  --surface-dim: #0b0e11;
+  --surface-bright: #222d37;
+  --surface-variant: #1e272f;
+  --surface-container-lowest: #000000;
+  --surface-container-low: #0f1418;
+  --surface-container: #141a20;
+  --surface-container-high: #192027;
+  --surface-container-highest: #1e272f;
+  --on-surface: #dde6f2;
+  --on-surface-variant: #a3acb7;
+  --background: #0b0e11;
+  --on-background: #dde6f2;
+  --primary: #c0c1ff;
+  --primary-dim: #b0b2ff;
+  --primary-container: #2f2ebe;
+  --primary-fixed: #e1e0ff;
+  --primary-fixed-dim: #d1d0ff;
+  --on-primary: #2724b8;
+  --on-primary-container: #ccccff;
+  --on-primary-fixed: #2622b7;
+  --on-primary-fixed-variant: #4647d3;
+  --inverse-primary: #494bd7;
+  --secondary: #9f9da1;
+  --secondary-dim: #9f9da1;
+  --secondary-container: #3c3b3f;
+  --on-secondary: #202023;
+  --on-secondary-container: #c1bec3;
+  --tertiary: #dee5ff;
+  --tertiary-dim: #c0c9e6;
+  --tertiary-container: #ced6f5;
+  --on-tertiary: #4a536c;
+  --error: #ec7c8a;
+  --error-dim: #b95463;
+  --error-container: #7f2737;
+  --on-error: #490013;
+  --outline: #6d7680;
+  --outline-variant: #404952;
+  --surface-tint: #c0c1ff;
+  --inverse-surface: #f8f9fe;
+  --inverse-on-surface: #535559;
+
+  --orb-opacity: 0.15;
+  --orb-blur: 80px;
+  --mesh-opacity: 0.03;
+  --glass-bg: rgba(20, 26, 32, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: rgba(0, 0, 0, 0.3);
+}
+
+html, body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior: none;
+  font-family: var(--font-body);
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+
+button, a, nav {
+  font-family: var(--font-interface);
+  font-weight: 500;
+}
+
+body {
+  background-color: var(--surface);
+  color: var(--on-surface);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px 0 var(--glass-shadow);
+  transition: background 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
+}
+
+.mesh-grid {
+  background-image: radial-gradient(circle at 1px 1px, rgba(128, 128, 128, var(--mesh-opacity)) 1px, transparent 0);
+  background-size: 40px 40px;
+}
