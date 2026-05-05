@@ -43,6 +43,9 @@ router.post('/short-links', shortLinkController.createShortLink);
 router.get('/short-links', shortLinkController.getAllShortLinks);
 router.delete('/short-links/:id', shortLinkController.deleteShortLink);
 
+import { getUrlMetadata } from '../controllers/publicController.js';
+router.get('/metadata-proxy', getUrlMetadata);
+
 // ─── EMAIL BLAST ─────────────────────────────────────────────────────────────
 
 /**
@@ -90,6 +93,8 @@ router.get('/users', asyncHandler(async (req, res) => {
   }
   if (req.query.role) filter.role = String(req.query.role);
   if (req.query.authMethod) filter.authMethod = String(req.query.authMethod);
+  if (req.query.isOnboarded) filter.isOnboarded = req.query.isOnboarded === 'true';
+  if (req.query.targetExam) filter.targetExam = { $in: [String(req.query.targetExam)] };
 
   const [users, total] = await Promise.all([
     User.find(filter)

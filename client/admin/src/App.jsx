@@ -20,6 +20,8 @@ import Layout from './components/Layout';
 import BattleQuestions from './pages/BattleQuestions';
 import UTMGenerator from './pages/UTMGenerator';
 import LinkShortener from './pages/LinkShortener';
+import MetaPreviewer from './pages/MetaPreviewer';
+import UserSegmentation from './pages/UserSegmentation';
 
 export const AuthCtx = createContext(null);
 
@@ -65,6 +67,8 @@ export default function App() {
             <Route path="/battle-questions" element={<BattleQuestions />} />
             <Route path="/utm-generator" element={<UTMGenerator />} />
             <Route path="/link-shortener" element={<LinkShortener />} />
+            <Route path="/meta-previewer" element={<MetaPreviewer />} />
+            <Route path="/segmentation" element={<UserSegmentation />} />
             <Route path="/health" element={<Health />} />
             <Route path="/settings" element={<Settings />} />
           </Route>

@@ -21,6 +21,8 @@ const NAV = [
   { section: 'Marketing' },
   { to: '/utm-generator', label: '🚀 UTM Generator' },
   { to: '/link-shortener', label: '✂️ Link Shortener' },
+  { to: '/meta-previewer', label: '📱 Social Meta Preview' },
+  { to: '/segmentation',   label: '🎯 User Segmentation' },
   { section: 'System' },
   { to: '/settings',  label: '⚙️ Settings' },
   { to: '/health',    label: '🩺 Health Monitor' },

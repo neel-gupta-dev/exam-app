@@ -2,6 +2,7 @@ import asyncHandler from 'express-async-handler';
 import User from '../models/User.js';
 import Follow from '../models/Follow.js';
 import PredictorLead from '../models/PredictorLead.js';
+import * as cheerio from 'cheerio';
 
 // @desc    Get public profile by roll number (vaultId)
 // @route   GET /api/public/profile/:rollNo
@@ -102,5 +103,36 @@ export const storePredictorLead = asyncHandler(async (req, res) => {
     // Don't leak DB errors to client, just return a generic success false
     // so it doesn't break the frontend flow
     res.status(500).json({ success: false, error: 'Failed to store lead' });
+  }
+});
+
+export const getUrlMetadata = asyncHandler(async (req, res) => {
+  const { url } = req.query;
+  if (!url) {
+    res.status(400);
+    throw new Error('URL is required');
+  }
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; VaylBot/1.0; +https://vayl.in)'
+      }
+    });
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    const metadata = {
+      title: $('meta[property="og:title"]').attr('content') || $('title').text() || $('meta[name="twitter:title"]').attr('content'),
+      description: $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content') || $('meta[name="twitter:description"]').attr('content'),
+      image: $('meta[property="og:image"]').attr('content') || $('meta[name="twitter:image"]').attr('content'),
+      url: url,
+      siteName: $('meta[property="og:site_name"]').attr('content') || (new URL(url)).hostname
+    };
+
+    res.json(metadata);
+  } catch (error) {
+    res.status(500);
+    throw new Error(`Failed to fetch metadata: ${error.message}`);
   }
 });
