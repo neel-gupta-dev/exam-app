@@ -48,7 +48,7 @@ export default function LinkShortener() {
       setCustomSlug('');
       fetchLinks();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create link');
+      setError(err.response?.data?.message || err.message || 'Failed to create link');
     } finally {
       setLoading(false);
     }
