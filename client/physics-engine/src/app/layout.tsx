@@ -30,10 +30,44 @@ const hanken = Hanken_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "VAYL Physics Lab",
-  description: "Interactive physics engine for visual learning and experimentation.",
+  title: {
+    default: "VAYL Physics Lab | Interactive Physics Engine",
+    template: "%s | VAYL Physics Lab"
+  },
+  description: "A high-performance, interactive physics sandbox for students and educators. Simulate projectile motion, collisions, and more with real-time vector visualization.",
+  keywords: ["Physics Simulator", "Matter.js", "STEM Education", "VAYL", "Kinematics", "Projectile Motion Lab", "Online Physics Lab"],
+  authors: [{ name: "VAYL Team" }],
+  creator: "VAYL",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://lab.vayl.in"),
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "VAYL Physics Lab",
+    description: "Interactive physics engine for visual learning and high-precision experimentation.",
+    url: "https://lab.vayl.in",
+    siteName: "VAYL Physics Lab",
+    images: [
+      {
+        url: "/vayl-logo.png",
+        width: 1200,
+        height: 630,
+        alt: "VAYL Physics Lab Preview",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "VAYL Physics Lab",
+    description: "Visualize physics like never before with our interactive simulation engine.",
+    images: ["/vayl-logo.png"],
+  },
   icons: {
     icon: "/vayl-logo.png",
+    shortcut: "/vayl-logo.png",
+    apple: "/vayl-logo.png",
   },
 };
 
