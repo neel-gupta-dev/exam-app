@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 const SITE_URL = "https://battle.vayl.in";
-const TITLE = "JEE Battle — 1v1 Real-Time Quiz Duels";
+const TITLE = "JEE Battle | 1v1 Live Quiz Challenges for Aspirants";
 const DESCRIPTION =
-  "Challenge friends or random opponents to a head-to-head JEE quiz battle. 10 questions, 60 seconds each. Physics, Chemistry & Maths. Prove you're the fastest mind.";
+  "The most exciting way to practice for JEE. Challenge your friends to quick 1v1 duels in Physics, Chemistry, and Math. See who's faster and sharper in real-time.";
 
 export const metadata: Metadata = {
   // ── Core ──────────────────────────────────────────────
@@ -15,16 +15,14 @@ export const metadata: Metadata = {
   description: DESCRIPTION,
   keywords: [
     "JEE Battle",
-    "JEE quiz",
+    "JEE practice",
     "1v1 quiz",
-    "JEE Mains practice",
-    "competitive quiz",
-    "real-time quiz",
+    "JEE Mains challenge",
     "Physics quiz",
     "Chemistry quiz",
     "Maths quiz",
-    "IIT JEE preparation",
-    "JEE multiplayer",
+    "IIT JEE prep",
+    "online JEE test",
     "Vayl",
   ],
   authors: [{ name: "Vayl", url: "https://vayl.in" }],
@@ -42,7 +40,7 @@ export const metadata: Metadata = {
     description: DESCRIPTION,
     images: [
       {
-        url: "/og-image.png",
+        url: "/vayl-logo.png",
         width: 1200,
         height: 630,
         alt: "JEE Battle — 1v1 Real-Time Quiz Duels",
@@ -56,14 +54,14 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
-    images: ["/og-image.png"],
+    images: ["/vayl-logo.png"],
     creator: "@vaaborern",
   },
 
   // ── Icons ─────────────────────────────────────────────
   icons: {
-    icon: "/favicon.ico",
-    apple: "/og-image.png",
+    icon: "/vayl-logo.png",
+    apple: "/vayl-logo.png",
   },
 
   // ── Robots ────────────────────────────────────────────
@@ -112,9 +110,9 @@ export default function RootLayout({
               "@type": "WebApplication",
               name: "JEE Battle",
               url: SITE_URL,
-              description: DESCRIPTION,
-              applicationCategory: "EducationalApplication",
-              operatingSystem: "Any",
+              description: "A real-time 1v1 quiz platform for JEE aspirants to practice Physics, Chemistry, and Maths through friendly competition.",
+              applicationCategory: "Educational Game",
+              operatingSystem: "Web",
               offers: {
                 "@type": "Offer",
                 price: "0",

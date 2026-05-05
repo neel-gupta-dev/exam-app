@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "JEE Battle by Vayl",
     short_name: "JEE Battle",
     description:
-      "Challenge friends or random opponents to a head-to-head JEE quiz battle. 10 questions, 60 seconds each.",
+      "The most exciting way to practice for JEE. Challenge friends to quick 1v1 duels in Physics, Chemistry, and Math.",
     start_url: "/",
     display: "standalone",
     background_color: "#0f1115",
