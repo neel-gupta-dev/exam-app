@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import Matter from 'matter-js';
+import * as gtag from '@/lib/gtag';
 
 export interface PhysicsCanvasHandle {
   launch: (velocity: number, angle: number) => void;
@@ -79,6 +80,14 @@ const PhysicsCanvas = forwardRef<PhysicsCanvasHandle, PhysicsCanvasProps>(({
       lastStopwatchTimeRef.current = 0;
       onStopwatchUpdate?.(0);
       setIsStopwatchRunning?.(true);
+
+      // Track Launch Event
+      gtag.event({
+        action: 'projectile_launch',
+        category: 'Experiment',
+        label: `v=${velocity}, a=${angle}`,
+        value: velocity
+      });
     }
   }));
 
@@ -196,6 +205,13 @@ const PhysicsCanvas = forwardRef<PhysicsCanvasHandle, PhysicsCanvasProps>(({
           });
 
       Matter.Composite.add(world, newBody);
+
+      // Track Spawn Event
+      gtag.event({
+        action: 'object_spawn',
+        category: 'Sandbox',
+        label: isCircle ? 'Circle' : 'Box'
+      });
     };
 
     render.canvas.addEventListener('mousedown', handleCanvasClick);

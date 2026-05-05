@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Montserrat, Poppins, Hanken_Grotesk } from "next/font/google";
 import { Toaster } from "sonner";
 import Script from "next/script";
+import TabManager from "@/components/TabManager";
 import "./globals.css";
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -105,8 +106,34 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full bg-surface text-on-surface font-body antialiased selection:bg-primary/20">
+        <TabManager />
         {children}
         <Toaster position="bottom-right" theme="dark" richColors />
+        
+        {/* JSON-LD Structured Data for SEO */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              "name": "VAYL Physics Lab",
+              "operatingSystem": "Web",
+              "applicationCategory": "EducationApplication",
+              "description": "High-performance interactive physics engine for students and educators.",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+              },
+              "author": {
+                "@type": "Organization",
+                "name": "VAYL",
+                "url": "https://vayl.in"
+              }
+            }),
+          }}
+        />
       </body>
     </html>
   );
