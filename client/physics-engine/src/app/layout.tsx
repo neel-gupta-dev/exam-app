@@ -28,6 +28,9 @@ const hanken = Hanken_Grotesk({
 export const metadata: Metadata = {
   title: "VAYL Physics Lab",
   description: "Interactive physics engine for visual learning and experimentation.",
+  icons: {
+    icon: "/vayl-logo.png",
+  },
 };
 
 export default function RootLayout({

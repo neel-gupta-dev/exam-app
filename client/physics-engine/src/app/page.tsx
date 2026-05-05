@@ -1,15 +1,27 @@
 "use client";
 
-import React, { useState } from 'react';
-import PhysicsCanvas from '@/components/PhysicsLab/PhysicsCanvas';
+import React, { useState, useRef } from 'react';
+import Link from 'next/link';
+import PhysicsCanvas, { PhysicsCanvasHandle } from '@/components/PhysicsLab/PhysicsCanvas';
 import PhysicsControls from '@/components/PhysicsLab/PhysicsControls';
-import { FlaskConical, Github, Share2, Info } from 'lucide-react';
+import { FlaskConical, Share2, Info, Mail } from 'lucide-react';
 
 export default function PhysicsLabPage() {
-  const [gravity, setGravity] = useState(1);
+  const canvasRef = useRef<PhysicsCanvasHandle>(null);
+  const [gravity, setGravity] = useState(9.79457);
   const [timeScale, setTimeScale] = useState(1);
   const [showVectors, setShowVectors] = useState(true);
+  const [launchVelocity, setLaunchVelocity] = useState(15);
+  const [launchAngle, setLaunchAngle] = useState(45);
+  const [isDeleteMode, setIsDeleteMode] = useState(false);
+  const [activePreset, setActivePreset] = useState<string | null>(null);
+  const [friction, setFriction] = useState(0.1);
+  const [airResistance, setAirResistance] = useState(0.01);
   const [key, setKey] = useState(0);
+
+  const handleLaunch = () => {
+    canvasRef.current?.launch(launchVelocity, launchAngle);
+  };
 
   const handleReset = () => {
     setKey(prev => prev + 1);
@@ -20,8 +32,8 @@ export default function PhysicsLabPage() {
       {/* Premium Navigation Header */}
       <nav className="h-20 border-b border-outline-variant/10 flex items-center justify-between px-8 bg-surface/80 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-            <FlaskConical className="w-6 h-6 text-white" />
+          <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center">
+            <img src="/vayl-logo.png" alt="Vayl" className="w-full h-full object-cover" />
           </div>
           <div>
             <h1 className="text-sm font-black uppercase tracking-[0.2em] text-on-surface">VAYL Lab</h1>
@@ -30,6 +42,13 @@ export default function PhysicsLabPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Link 
+            href="/contact"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high border border-white/5 text-[10px] font-black uppercase tracking-widest text-on-surface-variant transition-all"
+          >
+            <Mail className="w-3.5 h-3.5" />
+            Contact
+          </Link>
           <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high border border-white/5 text-[10px] font-black uppercase tracking-widest text-on-surface-variant transition-all">
             <Info className="w-3.5 h-3.5" />
             Theory
@@ -45,7 +64,7 @@ export default function PhysicsLabPage() {
       <div className="flex-1 p-8 flex flex-col lg:flex-row gap-8 max-w-[1600px] mx-auto w-full overflow-hidden">
         
         {/* The Physics Engine Workspace */}
-        <div className="flex-1 flex flex-col gap-6 h-[500px] lg:h-auto">
+        <div className="flex-1 flex flex-col gap-6 h-[450px]">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h2 className="text-xl font-black text-on-surface tracking-tight">Kinematics Sandbox</h2>
@@ -58,10 +77,15 @@ export default function PhysicsLabPage() {
           </div>
 
           <PhysicsCanvas 
+            ref={canvasRef}
             key={key}
             gravity={gravity}
             timeScale={timeScale}
             showVectors={showVectors}
+            isDeleteMode={isDeleteMode}
+            friction={friction}
+            airResistance={airResistance}
+            preset={activePreset || undefined}
           />
         </div>
 
@@ -73,6 +97,19 @@ export default function PhysicsLabPage() {
           setTimeScale={setTimeScale}
           showVectors={showVectors}
           setShowVectors={setShowVectors}
+          isDeleteMode={isDeleteMode}
+          setIsDeleteMode={setIsDeleteMode}
+          friction={friction}
+          setFriction={setFriction}
+          airResistance={airResistance}
+          setAirResistance={setAirResistance}
+          activePreset={activePreset}
+          setActivePreset={setActivePreset}
+          launchVelocity={launchVelocity}
+          setLaunchVelocity={setLaunchVelocity}
+          launchAngle={launchAngle}
+          setLaunchAngle={setLaunchAngle}
+          onLaunch={handleLaunch}
           onReset={handleReset}
         />
       </div>
