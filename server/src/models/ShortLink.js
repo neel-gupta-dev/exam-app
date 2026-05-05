@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const shortLinkSchema = new mongoose.Schema({
   originalUrl: {
@@ -33,4 +33,5 @@ const shortLinkSchema = new mongoose.Schema({
 // Index for fast lookups
 shortLinkSchema.index({ slug: 1 });
 
-module.exports = mongoose.model('ShortLink', shortLinkSchema);
+const ShortLink = mongoose.model('ShortLink', shortLinkSchema);
+export default ShortLink;

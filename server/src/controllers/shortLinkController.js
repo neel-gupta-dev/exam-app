@@ -1,7 +1,7 @@
-const ShortLink = require('../models/ShortLink');
-const crypto = require('crypto');
+import ShortLink from '../models/ShortLink.js';
+import crypto from 'crypto';
 
-exports.createShortLink = async (req, res) => {
+export const createShortLink = async (req, res) => {
   try {
     const { originalUrl, slug } = req.body;
 
@@ -34,7 +34,7 @@ exports.createShortLink = async (req, res) => {
   }
 };
 
-exports.getAllShortLinks = async (req, res) => {
+export const getAllShortLinks = async (req, res) => {
   try {
     const links = await ShortLink.find().sort({ createdAt: -1 });
     res.json(links);
@@ -43,7 +43,7 @@ exports.getAllShortLinks = async (req, res) => {
   }
 };
 
-exports.deleteShortLink = async (req, res) => {
+export const deleteShortLink = async (req, res) => {
   try {
     const link = await ShortLink.findByIdAndDelete(req.params.id);
     if (!link) return res.status(404).json({ message: 'Link not found' });
@@ -54,12 +54,14 @@ exports.deleteShortLink = async (req, res) => {
 };
 
 // The actual Redirect logic
-exports.handleRedirect = async (req, res) => {
+export const handleRedirect = async (req, res) => {
   try {
     const { slug } = req.params;
     const link = await ShortLink.findOne({ slug: slug.toLowerCase() });
 
     if (!link) {
+      // If it's an admin path but not found, don't 404 immediately 
+      // as it might be handled by the static server, but /v/ is our prefix.
       return res.status(404).send('Link not found');
     }
 

@@ -15,7 +15,6 @@ import Cutoff from '../models/Cutoff.js';
 import BattleQuestion from '../models/BattleQuestion.js';
 import UpcomingExam from '../models/UpcomingExam.js';
 import { parseExcelBuffer } from '../utils/excelParser.js';
-import { createExam, updateExam, deleteExam, getAllExams } from '../controllers/examController.js';
 import * as shortLinkController from '../controllers/shortLinkController.js';
 
 const upload = multer({ 
