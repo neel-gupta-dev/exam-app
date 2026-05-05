@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getPublicProfile, storePredictorLead } from '../controllers/publicController.js';
+import { handleRedirect } from '../controllers/shortLinkController.js';
 import User from '../models/User.js';
 import Cutoff from '../models/Cutoff.js';
 import Shortlist from '../models/Shortlist.js';
@@ -7,6 +8,9 @@ import UpcomingExam from '../models/UpcomingExam.js';
 import { protectAdmin } from '../middlewares/adminMiddleware.js';
 
 const router = Router();
+
+// ── Link Shortener Redirect ──────────────────────────────────────────────────
+router.get('/v/:slug', handleRedirect);
 
 router.get('/profile/:rollNo', getPublicProfile);
 

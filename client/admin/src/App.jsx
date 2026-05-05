@@ -18,6 +18,8 @@ import ExamManagement from './pages/ExamManagement';
 import Layout from './components/Layout';
 
 import BattleQuestions from './pages/BattleQuestions';
+import UTMGenerator from './pages/UTMGenerator';
+import LinkShortener from './pages/LinkShortener';
 
 export const AuthCtx = createContext(null);
 
@@ -61,6 +63,8 @@ export default function App() {
             <Route path="/cutoffs" element={<CutoffsManagement />} />
             <Route path="/exams" element={<ExamManagement />} />
             <Route path="/battle-questions" element={<BattleQuestions />} />
+            <Route path="/utm-generator" element={<UTMGenerator />} />
+            <Route path="/link-shortener" element={<LinkShortener />} />
             <Route path="/health" element={<Health />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
