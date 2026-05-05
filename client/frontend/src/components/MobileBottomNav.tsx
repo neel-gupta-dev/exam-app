@@ -146,34 +146,14 @@ export default function MobileBottomNav() {
             {/* Menu Content */}
             <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8">
               
-              {/* Secondary Navigation */}
+              {/* System Navigation */}
               <div className="space-y-3">
-                <h3 className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Core Tools</h3>
+                <h3 className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">System</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  {secondaryNavItems.map((item) => {
+                  {secondaryNavItems.filter(i => i.label !== 'JEE Battle').map((item) => {
                     const isLocked = isDemo && !isDemoAllowedPath(item.href);
                     const Icon = item.icon;
                     const demoHref = isDemo && item.href !== '/' ? `${item.href}?demo=true` : (isDemo && item.href === '/' ? '/?demo=true' : item.href);
-
-                    if (item.label === 'JEE Battle') {
-                      return (
-                        <button
-                          key={item.href}
-                          onClick={() => {
-                             const token = localStorage.getItem('kv_token');
-                             const baseUrl = window.location.hostname === 'localhost' 
-                               ? 'http://localhost:3001' 
-                               : item.href;
-                             window.open(`${baseUrl}/?token=${token}`, '_blank');
-                             setIsMenuOpen(false);
-                          }}
-                          className="flex items-center gap-3 p-3.5 rounded-xl bg-surface-container hover:bg-surface-bright text-on-surface-variant hover:text-primary transition-colors text-left"
-                        >
-                          <Icon className="w-5 h-5 shrink-0" />
-                          <span className="text-sm font-medium truncate">{item.label}</span>
-                        </button>
-                      );
-                    }
 
                     return isLocked ? (
                        <button
@@ -199,6 +179,7 @@ export default function MobileBottomNav() {
                   })}
                 </div>
               </div>
+              
 
               {/* Dynamic Folders */}
               <div className="space-y-3">
