@@ -14,6 +14,7 @@ import { sendGAEvent } from '@next/third-parties/google';
 import MonthlyGoalWidget from "@/components/MonthlyGoalWidget";
 import DailyGoalWidget from "@/components/DailyGoalWidget";
 import ExamTrackerWidget from "@/components/ExamTrackerWidget";
+import TargetExamWidget from "@/components/TargetExamWidget";
 
 /**
  * Progress Widget Component
@@ -275,6 +276,7 @@ export default function DashboardView() {
 
         {/* Right Column (Widgets) */}
         <aside className="w-full lg:w-[30%] space-y-6">
+          <TargetExamWidget />
           {/* Daily Goal — most prominent widget */}
           <DailyGoalWidget />
           <ExamTrackerWidget />
