@@ -14,6 +14,10 @@ interface PhysicsCanvasProps {
   isDeleteMode?: boolean;
   friction?: number;
   airResistance?: number;
+  restitution?: number;
+  nextMass?: number;
+  onStopwatchUpdate?: (time: number) => void;
+  setIsStopwatchRunning?: (isRunning: boolean) => void;
   onStatsUpdate?: (stats: any) => void;
   preset?: string;
 }
@@ -25,6 +29,10 @@ const PhysicsCanvas = forwardRef<PhysicsCanvasHandle, PhysicsCanvasProps>(({
   isDeleteMode = false,
   friction = 0.1,
   airResistance = 0.01,
+  restitution = 0.6,
+  nextMass = 1,
+  onStopwatchUpdate,
+  setIsStopwatchRunning,
   onStatsUpdate,
   preset
 }, ref) => {
@@ -35,6 +43,8 @@ const PhysicsCanvas = forwardRef<PhysicsCanvasHandle, PhysicsCanvasProps>(({
   const groundRef = useRef<Matter.Body | null>(null);
   const showVectorsRef = useRef(showVectors);
   const isDeleteModeRef = useRef(isDeleteMode);
+  const stopwatchStartTimeRef = useRef<number | null>(null);
+  const lastStopwatchTimeRef = useRef<number>(0);
 
   useImperativeHandle(ref, () => ({
     launch: (velocity: number, angle: number) => {
@@ -63,6 +73,12 @@ const PhysicsCanvas = forwardRef<PhysicsCanvasHandle, PhysicsCanvasProps>(({
 
       Matter.Body.setVelocity(projectile, { x: vx, y: vy });
       Matter.Composite.add(engineRef.current.world, projectile);
+
+      // Reset and Start stopwatch on launch
+      stopwatchStartTimeRef.current = Date.now();
+      lastStopwatchTimeRef.current = 0;
+      onStopwatchUpdate?.(0);
+      setIsStopwatchRunning?.(true);
     }
   }));
 
@@ -168,13 +184,15 @@ const PhysicsCanvas = forwardRef<PhysicsCanvasHandle, PhysicsCanvasProps>(({
       const newBody = isCircle 
         ? Matter.Bodies.circle(offsetX, offsetY, 20 + Math.random() * 20, {
             render: { fillStyle: Math.random() > 0.5 ? '#4f46e5' : '#c0c1ff' },
-            restitution: 0.6,
-            frictionAir: airResistance
+            restitution: restitution,
+            frictionAir: airResistance,
+            mass: nextMass
           })
         : Matter.Bodies.rectangle(offsetX, offsetY, 30 + Math.random() * 30, 30 + Math.random() * 30, {
             render: { fillStyle: Math.random() > 0.5 ? '#6366f1' : '#dde6f2' },
-            restitution: 0.5,
-            frictionAir: airResistance
+            restitution: restitution,
+            frictionAir: airResistance,
+            mass: nextMass
           });
 
       Matter.Composite.add(world, newBody);
@@ -205,6 +223,28 @@ const PhysicsCanvas = forwardRef<PhysicsCanvasHandle, PhysicsCanvasProps>(({
     runnerRef.current = runner;
     Matter.Runner.run(runner, engine);
     Matter.Render.run(render);
+
+    // Stopwatch Logic
+    Matter.Events.on(engine, 'beforeUpdate', () => {
+      if (stopwatchStartTimeRef.current) {
+        const elapsed = (Date.now() - stopwatchStartTimeRef.current) / 1000;
+        lastStopwatchTimeRef.current = elapsed;
+        onStopwatchUpdate?.(elapsed);
+      }
+    });
+
+    // Impact Detection for Stopwatch
+    Matter.Events.on(engine, 'collisionStart', (event) => {
+      event.pairs.forEach(pair => {
+        const { bodyA, bodyB } = pair;
+        if ((bodyA.label === 'Projectile' && bodyB.isStatic) || 
+            (bodyB.label === 'Projectile' && bodyA.isStatic)) {
+          // Stop the stopwatch on first impact with ground/wall
+          stopwatchStartTimeRef.current = null;
+          setIsStopwatchRunning?.(false);
+        }
+      });
+    });
 
     // 6. Vector Visualization (Custom Drawing)
     const drawArrow = (ctx: CanvasRenderingContext2D, fromX: number, fromY: number, toX: number, toY: number, color: string) => {
@@ -342,21 +382,23 @@ const PhysicsCanvas = forwardRef<PhysicsCanvasHandle, PhysicsCanvasProps>(({
     }
     if (groundRef.current) {
       groundRef.current.friction = friction;
+      groundRef.current.restitution = restitution;
     }
 
-    // Update air resistance for all dynamic bodies
+    // Update properties for all dynamic bodies
     if (engineRef.current) {
       const bodies = Matter.Composite.allBodies(engineRef.current.world);
       bodies.forEach(body => {
         if (!body.isStatic) {
           body.frictionAir = airResistance;
+          body.restitution = restitution;
         }
       });
     }
 
     showVectorsRef.current = showVectors;
     isDeleteModeRef.current = isDeleteMode;
-  }, [gravity, timeScale, showVectors, isDeleteMode, friction, airResistance]);
+  }, [gravity, timeScale, showVectors, isDeleteMode, friction, airResistance, restitution]);
 
   return (
     <div 

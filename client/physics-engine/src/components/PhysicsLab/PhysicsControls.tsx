@@ -20,6 +20,14 @@ interface PhysicsControlsProps {
   setFriction: (v: number) => void;
   airResistance: number;
   setAirResistance: (v: number) => void;
+  restitution: number;
+  setRestitution: (v: number) => void;
+  nextMass: number;
+  setNextMass: (v: number) => void;
+  stopwatchTime: number;
+  isStopwatchRunning: boolean;
+  onStopwatchToggle: () => void;
+  onStopwatchReset: () => void;
   activePreset: string | null;
   setActivePreset: (v: string | null) => void;
   launchVelocity: number;
@@ -37,6 +45,10 @@ const PhysicsControls: React.FC<PhysicsControlsProps> = ({
   isDeleteMode, setIsDeleteMode,
   friction, setFriction,
   airResistance, setAirResistance,
+  restitution, setRestitution,
+  nextMass, setNextMass,
+  stopwatchTime, isStopwatchRunning,
+  onStopwatchToggle, onStopwatchReset,
   activePreset, setActivePreset,
   launchVelocity, setLaunchVelocity,
   launchAngle, setLaunchAngle,
@@ -153,6 +165,40 @@ const PhysicsControls: React.FC<PhysicsControlsProps> = ({
           />
         </div>
 
+        {/* Bounciness Slider */}
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider flex items-center gap-2">
+              <span className="material-symbols-outlined text-[14px]">sports_tennis</span>
+              Bounciness (e)
+            </label>
+            <span className="text-xs font-mono font-bold text-pink-400">{restitution.toFixed(2)}</span>
+          </div>
+          <input 
+            type="range" min="0" max="1.2" step="0.05" 
+            value={restitution}
+            onChange={(e) => setRestitution(parseFloat(e.target.value))}
+            className="w-full h-1.5 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-pink-500"
+          />
+        </div>
+
+        {/* Mass Slider */}
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider flex items-center gap-2">
+              <Weight className="w-3 h-3" />
+              Next Object Mass (m)
+            </label>
+            <span className="text-xs font-mono font-bold text-yellow-400">{nextMass} kg</span>
+          </div>
+          <input 
+            type="range" min="0.1" max="10" step="0.1" 
+            value={nextMass}
+            onChange={(e) => setNextMass(parseFloat(e.target.value))}
+            className="w-full h-1.5 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-yellow-500"
+          />
+        </div>
+
         {/* Toggles */}
         <div className="pt-2 flex flex-col gap-3">
           <button 
@@ -230,6 +276,45 @@ const PhysicsControls: React.FC<PhysicsControlsProps> = ({
           </button>
         </div>
       )}
+
+      {/* Stopwatch Card */}
+      <div className="p-6 rounded-3xl bg-surface-container border border-white/5 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest flex items-center gap-2">
+            <span className="material-symbols-outlined text-[16px] text-sky-400">timer</span>
+            Precision Stopwatch
+          </h3>
+          <button 
+            onClick={onStopwatchReset}
+            className="p-1.5 rounded-lg bg-surface-container-highest hover:bg-white/10 transition-colors"
+          >
+            <RotateCcw className="w-3 h-3" />
+          </button>
+        </div>
+
+        <div className="bg-black/20 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center">
+          <span className="text-3xl font-mono font-black text-sky-400 tabular-nums tracking-tighter">
+            {stopwatchTime.toFixed(3)}<span className="text-sm ml-1 text-sky-400/50 italic">s</span>
+          </span>
+        </div>
+
+        <div className="flex gap-2">
+          <button 
+            onClick={onStopwatchToggle}
+            className={`flex-1 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+              isStopwatchRunning 
+                ? "bg-amber-500/10 border-amber-500/20 text-amber-400" 
+                : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+            }`}
+          >
+            {isStopwatchRunning ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+            {isStopwatchRunning ? "Stop" : "Start"}
+          </button>
+        </div>
+        <p className="text-[8px] text-center text-on-surface-variant/40 font-bold uppercase tracking-widest">
+          Autostart on projectile launch
+        </p>
+      </div>
 
       {/* Presets Card */}
       <div className="p-6 rounded-3xl bg-surface-container border border-white/5 space-y-4">

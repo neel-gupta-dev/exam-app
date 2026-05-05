@@ -17,6 +17,10 @@ export default function PhysicsLabPage() {
   const [activePreset, setActivePreset] = useState<string | null>(null);
   const [friction, setFriction] = useState(0.1);
   const [airResistance, setAirResistance] = useState(0.01);
+  const [restitution, setRestitution] = useState(0.6);
+  const [nextMass, setNextMass] = useState(1);
+  const [stopwatchTime, setStopwatchTime] = useState(0);
+  const [isStopwatchRunning, setIsStopwatchRunning] = useState(false);
   const [key, setKey] = useState(0);
 
   const handleLaunch = () => {
@@ -85,6 +89,10 @@ export default function PhysicsLabPage() {
             isDeleteMode={isDeleteMode}
             friction={friction}
             airResistance={airResistance}
+            restitution={restitution}
+            nextMass={nextMass}
+            onStopwatchUpdate={setStopwatchTime}
+            setIsStopwatchRunning={setIsStopwatchRunning}
             preset={activePreset || undefined}
           />
         </div>
@@ -103,6 +111,14 @@ export default function PhysicsLabPage() {
           setFriction={setFriction}
           airResistance={airResistance}
           setAirResistance={setAirResistance}
+          restitution={restitution}
+          setRestitution={setRestitution}
+          nextMass={nextMass}
+          setNextMass={setNextMass}
+          stopwatchTime={stopwatchTime}
+          isStopwatchRunning={isStopwatchRunning}
+          onStopwatchToggle={() => setIsStopwatchRunning(!isStopwatchRunning)}
+          onStopwatchReset={() => { setStopwatchTime(0); setIsStopwatchRunning(false); }}
           activePreset={activePreset}
           setActivePreset={setActivePreset}
           launchVelocity={launchVelocity}
