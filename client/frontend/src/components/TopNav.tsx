@@ -30,6 +30,7 @@ export default function TopNav() {
   const [title, setTitle] = useState("");
   const [type, setType] = useState<"video" | "pdf" | "link" | "other">("link");
   const [folderName, setFolderName] = useState("");
+  const [existingFolders, setExistingFolders] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const { searchQuery, setSearchQuery } = useSearch();
   const { modifierSymbol } = useModifierKey();
@@ -45,6 +46,30 @@ export default function TopNav() {
   
   const handleOpenModal = () => {
     setIsOpen(true);
+    fetchExistingFolders();
+  };
+
+  const fetchExistingFolders = async () => {
+    if (isDemo) {
+      try {
+        const demoVault = JSON.parse(localStorage.getItem('vayl_demo_vault') || '[]');
+        const staticFolders = ["Biology", "Physics", "Mathematics", "Chemistry"];
+        const dynamicFolders = Array.from(new Set(demoVault.map((r: any) => r.folderName).filter(Boolean))) as string[];
+        setExistingFolders([...new Set([...staticFolders, ...dynamicFolders])]);
+      } catch {
+        setExistingFolders(["Biology", "Physics", "Mathematics", "Chemistry"]);
+      }
+      return;
+    }
+    try {
+      const { data } = await api.get('/resources?page=1&limit=200');
+      if (data.resources) {
+        const unique = Array.from(new Set(data.resources.map((r: any) => r.folderName).filter(Boolean))) as string[];
+        setExistingFolders(unique);
+      }
+    } catch (err) {
+      console.error("Failed to fetch folders for modal", err);
+    }
   };
 
   // ── Keyboard Shortcuts ──────────────────────────────────────────────
@@ -346,11 +371,17 @@ export default function TopNav() {
                   <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Folder</label>
                   <input
                     type="text"
+                    list="folder-list"
                     placeholder="General"
                     value={folderName}
                     onChange={(e) => setFolderName(e.target.value)}
                     className="w-full bg-surface-container-highest border border-outline-variant/30 rounded-xl py-2 px-3 text-sm text-on-surface focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all outline-none"
                   />
+                  <datalist id="folder-list">
+                    {existingFolders.map(f => (
+                      <option key={f} value={f} />
+                    ))}
+                  </datalist>
                 </div>
               </div>
               <div className="pt-2">
