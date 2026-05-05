@@ -2,7 +2,7 @@ import asyncHandler from 'express-async-handler';
 import User from '../models/User.js';
 import Follow from '../models/Follow.js';
 import PredictorLead from '../models/PredictorLead.js';
-import * as cheerio from 'cheerio';
+import { load } from 'cheerio';
 
 // @desc    Get public profile by roll number (vaultId)
 // @route   GET /api/public/profile/:rollNo
@@ -114,25 +114,38 @@ export const getUrlMetadata = asyncHandler(async (req, res) => {
   }
 
   try {
-    const response = await fetch(url, {
+    // Ensure URL has protocol
+    const targetUrl = url.startsWith('http') ? url : `https://${url}`;
+    
+    const response = await fetch(targetUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; VaylBot/1.0; +https://vayl.in)'
-      }
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8'
+      },
+      redirect: 'follow'
     });
+
+    if (!response.ok) {
+      throw new Error(`Target site returned ${response.status}`);
+    }
+
     const html = await response.text();
-    const $ = cheerio.load(html);
+    const $ = load(html);
 
     const metadata = {
-      title: $('meta[property="og:title"]').attr('content') || $('title').text() || $('meta[name="twitter:title"]').attr('content'),
-      description: $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content') || $('meta[name="twitter:description"]').attr('content'),
-      image: $('meta[property="og:image"]').attr('content') || $('meta[name="twitter:image"]').attr('content'),
-      url: url,
-      siteName: $('meta[property="og:site_name"]').attr('content') || (new URL(url)).hostname
+      title: $('meta[property="og:title"]').attr('content') || $('title').text() || $('meta[name="twitter:title"]').attr('content') || 'No Title',
+      description: $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content') || $('meta[name="twitter:description"]').attr('content') || 'No description available.',
+      image: $('meta[property="og:image"]').attr('content') || $('meta[name="twitter:image"]').attr('content') || '',
+      url: targetUrl,
+      siteName: $('meta[property="og:site_name"]').attr('content') || (new URL(targetUrl)).hostname
     };
 
     res.json(metadata);
   } catch (error) {
-    res.status(500);
-    throw new Error(`Failed to fetch metadata: ${error.message}`);
+    console.error(`[Metadata Proxy] Error for ${url}:`, error.message);
+    res.status(500).json({ 
+      message: 'Failed to analyze URL', 
+      error: error.message 
+    });
   }
 });

@@ -24,7 +24,8 @@ export default function MetaPreviewer() {
       });
       setMetadata(res.data);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch metadata. Check URL.');
+      const msg = err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to fetch metadata';
+      setError(`${msg}. Please try another URL.`);
     } finally {
       setLoading(false);
     }
