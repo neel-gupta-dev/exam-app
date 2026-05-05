@@ -241,7 +241,7 @@ export const closeExpiredSessions = async () => {
  * Generate and save a 6-digit OTP for student verification
  */
 export const sendOtp = async (email) => {
-  const validDomains = ['.ac.in', '.edu.in'];
+  const validDomains = ['.ac.in', '.edu.in', '.edu', '.res.in'];
   const isValidDomain = validDomains.some((domain) => email.endsWith(domain));
 
   if (!isValidDomain) {

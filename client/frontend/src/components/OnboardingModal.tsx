@@ -274,7 +274,7 @@ export default function OnboardingModal() {
                 <span className="material-symbols-outlined text-2xl text-indigo-400">verified_user</span>
               </div>
               <h2 className="font-headline text-xl font-bold text-on-surface">Verify Student Status</h2>
-              <p className="text-sm text-on-surface-variant mt-1">Enter your <code className="text-primary">.ac.in</code> or <code className="text-primary">.edu.in</code> email</p>
+              <p className="text-sm text-on-surface-variant mt-1">Enter your academic email (e.g., <code className="text-primary">.edu</code>, <code className="text-primary">.ac.in</code>)</p>
             </div>
 
             <div className="space-y-2">
