@@ -167,7 +167,7 @@ export default function LandingPage() {
               <MagneticButton
                 onClick={() => {
                   sendGAEvent({ event: 'cta_click', value: 'nav_try_demo' });
-                  try { localStorage.setItem('vayl_demo_mode', 'true'); } catch (e) {}
+                  try { localStorage.setItem('vayl_demo_mode', 'true'); } catch (e) { }
                   window.location.href = '/?demo=true';
                 }}
                 className="text-xs font-interface font-black uppercase tracking-widest px-5 py-2.5 rounded-xl border border-primary/30 text-primary bg-primary/5 hover:bg-primary/15 transition-all cursor-pointer"
@@ -240,15 +240,15 @@ export default function LandingPage() {
               <MagneticButton href="/about" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-primary transition-colors py-2">About</MagneticButton>
               <MagneticButton href="/contact" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-primary transition-colors py-2">Contact</MagneticButton>
             </div>
-            
+
             <div className="h-px w-1/3 bg-outline-variant/20 my-2" />
-            
+
             <div className="flex flex-col items-center gap-4 w-full px-4">
               <MagneticButton href="/login" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-interface font-black uppercase tracking-widest text-on-surface hover:text-primary transition-colors py-2">Login</MagneticButton>
               <MagneticButton
                 onClick={() => {
                   sendGAEvent({ event: 'cta_click', value: 'nav_try_demo_mobile' });
-                  try { localStorage.setItem('vayl_demo_mode', 'true'); } catch (e) {}
+                  try { localStorage.setItem('vayl_demo_mode', 'true'); } catch (e) { }
                   window.location.href = '/?demo=true';
                 }}
                 className="w-full max-w-sm text-center text-sm font-interface font-black uppercase tracking-widest px-5 py-3 rounded-xl border border-primary/30 text-primary bg-primary/5 hover:bg-primary/15 transition-all cursor-pointer"
@@ -292,7 +292,7 @@ export default function LandingPage() {
           </motion.h1>
 
           <motion.p variants={itemVariants} className="text-on-surface-variant max-w-2xl mx-auto text-base md:text-lg leading-relaxed mb-8 opacity-80 font-medium font-interface italic">
-            Stop managing files. Start mastering concepts. Vayl is the ultimate command center for high-yield resource management and focused study.
+            Stop managing files. Start mastering concepts. Vayl is the center for high-yield resource management and focused study.
           </motion.p>
 
           <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-12">
@@ -347,7 +347,7 @@ export default function LandingPage() {
           { label: "Daily Focus Minutes", value: "480+", icon: <Timer className="w-5 h-5 text-primary" /> },
           { label: "Resources Tracked", value: "5k+", icon: <BookOpen className="w-5 h-5 text-tertiary" /> },
           { label: "Aspirants Joined", value: "1k+", icon: <Brain className="w-5 h-5 text-error" /> },
-          { label: "Efficiency Boost", value: "35%", icon: <Image src="/vayl-logo.png" alt="Vayl Logo" width={20} height={20} className=" object-contain" /> }
+          { label: "Efficiency Boost", value: "~37%", icon: <Image src="/vayl-logo.png" alt="Vayl Logo" width={20} height={20} className=" object-contain" /> }
         ].map((stat, i) => (
           <motion.div
             key={i}
@@ -379,17 +379,17 @@ export default function LandingPage() {
             <div className="space-y-4">
               <h3 className="text-xl font-bold text-on-surface flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-primary" />
-                Surgical Precision
+                Precision
               </h3>
               <p className="text-on-surface-variant leading-relaxed opacity-70 font-interface font-medium">
-                Elite preparation isn't about how much you study, but how effectively you manage what you know. Vayl provides the infrastructure for high-retention learning, taking the cognitive load off your organization and placing it purely on execution.
+                Strong preparation isn't always about how much you study, but how effectively you manage what you know. Vayl provides the infrastructure for high-retention learning, taking the cognitive load off your organization and placing it purely on execution.
               </p>
 
             </div>
             <div className="space-y-4">
               <h3 className="text-xl font-bold text-on-surface flex items-center gap-2">
                 <Image src="/vayl-logo.png" alt="Vayl Logo" width={20} height={20} className=" object-contain" />
-                Elite Workflow
+                Workflow
               </h3>
               <p className="text-on-surface-variant leading-relaxed opacity-70 font-interface font-medium">
                 From the way resources are categorized to the atmospheric audio in the Focus Room, every pixel is designed to induce a flow state. We don't just provide tools; we provide a standardized protocol for excellence.
@@ -412,7 +412,7 @@ export default function LandingPage() {
               Deep Work <br /><span className="text-error italic">Standardized.</span>
             </h2>
             <p className="text-on-surface-variant text-lg leading-relaxed opacity-70 font-semibold font-interface">
-              Eliminate peripheral noise with our integrated Focus Room. Real-time timer, atmospheric audio controls, and a distraction-free environment engineered for peak performance.
+              Eliminate peripheral noise with our integrated Focus Room. Real-time timer, atmospheric audio controls, and a distraction-free environment made for performance.
             </p>
             <ul className="space-y-4 text-sm font-bold text-on-surface-variant font-interface">
               <li className="flex items-center gap-3">
@@ -472,7 +472,7 @@ export default function LandingPage() {
               Mastery <br /><span className="text-tertiary italic">Visualized.</span>
             </h2>
             <p className="text-on-surface-variant text-lg leading-relaxed opacity-70 font-semibold font-interface">
-              Understand your coverage and streaks with surgical precision. Our analytics suite tracks progress so you can focus on the gaps.
+              Understand your coverage and streaks with precision. Our analytics suite tracks progress so you can focus on the gaps.
             </p>
             <Link
               href="/signup"
@@ -537,7 +537,7 @@ export default function LandingPage() {
             {
               icon: Timer,
               title: "Focus Protocol",
-              desc: "Enter flow state on command. Integrated deep-work timers with biometric simulation."
+              desc: "Enter flow state. Integrated deep-work timers."
             },
             {
               icon: Target,
@@ -640,7 +640,7 @@ export default function LandingPage() {
         </motion.div>
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <p className="text-[10px] text-on-surface-variant font-medium opacity-40 italic">
-            © 2026 Academic Excellence Protocol.
+            © 2026 Vayl. All rights reserved.
           </p>
 
         </div>
