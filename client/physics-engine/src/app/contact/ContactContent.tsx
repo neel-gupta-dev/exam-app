@@ -1,11 +1,62 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Mail, ArrowLeft, MessageSquare, Shield, Globe } from 'lucide-react';
+import { ArrowLeft, Shield, Globe, Send, Loader2 } from 'lucide-react';
+import ReCAPTCHA from 'react-google-recaptcha';
+import { toast } from 'sonner';
 
 export default function ContactContent() {
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+
+  const isProd = process.env.NODE_ENV === 'production';
+  const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    let captchaToken = null;
+    if (isProd) {
+      if (recaptchaRef.current) {
+        captchaToken = recaptchaRef.current.getValue();
+        if (!captchaToken) {
+          toast.error('Please complete the CAPTCHA verification');
+          setIsSubmitting(false);
+          return;
+        }
+      } else if (!siteKey) {
+        console.warn("reCAPTCHA site key is missing, bypassing for local testing if configured that way, but this will fail in production.");
+      }
+    }
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, message, captchaToken })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        toast.success('Message sent successfully!');
+        setEmail('');
+        setMessage('');
+        if (isProd && recaptchaRef.current) recaptchaRef.current.reset();
+      } else {
+        toast.error(data.error || 'Failed to send message');
+      }
+    } catch (err) {
+      toast.error('An unexpected error occurred while sending your message');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-surface flex flex-col items-center justify-center p-6 relative overflow-hidden">
       {/* Background elements consistent with main app */}
@@ -40,26 +91,67 @@ export default function ContactContent() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <a 
-                href="mailto:support@vayl.in"
-                className="p-6 rounded-3xl bg-surface-container-high border border-white/5 hover:border-primary/30 transition-all group"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Mail className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-sm font-black uppercase tracking-widest text-on-surface mb-1">Email Us</h3>
-                <p className="text-xs font-mono font-bold text-primary">support@vayl.in</p>
-              </a>
-
-              <div className="p-6 rounded-3xl bg-surface-container-high border border-white/5 opacity-50 cursor-not-allowed">
-                <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
-                  <MessageSquare className="w-6 h-6 text-on-surface-variant" />
-                </div>
-                <h3 className="text-sm font-black uppercase tracking-widest text-on-surface mb-1">Live Chat</h3>
-                <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Coming Soon</p>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="email" className="block text-xs font-black uppercase tracking-widest text-on-surface-variant mb-2">
+                  Email Address
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isSubmitting}
+                  className="w-full p-4 rounded-xl bg-surface-container-high border border-white/5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all disabled:opacity-50"
+                  placeholder="your@email.com"
+                />
               </div>
-            </div>
+
+              <div>
+                <label htmlFor="message" className="block text-xs font-black uppercase tracking-widest text-on-surface-variant mb-2">
+                  Message
+                </label>
+                <textarea
+                  id="message"
+                  required
+                  rows={4}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  disabled={isSubmitting}
+                  className="w-full p-4 rounded-xl bg-surface-container-high border border-white/5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none disabled:opacity-50"
+                  placeholder="How can we help?"
+                />
+              </div>
+
+              {isProd && siteKey && (
+                <div className="flex justify-center pt-2">
+                  <ReCAPTCHA
+                    ref={recaptchaRef}
+                    sitekey={siteKey}
+                    theme="dark" // Assuming standard theme matches VAYL better
+                  />
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full py-4 mt-2 rounded-xl bg-primary text-on-primary font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary-dim transition-colors disabled:opacity-70"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-5 h-5" />
+                    Send Message
+                  </>
+                )}
+              </button>
+            </form>
 
             <div className="pt-8 border-t border-white/5">
               <h3 className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em] mb-6">Our Commitment</h3>
