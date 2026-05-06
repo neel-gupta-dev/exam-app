@@ -84,6 +84,12 @@ export default function RootLayout({
       className={`h-full antialiased ${montserrat.variable} ${poppins.variable} ${hanken.variable}`}
     >
       <head>
+        {/* Dark mode: detect system preference before first paint to avoid flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{if(window.matchMedia('(prefers-color-scheme:dark)').matches){document.documentElement.classList.add('dark')}}catch(e){}})();`,
+          }}
+        />
         {isProd && GA_ID && (
           <>
             <Script
@@ -100,6 +106,12 @@ export default function RootLayout({
             </Script>
           </>
         )}
+        {/* Preload Material Symbols to avoid render-blocking */}
+        <link
+          rel="preload"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap"
+          as="style"
+        />
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap"
           rel="stylesheet"

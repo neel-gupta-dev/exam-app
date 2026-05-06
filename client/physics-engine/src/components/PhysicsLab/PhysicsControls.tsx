@@ -5,7 +5,6 @@ import {
   Play, Pause, RotateCcw, Settings2, 
   Wind, Weight, Gauge, ArrowRightCircle 
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 interface PhysicsControlsProps {
   gravity: number;
@@ -36,6 +35,7 @@ interface PhysicsControlsProps {
   setLaunchAngle: (v: number) => void;
   onLaunch: () => void;
   onReset: () => void;
+  onClear: () => void;
 }
 
 const PhysicsControls: React.FC<PhysicsControlsProps> = ({
@@ -52,7 +52,7 @@ const PhysicsControls: React.FC<PhysicsControlsProps> = ({
   activePreset, setActivePreset,
   launchVelocity, setLaunchVelocity,
   launchAngle, setLaunchAngle,
-  onLaunch, onReset
+  onLaunch, onReset, onClear
 }) => {
   return (
     <div className="w-full lg:w-80 flex flex-col gap-6">
@@ -65,20 +65,16 @@ const PhysicsControls: React.FC<PhysicsControlsProps> = ({
           </h3>
           <div className="flex gap-2">
             <button 
-              onClick={() => {
-                // We'll need a way to clear all dynamic bodies
-                // I'll add an onClear prop
-                onReset(); // For now, just reset
-              }}
+              onClick={onClear}
               className="p-2 rounded-xl bg-surface-container-highest hover:bg-error/20 text-on-surface-variant hover:text-error transition-all active:scale-95"
-              title="Clear All Objects"
+              title="Clear All Dynamic Objects"
             >
               <span className="material-symbols-outlined text-[20px]">delete_sweep</span>
             </button>
             <button 
               onClick={onReset}
               className="p-2 rounded-xl bg-surface-container-highest hover:bg-primary/20 text-on-surface-variant hover:text-primary transition-all active:scale-95"
-              title="Reset Simulation"
+              title="Reset Entire Simulation"
             >
               <RotateCcw className="w-4 h-4" />
             </button>
@@ -227,9 +223,9 @@ const PhysicsControls: React.FC<PhysicsControlsProps> = ({
         </div>
       </div>
 
-      {/* Projectile Settings - Only shown if Projectile Preset is selected */}
+      {/* Projectile Settings */}
       {activePreset === 'Projectile Motion' && (
-        <div className="p-6 rounded-3xl bg-surface-container border border-white/5 space-y-6 animate-in slide-in-from-right-4 fade-in duration-300">
+        <div className="p-6 rounded-3xl bg-surface-container border border-white/5 space-y-6 transition-all duration-300">
           <h3 className="text-xs font-black text-on-surface-variant uppercase tracking-widest flex items-center gap-2">
             <Play className="w-4 h-4 text-emerald-400" />
             Projectile Lab
@@ -312,7 +308,7 @@ const PhysicsControls: React.FC<PhysicsControlsProps> = ({
           </button>
         </div>
         <p className="text-[8px] text-center text-on-surface-variant/40 font-bold uppercase tracking-widest">
-          Autostart on projectile launch
+          Autostart on projectile launch · Uses simulation time
         </p>
       </div>
 
@@ -322,7 +318,7 @@ const PhysicsControls: React.FC<PhysicsControlsProps> = ({
           Experiment Presets
         </h3>
         <div className="grid grid-cols-1 gap-2">
-          {['Projectile Motion', 'Elastic Collisions', 'Free Fall Lab', 'Chaos Pendulum'].map((p) => (
+          {['Projectile Motion'].map((p) => (
             <button 
               key={p}
               onClick={() => setActivePreset(activePreset === p ? null : p)}

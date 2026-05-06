@@ -2,9 +2,10 @@
 
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import PhysicsCanvas, { PhysicsCanvasHandle } from '@/components/PhysicsLab/PhysicsCanvas';
 import PhysicsControls from '@/components/PhysicsLab/PhysicsControls';
-import { FlaskConical, Share2, Info, Mail } from 'lucide-react';
+import { Mail } from 'lucide-react';
 
 export default function PhysicsLabPage() {
   const canvasRef = useRef<PhysicsCanvasHandle>(null);
@@ -28,16 +29,22 @@ export default function PhysicsLabPage() {
   };
 
   const handleReset = () => {
+    setStopwatchTime(0);
+    setIsStopwatchRunning(false);
     setKey(prev => prev + 1);
   };
 
+  const handleClear = () => {
+    canvasRef.current?.clearDynamic();
+  };
+
   return (
-    <main className="min-h-screen bg-surface flex flex-col">
-      {/* Premium Navigation Header */}
+    <main className="h-screen bg-surface flex flex-col overflow-hidden">
+      {/* Navigation Header */}
       <nav className="h-20 border-b border-outline-variant/10 flex items-center justify-between px-8 bg-surface/80 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center">
-            <img src="/vayl-logo.png" alt="Vayl" className="w-full h-full object-cover" />
+          <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center relative">
+            <Image src="/vayl-logo.png" alt="Vayl" fill className="object-cover" sizes="40px" />
           </div>
           <div>
             <h1 className="text-sm font-black uppercase tracking-[0.2em] text-on-surface">VAYL Lab</h1>
@@ -53,22 +60,14 @@ export default function PhysicsLabPage() {
             <Mail className="w-3.5 h-3.5" />
             Contact
           </Link>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high border border-white/5 text-[10px] font-black uppercase tracking-widest text-on-surface-variant transition-all">
-            <Info className="w-3.5 h-3.5" />
-            Theory
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:opacity-90 transition-all">
-            <Share2 className="w-3.5 h-3.5" />
-            Share Sim
-          </button>
         </div>
       </nav>
 
       {/* Main Laboratory Floor */}
-      <div className="flex-1 p-8 flex flex-col lg:flex-row gap-8 max-w-[1600px] mx-auto w-full overflow-hidden">
+      <div className="flex-1 p-6 flex flex-col lg:flex-row gap-6 max-w-[1600px] mx-auto w-full overflow-hidden">
         
         {/* The Physics Engine Workspace */}
-        <div className="flex-1 flex flex-col gap-6 h-[450px]">
+        <div className="flex-1 flex flex-col gap-4 min-h-0">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h2 className="text-xl font-black text-on-surface tracking-tight">Kinematics Sandbox</h2>
@@ -76,11 +75,10 @@ export default function PhysicsLabPage() {
             </div>
             <div className="flex items-center gap-4 bg-surface-container-high/50 p-1.5 rounded-2xl border border-white/5">
               <div className="px-3 py-1.5 rounded-xl bg-primary/10 text-[10px] font-black text-primary uppercase">Active Session</div>
-              <div className="px-3 text-[10px] font-bold text-on-surface-variant/40">Lat: 12ms</div>
             </div>
           </div>
 
-          <PhysicsCanvas 
+          <PhysicsCanvas
             ref={canvasRef}
             key={key}
             gravity={gravity}
@@ -91,13 +89,15 @@ export default function PhysicsLabPage() {
             airResistance={airResistance}
             restitution={restitution}
             nextMass={nextMass}
+            isStopwatchRunning={isStopwatchRunning}
+            stopwatchTime={stopwatchTime}
             onStopwatchUpdate={setStopwatchTime}
             setIsStopwatchRunning={setIsStopwatchRunning}
-            preset={activePreset || undefined}
           />
         </div>
 
-        {/* The Control Panel Sidebar */}
+        {/* The Control Panel Sidebar — scrollable */}
+        <div className="w-full lg:w-80 overflow-y-auto flex-shrink-0 pb-2">
         <PhysicsControls 
           gravity={gravity}
           setGravity={setGravity}
@@ -127,7 +127,9 @@ export default function PhysicsLabPage() {
           setLaunchAngle={setLaunchAngle}
           onLaunch={handleLaunch}
           onReset={handleReset}
+          onClear={handleClear}
         />
+        </div>
       </div>
 
       {/* Global Background Elements */}
