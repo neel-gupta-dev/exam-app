@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 
 export default function LinkShortener() {
   const [links, setLinks] = useState([]);
@@ -9,7 +9,6 @@ export default function LinkShortener() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'https://api.vayl.in';
   const REDIRECT_BASE = import.meta.env.VITE_REDIRECT_BASE || 'https://vayl.in/v';
 
   useEffect(() => {
@@ -18,10 +17,7 @@ export default function LinkShortener() {
 
   const fetchLinks = async () => {
     try {
-      const token = localStorage.getItem('admin_token');
-      const res = await axios.get(`${API_BASE}/api/admin/short-links`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.get(`/api/admin/short-links`);
       setLinks(res.data);
     } catch (err) {
       console.error('Failed to fetch links');
@@ -35,12 +31,9 @@ export default function LinkShortener() {
     setSuccess('');
 
     try {
-      const token = localStorage.getItem('admin_token');
-      const res = await axios.post(`${API_BASE}/api/admin/short-links`, {
+      const res = await api.post(`/api/admin/short-links`, {
         originalUrl: longUrl,
         slug: customSlug
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
 
       setSuccess(`Link created: ${REDIRECT_BASE}/${res.data.slug}`);
@@ -57,10 +50,7 @@ export default function LinkShortener() {
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this link?')) return;
     try {
-      const token = localStorage.getItem('admin_token');
-      await axios.delete(`${API_BASE}/api/admin/short-links/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`/api/admin/short-links/${id}`);
       fetchLinks();
     } catch (err) {
       alert('Failed to delete');

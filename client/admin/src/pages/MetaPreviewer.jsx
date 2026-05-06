@@ -1,13 +1,11 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 
 export default function MetaPreviewer() {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [metadata, setMetadata] = useState(null);
   const [error, setError] = useState('');
-
-  const API_BASE = import.meta.env.VITE_API_URL || 'https://api.vayl.in';
 
   const fetchMetadata = async (e) => {
     e.preventDefault();
@@ -17,10 +15,8 @@ export default function MetaPreviewer() {
     setMetadata(null);
 
     try {
-      const token = localStorage.getItem('admin_token');
-      const res = await axios.get(`${API_BASE}/api/admin/metadata-proxy`, {
-        params: { url: url.trim() },
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await api.get(`/api/admin/metadata-proxy`, {
+        params: { url: url.trim() }
       });
       setMetadata(res.data);
     } catch (err) {

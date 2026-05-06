@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 
 export default function UserSegmentation() {
   const [users, setUsers] = useState([]);
@@ -12,8 +12,6 @@ export default function UserSegmentation() {
     search: ''
   });
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'https://api.vayl.in';
-
   useEffect(() => {
     fetchUsers();
   }, [filters]);
@@ -21,10 +19,8 @@ export default function UserSegmentation() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('admin_token');
-      const res = await axios.get(`${API_BASE}/api/admin/users`, {
-        params: { ...filters, limit: 100 },
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await api.get(`/api/admin/users`, {
+        params: { ...filters, limit: 100 }
       });
       setUsers(res.data.users);
       setTotal(res.data.total);
