@@ -205,8 +205,11 @@ export default function SignupPage() {
                   </button>
                 </div>
 
-                {/* Divider */}
-                <div className="relative mb-8">
+                {/* EMAIL SIGNUP TEMPORARILY DISABLED */}
+                {false && (
+                  <>
+                    {/* Divider */}
+                    <div className="relative mb-8">
                   <div className="absolute inset-0 flex items-center"><div className="w-full h-px bg-white/10"></div></div>
                   <div className="relative flex justify-center">
                     <span className="bg-surface-container/60 backdrop-blur-md px-4 text-[10px] font-label text-on-surface-variant font-bold uppercase tracking-[0.2em] rounded-full">Or use email</span>
@@ -258,6 +261,8 @@ export default function SignupPage() {
                     : <>Send Verification Code <span className="material-symbols-outlined text-[18px]">send</span></>
                   }
                 </button>
+                  </>
+                )}
               </form>
 
               <div className="mt-8 text-center border-t border-white/5 pt-6">
