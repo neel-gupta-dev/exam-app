@@ -24,6 +24,15 @@ export default function PhysicsLabPage() {
   const [isStopwatchRunning, setIsStopwatchRunning] = useState(false);
   const [key, setKey] = useState(0);
 
+  // New Experiment States
+  const [cradleCount, setCradleCount] = useState(5);
+  const [massA, setMassA] = useState(1);
+  const [massB, setMassB] = useState(1);
+  const [velA, setVelA] = useState(5);
+  const [velB, setVelB] = useState(-5);
+  const [rampAngle, setRampAngle] = useState(30);
+  const [rampFriction, setRampFriction] = useState(0.1);
+
   const handleLaunch = () => {
     canvasRef.current?.launch(launchVelocity, launchAngle);
   };
@@ -93,6 +102,14 @@ export default function PhysicsLabPage() {
             stopwatchTime={stopwatchTime}
             onStopwatchUpdate={setStopwatchTime}
             setIsStopwatchRunning={setIsStopwatchRunning}
+            activePreset={activePreset}
+            cradleCount={cradleCount}
+            massA={massA}
+            massB={massB}
+            velA={velA}
+            velB={velB}
+            rampAngle={rampAngle}
+            rampFriction={rampFriction}
           />
         </div>
 
@@ -128,6 +145,20 @@ export default function PhysicsLabPage() {
           onLaunch={handleLaunch}
           onReset={handleReset}
           onClear={handleClear}
+          cradleCount={cradleCount}
+          setCradleCount={setCradleCount}
+          massA={massA}
+          setMassA={setMassA}
+          massB={massB}
+          setMassB={setMassB}
+          velA={velA}
+          setVelA={setVelA}
+          velB={velB}
+          setVelB={setVelB}
+          rampAngle={rampAngle}
+          setRampAngle={setRampAngle}
+          rampFriction={rampFriction}
+          setRampFriction={setRampFriction}
         />
         </div>
       </div>

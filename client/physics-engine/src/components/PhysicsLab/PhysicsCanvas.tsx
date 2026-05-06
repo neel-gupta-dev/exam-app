@@ -22,6 +22,14 @@ interface PhysicsCanvasProps {
   stopwatchTime?: number;
   onStopwatchUpdate?: (time: number) => void;
   setIsStopwatchRunning?: (isRunning: boolean) => void;
+  activePreset?: string | null;
+  cradleCount?: number;
+  massA?: number;
+  massB?: number;
+  velA?: number;
+  velB?: number;
+  rampAngle?: number;
+  rampFriction?: number;
 }
 
 const PhysicsCanvas = forwardRef<PhysicsCanvasHandle, PhysicsCanvasProps>(({ 
@@ -37,6 +45,14 @@ const PhysicsCanvas = forwardRef<PhysicsCanvasHandle, PhysicsCanvasProps>(({
   stopwatchTime = 0,
   onStopwatchUpdate,
   setIsStopwatchRunning,
+  activePreset,
+  cradleCount = 5,
+  massA = 1,
+  massB = 1,
+  velA = 5,
+  velB = -5,
+  rampAngle = 30,
+  rampFriction = 0.1,
 }, ref) => {
   // ── Engine refs ──
   const sceneRef = useRef<HTMLDivElement>(null);
@@ -83,6 +99,86 @@ const PhysicsCanvas = forwardRef<PhysicsCanvasHandle, PhysicsCanvasProps>(({
       simulatedTimeRef.current = 0;
     }
   }, [stopwatchTime]);
+
+  // ── Preset Observer & Builder ──
+  useEffect(() => {
+    if (!engineRef.current) return;
+    
+    // Clear EVERYTHING except the 4 boundary walls
+    const allBodies = Matter.Composite.allBodies(engineRef.current.world);
+    const toRemoveBodies = allBodies.filter(b => !wallsRef.current.includes(b));
+    toRemoveBodies.forEach(b => Matter.Composite.remove(engineRef.current!.world, b));
+    
+    // Remove all constraints
+    const allConstraints = Matter.Composite.allConstraints(engineRef.current.world);
+    const toRemoveConstraints = allConstraints.filter(c => c.label !== 'Mouse Constraint');
+    toRemoveConstraints.forEach(c => Matter.Composite.remove(engineRef.current!.world, c));
+
+    const { width, height } = dimensionsRef.current;
+    
+    // Auto-reset stopwatch
+    simulatedTimeRef.current = 0;
+    onStopwatchUpdateRef.current?.(0);
+
+    if (activePreset === "Newton's Cradle") {
+      const cradle = Matter.Composites.newtonsCradle(width / 2 - (cradleCount * 50) / 2, 100, cradleCount, 25, 200);
+      // Make them bouncy and frictionless
+      cradle.bodies.forEach(b => {
+        b.restitution = 1;
+        b.friction = 0;
+        b.frictionAir = 0;
+        b.render.fillStyle = '#f472b6';
+      });
+      Matter.Composite.add(engineRef.current.world, cradle);
+    } 
+    else if (activePreset === "Collision Track") {
+      const yPos = height - 200;
+      const blockA = Matter.Bodies.rectangle(width / 2 - 200, yPos, 60, 60, {
+        mass: massA,
+        render: { fillStyle: '#f97316' },
+        friction: 0, frictionAir: 0, restitution: 1
+      });
+      const blockB = Matter.Bodies.rectangle(width / 2 + 200, yPos, 60, 60, {
+        mass: massB,
+        render: { fillStyle: '#38bdf8' },
+        friction: 0, frictionAir: 0, restitution: 1
+      });
+      Matter.Body.setVelocity(blockA, { x: velA, y: 0 });
+      Matter.Body.setVelocity(blockB, { x: velB, y: 0 });
+      Matter.Composite.add(engineRef.current.world, [blockA, blockB]);
+      
+      stopwatchActiveRef.current = true;
+      setIsStopwatchRunningRef.current?.(true);
+    }
+    else if (activePreset === "Inclined Plane") {
+      const radians = (rampAngle * Math.PI) / 180;
+      const rampLength = 800;
+      const rampThickness = 40;
+      
+      const ramp = Matter.Bodies.rectangle(width / 2, height - 200, rampLength, rampThickness, {
+        isStatic: true,
+        angle: radians,
+        friction: rampFriction,
+        render: { fillStyle: '#a855f7' },
+        label: 'Ramp'
+      });
+      
+      const blockX = width / 2 - Math.cos(radians) * (rampLength / 2 - 50) - Math.sin(radians) * 40;
+      const blockY = height - 200 - Math.sin(radians) * (rampLength / 2 - 50) + Math.cos(radians) * 40;
+
+      const block = Matter.Bodies.rectangle(blockX, blockY, 50, 50, {
+        friction: rampFriction,
+        render: { fillStyle: '#34d399' },
+        angle: radians
+      });
+      
+      Matter.Composite.add(engineRef.current.world, [ramp, block]);
+      
+      stopwatchActiveRef.current = true;
+      setIsStopwatchRunningRef.current?.(true);
+    }
+
+  }, [activePreset, cradleCount, massA, massB, velA, velB, rampAngle, rampFriction]);
 
   // ── Imperative API ──
   useImperativeHandle(ref, () => ({
@@ -307,8 +403,33 @@ const PhysicsCanvas = forwardRef<PhysicsCanvasHandle, PhysicsCanvasProps>(({
     };
 
     Matter.Events.on(render, 'afterRender', () => {
-      if (!showVectorsRef.current) return;
       const context = render.context;
+      
+      // Draw constraints (like strings in Newton's Cradle) explicitly to ensure they look good
+      const engineConstraints = Matter.Composite.allConstraints(engine.world);
+      context.beginPath();
+      engineConstraints.forEach(constraint => {
+        if (constraint.label === "Mouse Constraint") return;
+        if (constraint.render && constraint.render.visible === false) return;
+        
+        const posA = constraint.bodyA ? 
+          { x: constraint.bodyA.position.x + constraint.pointA.x, y: constraint.bodyA.position.y + constraint.pointA.y } : 
+          constraint.pointA;
+        const posB = constraint.bodyB ? 
+          { x: constraint.bodyB.position.x + constraint.pointB.x, y: constraint.bodyB.position.y + constraint.pointB.y } : 
+          constraint.pointB;
+          
+        if (posA && posB) {
+          context.moveTo(posA.x, posA.y);
+          context.lineTo(posB.x, posB.y);
+        }
+      });
+      context.lineWidth = 2;
+      context.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      context.stroke();
+
+      if (!showVectorsRef.current) return;
+      
       const allBodies = Matter.Composite.allBodies(engine.world);
       // Use live dimensions from ref (Bug 5 fix)
       const currentHeight = dimensionsRef.current.height;

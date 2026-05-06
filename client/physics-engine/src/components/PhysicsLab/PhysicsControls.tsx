@@ -36,6 +36,20 @@ interface PhysicsControlsProps {
   onLaunch: () => void;
   onReset: () => void;
   onClear: () => void;
+  cradleCount: number;
+  setCradleCount: (v: number) => void;
+  massA: number;
+  setMassA: (v: number) => void;
+  massB: number;
+  setMassB: (v: number) => void;
+  velA: number;
+  setVelA: (v: number) => void;
+  velB: number;
+  setVelB: (v: number) => void;
+  rampAngle: number;
+  setRampAngle: (v: number) => void;
+  rampFriction: number;
+  setRampFriction: (v: number) => void;
 }
 
 const PhysicsControls: React.FC<PhysicsControlsProps> = ({
@@ -52,7 +66,11 @@ const PhysicsControls: React.FC<PhysicsControlsProps> = ({
   activePreset, setActivePreset,
   launchVelocity, setLaunchVelocity,
   launchAngle, setLaunchAngle,
-  onLaunch, onReset, onClear
+  onLaunch, onReset, onClear,
+  cradleCount, setCradleCount,
+  massA, setMassA, massB, setMassB,
+  velA, setVelA, velB, setVelB,
+  rampAngle, setRampAngle, rampFriction, setRampFriction
 }) => {
   return (
     <div className="w-full lg:w-80 flex flex-col gap-6">
@@ -273,6 +291,93 @@ const PhysicsControls: React.FC<PhysicsControlsProps> = ({
         </div>
       )}
 
+      {/* Newton's Cradle Settings */}
+      {activePreset === "Newton's Cradle" && (
+        <div className="p-6 rounded-3xl bg-surface-container border border-white/5 space-y-6 transition-all duration-300">
+          <h3 className="text-xs font-black text-on-surface-variant uppercase tracking-widest flex items-center gap-2">
+            <span className="material-symbols-outlined text-[16px] text-pink-400">lens</span>
+            Newton's Cradle
+          </h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">
+                Number of Spheres
+              </label>
+              <span className="text-xs font-mono font-bold text-pink-400">{cradleCount}</span>
+            </div>
+            <input 
+              type="range" min="3" max="9" step="1" 
+              value={cradleCount}
+              onChange={(e) => setCradleCount(parseInt(e.target.value))}
+              className="w-full h-1.5 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-pink-500"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Collision Track Settings */}
+      {activePreset === 'Collision Track' && (
+        <div className="p-6 rounded-3xl bg-surface-container border border-white/5 space-y-6 transition-all duration-300">
+          <h3 className="text-xs font-black text-on-surface-variant uppercase tracking-widest flex items-center gap-2">
+            <span className="material-symbols-outlined text-[16px] text-orange-400">compare_arrows</span>
+            Collision Lab
+          </h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Mass A (kg)</label>
+              <span className="text-xs font-mono font-bold text-orange-400">{massA.toFixed(1)}</span>
+            </div>
+            <input type="range" min="0.1" max="10" step="0.1" value={massA} onChange={(e) => setMassA(parseFloat(e.target.value))} className="w-full h-1.5 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-orange-500" />
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Velocity A (m/s)</label>
+              <span className="text-xs font-mono font-bold text-orange-400">{velA.toFixed(1)}</span>
+            </div>
+            <input type="range" min="0" max="20" step="1" value={velA} onChange={(e) => setVelA(parseFloat(e.target.value))} className="w-full h-1.5 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-orange-500" />
+          </div>
+          <hr className="border-white/5" />
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Mass B (kg)</label>
+              <span className="text-xs font-mono font-bold text-sky-400">{massB.toFixed(1)}</span>
+            </div>
+            <input type="range" min="0.1" max="10" step="0.1" value={massB} onChange={(e) => setMassB(parseFloat(e.target.value))} className="w-full h-1.5 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-sky-500" />
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Velocity B (m/s)</label>
+              <span className="text-xs font-mono font-bold text-sky-400">{velB.toFixed(1)}</span>
+            </div>
+            <input type="range" min="-20" max="0" step="1" value={velB} onChange={(e) => setVelB(parseFloat(e.target.value))} className="w-full h-1.5 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-sky-500" />
+          </div>
+        </div>
+      )}
+
+      {/* Inclined Plane Settings */}
+      {activePreset === 'Inclined Plane' && (
+        <div className="p-6 rounded-3xl bg-surface-container border border-white/5 space-y-6 transition-all duration-300">
+          <h3 className="text-xs font-black text-on-surface-variant uppercase tracking-widest flex items-center gap-2">
+            <span className="material-symbols-outlined text-[16px] text-purple-400">signal_cellular_4_bar</span>
+            Inclined Plane Lab
+          </h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Ramp Angle (°)</label>
+              <span className="text-xs font-mono font-bold text-purple-400">{rampAngle}°</span>
+            </div>
+            <input type="range" min="10" max="80" step="1" value={rampAngle} onChange={(e) => setRampAngle(parseInt(e.target.value))} className="w-full h-1.5 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-purple-500" />
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Ramp Friction (μ)</label>
+              <span className="text-xs font-mono font-bold text-emerald-400">{rampFriction.toFixed(2)}</span>
+            </div>
+            <input type="range" min="0" max="1" step="0.01" value={rampFriction} onChange={(e) => setRampFriction(parseFloat(e.target.value))} className="w-full h-1.5 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-emerald-500" />
+          </div>
+        </div>
+      )}
+
       {/* Stopwatch Card */}
       <div className="p-6 rounded-3xl bg-surface-container border border-white/5 space-y-4">
         <div className="flex items-center justify-between">
@@ -318,7 +423,7 @@ const PhysicsControls: React.FC<PhysicsControlsProps> = ({
           Experiment Presets
         </h3>
         <div className="grid grid-cols-1 gap-2">
-          {['Projectile Motion'].map((p) => (
+          {['Projectile Motion', "Newton's Cradle", 'Collision Track', 'Inclined Plane'].map((p) => (
             <button 
               key={p}
               onClick={() => setActivePreset(activePreset === p ? null : p)}
