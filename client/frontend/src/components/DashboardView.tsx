@@ -197,7 +197,7 @@ function QuickTipCard() {
  * endpoints to display recent resources, progress widgets, and learning streaks.
  */
 export default function DashboardView() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [resourceCount, setResourceCount] = useState(0);
   const [heatmapData, setHeatmapData] = useState<number[]>(new Array(28).fill(0));
   const [demoName, setDemoName] = useState<string | null>(null);
