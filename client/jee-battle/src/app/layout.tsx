@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next"
 import "./globals.css";
 
 const SITE_URL = "https://battle.vayl.in";
@@ -146,6 +147,7 @@ export default function RootLayout({
                 gtag('config', '${GA_ID}');
               `}
             </Script>
+            <Analytics />
           </>
         )}
         <MathProvider>
