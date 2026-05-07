@@ -130,11 +130,16 @@ export default function BattleQuestions() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!questionText || options.some(opt => !opt.text)) {
+    
+    // Validation
+    const isOptionsMissing = type !== 'integer' && options.some(opt => !opt.text);
+    const isIntegerMissing = type === 'integer' && (correctInteger === '' || correctInteger === null);
+
+    if (!questionText || isOptionsMissing || isIntegerMissing) {
       setError('Please fill in all fields.');
       return;
     }
-    if (!options.some(opt => opt.isCorrect)) {
+    if (type !== 'integer' && !options.some(opt => opt.isCorrect)) {
       setError('At least one option must be marked as correct.');
       return;
     }
