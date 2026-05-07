@@ -379,8 +379,12 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
       <div className="min-h-screen bg-[#0f1115] text-white flex flex-col items-center justify-center">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-500 mx-auto"></div>
-          <h2 className="text-2xl font-bold">Waiting for opponent to finish...</h2>
-          <p className="text-gray-400">You completed all questions! Results incoming.</p>
+          <h2 className="text-2xl font-bold">
+            {battleState.isSolo ? 'Finalizing Results...' : 'Waiting for opponent to finish...'}
+          </h2>
+          <p className="text-gray-400">
+            {battleState.isSolo ? 'Calculating your final XP...' : 'You completed all questions! Results incoming.'}
+          </p>
         </div>
       </div>
     );

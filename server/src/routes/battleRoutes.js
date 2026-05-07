@@ -256,6 +256,38 @@ router.post('/cancel', protect, async (req, res) => {
 });
 
 /**
+ * POST /battle/solo/create
+ * Create a solo practice room.
+ */
+router.post('/solo/create', protect, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const roomCode = await uniqueRoomCode();
+
+    // Fetch 5 random questions for Solo Rush
+    const questions = await BattleQuestion.aggregate([{ $sample: { size: 5 } }]);
+    if (questions.length === 0) {
+      return res.status(500).json({ error: 'No battle questions available' });
+    }
+
+    const battle = await Battle.create({
+      roomCode,
+      player1: userId,
+      status: 'active', // Immediately active
+      isSolo: true,
+      questions: questions.map(q => q._id),
+      startedAt: new Date(),
+      player1LastAnswerAt: new Date(),
+    });
+
+    res.json({ roomCode: battle.roomCode, status: 'active' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to create solo room' });
+  }
+});
+
+/**
  * POST /battle/solo-start
  * Admin only: force-start a waiting room without an opponent (for testing).
  */
