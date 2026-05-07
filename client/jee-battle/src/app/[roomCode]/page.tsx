@@ -386,13 +386,13 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
         <div className="flex items-center justify-between gap-4 bg-[#16191f] p-4 rounded-2xl border border-white/5 shadow-xl">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
-              <span className="text-lg font-bold text-indigo-400">{battleState.player1Score}</span>
+              <span className="text-lg font-bold text-indigo-400">?</span>
             </div>
             <div className="hidden sm:block">
               <p className="text-[10px] uppercase font-black tracking-widest text-indigo-400">You</p>
               <div className="flex gap-1 mt-1">
                 {battleState.questions.map((_: any, i: number) => (
-                  <div key={i} className={`w-3 h-1.5 rounded-full ${i < battleState.myProgress ? (battleState.myAnswers[i]?.isCorrect ? 'bg-green-500' : 'bg-red-500') : 'bg-white/10'}`} />
+                  <div key={i} className={`w-3 h-1.5 rounded-full ${i < battleState.myProgress ? 'bg-indigo-400' : 'bg-white/10'}`} />
                 ))}
               </div>
             </div>
@@ -410,12 +410,12 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
               <p className="text-[10px] uppercase font-black tracking-widest text-rose-400">{battleState.player2?.name || 'Opponent'}</p>
               <div className="flex gap-1 mt-1 justify-end">
                 {battleState.questions.map((_: any, i: number) => (
-                  <div key={i} className={`w-3 h-1.5 rounded-full ${i < battleState.opponentProgress ? 'bg-rose-500/50' : 'bg-white/10'}`} />
+                  <div key={i} className={`w-3 h-1.5 rounded-full ${i < battleState.opponentProgress ? 'bg-rose-400/50' : 'bg-white/10'}`} />
                 ))}
               </div>
             </div>
             <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center border border-rose-500/30">
-              <span className="text-lg font-bold text-rose-400">{battleState.player2Score}</span>
+              <span className="text-lg font-bold text-rose-400">?</span>
             </div>
           </div>
         </div>
