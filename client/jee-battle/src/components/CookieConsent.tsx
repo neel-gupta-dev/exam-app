@@ -44,7 +44,7 @@ export default function CookieConsent() {
 
         <div className="grid grid-cols-2 gap-3 mt-6">
           <button
-            onClick={accept}
+            onClick={decline}
             className="py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white/40 hover:bg-white/5 transition-colors border border-white/5"
           >
             Necessary Only

@@ -3,11 +3,7 @@
 import { useEffect, useState, use, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { MathJax } from 'better-react-mathjax';
-import {
-  Trophy, Users, Timer, ArrowRight,
-  CheckCircle2, XCircle, Sword, LogOut,
-  Share2, Copy, Zap
-} from 'lucide-react';
+import { Timer, ArrowRight, CheckCircle2, Zap } from 'lucide-react';
 
 export default function BattleRoom({ params }: { params: Promise<{ roomCode: string }> }) {
   const router = useRouter();
@@ -34,6 +30,11 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
 
   const lastSubmittedIndex = useRef<number>(-1);
   const [countdownMs, setCountdownMs] = useState<number>(0);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Refs to avoid stale closures in intervals/timers
+  const battleStatusRef = useRef<string | null>(null);
+  const submittingRef = useRef(false);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in';
 
@@ -49,13 +50,18 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
   const fetchState = async () => {
     if (!token) return;
     // Skip if already finished to save requests
-    if (battleState?.status === 'finished') return;
+    if (battleStatusRef.current === 'finished') return;
 
     try {
       const res = await fetch(`${apiUrl}/battle/${roomCode}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
+      if (res.status === 401) {
+        localStorage.removeItem('kv_token');
+        throw new Error("Session expired. Please sign in again.");
+      }
+
       if (res.status === 403) {
         throw new Error("🔒 Not authorized. This is a private room for other players.");
       }
@@ -64,6 +70,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
       if (!res.ok) throw new Error(data.error || 'Failed to fetch battle state');
 
       setBattleState(data);
+      battleStatusRef.current = data.status;
 
       if (data.status === 'active' && data.myProgress !== undefined) {
         setCurrentQuestionIndex(data.myProgress);
@@ -86,13 +93,15 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
     // Reset state for new room
     setCurrentQuestionIndex(0);
     setBattleState(null);
+    battleStatusRef.current = null;
     setLoading(true);
     setError(null);
     
     fetchState();
     const interval = setInterval(() => {
-      // Check ref or use local closure isn't possible, so we check state in fetchState
-      fetchState();
+      if (battleStatusRef.current !== 'finished') {
+        fetchState();
+      }
     }, 5000);
 
     return () => clearInterval(interval);
@@ -125,7 +134,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
       setTimeRemaining(remaining);
 
       if (remaining <= 0) {
-        if (lastSubmittedIndex.current !== currentQuestionIndex) {
+        if (lastSubmittedIndex.current !== currentQuestionIndex && !submittingRef.current) {
           lastSubmittedIndex.current = currentQuestionIndex;
           submitAnswer([-1111], -1111);
         }
@@ -137,7 +146,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
   }, [currentQuestionIndex, battleState?.status, countdownMs]);
 
   const submitAnswer = async (manualIndices?: number[], manualInteger?: number) => {
-    if (!token || !battleState || submitting) return;
+    if (!token || !battleState || submittingRef.current) return;
 
     const currentQuestion = battleState.questions[currentQuestionIndex];
     const isMulti = currentQuestion.type === 'multi';
@@ -147,10 +156,12 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
     const indices = manualIndices || (isMulti ? selectedOptions : (selectedOptions.length > 0 ? [selectedOptions[0]] : [-1111]));
     const integerVal = manualInteger !== undefined ? manualInteger : (typedAnswer !== '' ? Number(typedAnswer) : -1111);
 
+    submittingRef.current = true;
     setSubmitting(true);
+    setSubmitError(null);
 
     const questionId = currentQuestion._id;
-    const timeTaken = 60 - timeRemaining;
+    const timeTaken = 120 - timeRemaining;
 
     try {
       const res = await fetch(`${apiUrl}/battle/submit`, {
@@ -180,7 +191,11 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
 
     } catch (err: any) {
       console.error(err);
+      if (err.message !== 'Already answered this question') {
+        setSubmitError(err.message || 'Failed to submit answer');
+      }
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   };
@@ -203,12 +218,13 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
       await fetchState();
     } catch (err: any) {
       alert(err.message);
+    } finally {
       setSoloStarting(false);
     }
   };
 
   const copyCode = () => {
-    navigator.clipboard.writeText(roomCode.toUpperCase());
+    navigator.clipboard.writeText(roomCode.toUpperCase()).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -378,7 +394,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
 
           <div className="flex gap-3">
             <button onClick={() => router.push('/')} className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition font-bold">
-              Return to Lobby
+              ⚔️ Play Again
             </button>
             <button
               onClick={() => router.push('/')}
@@ -590,6 +606,13 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
             </div>
           </div>
         </div>
+
+        {/* Submit Error */}
+        {submitError && (
+          <div className="bg-red-500/10 text-red-400 p-3 rounded-xl text-sm border border-red-500/20 text-center">
+            {submitError}
+          </div>
+        )}
 
         {/* Submit Button */}
         <button

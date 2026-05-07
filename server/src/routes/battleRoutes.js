@@ -26,7 +26,7 @@ function generateRoomCode() {
 async function uniqueRoomCode() {
   for (let i = 0; i < 10; i++) {
     const code = generateRoomCode();
-    const existing = await Battle.findOne({ roomCode: code, status: { $in: ['waiting', 'active'] } });
+    const existing = await Battle.findOne({ roomCode: code });
     if (!existing) return code;
   }
   throw new Error('Failed to generate unique room code');
@@ -503,7 +503,7 @@ router.post('/submit', protect, async (req, res) => {
             lbPoints = 4;
             lbCorrect = 1;
             isCorrect = true;
-            const timeBonus = Math.max(0, Math.floor((60 - actualTimeTaken) * (50 / 60)));
+            const timeBonus = Math.max(0, Math.floor((120 - actualTimeTaken) * (50 / 120)));
             points = 100 + timeBonus;
           } else {
             const correctSelectedCount = selected.filter(idx => question.options[idx]?.isCorrect).length;
