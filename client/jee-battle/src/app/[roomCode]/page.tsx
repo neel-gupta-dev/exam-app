@@ -1,9 +1,52 @@
 "use client";
 
-import { useEffect, useState, use, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { MathJax } from 'better-react-mathjax';
 import { Timer, ArrowRight, CheckCircle2, Zap } from 'lucide-react';
+
+type BattleQuestionType = 'single' | 'multi' | 'integer';
+
+type BattleQuestionOption = {
+  text: string;
+};
+
+type BattleQuestion = {
+  _id: string;
+  subject: string;
+  questionText: string;
+  questionCode?: string;
+  type: BattleQuestionType;
+  options: BattleQuestionOption[];
+};
+
+type BattleAnswer = {
+  lbPoints?: number;
+  isCorrect?: boolean;
+};
+
+type BattlePlayer = {
+  name?: string;
+  avatar?: string | null;
+};
+
+type BattleState = {
+  roomCode: string;
+  status: 'waiting' | 'active' | 'finished' | string;
+  questions: BattleQuestion[];
+  player1?: BattlePlayer;
+  player2?: BattlePlayer;
+  player1Score: number;
+  player2Score: number;
+  opponentProgress: number;
+  myProgress: number;
+  myAnswers: BattleAnswer[];
+  winner?: string | null;
+  startedAt?: string;
+  serverNow?: number;
+  isSolo?: boolean;
+  isAdmin?: boolean;
+};
 
 export default function BattleRoom({ params }: { params: Promise<{ roomCode: string }> }) {
   const router = useRouter();
@@ -16,7 +59,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
   }, [roomCode]);
 
   const [token, setToken] = useState<string | null>(null);
-  const [battleState, setBattleState] = useState<any>(null);
+  const [battleState, setBattleState] = useState<BattleState | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,6 +83,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
 
   useEffect(() => {
     const storedToken = localStorage.getItem('kv_token');
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (storedToken) setToken(storedToken);
     else {
       setError("Not authenticated. Please join from the lobby.");
@@ -47,7 +91,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
     }
   }, []);
 
-  const fetchState = async () => {
+  const fetchState = useCallback(async () => {
     if (!token) return;
     // Skip if already finished to save requests
     if (battleStatusRef.current === 'finished') return;
@@ -69,7 +113,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to fetch battle state');
 
-      setBattleState(data);
+      setBattleState(data as BattleState);
       battleStatusRef.current = data.status;
 
       if (data.status === 'active' && data.myProgress !== undefined) {
@@ -82,15 +126,16 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
         }
       }
       setLoading(false);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch battle state');
       setLoading(false);
     }
-  };
+  }, [apiUrl, countdownMs, roomCode, token]);
 
   useEffect(() => {
     if (!token) return;
     // Reset state for new room
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentQuestionIndex(0);
     setBattleState(null);
     battleStatusRef.current = null;
@@ -105,7 +150,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [token, roomCode]);
+  }, [fetchState, roomCode, token]);
 
   useEffect(() => {
     if (countdownMs <= 0) return;
@@ -117,35 +162,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
 
   const targetTimeRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    if (battleState?.status !== 'active' || currentQuestionIndex >= (battleState?.questions?.length || 0) || countdownMs > 0) return;
-
-    // Set target time to 120 seconds from now
-    targetTimeRef.current = Date.now() + 120000;
-    setTimeRemaining(120);
-
-    const timerInterval = setInterval(() => {
-      if (!targetTimeRef.current) return;
-      
-      const now = Date.now();
-      const diff = targetTimeRef.current - now;
-      const remaining = Math.max(0, Math.ceil(diff / 1000));
-      
-      setTimeRemaining(remaining);
-
-      if (remaining <= 0) {
-        if (lastSubmittedIndex.current !== currentQuestionIndex && !submittingRef.current) {
-          lastSubmittedIndex.current = currentQuestionIndex;
-          submitAnswer([-1111], -1111);
-        }
-        clearInterval(timerInterval);
-      }
-    }, 250); // High frequency check for smooth UI and accurate timeout
-
-    return () => clearInterval(timerInterval);
-  }, [currentQuestionIndex, battleState?.status, countdownMs]);
-
-  const submitAnswer = async (manualIndices?: number[], manualInteger?: number) => {
+  const submitAnswer = useCallback(async (manualIndices?: number[], manualInteger?: number) => {
     if (!token || !battleState || submittingRef.current) return;
 
     const currentQuestion = battleState.questions[currentQuestionIndex];
@@ -189,16 +206,46 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
       lastSubmittedIndex.current = -1;
       await fetchState();
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      if (err.message !== 'Already answered this question') {
-        setSubmitError(err.message || 'Failed to submit answer');
+      const msg = err instanceof Error ? err.message : 'Failed to submit answer';
+      if (msg !== 'Already answered this question') {
+        setSubmitError(msg || 'Failed to submit answer');
       }
     } finally {
       submittingRef.current = false;
       setSubmitting(false);
     }
-  };
+  }, [apiUrl, battleState, currentQuestionIndex, fetchState, roomCode, selectedOptions, timeRemaining, token, typedAnswer]);
+
+  useEffect(() => {
+    if (battleState?.status !== 'active' || currentQuestionIndex >= (battleState?.questions?.length || 0) || countdownMs > 0) return;
+
+    // Set target time to 120 seconds from now
+    targetTimeRef.current = Date.now() + 120000;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setTimeRemaining(120);
+
+    const timerInterval = setInterval(() => {
+      if (!targetTimeRef.current) return;
+      
+      const now = Date.now();
+      const diff = targetTimeRef.current - now;
+      const remaining = Math.max(0, Math.ceil(diff / 1000));
+      
+      setTimeRemaining(remaining);
+
+      if (remaining <= 0) {
+        if (lastSubmittedIndex.current !== currentQuestionIndex && !submittingRef.current) {
+          lastSubmittedIndex.current = currentQuestionIndex;
+          submitAnswer([-1111], -1111);
+        }
+        clearInterval(timerInterval);
+      }
+    }, 250); // High frequency check for smooth UI and accurate timeout
+
+    return () => clearInterval(timerInterval);
+  }, [battleState, countdownMs, currentQuestionIndex, fetchState, roomCode, submitAnswer]);
 
   const soloStart = async () => {
     if (!token) return;
@@ -216,8 +263,8 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
       if (!res.ok) throw new Error(data.error);
       // Trigger immediate state refresh
       await fetchState();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Failed to start solo battle');
     } finally {
       setSoloStarting(false);
     }
@@ -322,15 +369,15 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
   // ── Finished Screen ──
   if (battleState.status === 'finished') {
     // Compute leaderboard points earned in this battle (+4 correct, -1 wrong, 0 skip)
-    const computeLbPoints = (answers: any[]) => {
+    const computeLbPoints = (answers: BattleAnswer[]) => {
       let pts = 0;
       let correct = 0;
       let wrong = 0;
-      (answers || []).forEach((a: any) => {
+      (answers || []).forEach((a) => {
         pts += (a.lbPoints || 0);
         if (a.isCorrect) {
           correct++;
-        } else if (a.lbPoints < 0) {
+        } else if ((a.lbPoints ?? 0) < 0) {
           wrong++;
         }
       });
@@ -464,7 +511,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
               <p className="text-[10px] uppercase font-black tracking-widest text-indigo-400 truncate">You</p>
               {/* Dots on Desktop */}
               <div className="hidden sm:flex gap-1 mt-1">
-                {battleState.questions.map((_: any, i: number) => (
+                {battleState.questions.map((_, i: number) => (
                   <div key={i} className={`w-3 h-1.5 rounded-full ${i < battleState.myProgress ? 'bg-indigo-400' : 'bg-white/10'}`} />
                 ))}
               </div>
@@ -501,7 +548,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
                   </p>
                   {/* Dots on Desktop */}
                   <div className="hidden sm:flex gap-1 mt-1 justify-end">
-                    {battleState.questions.map((_: any, i: number) => (
+                    {battleState.questions.map((_, i: number) => (
                       <div key={i} className={`w-3 h-1.5 rounded-full ${i < battleState.opponentProgress ? 'bg-rose-400/50' : 'bg-white/10'}`} />
                     ))}
                   </div>
@@ -558,7 +605,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
                   <p className="text-[10px] text-gray-500 text-center uppercase tracking-widest font-bold">Integer Type • +4 / -1 Marking</p>
                 </div>
               ) : (
-                currentQuestion.options.map((option: any, index: number) => {
+                currentQuestion.options.map((option, index: number) => {
                   const isSelected = selectedOptions.includes(index);
                   const isMulti = currentQuestion.type === 'multi';
 

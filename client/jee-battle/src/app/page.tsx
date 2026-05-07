@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 /** Parse user ID from a JWT token (no verification — just decode payload) */
 function getUserIdFromToken(token: string): string | null {
@@ -28,7 +29,17 @@ function LobbyContent() {
   const [creating, setCreating] = useState(false);
 
   // Leaderboard state
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  type LeaderboardEntry = {
+    userId: string;
+    name?: string;
+    avatar?: string | null;
+    points?: number;
+    rank?: number;
+    gamesPlayed?: number;
+    correctAnswers?: number;
+    wrongAnswers?: number;
+  };
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [lbLoading, setLbLoading] = useState(true);
   const [countdown, setCountdown] = useState('');
 
@@ -91,14 +102,11 @@ function LobbyContent() {
       localStorage.setItem('kv_token', urlToken);
       // Clean token from URL immediately to prevent leaking via history/referrer
       window.history.replaceState({}, '', '/');
-      setToken(urlToken);
-      setChecking(false);
-    } else {
-      const storedToken = localStorage.getItem('kv_token');
-      if (storedToken) setToken(storedToken);
-      setChecking(false);
     }
-  }, [searchParams, router]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setToken(urlToken || localStorage.getItem('kv_token'));
+    setChecking(false);
+  }, [searchParams]);
 
   // Fetch online player count periodically
   const fetchOnlineCount = useCallback(async () => {
@@ -118,6 +126,7 @@ function LobbyContent() {
 
   useEffect(() => {
     if (!token) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchOnlineCount();
     const interval = setInterval(fetchOnlineCount, 15000);
     return () => clearInterval(interval);
@@ -180,8 +189,8 @@ function LobbyContent() {
       if (!res.ok) throw new Error(data.error || 'Failed to create solo room');
 
       router.push(`/${data.roomCode}`);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to create solo room');
     } finally {
       setCreating(false);
     }
@@ -208,8 +217,8 @@ function LobbyContent() {
         setWaitingRoomCode(data.roomCode);
         pollRef.current = setInterval(() => pollForOpponent(data.roomCode), 3000);
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to queue');
       setStatus('idle');
     }
   };
@@ -252,8 +261,8 @@ function LobbyContent() {
       if (data.roomCode) {
         router.push(`/${data.roomCode}`);
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to create room');
     } finally {
       setCreating(false);
     }
@@ -277,8 +286,8 @@ function LobbyContent() {
       if (data.roomCode) {
         router.push(`/${data.roomCode}`);
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to join');
     } finally {
       setJoining(false);
     }
@@ -343,7 +352,7 @@ function LobbyContent() {
               </svg>
               Continue with Google
             </button>
-            <p className="text-gray-600 text-xs">New here? We'll create your account automatically.</p>
+            <p className="text-gray-600 text-xs">New here? We&apos;ll create your account automatically.</p>
           </div>
         ) : status === 'waiting' && waitingRoomCode ? (
           /* Waiting for opponent — inline waiting UI */
@@ -545,7 +554,7 @@ function LobbyContent() {
                   </tr>
                 </thead>
                 <tbody>
-                  {leaderboard.map((entry: any) => {
+                  {leaderboard.map((entry) => {
                     const isMe = currentUserId && entry.userId?.toString() === currentUserId.toString();
                     const rankBadge = entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : null;
                     return (
@@ -578,20 +587,20 @@ function LobbyContent() {
                             )}
                           </div>
                           <p className="text-[10px] text-gray-600 mt-0.5">
-                            {entry.gamesPlayed} game{entry.gamesPlayed !== 1 ? 's' : ''}
+                            {entry.gamesPlayed ?? 0} game{(entry.gamesPlayed ?? 0) !== 1 ? 's' : ''}
                           </p>
                         </td>
                         <td className="py-3 px-4 text-right">
-                          <span className={`text-lg font-black ${entry.points > 0 ? 'text-emerald-400' : entry.points < 0 ? 'text-red-400' : 'text-gray-500'
+                          <span className={`text-lg font-black ${(entry.points ?? 0) > 0 ? 'text-emerald-400' : (entry.points ?? 0) < 0 ? 'text-red-400' : 'text-gray-500'
                             }`}>
-                            {entry.points > 0 ? '+' : ''}{entry.points}
+                            {(entry.points ?? 0) > 0 ? '+' : ''}{entry.points ?? 0}
                           </span>
                         </td>
                         <td className="py-3 px-4 text-right hidden sm:table-cell">
                           <span className="text-xs text-gray-500">
-                            <span className="text-emerald-500">{entry.correctAnswers}</span>
+                            <span className="text-emerald-500">{entry.correctAnswers ?? 0}</span>
                             <span className="text-gray-700 mx-0.5">/</span>
-                            <span className="text-red-500">{entry.wrongAnswers}</span>
+                            <span className="text-red-500">{entry.wrongAnswers ?? 0}</span>
                           </span>
                         </td>
                       </tr>
@@ -634,7 +643,7 @@ function LobbyContent() {
           </div>
           <div className="pt-2 border-t border-white/5">
             <p className="text-xs text-gray-500 italic">
-              "The goal isn't just to solve, but to solve faster than the person next to you. That's the real JEE spirit."
+              &quot;The goal isn&apos;t just to solve, but to solve faster than the person next to you. That&apos;s the real JEE spirit.&quot;
             </p>
           </div>
         </div>
@@ -669,9 +678,9 @@ function LobbyContent() {
       {/* ── Footer ── */}
       <div className="lg:col-span-12 pt-12 mt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-6 text-[10px] text-gray-600 uppercase tracking-[0.2em] font-bold">
         <div className="flex items-center gap-8">
-          <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition-colors">Privacy Policy</a>
-          <a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition-colors">Terms of Service</a>
-          <a href="/contact" className="hover:text-indigo-400 transition-colors">Contact Us</a>
+          <Link href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition-colors">Privacy Policy</Link>
+          <Link href="/terms" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition-colors">Terms of Service</Link>
+          <Link href="/contact" className="hover:text-indigo-400 transition-colors">Contact Us</Link>
         </div>
         <div className="flex items-center gap-2">
           <span>© {new Date().getFullYear()} Vayl Technologies.</span>

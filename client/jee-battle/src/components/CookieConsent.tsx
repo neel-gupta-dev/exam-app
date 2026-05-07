@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Cookie, X, Check } from "lucide-react";
+import { Cookie, Check } from "lucide-react";
 
 export default function CookieConsent() {
   const [show, setShow] = useState(false);

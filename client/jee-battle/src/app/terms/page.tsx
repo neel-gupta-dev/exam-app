@@ -58,7 +58,7 @@ export default function TermsOfService() {
               <h2 className="text-2xl font-bold uppercase tracking-tight">2. Fair Play & Matchmaking</h2>
             </div>
             <p className="text-white/70">
-              Any attempt to manipulate match results, including intentional disconnection to avoid losses or "win-trading" with friends, will result in a reset of your global leaderboard points and potential suspension of your Vayl account.
+              Any attempt to manipulate match results, including intentional disconnection to avoid losses or &quot;win-trading&quot; with friends, will result in a reset of your global leaderboard points and potential suspension of your Vayl account.
             </p>
           </section>
 
@@ -68,7 +68,7 @@ export default function TermsOfService() {
               <h2 className="text-2xl font-bold uppercase tracking-tight">3. Platform Limitations</h2>
             </div>
             <p className="text-white/70">
-              While we strive for 100% accuracy, JEE Battle is a tool for practice. Match results do not guarantee actual JEE exam performance. The platform is provided "as-is" without warranty of continuous availability.
+              While we strive for 100% accuracy, JEE Battle is a tool for practice. Match results do not guarantee actual JEE exam performance. The platform is provided &quot;as-is&quot; without warranty of continuous availability.
             </p>
           </section>
 

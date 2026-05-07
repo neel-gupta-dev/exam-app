@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, Mail, MessageSquare, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Mail, ShieldAlert } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Contact Support",

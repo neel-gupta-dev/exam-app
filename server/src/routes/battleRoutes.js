@@ -454,7 +454,11 @@ router.post('/submit', protect, async (req, res) => {
     const qType = question.type || 'single';
 
     if (qType === 'single') {
-      if (selectedOptionIndex === question.correctOptionIndex) {
+      const correctIndex = Array.isArray(question.options)
+        ? question.options.findIndex(opt => opt?.isCorrect)
+        : -1;
+
+      if (correctIndex >= 0 && selectedOptionIndex === correctIndex) {
         lbPoints = battle.isSolo ? 2 : 4;
         lbCorrect = 1;
         isCorrect = true;
@@ -465,7 +469,7 @@ router.post('/submit', protect, async (req, res) => {
         lbWrong = 1;
       }
     } else if (qType === 'integer') {
-      if (submittedInteger === question.integerAnswer) {
+      if (submittedInteger === question.correctInteger) {
         lbPoints = battle.isSolo ? 1 : 4;
         lbCorrect = 1;
         isCorrect = true;
@@ -476,12 +480,15 @@ router.post('/submit', protect, async (req, res) => {
         lbWrong = 1;
       }
     } else if (qType === 'multi') {
-      const selected = Array.isArray(selectedOptionIndices) ? selectedOptionIndices : [];
+      const rawSelected = Array.isArray(selectedOptionIndices) ? selectedOptionIndices : [];
+      const selected = rawSelected
+        .filter(n => Number.isInteger(n))
+        .filter(n => n >= 0 && n < (question.options?.length || 0));
       const correctIndices = question.options
         .map((opt, idx) => (opt.isCorrect ? idx : -1))
         .filter(idx => idx !== -1);
 
-      if (selected.length > 0 && selected[0] !== -1111) {
+      if (rawSelected.length > 0 && rawSelected[0] !== -1111) {
         const hasIncorrect = selected.some(idx => !question.options[idx]?.isCorrect);
         const allCorrectSelected = correctIndices.every(idx => selected.includes(idx)) && selected.length === correctIndices.length;
         
