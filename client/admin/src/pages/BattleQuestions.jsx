@@ -359,54 +359,79 @@ export default function BattleQuestions() {
           </div>
 
           {/* Existing questions */}
-          <div className="card" ref={listRef}>
-            <div className="card-header">Existing Questions ({questions.length})</div>
-            <div className="card-body" style={{ maxHeight: 500, overflowY: 'auto' }}>
+          <div className="card">
+            <div className="card-header">All Questions ({questions.length})</div>
+            <div className="card-body" style={{ maxHeight: 800, overflowY: 'auto' }}>
               {questions.length === 0 ? (
                 <div className="text-muted text-center" style={{ padding: 20 }}>No questions found.</div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {questions.map((q) => (
-                    <div key={q._id} style={{ border: '1px solid var(--border)', borderRadius: 3, padding: 12, position: 'relative' }}>
-                      <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 8 }}>
-                        <button
-                          className="btn btn-sm btn-outline"
-                          onClick={() => handleEdit(q)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="btn btn-sm btn-danger"
-                          onClick={() => handleDelete(q._id)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                      <div style={{ marginBottom: 8 }}>
-                        {q.questionCode && <span className="badge badge-gray" style={{ marginRight: 4 }}>{q.questionCode}</span>}
-                        <span className="badge badge-blue" style={{ marginRight: 4 }}>{q.subject}</span>
-                        <span className="badge badge-gray" style={{ marginRight: 4 }}>{q.difficulty}</span>
-                        <span className="badge badge-purple">{q.type === 'integer' ? 'Integer' : (q.type === 'multi' ? 'Multi' : 'Single')}</span>
-                      </div>
-                      <div style={{ fontWeight: 500, marginBottom: 12, paddingRight: 60 }}>
-                        {q.questionText}
-                      </div>
-                      {q.type === 'integer' ? (
-                        <div style={{ fontSize: '12px', color: 'var(--success)', fontWeight: 'bold' }}>
-                          Ans: {q.correctInteger}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                  {['Physics', 'Chemistry', 'Mathematics'].map((subj) => {
+                    const subjQuestions = questions.filter(q => q.subject === subj);
+                    if (subjQuestions.length === 0) return null;
+
+                    return (
+                      <div key={subj}>
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: 12, 
+                          marginBottom: 12,
+                          padding: '8px 12px',
+                          background: 'var(--surface-variant)',
+                          borderRadius: 6,
+                          borderLeft: `4px solid ${subj === 'Physics' ? '#3b82f6' : subj === 'Chemistry' ? '#10b981' : '#8b5cf6'}`
+                        }}>
+                          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: 'var(--on-surface)' }}>{subj}</h3>
+                          <span className="badge badge-gray">{subjQuestions.length}</span>
                         </div>
-                      ) : (
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          {q.options.map((o, idx) => (
-                            <div key={idx} style={{
-                              width: 12, height: 12, borderRadius: '50%',
-                              background: o.isCorrect ? 'var(--success)' : '#e5e7eb'
-                            }} title={o.isCorrect ? 'Correct' : 'Incorrect'} />
+                        
+                        <div ref={listRef} style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingLeft: 8 }}>
+                          {subjQuestions.map((q) => (
+                            <div key={q._id} style={{ border: '1px solid var(--border)', borderRadius: 3, padding: 12, position: 'relative', background: '#fff' }}>
+                              <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 8 }}>
+                                <button
+                                  className="btn btn-sm btn-outline"
+                                  onClick={() => handleEdit(q)}
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  className="btn btn-sm btn-danger"
+                                  onClick={() => handleDelete(q._id)}
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                              <div style={{ marginBottom: 8 }}>
+                                {q.questionCode && <span className="badge badge-gray" style={{ marginRight: 4 }}>{q.questionCode}</span>}
+                                <span className="badge badge-blue" style={{ marginRight: 4 }}>{q.subject}</span>
+                                <span className="badge badge-gray" style={{ marginRight: 4 }}>{q.difficulty}</span>
+                                <span className="badge badge-purple">{q.type === 'integer' ? 'Integer' : (q.type === 'multi' ? 'Multi' : 'Single')}</span>
+                              </div>
+                              <div style={{ fontWeight: 500, marginBottom: 12, paddingRight: 60 }}>
+                                {q.questionText}
+                              </div>
+                              {q.type === 'integer' ? (
+                                <div style={{ fontSize: '12px', color: 'var(--success)', fontWeight: 'bold' }}>
+                                  Ans: {q.correctInteger}
+                                </div>
+                              ) : (
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                  {q.options.map((o, idx) => (
+                                    <div key={idx} style={{
+                                      width: 12, height: 12, borderRadius: '50%',
+                                      background: o.isCorrect ? 'var(--success)' : '#e5e7eb'
+                                    }} title={o.isCorrect ? 'Correct' : 'Incorrect'} />
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           ))}
                         </div>
-                      )}
-                    </div>
-                  ))}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
