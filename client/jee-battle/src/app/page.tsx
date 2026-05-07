@@ -589,6 +589,32 @@ function LobbyContent() {
           </p>
         </div>
       </div>
+
+      {/* ── Community ── */}
+      <div className="bg-[#ff4500]/5 rounded-2xl border border-[#ff4500]/20 p-6 shadow-2xl relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-[#ff4500]/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-[#ff4500]/20 transition-colors" />
+        <div className="relative flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#ff4500] flex items-center justify-center text-white shadow-lg shadow-[#ff4500]/20">
+              <svg viewBox="0 0 24 24" className="w-7 h-7 fill-current">
+                <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.056 1.597.04.21.06.42.06.632 0 2.835-3.522 5.137-7.857 5.137-4.335 0-7.858-2.302-7.858-5.137 0-.21.021-.42.06-.632a1.734 1.734 0 0 1-1.055-1.597c0-.968.786-1.754 1.754-1.754.463 0 .873.181 1.18.471 1.201-.86 2.871-1.431 4.717-1.49l.846-3.955a.25.25 0 0 1 .255-.196l3.076.643c.045-.403.388-.716.8-.716zM9.03 12.056c-.687 0-1.25.562-1.25 1.25 0 .687.563 1.25 1.25 1.25.687 0 1.25-.563 1.25-1.25 0-.688-.563-1.25-1.25-1.25zm5.94 0c-.687 0-1.25.562-1.25 1.25 0 .687.563 1.25 1.25 1.25.688 0 1.25-.563 1.25-1.25 0-.688-.563-1.25-1.25-1.25zm-6.666 3.655c-.012.012-.023.023-.034.035a.25.25 0 0 0 .015.352c.813.738 2.146 1.134 3.715 1.134 1.565 0 2.898-.396 3.711-1.134a.25.25 0 0 0 .015-.352l-.034-.035a.25.25 0 0 0-.352-.015c-.636.574-1.785.886-3.34.886-1.555 0-2.703-.312-3.34-.886a.25.25 0 0 0-.351.015z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-white font-bold text-lg">Join the Vayl Community</h3>
+              <p className="text-gray-400 text-xs">Discuss strategies, report issues, and compete on Reddit.</p>
+            </div>
+          </div>
+          <a 
+            href="https://www.reddit.com/r/Vayl/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="px-6 py-3 rounded-xl bg-[#ff4500] text-white font-black uppercase tracking-widest text-[10px] hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[#ff4500]/20 whitespace-nowrap"
+          >
+            r/Vayl
+          </a>
+        </div>
+      </div>
     </div>
   );
 }
