@@ -58,9 +58,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
       setBattleState(data);
 
       if (data.status === 'active' && data.myProgress !== undefined) {
-        if (data.myProgress < data.questions.length) {
-          setCurrentQuestionIndex(data.myProgress);
-        }
+        setCurrentQuestionIndex(data.myProgress);
         if (data.startedAt && data.serverNow) {
           const deltaMs = new Date(data.startedAt).getTime() - data.serverNow;
           if (deltaMs > 0 && countdownMs === 0) {
@@ -77,6 +75,12 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
 
   useEffect(() => {
     if (!token) return;
+    // Reset state for new room
+    setCurrentQuestionIndex(0);
+    setBattleState(null);
+    setLoading(true);
+    setError(null);
+    
     fetchState();
     const interval = setInterval(fetchState, 5000);
     return () => clearInterval(interval);
