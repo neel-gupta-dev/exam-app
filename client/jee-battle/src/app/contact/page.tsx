@@ -56,7 +56,7 @@ export default function ContactPage() {
             <span className="text-xs font-bold uppercase tracking-widest">Global Arena Servers Online</span>
           </div>
           <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">
-            Powered by Vayl Intelligence Systems
+            Powered by Vayl Technologies
           </div>
         </div>
       </div>
