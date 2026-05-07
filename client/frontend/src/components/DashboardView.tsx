@@ -126,6 +126,54 @@ function ProgressWidget({ resourceCount, heatmapData, currentStreak, user }: { r
   );
 }
 
+/**
+ * Battle Mode Widget
+ * High-engagement entry point for the JEE Battle application.
+ * Seamlessly passes the user's session token via URL.
+ */
+function BattleWidget({ token }: { token: string | null }) {
+  const battleUrl = "https://battle.vayl.in";
+  const utmParams = "utm_source=dashboard&utm_medium=right_aside&utm_campaign=battle_mode";
+  const fullUrl = token ? `${battleUrl}/?token=${token}&${utmParams}` : `${battleUrl}/?${utmParams}`;
+
+  return (
+    <a 
+      href={fullUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group block relative bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 p-6 rounded-2xl overflow-hidden shadow-lg hover:shadow-indigo-500/20 transition-all hover:scale-[1.02] active:scale-95"
+    >
+      {/* Decorative patterns */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-white/20 transition-colors" />
+      <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/20 rounded-full blur-2xl -ml-12 -mb-12" />
+      
+      <div className="relative flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <div className="p-2 bg-white/15 rounded-lg backdrop-blur-sm">
+            <Star className="w-5 h-5 text-white animate-pulse" />
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-widest text-white/60 bg-black/20 px-2 py-1 rounded">
+            Live Multiplayer
+          </span>
+        </div>
+
+        <div>
+          <h4 className="text-xl font-black text-white leading-tight">
+            JEE Battle Mode
+          </h4>
+          <p className="text-xs text-white/70 mt-1 font-medium">
+            Duel other scholars in real-time. Rise to the top of the leaderboard.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 text-xs font-bold text-white bg-white/10 w-fit px-4 py-2 rounded-full backdrop-blur-md border border-white/10 group-hover:bg-white/20 transition-all">
+          Enter Arena ⚔️
+        </div>
+      </div>
+    </a>
+  );
+}
+
 function QuickTipCard() {
   return (
     <div className="bg-surface-bright p-5 rounded-xl border border-outline-variant/10">
@@ -276,6 +324,7 @@ export default function DashboardView() {
 
         {/* Right Column (Widgets) */}
         <aside className="w-full lg:w-[30%] space-y-6">
+          <BattleWidget token={token} />
           <TargetExamWidget />
           {/* Daily Goal — most prominent widget */}
           <DailyGoalWidget />
