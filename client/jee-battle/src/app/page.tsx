@@ -387,23 +387,8 @@ function LobbyContent() {
             </div>
           )}
 
-          {/* Solo Rush & Find Random Match */}
-          <div className="bg-[#16191f] rounded-2xl border border-white/5 p-6 shadow-2xl space-y-4">
-            <div className="space-y-2">
-              <button
-                onClick={handleSoloRush}
-                disabled={creating}
-                className="w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 disabled:opacity-50
-                  bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 
-                  text-black shadow-[0_0_20px_rgba(245,158,11,0.2)] hover:shadow-[0_0_30px_rgba(245,158,11,0.4)] active:scale-[0.98]"
-              >
-                {creating ? 'Creating...' : '⚡ Solo Rush (5 Qs)'}
-              </button>
-              <p className="text-[10px] text-amber-500/60 text-center font-medium px-4">
-                Note: Solo points track your practice XP and <span className="underline decoration-amber-500/30">do not</span> count toward the main competitive leaderboard.
-              </p>
-            </div>
-
+          {/* Find Random Match */}
+          <div className="bg-[#16191f] rounded-2xl border border-white/5 p-6 shadow-2xl">
             <button
               onClick={findMatch}
               disabled={status === 'searching'}
@@ -444,6 +429,22 @@ function LobbyContent() {
               ) : '🏠 Create Custom Room'}
             </button>
             <p className="text-gray-500 text-xs text-center">Create a private room and share the code with a friend</p>
+          </div>
+
+          {/* Solo Rush */}
+          <div className="bg-[#16191f] rounded-2xl border border-white/5 p-6 shadow-2xl space-y-3">
+            <button
+              onClick={handleSoloRush}
+              disabled={creating}
+              className="w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 disabled:opacity-50
+                bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 
+                text-black shadow-[0_0_20px_rgba(245,158,11,0.2)] hover:shadow-[0_0_30px_rgba(245,158,11,0.4)] active:scale-[0.98]"
+            >
+              {creating ? 'Creating...' : '⚡ Solo Rush (5 Qs)'}
+            </button>
+            <p className="text-[10px] text-amber-500/60 text-center font-medium px-4">
+              Practice Mode: Points do not count toward the main competitive leaderboard.
+            </p>
           </div>
 
           {/* Divider */}
