@@ -443,7 +443,7 @@ router.post('/submit', protect, async (req, res) => {
 
     const lastAnswerAt = isPlayer1 ? battle.player1LastAnswerAt : battle.player2LastAnswerAt;
     const serverTimeTakenSeconds = lastAnswerAt ? Math.max(0, (Date.now() - lastAnswerAt.getTime()) / 1000) : timeTakenSeconds;
-    const actualTimeTaken = Math.min(60, serverTimeTakenSeconds);
+    const actualTimeTaken = Math.min(120, serverTimeTakenSeconds);
 
     let isCorrect = false;
     let points = 0;
@@ -458,7 +458,7 @@ router.post('/submit', protect, async (req, res) => {
         lbPoints = battle.isSolo ? 2 : 4;
         lbCorrect = 1;
         isCorrect = true;
-        const timeBonus = battle.isSolo ? 0 : Math.max(0, Math.floor((60 - actualTimeTaken) * (50 / 60)));
+        const timeBonus = battle.isSolo ? 0 : Math.max(0, Math.floor((120 - actualTimeTaken) * (50 / 120)));
         points = 100 + timeBonus;
       } else if (selectedOptionIndex !== -1111) {
         lbPoints = -1;
@@ -469,7 +469,7 @@ router.post('/submit', protect, async (req, res) => {
         lbPoints = battle.isSolo ? 1 : 4;
         lbCorrect = 1;
         isCorrect = true;
-        const timeBonus = battle.isSolo ? 0 : Math.max(0, Math.floor((60 - actualTimeTaken) * (50 / 60)));
+        const timeBonus = battle.isSolo ? 0 : Math.max(0, Math.floor((120 - actualTimeTaken) * (50 / 120)));
         points = 100 + timeBonus;
       } else if (submittedInteger !== -1111) {
         lbPoints = -1;

@@ -28,7 +28,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
   const [typedAnswer, setTypedAnswer] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(60);
+  const [timeRemaining, setTimeRemaining] = useState(120);
   const [copied, setCopied] = useState(false);
   const [soloStarting, setSoloStarting] = useState(false);
 
@@ -95,9 +95,9 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
   useEffect(() => {
     if (battleState?.status !== 'active' || currentQuestionIndex >= (battleState?.questions?.length || 0) || countdownMs > 0) return;
 
-    // Set target time to 60 seconds from now
-    targetTimeRef.current = Date.now() + 60000;
-    setTimeRemaining(60);
+    // Set target time to 120 seconds from now
+    targetTimeRef.current = Date.now() + 120000;
+    setTimeRemaining(120);
 
     const timerInterval = setInterval(() => {
       if (!targetTimeRef.current) return;

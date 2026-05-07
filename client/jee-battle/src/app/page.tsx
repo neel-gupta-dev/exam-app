@@ -622,7 +622,7 @@ function LobbyContent() {
             </div>
             <div className="flex gap-3">
               <div className="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold shrink-0">2</div>
-              <p><span className="text-gray-200 font-semibold">Quickfire Duel:</span> Answer 10 sharp JEE-level questions in Physics, Chemistry, and Math. You have 60 seconds per question.</p>
+              <p><span className="text-gray-200 font-semibold">Quickfire Duel:</span> Answer 10 sharp JEE-level questions in Physics, Chemistry, and Math. You have 120 seconds per question.</p>
             </div>
             <div className="flex gap-3">
               <div className="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold shrink-0">3</div>
