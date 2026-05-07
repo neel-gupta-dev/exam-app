@@ -383,7 +383,7 @@ router.get('/:roomCode', protect, async (req, res) => {
  */
 router.post('/submit', protect, async (req, res) => {
   try {
-    const { roomCode, questionId, selectedOptionIndex, timeTakenSeconds } = req.body;
+    const { roomCode, questionId, selectedOptionIndex, selectedOptionIndices, timeTakenSeconds } = req.body;
     const userId = req.user._id;
 
     const battle = await Battle.findOne({ roomCode: roomCode.toUpperCase() });
@@ -414,13 +414,56 @@ router.post('/submit', protect, async (req, res) => {
 
     let isCorrect = false;
     let points = 0;
+    let lbPoints = 0;
+    let lbCorrect = 0;
+    let lbWrong = 0;
 
-    if (selectedOptionIndex !== undefined && selectedOptionIndex !== null && selectedOptionIndex !== -1) {
-      const option = question.options[selectedOptionIndex];
-      if (option && option.isCorrect) {
-        isCorrect = true;
-        const timeBonus = Math.max(0, Math.floor((60 - actualTimeTaken) * (50 / 60)));
-        points = 100 + timeBonus;
+    const isMulti = question.type === 'multi';
+
+    if (isMulti) {
+      // Multi-correct marking logic
+      const selected = Array.isArray(selectedOptionIndices) ? selectedOptionIndices : [];
+      const correctIndices = question.options
+        .map((opt, idx) => (opt.isCorrect ? idx : -1))
+        .filter(idx => idx !== -1);
+
+      if (selected.length > 0) {
+        const hasIncorrect = selected.some(idx => !question.options[idx]?.isCorrect);
+        const allCorrectSelected = correctIndices.every(idx => selected.includes(idx)) && selected.length === correctIndices.length;
+        
+        if (hasIncorrect) {
+          lbPoints = -2;
+          lbWrong = 1;
+        } else if (allCorrectSelected) {
+          lbPoints = 4;
+          lbCorrect = 1;
+          isCorrect = true;
+          const timeBonus = Math.max(0, Math.floor((60 - actualTimeTaken) * (50 / 60)));
+          points = 100 + timeBonus;
+        } else {
+          // Partial correct
+          const correctSelectedCount = selected.filter(idx => question.options[idx]?.isCorrect).length;
+          lbPoints = correctSelectedCount;
+          lbCorrect = 1; // Count as correct for stats? Usually partial is better than wrong.
+          // Give some battle points for partial? Let's say 25 pts per correct option
+          points = correctSelectedCount * 25;
+        }
+      }
+    } else {
+      // Single-correct marking logic
+      const sIndex = selectedOptionIndex !== undefined ? selectedOptionIndex : -1;
+      if (sIndex !== -1) {
+        const option = question.options[sIndex];
+        if (option && option.isCorrect) {
+          isCorrect = true;
+          lbPoints = 4;
+          lbCorrect = 1;
+          const timeBonus = Math.max(0, Math.floor((60 - actualTimeTaken) * (50 / 60)));
+          points = 100 + timeBonus;
+        } else {
+          lbPoints = -1;
+          lbWrong = 1;
+        }
       }
     }
 
@@ -432,8 +475,10 @@ router.post('/submit', protect, async (req, res) => {
 
     const answerRecord = {
       questionId,
-      selectedOptionIndex,
+      selectedOptionIndex: isMulti ? -2 : (indices[0] ?? -1), // -2 indicates multi
+      selectedOptionIndices: isMulti ? selectedOptionIndices : [],
       isCorrect,
+      lbPoints,
       timeTakenSeconds: actualTimeTaken,
       points
     };
@@ -462,19 +507,6 @@ router.post('/submit', protect, async (req, res) => {
 
     await battle.save();
 
-    // ── Leaderboard tracking ──
-    // +4 correct, -1 wrong, 0 skipped (timeout / index -1)
-    let lbPoints = 0;
-    let lbCorrect = 0;
-    let lbWrong = 0;
-    if (isCorrect) {
-      lbPoints = 4;
-      lbCorrect = 1;
-    } else if (selectedOptionIndex !== undefined && selectedOptionIndex !== null && selectedOptionIndex !== -1) {
-      lbPoints = -1;
-      lbWrong = 1;
-    }
-
     const todayIST = getTodayIST();
     const lbUpdate = {
       $inc: {
@@ -483,7 +515,6 @@ router.post('/submit', protect, async (req, res) => {
         wrongAnswers: lbWrong,
       },
     };
-    // Increment gamesPlayed only when the user finishes all questions in a battle
     const userFinished = isPlayer1 ? p1Finished : (battle.player2 ? p2Finished : false);
     if (userFinished) {
       lbUpdate.$inc.gamesPlayed = 1;
@@ -499,6 +530,7 @@ router.post('/submit', protect, async (req, res) => {
       success: true,
       isCorrect,
       points,
+      lbPoints, // Added for clarity
       currentScore: isPlayer1 ? battle.player1Score : battle.player2Score,
       matchFinished: battle.status === 'finished'
     });

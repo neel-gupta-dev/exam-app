@@ -18,6 +18,11 @@ const BattleQuestionSchema = new mongoose.Schema({
     imageUrl: String,
     isCorrect: Boolean,
   }],
+  type: {
+    type: String,
+    enum: ['single', 'multi'],
+    default: 'single',
+  },
   difficulty: {
     type: String,
     enum: ['Easy', 'Medium', 'Hard'],

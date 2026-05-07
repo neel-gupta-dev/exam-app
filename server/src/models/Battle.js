@@ -28,14 +28,18 @@ const BattleSchema = new mongoose.Schema({
   player1Answers: [{
     questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'BattleQuestion' },
     selectedOptionIndex: Number,
+    selectedOptionIndices: [Number],
     isCorrect: Boolean,
+    lbPoints: Number, // Leaderboard points for this specific answer
     timeTakenSeconds: Number,
     points: Number,
   }],
   player2Answers: [{
     questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'BattleQuestion' },
     selectedOptionIndex: Number,
+    selectedOptionIndices: [Number],
     isCorrect: Boolean,
+    lbPoints: Number, // Leaderboard points for this specific answer
     timeTakenSeconds: Number,
     points: Number,
   }],

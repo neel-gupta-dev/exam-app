@@ -25,7 +25,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
   const [error, setError] = useState<string | null>(null);
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(60);
   const [copied, setCopied] = useState(false);
@@ -98,7 +98,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
         if (prev <= 1) {
           if (lastSubmittedIndex.current !== currentQuestionIndex) {
             lastSubmittedIndex.current = currentQuestionIndex;
-            submitAnswer(-1);
+            submitAnswer([-1]);
           }
           return 0;
         }
@@ -109,11 +109,19 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
     return () => clearInterval(timerInterval);
   }, [currentQuestionIndex, battleState?.status, countdownMs]);
 
-  const submitAnswer = async (optionIndex: number) => {
+  const submitAnswer = async (manualIndices?: number[]) => {
     if (!token || !battleState || submitting) return;
+
+    const currentQuestion = battleState.questions[currentQuestionIndex];
+    const isMulti = currentQuestion.type === 'multi';
+
+    // If manualIndices is provided (e.g. from timeout), use it.
+    // Otherwise use state. For timeout, we pass [-1] to indicate skip.
+    const indices = manualIndices || (isMulti ? selectedOptions : (selectedOptions.length > 0 ? [selectedOptions[0]] : [-1]));
+
     setSubmitting(true);
 
-    const questionId = battleState.questions[currentQuestionIndex]._id;
+    const questionId = currentQuestion._id;
     const timeTaken = 60 - timeRemaining;
 
     try {
@@ -126,7 +134,8 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
         body: JSON.stringify({
           roomCode,
           questionId,
-          selectedOptionIndex: optionIndex,
+          selectedOptionIndex: isMulti ? -2 : (indices[0] ?? -1),
+          selectedOptionIndices: indices,
           timeTakenSeconds: timeTaken
         })
       });
@@ -134,7 +143,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      setSelectedOption(null);
+      setSelectedOptions([]);
       setCurrentQuestionIndex(prev => prev + 1);
       lastSubmittedIndex.current = -1;
       await fetchState();
@@ -265,8 +274,12 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
       let correct = 0;
       let wrong = 0;
       (answers || []).forEach((a: any) => {
-        if (a.isCorrect) { pts += 4; correct++; }
-        else if (a.selectedOptionIndex !== -1 && a.selectedOptionIndex !== null && a.selectedOptionIndex !== undefined) { pts -= 1; wrong++; }
+        pts += (a.lbPoints || 0);
+        if (a.isCorrect) {
+          correct++;
+        } else if (a.lbPoints < 0) {
+          wrong++;
+        }
       });
       return { pts, correct, wrong };
     };
@@ -422,37 +435,59 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
             </div>
 
             <div className="grid grid-cols-1 gap-4">
-              {currentQuestion.options.map((option: any, index: number) => (
-                <button
-                  key={index}
-                  onClick={() => !submitting && setSelectedOption(index)}
-                  disabled={submitting}
-                  className={`group relative p-5 rounded-2xl border transition-all text-left flex items-center gap-4 ${selectedOption === index
-                      ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-500/20 -translate-y-1'
-                      : 'bg-[#1c2128] border-white/5 text-gray-300 hover:border-white/20 hover:bg-[#252b35]'
-                    }`}
-                >
-                  <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-black transition-colors ${selectedOption === index ? 'bg-white text-indigo-600' : 'bg-white/5 text-white/40 group-hover:bg-white/10'
-                    }`}>
-                    {String.fromCharCode(65 + index)}
-                  </span>
-                  <span className="text-lg font-medium">
-                    <MathJax>{option.text}</MathJax>
-                  </span>
-                  {selectedOption === index && (
-                    <Zap className="w-4 h-4 text-white absolute top-4 right-4 animate-bounce" />
-                  )}
-                </button>
-              ))}
+              {currentQuestion.options.map((option: any, index: number) => {
+                const isSelected = selectedOptions.includes(index);
+                const isMulti = currentQuestion.type === 'multi';
+
+                const toggleOption = () => {
+                  if (submitting) return;
+                  if (isMulti) {
+                    setSelectedOptions(prev =>
+                      prev.includes(index)
+                        ? prev.filter(i => i !== index)
+                        : [...prev, index]
+                    );
+                  } else {
+                    setSelectedOptions([index]);
+                  }
+                };
+
+                return (
+                  <button
+                    key={index}
+                    onClick={toggleOption}
+                    disabled={submitting}
+                    className={`group relative p-5 rounded-2xl border transition-all text-left flex items-center gap-4 ${isSelected
+                        ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-500/20 -translate-y-1'
+                        : 'bg-[#1c2128] border-white/5 text-gray-300 hover:border-white/20 hover:bg-[#252b35]'
+                      }`}
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-black transition-colors ${isSelected ? 'bg-white text-indigo-600' : 'bg-white/5 text-white/40 group-hover:bg-white/10'
+                      }`}>
+                      {isMulti ? (
+                        isSelected ? <CheckCircle2 className="w-5 h-5" /> : String.fromCharCode(65 + index)
+                      ) : (
+                        String.fromCharCode(65 + index)
+                      )}
+                    </div>
+                    <span className="text-lg font-medium">
+                      <MathJax>{option.text}</MathJax>
+                    </span>
+                    {isSelected && (
+                      <Zap className="w-4 h-4 text-white absolute top-4 right-4 animate-bounce" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
 
         {/* Submit Button */}
         <button
-          onClick={() => selectedOption !== null && submitAnswer(selectedOption)}
-          disabled={selectedOption === null || submitting}
-          className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all ${selectedOption !== null && !submitting
+          onClick={() => selectedOptions.length > 0 && submitAnswer()}
+          disabled={selectedOptions.length === 0 || submitting}
+          className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all ${selectedOptions.length > 0 && !submitting
               ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xl shadow-indigo-600/20 hover:scale-[1.02] active:scale-[0.98]'
               : 'bg-white/5 text-white/20 cursor-not-allowed'
             }`}
@@ -461,7 +496,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
             <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
           ) : (
             <>
-              {selectedOption !== null ? 'Confirm Answer' : 'Select an Option'}
+              {selectedOptions.length > 0 ? (currentQuestion.type === 'multi' ? 'Confirm Answers' : 'Confirm Answer') : 'Select Option(s)'}
               <ArrowRight className="w-5 h-5" />
             </>
           )}

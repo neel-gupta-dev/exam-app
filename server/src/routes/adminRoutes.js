@@ -340,7 +340,7 @@ router.get('/battle-questions', asyncHandler(async (req, res) => {
  * Create a new battle question.
  */
 router.post('/battle-questions', asyncHandler(async (req, res) => {
-  const { subject, questionText, options, difficulty, explanation, imageUrl } = req.body;
+  const { subject, questionText, options, difficulty, explanation, imageUrl, type } = req.body;
   
   if (!subject || !questionText || !options || options.length < 2) {
     res.status(400); throw new Error('Subject, question text, and at least 2 options are required.');
@@ -352,10 +352,35 @@ router.post('/battle-questions', asyncHandler(async (req, res) => {
     options,
     difficulty,
     explanation,
-    imageUrl
+    imageUrl,
+    type: type || 'single'
   });
 
   res.status(201).json(question);
+}));
+
+/**
+ * PATCH /api/admin/battle-questions/:id
+ * Update a battle question.
+ */
+router.patch('/battle-questions/:id', asyncHandler(async (req, res) => {
+  const { subject, questionText, options, difficulty, explanation, imageUrl, type } = req.body;
+  
+  const question = await BattleQuestion.findById(req.params.id);
+  if (!question) {
+    res.status(404); throw new Error('Question not found');
+  }
+
+  if (subject) question.subject = subject;
+  if (questionText) question.questionText = questionText;
+  if (options) question.options = options;
+  if (difficulty) question.difficulty = difficulty;
+  if (explanation) question.explanation = explanation;
+  if (imageUrl !== undefined) question.imageUrl = imageUrl;
+  if (type) question.type = type;
+
+  await question.save();
+  res.json(question);
 }));
 
 /**

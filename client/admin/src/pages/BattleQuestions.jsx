@@ -48,8 +48,10 @@ export default function BattleQuestions() {
   const [success, setSuccess] = useState('');
 
   // Form State
+  // Form State
   const [subject, setSubject] = useState('Physics');
   const [questionText, setQuestionText] = useState('');
+  const [type, setType] = useState('single');
   const [options, setOptions] = useState([
     { text: '', isCorrect: true },
     { text: '', isCorrect: false },
@@ -59,6 +61,7 @@ export default function BattleQuestions() {
   const [difficulty, setDifficulty] = useState('Medium');
   const [explanation, setExplanation] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
   const previewRef = useRef(null);
   const listRef = useRef(null);
@@ -86,7 +89,37 @@ export default function BattleQuestions() {
   };
 
   const handleCorrectOptionChange = (index) => {
-    setOptions(options.map((opt, i) => ({ ...opt, isCorrect: i === index })));
+    if (type === 'multi') {
+      const newOptions = [...options];
+      newOptions[index].isCorrect = !newOptions[index].isCorrect;
+      setOptions(newOptions);
+    } else {
+      setOptions(options.map((opt, i) => ({ ...opt, isCorrect: i === index })));
+    }
+  };
+
+  const resetForm = () => {
+    setEditingId(null);
+    setQuestionText('');
+    setExplanation('');
+    setType('single');
+    setOptions([
+      { text: '', isCorrect: true },
+      { text: '', isCorrect: false },
+      { text: '', isCorrect: false },
+      { text: '', isCorrect: false },
+    ]);
+  };
+
+  const handleEdit = (q) => {
+    setEditingId(q._id);
+    setSubject(q.subject);
+    setQuestionText(q.questionText);
+    setType(q.type || 'single');
+    setDifficulty(q.difficulty);
+    setExplanation(q.explanation || '');
+    setOptions(q.options.map(o => ({ text: o.text, isCorrect: o.isCorrect })));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSubmit = async (e) => {
@@ -95,28 +128,33 @@ export default function BattleQuestions() {
       setError('Please fill in all fields.');
       return;
     }
+    if (!options.some(opt => opt.isCorrect)) {
+      setError('At least one option must be marked as correct.');
+      return;
+    }
 
     setIsSubmitting(true);
     setError('');
     setSuccess('');
 
     try {
-      const { data } = await api.post('/admin/battle-questions', {
-        subject, questionText, options, difficulty, explanation
-      });
-      setQuestions([data, ...questions]);
-      setQuestionText('');
-      setExplanation('');
-      setOptions([
-        { text: '', isCorrect: true },
-        { text: '', isCorrect: false },
-        { text: '', isCorrect: false },
-        { text: '', isCorrect: false },
-      ]);
-      setSuccess('Question added successfully!');
+      const payload = {
+        subject, questionText, options, difficulty, explanation, type
+      };
+      
+      if (editingId) {
+        const { data } = await api.patch(`/admin/battle-questions/${editingId}`, payload);
+        setQuestions(questions.map(q => q._id === editingId ? data : q));
+        setSuccess('Question updated successfully!');
+      } else {
+        const { data } = await api.post('/admin/battle-questions', payload);
+        setQuestions([data, ...questions]);
+        setSuccess('Question added successfully!');
+      }
+      resetForm();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to add question');
+      setError(err.response?.data?.message || 'Failed to save question');
     } finally {
       setIsSubmitting(false);
     }
@@ -149,7 +187,7 @@ export default function BattleQuestions() {
       <div className="two-col" style={{ alignItems: 'flex-start' }}>
         {/* ── FORM ── */}
         <div className="card">
-          <div className="card-header">Add New Question</div>
+          <div className="card-header">{editingId ? 'Edit Question' : 'Add New Question'}</div>
           <div className="card-body">
             <form onSubmit={handleSubmit}>
               <div className="form-row">
@@ -159,6 +197,13 @@ export default function BattleQuestions() {
                     <option>Physics</option>
                     <option>Chemistry</option>
                     <option>Mathematics</option>
+                  </select>
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label className="form-label">Type</label>
+                  <select value={type} onChange={(e) => setType(e.target.value)}>
+                    <option value="single">Single Correct</option>
+                    <option value="multi">Multi Correct</option>
                   </select>
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
@@ -188,7 +233,7 @@ export default function BattleQuestions() {
                 {options.map((opt, idx) => (
                   <div key={idx} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
                     <input
-                      type="radio"
+                      type={type === 'multi' ? 'checkbox' : 'radio'}
                       name="correctOption"
                       checked={opt.isCorrect}
                       onChange={() => handleCorrectOptionChange(idx)}
@@ -217,9 +262,16 @@ export default function BattleQuestions() {
                 />
               </div>
 
-              <button type="submit" className="btn btn-primary" disabled={isSubmitting} style={{ width: '100%', padding: 10 }}>
-                {isSubmitting ? 'Saving...' : 'Save Question'}
-              </button>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button type="submit" className="btn btn-primary" disabled={isSubmitting} style={{ flex: 1, padding: 10 }}>
+                  {isSubmitting ? 'Saving...' : (editingId ? 'Update Question' : 'Save Question')}
+                </button>
+                {editingId && (
+                  <button type="button" className="btn btn-secondary" onClick={resetForm} style={{ flex: 1 }}>
+                    Cancel
+                  </button>
+                )}
+              </div>
             </form>
           </div>
         </div>
@@ -233,7 +285,8 @@ export default function BattleQuestions() {
             <div className="card-body">
               <div style={{ marginBottom: 16 }}>
                 <span className="badge badge-blue">{subject}</span>{' '}
-                <span className="badge badge-gray">{difficulty}</span>
+                <span className="badge badge-gray">{difficulty}</span>{' '}
+                <span className="badge badge-purple">{type === 'multi' ? 'Multi-Correct' : 'Single-Correct'}</span>
               </div>
               <div style={{ fontSize: 15, marginBottom: 16 }}>
                 {questionText || 'Your question will appear here...'}
@@ -266,16 +319,24 @@ export default function BattleQuestions() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {questions.map((q) => (
                     <div key={q._id} style={{ border: '1px solid var(--border)', borderRadius: 3, padding: 12, position: 'relative' }}>
-                      <button
-                        className="btn btn-sm btn-danger"
-                        style={{ position: 'absolute', top: 12, right: 12 }}
-                        onClick={() => handleDelete(q._id)}
-                      >
-                        Delete
-                      </button>
+                      <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 8 }}>
+                        <button
+                          className="btn btn-sm btn-outline"
+                          onClick={() => handleEdit(q)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="btn btn-sm btn-danger"
+                          onClick={() => handleDelete(q._id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
                       <div style={{ marginBottom: 8 }}>
                         <span className="badge badge-blue" style={{ marginRight: 4 }}>{q.subject}</span>
-                        <span className="badge badge-gray">{q.difficulty}</span>
+                        <span className="badge badge-gray" style={{ marginRight: 4 }}>{q.difficulty}</span>
+                        <span className="badge badge-purple">{q.type === 'multi' ? 'Multi' : 'Single'}</span>
                       </div>
                       <div style={{ fontWeight: 500, marginBottom: 12, paddingRight: 60 }}>
                         {q.questionText}
