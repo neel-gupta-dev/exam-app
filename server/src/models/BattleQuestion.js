@@ -13,6 +13,11 @@ const BattleQuestionSchema = new mongoose.Schema({
   imageUrl: {
     type: String, // Optional image for the question
   },
+  questionCode: {
+    type: String,
+    unique: true,
+    index: true,
+  },
   options: [{
     text: String,
     imageUrl: String,

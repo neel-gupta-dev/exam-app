@@ -346,8 +346,23 @@ router.post('/battle-questions', asyncHandler(async (req, res) => {
     res.status(400); throw new Error('Subject, question text, and at least 2 options are required.');
   }
 
+  // Generate unique question code
+  const subjectPrefix = subject.substring(0, 3).toUpperCase();
+  const count = await BattleQuestion.countDocuments({ subject });
+  let questionCode = `${subjectPrefix}-${(count + 1).toString().padStart(3, '0')}`;
+  
+  // Handle potential collision if questions were deleted
+  let collision = await BattleQuestion.findOne({ questionCode });
+  let suffix = 1;
+  while (collision) {
+    questionCode = `${subjectPrefix}-${(count + 1 + suffix).toString().padStart(3, '0')}`;
+    collision = await BattleQuestion.findOne({ questionCode });
+    suffix++;
+  }
+
   const question = await BattleQuestion.create({
     subject,
+    questionCode,
     questionText,
     options,
     difficulty,
@@ -378,6 +393,16 @@ router.patch('/battle-questions/:id', asyncHandler(async (req, res) => {
   if (explanation) question.explanation = explanation;
   if (imageUrl !== undefined) question.imageUrl = imageUrl;
   if (type) question.type = type;
+  if (req.body.questionCode) {
+    // Check for uniqueness if code is changed
+    if (req.body.questionCode !== question.questionCode) {
+      const existing = await BattleQuestion.findOne({ questionCode: req.body.questionCode });
+      if (existing) {
+        res.status(400); throw new Error('Question code already exists');
+      }
+      question.questionCode = req.body.questionCode;
+    }
+  }
 
   await question.save();
   res.json(question);

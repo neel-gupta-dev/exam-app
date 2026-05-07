@@ -50,6 +50,7 @@ export default function BattleQuestions() {
   // Form State
   // Form State
   const [subject, setSubject] = useState('Physics');
+  const [questionCode, setQuestionCode] = useState('');
   const [questionText, setQuestionText] = useState('');
   const [type, setType] = useState('single');
   const [options, setOptions] = useState([
@@ -100,6 +101,7 @@ export default function BattleQuestions() {
 
   const resetForm = () => {
     setEditingId(null);
+    setQuestionCode('');
     setQuestionText('');
     setExplanation('');
     setType('single');
@@ -114,6 +116,7 @@ export default function BattleQuestions() {
   const handleEdit = (q) => {
     setEditingId(q._id);
     setSubject(q.subject);
+    setQuestionCode(q.questionCode || '');
     setQuestionText(q.questionText);
     setType(q.type || 'single');
     setDifficulty(q.difficulty);
@@ -139,7 +142,7 @@ export default function BattleQuestions() {
 
     try {
       const payload = {
-        subject, questionText, options, difficulty, explanation, type
+        subject, questionText, options, difficulty, explanation, type, questionCode
       };
       
       if (editingId) {
@@ -216,6 +219,19 @@ export default function BattleQuestions() {
                 </div>
               </div>
 
+              {editingId && (
+                <div className="form-group" style={{ marginBottom: 12 }}>
+                  <label className="form-label">Question Code (Unique ID)</label>
+                  <input
+                    type="text"
+                    value={questionCode}
+                    onChange={(e) => setQuestionCode(e.target.value)}
+                    placeholder="e.g. PHY-001"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+              )}
+
               <div className="form-group" style={{ marginBottom: 12 }}>
                 <label className="form-label">Question Text (LaTeX supported: $...$)</label>
                 <textarea
@@ -284,6 +300,7 @@ export default function BattleQuestions() {
             <div className="card-header" style={{ background: '#fff', color: 'var(--accent)' }}>Live Preview</div>
             <div className="card-body">
               <div style={{ marginBottom: 16 }}>
+                {questionCode && <span className="badge badge-gray" style={{ marginRight: 8 }}>{questionCode}</span>}
                 <span className="badge badge-blue">{subject}</span>{' '}
                 <span className="badge badge-gray">{difficulty}</span>{' '}
                 <span className="badge badge-purple">{type === 'multi' ? 'Multi-Correct' : 'Single-Correct'}</span>
@@ -334,6 +351,7 @@ export default function BattleQuestions() {
                         </button>
                       </div>
                       <div style={{ marginBottom: 8 }}>
+                        {q.questionCode && <span className="badge badge-gray" style={{ marginRight: 4 }}>{q.questionCode}</span>}
                         <span className="badge badge-blue" style={{ marginRight: 4 }}>{q.subject}</span>
                         <span className="badge badge-gray" style={{ marginRight: 4 }}>{q.difficulty}</span>
                         <span className="badge badge-purple">{q.type === 'multi' ? 'Multi' : 'Single'}</span>
