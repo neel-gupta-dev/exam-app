@@ -204,6 +204,10 @@ const userSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
+    soloPoints: {
+      type: Number,
+      default: 0,
+    },
   },
   { 
     timestamps: true,

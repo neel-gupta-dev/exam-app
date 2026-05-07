@@ -57,6 +57,10 @@ const BattleSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  isSolo: {
+    type: Boolean,
+    default: false,
+  },
   winner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

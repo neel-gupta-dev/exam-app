@@ -368,6 +368,7 @@ router.get('/:roomCode', protect, async (req, res) => {
       myAnswers: isPlayer1 ? battle.player1Answers : battle.player2Answers,
       winner: battle.winner,
       startedAt: battle.startedAt,
+      isSolo: battle.isSolo,
       isAdmin: req.user.role === 'admin',
       serverNow: Date.now(),
     });
@@ -420,62 +421,64 @@ router.post('/submit', protect, async (req, res) => {
 
     const qType = question.type || 'single';
 
-    if (qType === 'integer') {
-      // Integer type marking logic (+4 / -1)
-      if (submittedInteger !== undefined && submittedInteger !== null && submittedInteger !== -1111) { // -1111 for skip/timeout
-        if (Number(submittedInteger) === Number(question.correctInteger)) {
-          isCorrect = true;
-          lbPoints = 4;
-          lbCorrect = 1;
-          const timeBonus = Math.max(0, Math.floor((60 - actualTimeTaken) * (50 / 60)));
-          points = 100 + timeBonus;
-        } else {
-          lbPoints = -1;
-          lbWrong = 1;
-        }
+    if (qType === 'single') {
+      if (selectedOptionIndex === question.correctOptionIndex) {
+        lbPoints = battle.isSolo ? 2 : 4;
+        lbCorrect = 1;
+        isCorrect = true;
+        const timeBonus = battle.isSolo ? 0 : Math.max(0, Math.floor((60 - actualTimeTaken) * (50 / 60)));
+        points = 100 + timeBonus;
+      } else if (selectedOptionIndex !== -1111) {
+        lbPoints = -1;
+        lbWrong = 1;
+      }
+    } else if (qType === 'integer') {
+      if (submittedInteger === question.integerAnswer) {
+        lbPoints = battle.isSolo ? 1 : 4;
+        lbCorrect = 1;
+        isCorrect = true;
+        const timeBonus = battle.isSolo ? 0 : Math.max(0, Math.floor((60 - actualTimeTaken) * (50 / 60)));
+        points = 100 + timeBonus;
+      } else if (submittedInteger !== -1111) {
+        lbPoints = -1;
+        lbWrong = 1;
       }
     } else if (qType === 'multi') {
-      // Multi-correct marking logic
       const selected = Array.isArray(selectedOptionIndices) ? selectedOptionIndices : [];
       const correctIndices = question.options
         .map((opt, idx) => (opt.isCorrect ? idx : -1))
         .filter(idx => idx !== -1);
 
-      if (selected.length > 0) {
+      if (selected.length > 0 && selected[0] !== -1111) {
         const hasIncorrect = selected.some(idx => !question.options[idx]?.isCorrect);
         const allCorrectSelected = correctIndices.every(idx => selected.includes(idx)) && selected.length === correctIndices.length;
         
-        if (hasIncorrect) {
-          lbPoints = -2;
-          lbWrong = 1;
-        } else if (allCorrectSelected) {
-          lbPoints = 4;
-          lbCorrect = 1;
-          isCorrect = true;
-          const timeBonus = Math.max(0, Math.floor((60 - actualTimeTaken) * (50 / 60)));
-          points = 100 + timeBonus;
+        if (battle.isSolo) {
+          if (allCorrectSelected && !hasIncorrect) {
+            lbPoints = 2;
+            lbCorrect = 1;
+            isCorrect = true;
+            points = 100;
+          } else {
+            lbPoints = -2;
+            lbWrong = 1;
+          }
         } else {
-          // Partial correct
-          const correctSelectedCount = selected.filter(idx => question.options[idx]?.isCorrect).length;
-          lbPoints = correctSelectedCount;
-          lbCorrect = 1; 
-          points = correctSelectedCount * 25;
-        }
-      }
-    } else {
-      // Single-correct marking logic
-      const sIndex = selectedOptionIndex !== undefined ? selectedOptionIndex : -1;
-      if (sIndex !== -1 && sIndex !== -1111) {
-        const option = question.options[sIndex];
-        if (option && option.isCorrect) {
-          isCorrect = true;
-          lbPoints = 4;
-          lbCorrect = 1;
-          const timeBonus = Math.max(0, Math.floor((60 - actualTimeTaken) * (50 / 60)));
-          points = 100 + timeBonus;
-        } else {
-          lbPoints = -1;
-          lbWrong = 1;
+          if (hasIncorrect) {
+            lbPoints = -2;
+            lbWrong = 1;
+          } else if (allCorrectSelected) {
+            lbPoints = 4;
+            lbCorrect = 1;
+            isCorrect = true;
+            const timeBonus = Math.max(0, Math.floor((60 - actualTimeTaken) * (50 / 60)));
+            points = 100 + timeBonus;
+          } else {
+            const correctSelectedCount = selected.filter(idx => question.options[idx]?.isCorrect).length;
+            lbPoints = correctSelectedCount;
+            lbCorrect = 1; 
+            points = correctSelectedCount * 25;
+          }
         }
       }
     }
@@ -488,7 +491,7 @@ router.post('/submit', protect, async (req, res) => {
 
     const answerRecord = {
       questionId,
-      selectedOptionIndex: qType === 'integer' ? -3 : (qType === 'multi' ? -2 : (selectedOptionIndex ?? -1)), // -3 for integer, -2 for multi
+      selectedOptionIndex: qType === 'integer' ? -3 : (qType === 'multi' ? -2 : (selectedOptionIndex ?? -1)),
       selectedOptionIndices: qType === 'multi' ? selectedOptionIndices : [],
       submittedInteger: qType === 'integer' ? submittedInteger : undefined,
       isCorrect,
@@ -512,33 +515,39 @@ router.post('/submit', protect, async (req, res) => {
     if (p1Finished && p2Finished) {
       battle.status = 'finished';
       battle.finishedAt = new Date();
-      if (battle.player1Score > battle.player2Score) {
-        battle.winner = battle.player1;
-      } else if (battle.player2Score > battle.player1Score) {
-        battle.winner = battle.player2;
+      if (battle.player2) {
+        if (battle.player1Score > battle.player2Score) {
+          battle.winner = battle.player1;
+        } else if (battle.player2Score > battle.player1Score) {
+          battle.winner = battle.player2;
+        }
       }
     }
 
     await battle.save();
 
-    const todayIST = getTodayIST();
-    const lbUpdate = {
-      $inc: {
-        points: lbPoints,
-        correctAnswers: lbCorrect,
-        wrongAnswers: lbWrong,
-      },
-    };
-    const userFinished = isPlayer1 ? p1Finished : (battle.player2 ? p2Finished : false);
-    if (userFinished) {
-      lbUpdate.$inc.gamesPlayed = 1;
-    }
+    if (battle.isSolo) {
+      await User.findByIdAndUpdate(userId, { $inc: { soloPoints: lbPoints } });
+    } else {
+      const todayIST = getTodayIST();
+      const lbUpdate = {
+        $inc: {
+          points: lbPoints,
+          correctAnswers: lbCorrect,
+          wrongAnswers: lbWrong,
+        },
+      };
+      const userFinished = isPlayer1 ? p1Finished : (battle.player2 ? p2Finished : false);
+      if (userFinished) {
+        lbUpdate.$inc.gamesPlayed = 1;
+      }
 
-    await BattleLeaderboard.findOneAndUpdate(
-      { userId, date: todayIST },
-      lbUpdate,
-      { upsert: true, new: true }
-    );
+      await BattleLeaderboard.findOneAndUpdate(
+        { userId, date: todayIST },
+        lbUpdate,
+        { upsert: true, new: true }
+      );
+    }
 
     res.json({
       success: true,

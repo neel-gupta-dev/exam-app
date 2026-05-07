@@ -302,24 +302,39 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
 
     return (
       <div className="min-h-screen bg-[#0f1115] text-white flex flex-col items-center justify-center p-4">
-        <div className="max-w-lg w-full bg-[#16191f] rounded-2xl border border-white/5 p-8 text-center space-y-8 shadow-2xl">
-          <h1 className="text-5xl font-black">Match Finished!</h1>
+        <div className="max-w-lg w-full bg-[#16191f] rounded-2xl border border-white/5 p-8 text-center space-y-8 shadow-2xl relative overflow-hidden">
+          {battleState.isSolo && (
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-amber-500" />
+          )}
 
-          <div className="flex justify-between items-center bg-black/30 p-6 rounded-xl">
-            <div className="text-center flex-1">
-              <div className="text-sm text-gray-400 mb-1">{battleState.player1?.name || 'Player 1'}</div>
-              <div className="text-3xl font-bold text-indigo-400">{battleState.player1Score}</div>
-            </div>
-            <div className="text-2xl font-bold text-gray-600 px-4">VS</div>
-            <div className="text-center flex-1">
-              <div className="text-sm text-gray-400 mb-1">{battleState.player2?.name || 'Player 2'}</div>
-              <div className="text-3xl font-bold text-blue-400">{battleState.player2Score}</div>
-            </div>
-          </div>
+          <h1 className={`text-5xl font-black ${battleState.isSolo ? 'text-amber-500' : 'text-white'}`}>
+            {battleState.isSolo ? 'Practice Finished!' : 'Match Finished!'}
+          </h1>
 
-          {/* Leaderboard Points Earned */}
+          {battleState.isSolo ? (
+            <div className="bg-black/30 p-8 rounded-xl">
+              <div className="text-sm text-amber-500/60 uppercase font-black tracking-[0.2em] mb-2">Final Score</div>
+              <div className="text-6xl font-black text-white">{battleState.player1Score}</div>
+            </div>
+          ) : (
+            <div className="flex justify-between items-center bg-black/30 p-6 rounded-xl">
+              <div className="text-center flex-1">
+                <div className="text-sm text-gray-400 mb-1">{battleState.player1?.name || 'Player 1'}</div>
+                <div className="text-3xl font-bold text-indigo-400">{battleState.player1Score}</div>
+              </div>
+              <div className="text-2xl font-bold text-gray-600 px-4">VS</div>
+              <div className="text-center flex-1">
+                <div className="text-sm text-gray-400 mb-1">{battleState.player2?.name || 'Player 2'}</div>
+                <div className="text-3xl font-bold text-blue-400">{battleState.player2Score}</div>
+              </div>
+            </div>
+          )}
+
+          {/* Points Earned */}
           <div className="bg-black/20 rounded-xl p-4 border border-white/5 space-y-2">
-            <p className="text-[10px] uppercase tracking-widest text-amber-500/70 font-bold">Leaderboard Points Earned</p>
+            <p className="text-[10px] uppercase tracking-widest text-amber-500/70 font-bold">
+              {battleState.isSolo ? 'Solo XP Earned' : 'Leaderboard Points Earned'}
+            </p>
             <div className="flex items-center justify-center gap-3">
               <span className={`text-3xl font-black ${myLb.pts > 0 ? 'text-emerald-400' : myLb.pts < 0 ? 'text-red-400' : 'text-gray-500'}`}>
                 {myLb.pts > 0 ? '+' : ''}{myLb.pts}
@@ -329,11 +344,11 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
             <div className="flex items-center justify-center gap-4 text-xs text-gray-500">
               <span className="flex items-center gap-1">
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                {myLb.correct} correct (+{myLb.correct * 4})
+                {myLb.correct} correct
               </span>
               <span className="flex items-center gap-1">
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                {myLb.wrong} wrong (−{myLb.wrong})
+                {myLb.wrong} wrong
               </span>
             </div>
           </div>
@@ -393,7 +408,11 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
     <div className="min-h-screen bg-[#0f1115] text-white flex flex-col items-center justify-center p-4 md:p-8 overflow-x-hidden">
       <div className="max-w-2xl w-full space-y-6">
         {/* Progress & Scores */}
-        <div className="flex items-center justify-between gap-4 bg-[#16191f] p-4 rounded-2xl border border-white/5 shadow-xl">
+        <div className="flex items-center justify-between gap-4 bg-[#16191f] p-4 rounded-2xl border border-white/5 shadow-xl relative overflow-hidden">
+          {battleState.isSolo && (
+            <div className="absolute top-0 left-0 w-full h-full bg-amber-500/5 pointer-events-none" />
+          )}
+          
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
               <span className="text-lg font-bold text-indigo-400">?</span>
@@ -415,19 +434,31 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
             </div>
           </div>
 
-          <div className="flex items-center gap-3 text-right">
-            <div className="hidden sm:block">
-              <p className="text-[10px] uppercase font-black tracking-widest text-rose-400">{battleState.player2?.name || 'Opponent'}</p>
-              <div className="flex gap-1 mt-1 justify-end">
-                {battleState.questions.map((_: any, i: number) => (
-                  <div key={i} className={`w-3 h-1.5 rounded-full ${i < battleState.opponentProgress ? 'bg-rose-400/50' : 'bg-white/10'}`} />
-                ))}
+          {battleState.isSolo ? (
+            <div className="flex items-center gap-3 text-right">
+              <div className="hidden sm:block">
+                <p className="text-[10px] uppercase font-black tracking-widest text-amber-500">Solo Rush</p>
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter mt-1">Practice Mode</p>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/30">
+                <span className="text-lg">⚡</span>
               </div>
             </div>
-            <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center border border-rose-500/30">
-              <span className="text-lg font-bold text-rose-400">?</span>
+          ) : (
+            <div className="flex items-center gap-3 text-right">
+              <div className="hidden sm:block">
+                <p className="text-[10px] uppercase font-black tracking-widest text-rose-400">{battleState.player2?.name || 'Opponent'}</p>
+                <div className="flex gap-1 mt-1 justify-end">
+                  {battleState.questions.map((_: any, i: number) => (
+                    <div key={i} className={`w-3 h-1.5 rounded-full ${i < battleState.opponentProgress ? 'bg-rose-400/50' : 'bg-white/10'}`} />
+                  ))}
+                </div>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center border border-rose-500/30">
+                <span className="text-lg font-bold text-rose-400">?</span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Question Card */}

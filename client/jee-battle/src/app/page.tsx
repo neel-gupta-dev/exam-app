@@ -157,6 +157,32 @@ function LobbyContent() {
     window.location.href = `${apiUrl}/auth/google?origin=battle`;
   };
 
+  const handleSoloRush = async () => {
+    if (!token || creating) return;
+
+    const confirmed = window.confirm(
+      "Solo Rush is for practice only. Points earned in this mode will be added to your Solo XP and will NOT count toward the Daily Competitive Leaderboard. Continue?"
+    );
+    if (!confirmed) return;
+
+    setCreating(true);
+    setError(null);
+
+    try {
+      const res = await fetch(`${apiUrl}/battle/solo/create`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create solo room');
+      
+      router.push(`/${data.roomCode}`);
+    } catch (err: any) {
+      setError(err.message);
+      setCreating(false);
+    }
+  };
+
   const findMatch = async () => {
     if (!token) return;
     setStatus('searching');
@@ -361,8 +387,23 @@ function LobbyContent() {
             </div>
           )}
 
-          {/* Find Random Match */}
-          <div className="bg-[#16191f] rounded-2xl border border-white/5 p-6 shadow-2xl">
+          {/* Solo Rush & Find Random Match */}
+          <div className="bg-[#16191f] rounded-2xl border border-white/5 p-6 shadow-2xl space-y-4">
+            <div className="space-y-2">
+              <button
+                onClick={handleSoloRush}
+                disabled={creating}
+                className="w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 disabled:opacity-50
+                  bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 
+                  text-black shadow-[0_0_20px_rgba(245,158,11,0.2)] hover:shadow-[0_0_30px_rgba(245,158,11,0.4)] active:scale-[0.98]"
+              >
+                {creating ? 'Creating...' : '⚡ Solo Rush (5 Qs)'}
+              </button>
+              <p className="text-[10px] text-amber-500/60 text-center font-medium px-4">
+                Note: Solo points track your practice XP and <span className="underline decoration-amber-500/30">do not</span> count toward the main competitive leaderboard.
+              </p>
+            </div>
+
             <button
               onClick={findMatch}
               disabled={status === 'searching'}
@@ -378,7 +419,7 @@ function LobbyContent() {
                   </svg>
                   Finding Opponent...
                 </span>
-              ) : '⚔️ Find Opponent'}
+              ) : '⚔️ Find Opponent (10 Qs)'}
             </button>
           </div>
 
