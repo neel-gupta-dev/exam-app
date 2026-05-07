@@ -559,7 +559,7 @@ function LobbyContent() {
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
-                          <span className={`text-sm font-semibold truncate max-w-[140px] ${isMe ? 'text-indigo-300' : 'text-gray-300'
+                          <span className={`text-sm font-semibold truncate max-w-[90px] xs:max-w-[120px] sm:max-w-[200px] ${isMe ? 'text-indigo-300' : 'text-gray-300'
                             }`}>
                             {entry.name}
                           </span>

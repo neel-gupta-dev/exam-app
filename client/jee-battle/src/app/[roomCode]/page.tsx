@@ -413,52 +413,66 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
             <div className="absolute top-0 left-0 w-full h-full bg-amber-500/5 pointer-events-none" />
           )}
           
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
+          <div className="flex items-center gap-3 flex-1">
+            <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30 shrink-0">
               <span className="text-lg font-bold text-indigo-400">?</span>
             </div>
-            <div className="hidden sm:block">
-              <p className="text-[10px] uppercase font-black tracking-widest text-indigo-400">You</p>
-              <div className="flex gap-1 mt-1">
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase font-black tracking-widest text-indigo-400 truncate">You</p>
+              {/* Dots on Desktop */}
+              <div className="hidden sm:flex gap-1 mt-1">
                 {battleState.questions.map((_: any, i: number) => (
                   <div key={i} className={`w-3 h-1.5 rounded-full ${i < battleState.myProgress ? 'bg-indigo-400' : 'bg-white/10'}`} />
                 ))}
               </div>
+              {/* Number on Mobile */}
+              <p className="sm:hidden text-[10px] font-bold text-white/40 mt-0.5">
+                {battleState.myProgress}/{battleState.questions.length}
+              </p>
             </div>
           </div>
 
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center shrink-0">
             <div className={`flex items-center gap-2 font-black italic ${timeRemaining <= 10 ? 'text-red-500 animate-pulse' : 'text-yellow-500'}`}>
               <Timer className="w-5 h-5" />
               <span className="text-xl">{timeRemaining}s</span>
             </div>
           </div>
 
-          {battleState.isSolo ? (
-            <div className="flex items-center gap-3 text-right">
-              <div className="hidden sm:block">
-                <p className="text-[10px] uppercase font-black tracking-widest text-amber-500">Solo Rush</p>
-                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter mt-1">Practice Mode</p>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/30">
-                <span className="text-lg">⚡</span>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3 text-right">
-              <div className="hidden sm:block">
-                <p className="text-[10px] uppercase font-black tracking-widest text-rose-400">{battleState.player2?.name || 'Opponent'}</p>
-                <div className="flex gap-1 mt-1 justify-end">
-                  {battleState.questions.map((_: any, i: number) => (
-                    <div key={i} className={`w-3 h-1.5 rounded-full ${i < battleState.opponentProgress ? 'bg-rose-400/50' : 'bg-white/10'}`} />
-                  ))}
+          <div className="flex-1">
+            {battleState.isSolo ? (
+              <div className="flex items-center gap-3 justify-end">
+                <div className="text-right">
+                  <p className="text-[10px] uppercase font-black tracking-widest text-amber-500">Solo</p>
+                  <p className="text-[9px] text-gray-600 font-bold uppercase tracking-tighter">Practice</p>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/30 shrink-0">
+                  <span className="text-lg">⚡</span>
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center border border-rose-500/30">
-                <span className="text-lg font-bold text-rose-400">?</span>
+            ) : (
+              <div className="flex items-center gap-3 justify-end">
+                <div className="min-w-0 text-right">
+                  <p className="text-[10px] uppercase font-black tracking-widest text-rose-400/80 truncate">
+                    {battleState.player2?.name || 'Opponent'}
+                  </p>
+                  {/* Dots on Desktop */}
+                  <div className="hidden sm:flex gap-1 mt-1 justify-end">
+                    {battleState.questions.map((_: any, i: number) => (
+                      <div key={i} className={`w-3 h-1.5 rounded-full ${i < battleState.opponentProgress ? 'bg-rose-400/50' : 'bg-white/10'}`} />
+                    ))}
+                  </div>
+                  {/* Number on Mobile */}
+                  <p className="sm:hidden text-[10px] font-bold text-white/40 mt-0.5">
+                    {battleState.opponentProgress}/{battleState.questions.length}
+                  </p>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center border border-rose-500/30 shrink-0">
+                  <span className="text-lg font-bold text-rose-400">?</span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Question Card */}
@@ -469,7 +483,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
                 <span className="px-3 py-1 bg-indigo-500/10 text-indigo-400 text-[10px] font-black uppercase tracking-widest rounded-full border border-indigo-500/20">
-                  Question {currentQuestionIndex + 1} / 10
+                  Question {currentQuestionIndex + 1} / {battleState.questions.length}
                 </span>
                 {currentQuestion.questionCode && (
                   <span className="text-[10px] font-black uppercase tracking-widest text-white/30 border border-white/10 px-2 py-1 rounded-full">
