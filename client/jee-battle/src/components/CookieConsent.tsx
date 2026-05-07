@@ -44,17 +44,17 @@ export default function CookieConsent() {
 
         <div className="grid grid-cols-2 gap-3 mt-6">
           <button
-            onClick={decline}
-            className="py-3 rounded-2xl text-xs font-black uppercase tracking-widest text-white/40 hover:bg-white/5 transition-colors"
+            onClick={accept}
+            className="py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white/40 hover:bg-white/5 transition-colors border border-white/5"
           >
-            Decline
+            Necessary Only
           </button>
           <button
             onClick={accept}
-            className="py-3 rounded-2xl text-xs font-black uppercase tracking-widest bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            className="py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
           >
             <Check className="w-4 h-4" />
-            Accept
+            Accept All
           </button>
         </div>
       </div>
