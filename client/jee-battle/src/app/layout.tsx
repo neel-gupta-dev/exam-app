@@ -87,6 +87,7 @@ export const metadata: Metadata = {
 };
 
 import MathProvider from "@/components/MathProvider";
+import CookieConsent from "@/components/CookieConsent";
 
 export default function RootLayout({
   children,
@@ -152,6 +153,7 @@ export default function RootLayout({
         )}
         <MathProvider>
           {children}
+          <CookieConsent />
         </MathProvider>
       </body>
     </html>

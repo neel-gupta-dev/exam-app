@@ -90,22 +90,32 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
     return () => clearInterval(interval);
   }, [countdownMs]);
 
-  useEffect(() => {
-    if (battleState?.status !== 'active' || currentQuestionIndex >= battleState?.questions?.length || countdownMs > 0) return;
+  const targetTimeRef = useRef<number | null>(null);
 
+  useEffect(() => {
+    if (battleState?.status !== 'active' || currentQuestionIndex >= (battleState?.questions?.length || 0) || countdownMs > 0) return;
+
+    // Set target time to 60 seconds from now
+    targetTimeRef.current = Date.now() + 60000;
     setTimeRemaining(60);
+
     const timerInterval = setInterval(() => {
-      setTimeRemaining(prev => {
-        if (prev <= 1) {
-          if (lastSubmittedIndex.current !== currentQuestionIndex) {
-            lastSubmittedIndex.current = currentQuestionIndex;
-            submitAnswer([-1111], -1111);
-          }
-          return 0;
+      if (!targetTimeRef.current) return;
+      
+      const now = Date.now();
+      const diff = targetTimeRef.current - now;
+      const remaining = Math.max(0, Math.ceil(diff / 1000));
+      
+      setTimeRemaining(remaining);
+
+      if (remaining <= 0) {
+        if (lastSubmittedIndex.current !== currentQuestionIndex) {
+          lastSubmittedIndex.current = currentQuestionIndex;
+          submitAnswer([-1111], -1111);
         }
-        return prev - 1;
-      });
-    }, 1000);
+        clearInterval(timerInterval);
+      }
+    }, 250); // High frequency check for smooth UI and accurate timeout
 
     return () => clearInterval(timerInterval);
   }, [currentQuestionIndex, battleState?.status, countdownMs]);
@@ -441,7 +451,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
               </span>
             </div>
 
-            <div className="text-xl sm:text-2xl font-medium leading-relaxed mb-8 min-h-[4rem]">
+            <div className="text-lg sm:text-2xl font-medium leading-relaxed mb-8 min-h-[4rem] overflow-x-auto custom-scrollbar py-2">
               <MathJax>{currentQuestion.questionText}</MathJax>
             </div>
 
