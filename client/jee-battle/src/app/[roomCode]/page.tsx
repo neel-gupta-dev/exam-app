@@ -406,7 +406,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
 
   return (
     <div className="min-h-screen bg-[#0f1115] text-white flex flex-col items-center justify-center p-4 md:p-8 overflow-x-hidden">
-      <div className="max-w-2xl w-full space-y-6">
+      <div className="max-w-5xl w-full space-y-6">
         {/* Progress & Scores */}
         <div className="flex items-center justify-between gap-4 bg-[#16191f] p-4 rounded-2xl border border-white/5 shadow-xl relative overflow-hidden">
           {battleState.isSolo && (
@@ -500,7 +500,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
               <MathJax>{currentQuestion.questionText}</MathJax>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
+            <div className={`grid gap-4 ${currentQuestion.type === 'integer' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
               {currentQuestion.type === 'integer' ? (
                 <div className="space-y-4">
                   <p className="text-sm text-gray-400 font-medium italic">Type your numerical answer below:</p>
