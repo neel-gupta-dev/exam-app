@@ -25,8 +25,11 @@ const BattleQuestionSchema = new mongoose.Schema({
   }],
   type: {
     type: String,
-    enum: ['single', 'multi'],
+    enum: ['single', 'multi', 'integer'],
     default: 'single',
+  },
+  correctInteger: {
+    type: Number, // Stores the correct answer for integer type questions
   },
   difficulty: {
     type: String,

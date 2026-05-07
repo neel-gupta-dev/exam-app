@@ -383,7 +383,7 @@ router.get('/:roomCode', protect, async (req, res) => {
  */
 router.post('/submit', protect, async (req, res) => {
   try {
-    const { roomCode, questionId, selectedOptionIndex, selectedOptionIndices, timeTakenSeconds } = req.body;
+    const { roomCode, questionId, selectedOptionIndex, selectedOptionIndices, submittedInteger, timeTakenSeconds } = req.body;
     const userId = req.user._id;
 
     const battle = await Battle.findOne({ roomCode: roomCode.toUpperCase() });
@@ -418,9 +418,23 @@ router.post('/submit', protect, async (req, res) => {
     let lbCorrect = 0;
     let lbWrong = 0;
 
-    const isMulti = question.type === 'multi';
+    const qType = question.type || 'single';
 
-    if (isMulti) {
+    if (qType === 'integer') {
+      // Integer type marking logic (+4 / -1)
+      if (submittedInteger !== undefined && submittedInteger !== null && submittedInteger !== -1111) { // -1111 for skip/timeout
+        if (Number(submittedInteger) === Number(question.correctInteger)) {
+          isCorrect = true;
+          lbPoints = 4;
+          lbCorrect = 1;
+          const timeBonus = Math.max(0, Math.floor((60 - actualTimeTaken) * (50 / 60)));
+          points = 100 + timeBonus;
+        } else {
+          lbPoints = -1;
+          lbWrong = 1;
+        }
+      }
+    } else if (qType === 'multi') {
       // Multi-correct marking logic
       const selected = Array.isArray(selectedOptionIndices) ? selectedOptionIndices : [];
       const correctIndices = question.options
@@ -444,15 +458,14 @@ router.post('/submit', protect, async (req, res) => {
           // Partial correct
           const correctSelectedCount = selected.filter(idx => question.options[idx]?.isCorrect).length;
           lbPoints = correctSelectedCount;
-          lbCorrect = 1; // Count as correct for stats? Usually partial is better than wrong.
-          // Give some battle points for partial? Let's say 25 pts per correct option
+          lbCorrect = 1; 
           points = correctSelectedCount * 25;
         }
       }
     } else {
       // Single-correct marking logic
       const sIndex = selectedOptionIndex !== undefined ? selectedOptionIndex : -1;
-      if (sIndex !== -1) {
+      if (sIndex !== -1 && sIndex !== -1111) {
         const option = question.options[sIndex];
         if (option && option.isCorrect) {
           isCorrect = true;
@@ -475,8 +488,9 @@ router.post('/submit', protect, async (req, res) => {
 
     const answerRecord = {
       questionId,
-      selectedOptionIndex: isMulti ? -2 : (indices[0] ?? -1), // -2 indicates multi
-      selectedOptionIndices: isMulti ? selectedOptionIndices : [],
+      selectedOptionIndex: qType === 'integer' ? -3 : (qType === 'multi' ? -2 : (selectedOptionIndex ?? -1)), // -3 for integer, -2 for multi
+      selectedOptionIndices: qType === 'multi' ? selectedOptionIndices : [],
+      submittedInteger: qType === 'integer' ? submittedInteger : undefined,
       isCorrect,
       lbPoints,
       timeTakenSeconds: actualTimeTaken,

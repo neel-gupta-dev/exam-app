@@ -29,6 +29,7 @@ const BattleSchema = new mongoose.Schema({
     questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'BattleQuestion' },
     selectedOptionIndex: Number,
     selectedOptionIndices: [Number],
+    submittedInteger: Number,
     isCorrect: Boolean,
     lbPoints: Number, // Leaderboard points for this specific answer
     timeTakenSeconds: Number,
@@ -38,6 +39,7 @@ const BattleSchema = new mongoose.Schema({
     questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'BattleQuestion' },
     selectedOptionIndex: Number,
     selectedOptionIndices: [Number],
+    submittedInteger: Number,
     isCorrect: Boolean,
     lbPoints: Number, // Leaderboard points for this specific answer
     timeTakenSeconds: Number,

@@ -340,10 +340,18 @@ router.get('/battle-questions', asyncHandler(async (req, res) => {
  * Create a new battle question.
  */
 router.post('/battle-questions', asyncHandler(async (req, res) => {
-  const { subject, questionText, options, difficulty, explanation, imageUrl, type } = req.body;
+  const { subject, questionText, options, difficulty, explanation, imageUrl, type, correctInteger } = req.body;
   
-  if (!subject || !questionText || !options || options.length < 2) {
-    res.status(400); throw new Error('Subject, question text, and at least 2 options are required.');
+  if (!subject || !questionText) {
+    res.status(400); throw new Error('Subject and question text are required.');
+  }
+
+  if (type !== 'integer' && (!options || options.length < 2)) {
+    res.status(400); throw new Error('Options are required for non-integer questions.');
+  }
+
+  if (type === 'integer' && (correctInteger === undefined || correctInteger === null)) {
+    res.status(400); throw new Error('Correct integer answer is required.');
   }
 
   // Generate unique question code
@@ -368,7 +376,8 @@ router.post('/battle-questions', asyncHandler(async (req, res) => {
     difficulty,
     explanation,
     imageUrl,
-    type: type || 'single'
+    type: type || 'single',
+    correctInteger: type === 'integer' ? correctInteger : undefined
   });
 
   res.status(201).json(question);
@@ -393,6 +402,7 @@ router.patch('/battle-questions/:id', asyncHandler(async (req, res) => {
   if (explanation) question.explanation = explanation;
   if (imageUrl !== undefined) question.imageUrl = imageUrl;
   if (type) question.type = type;
+  if (correctInteger !== undefined) question.correctInteger = correctInteger;
   if (req.body.questionCode) {
     // Check for uniqueness if code is changed
     if (req.body.questionCode !== question.questionCode) {

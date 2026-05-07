@@ -53,6 +53,7 @@ export default function BattleQuestions() {
   const [questionCode, setQuestionCode] = useState('');
   const [questionText, setQuestionText] = useState('');
   const [type, setType] = useState('single');
+  const [correctInteger, setCorrectInteger] = useState('');
   const [options, setOptions] = useState([
     { text: '', isCorrect: true },
     { text: '', isCorrect: false },
@@ -105,6 +106,7 @@ export default function BattleQuestions() {
     setQuestionText('');
     setExplanation('');
     setType('single');
+    setCorrectInteger('');
     setOptions([
       { text: '', isCorrect: true },
       { text: '', isCorrect: false },
@@ -119,6 +121,7 @@ export default function BattleQuestions() {
     setQuestionCode(q.questionCode || '');
     setQuestionText(q.questionText);
     setType(q.type || 'single');
+    setCorrectInteger(q.correctInteger !== undefined ? q.correctInteger : '');
     setDifficulty(q.difficulty);
     setExplanation(q.explanation || '');
     setOptions(q.options.map(o => ({ text: o.text, isCorrect: o.isCorrect })));
@@ -142,7 +145,8 @@ export default function BattleQuestions() {
 
     try {
       const payload = {
-        subject, questionText, options, difficulty, explanation, type, questionCode
+        subject, questionText, options, difficulty, explanation, type, questionCode,
+        correctInteger: type === 'integer' ? Number(correctInteger) : undefined
       };
       
       if (editingId) {
@@ -207,6 +211,7 @@ export default function BattleQuestions() {
                   <select value={type} onChange={(e) => setType(e.target.value)}>
                     <option value="single">Single Correct</option>
                     <option value="multi">Multi Correct</option>
+                    <option value="integer">Integer Type</option>
                   </select>
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
@@ -244,28 +249,42 @@ export default function BattleQuestions() {
                 />
               </div>
 
-              <div className="form-group" style={{ marginBottom: 12 }}>
-                <label className="form-label">Options (select the correct one)</label>
-                {options.map((opt, idx) => (
-                  <div key={idx} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
-                    <input
-                      type={type === 'multi' ? 'checkbox' : 'radio'}
-                      name="correctOption"
-                      checked={opt.isCorrect}
-                      onChange={() => handleCorrectOptionChange(idx)}
-                      style={{ cursor: 'pointer' }}
-                    />
-                    <input
-                      type="text"
-                      value={opt.text}
-                      onChange={(e) => handleOptionChange(idx, e.target.value)}
-                      placeholder={`Option ${String.fromCharCode(65 + idx)}`}
-                      required
-                      style={{ flex: 1 }}
-                    />
-                  </div>
-                ))}
-              </div>
+              {type === 'integer' ? (
+                <div className="form-group" style={{ marginBottom: 12 }}>
+                  <label className="form-label">Correct Integer Answer</label>
+                  <input
+                    type="number"
+                    value={correctInteger}
+                    onChange={(e) => setCorrectInteger(e.target.value)}
+                    placeholder="e.g. 42"
+                    style={{ width: '100%' }}
+                    required
+                  />
+                </div>
+              ) : (
+                <div className="form-group" style={{ marginBottom: 12 }}>
+                  <label className="form-label">Options ({type === 'multi' ? 'select multiple' : 'select the correct one'})</label>
+                  {options.map((opt, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+                      <input
+                        type={type === 'multi' ? 'checkbox' : 'radio'}
+                        name="correctOption"
+                        checked={opt.isCorrect}
+                        onChange={() => handleCorrectOptionChange(idx)}
+                        style={{ cursor: 'pointer' }}
+                      />
+                      <input
+                        type="text"
+                        value={opt.text}
+                        onChange={(e) => handleOptionChange(idx, e.target.value)}
+                        placeholder={`Option ${String.fromCharCode(65 + idx)}`}
+                        required
+                        style={{ flex: 1 }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div className="form-group" style={{ marginBottom: 20 }}>
                 <label className="form-label">Explanation (optional)</label>
@@ -303,26 +322,34 @@ export default function BattleQuestions() {
                 {questionCode && <span className="badge badge-gray" style={{ marginRight: 8 }}>{questionCode}</span>}
                 <span className="badge badge-blue">{subject}</span>{' '}
                 <span className="badge badge-gray">{difficulty}</span>{' '}
-                <span className="badge badge-purple">{type === 'multi' ? 'Multi-Correct' : 'Single-Correct'}</span>
+                <span className="badge badge-purple">
+                  {type === 'multi' ? 'Multi-Correct' : type === 'integer' ? 'Integer Type' : 'Single-Correct'}
+                </span>
               </div>
               <div style={{ fontSize: 15, marginBottom: 16 }}>
                 {questionText || 'Your question will appear here...'}
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {options.map((opt, i) => (
-                  <div key={i} style={{
-                    padding: 10,
-                    border: opt.isCorrect ? '1px solid var(--success)' : '1px solid var(--border)',
-                    borderRadius: 3,
-                    background: opt.isCorrect ? '#f0fdf4' : '#fff'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <span style={{ fontWeight: 'bold', color: 'var(--text-muted)' }}>{String.fromCharCode(65 + i)}</span>
-                      <span>{opt.text || `Option ${String.fromCharCode(65 + i)}`}</span>
+              {type === 'integer' ? (
+                <div style={{ padding: 10, border: '1px solid var(--success)', borderRadius: 3, background: '#f0fdf4' }}>
+                  <strong>Answer:</strong> {correctInteger || '...'}
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {options.map((opt, i) => (
+                    <div key={i} style={{
+                      padding: 10,
+                      border: opt.isCorrect ? '1px solid var(--success)' : '1px solid var(--border)',
+                      borderRadius: 3,
+                      background: opt.isCorrect ? '#f0fdf4' : '#fff'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <span style={{ fontWeight: 'bold', color: 'var(--text-muted)' }}>{String.fromCharCode(65 + i)}</span>
+                        <span>{opt.text || `Option ${String.fromCharCode(65 + i)}`}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -354,19 +381,25 @@ export default function BattleQuestions() {
                         {q.questionCode && <span className="badge badge-gray" style={{ marginRight: 4 }}>{q.questionCode}</span>}
                         <span className="badge badge-blue" style={{ marginRight: 4 }}>{q.subject}</span>
                         <span className="badge badge-gray" style={{ marginRight: 4 }}>{q.difficulty}</span>
-                        <span className="badge badge-purple">{q.type === 'multi' ? 'Multi' : 'Single'}</span>
+                        <span className="badge badge-purple">{q.type === 'integer' ? 'Integer' : (q.type === 'multi' ? 'Multi' : 'Single')}</span>
                       </div>
                       <div style={{ fontWeight: 500, marginBottom: 12, paddingRight: 60 }}>
                         {q.questionText}
                       </div>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        {q.options.map((o, idx) => (
-                          <div key={idx} style={{
-                            width: 12, height: 12, borderRadius: '50%',
-                            background: o.isCorrect ? 'var(--success)' : '#e5e7eb'
-                          }} title={o.isCorrect ? 'Correct' : 'Incorrect'} />
-                        ))}
-                      </div>
+                      {q.type === 'integer' ? (
+                        <div style={{ fontSize: '12px', color: 'var(--success)', fontWeight: 'bold' }}>
+                          Ans: {q.correctInteger}
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          {q.options.map((o, idx) => (
+                            <div key={idx} style={{
+                              width: 12, height: 12, borderRadius: '50%',
+                              background: o.isCorrect ? 'var(--success)' : '#e5e7eb'
+                            }} title={o.isCorrect ? 'Correct' : 'Incorrect'} />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
