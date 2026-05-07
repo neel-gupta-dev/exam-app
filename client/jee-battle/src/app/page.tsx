@@ -660,6 +660,20 @@ function LobbyContent() {
           </div>
         </div>
       </div>
+
+      {/* ── Footer ── */}
+      <div className="lg:col-span-12 pt-12 mt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-6 text-[10px] text-gray-600 uppercase tracking-[0.2em] font-bold">
+        <div className="flex items-center gap-8">
+          <a href="#" className="hover:text-indigo-400 transition-colors">Privacy Policy</a>
+          <a href="#" className="hover:text-indigo-400 transition-colors">Terms of Service</a>
+          <a href="#" className="hover:text-indigo-400 transition-colors">Contact Us</a>
+        </div>
+        <div className="flex items-center gap-2">
+          <span>© {new Date().getFullYear()} Vayl Technologies.</span>
+          <span className="hidden sm:inline text-gray-800">•</span>
+          <span>Built for JEE Warriors</span>
+        </div>
+      </div>
     </div>
   );
 }
