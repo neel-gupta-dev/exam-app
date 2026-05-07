@@ -47,7 +47,9 @@ function LobbyContent() {
         const res = await fetch(`${apiUrl}/battle/leaderboard`);
         if (res.ok) {
           const data = await res.json();
-          setLeaderboard(data.leaderboard || []);
+          // Support both { leaderboard: [] } and direct [] formats for backwards compatibility
+          const lbData = Array.isArray(data) ? data : (data.leaderboard || []);
+          setLeaderboard(lbData);
         }
       } catch {
         // Non-critical
@@ -541,7 +543,7 @@ function LobbyContent() {
                 </thead>
                 <tbody>
                   {leaderboard.map((entry: any) => {
-                    const isMe = currentUserId && entry.userId === currentUserId;
+                    const isMe = currentUserId && entry.userId?.toString() === currentUserId.toString();
                     const rankBadge = entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : null;
                     return (
                       <tr
