@@ -93,16 +93,20 @@ app.use(
         return callback(null, true);
       }
 
-      // Allow exact vayl.in domain and subdomains securely
-      if (origin === 'https://vayl.in' || /^https:\/\/[a-zA-Z0-9-]+\.vayl\.in$/.test(origin)) {
+      // Allow exact vayl.in domain, subdomains, and potential ports securely
+      const isVaylDomain = origin === 'https://vayl.in' || 
+                          origin === 'http://vayl.in' ||
+                          /^https?:\/\/[a-zA-Z0-9-]+\.vayl\.in(:\d+)?$/.test(origin);
+      
+      if (isVaylDomain) {
         return callback(null, true);
       }
-
+ 
       // Allow whitelisted origins
       if (runtimeAllowedOrigins.includes(origin) || runtimeAllowedOrigins.includes('*')) {
         return callback(null, true);
       }
-
+ 
       console.warn(`[CORS] Blocked request from origin: ${origin}`);
       return callback(new Error(`Not allowed by CORS: ${origin}`));
     },
@@ -154,7 +158,7 @@ app.use(passport.initialize());
 // --- Global Rate Limiter ---
 const globalLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 100, // 100 requests per IP per minute
+  max: 500, // Increased to 500 requests per IP per minute
   message: { error: 'Too many requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,

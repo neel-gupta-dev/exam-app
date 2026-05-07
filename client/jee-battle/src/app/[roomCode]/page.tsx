@@ -48,10 +48,18 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
 
   const fetchState = async () => {
     if (!token) return;
+    // Skip if already finished to save requests
+    if (battleState?.status === 'finished') return;
+
     try {
       const res = await fetch(`${apiUrl}/battle/${roomCode}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      
+      if (res.status === 403) {
+        throw new Error("🔒 Not authorized. This is a private room for other players.");
+      }
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to fetch battle state');
 
@@ -82,7 +90,11 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
     setError(null);
     
     fetchState();
-    const interval = setInterval(fetchState, 5000);
+    const interval = setInterval(() => {
+      // Check ref or use local closure isn't possible, so we check state in fetchState
+      fetchState();
+    }, 5000);
+
     return () => clearInterval(interval);
   }, [token, roomCode]);
 
@@ -208,10 +220,17 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
   );
 
   if (error) return (
-    <div className="min-h-screen bg-[#0f1115] flex items-center justify-center">
-      <div className="text-center space-y-4">
-        <p className="text-red-400">{error}</p>
-        <button onClick={() => router.push('/')} className="text-indigo-400 hover:underline text-sm">Back to Lobby</button>
+    <div className="min-h-screen bg-[#0f1115] flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-[#16191f] rounded-2xl border border-red-500/20 p-8 text-center space-y-6 shadow-2xl">
+        <div className="text-5xl">🚫</div>
+        <h2 className="text-xl font-bold text-white">Access Denied</h2>
+        <p className="text-gray-400 text-sm leading-relaxed">{error}</p>
+        <button 
+          onClick={() => router.push('/')} 
+          className="w-full py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-all font-bold"
+        >
+          Return to Lobby
+        </button>
       </div>
     </div>
   );
