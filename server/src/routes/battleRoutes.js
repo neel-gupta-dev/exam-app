@@ -32,11 +32,18 @@ async function uniqueRoomCode() {
   throw new Error('Failed to generate unique room code');
 }
 
-/** Auto-abandon stale waiting rooms older than 10 minutes */
+/** Auto-abandon stale waiting/active rooms */
 async function cleanupStaleRooms() {
-  const staleThreshold = new Date(Date.now() - 10 * 60 * 1000); // 10 min
+  const waitingThreshold = new Date(Date.now() - 10 * 60 * 1000); // 10 min
+  const activeThreshold = new Date(Date.now() - 60 * 60 * 1000);  // 60 min
+  
   await Battle.updateMany(
-    { status: 'waiting', createdAt: { $lt: staleThreshold } },
+    { 
+      $or: [
+        { status: 'waiting', createdAt: { $lt: waitingThreshold } },
+        { status: 'active', startedAt: { $lt: activeThreshold } }
+      ]
+    },
     { $set: { status: 'abandoned' } }
   );
 }
@@ -181,6 +188,19 @@ router.post('/join', protect, async (req, res) => {
 
     if (!roomCode || roomCode.length !== 5) {
       return res.status(400).json({ error: 'Invalid room code' });
+    }
+
+    // Cleanup stale rooms
+    await cleanupStaleRooms();
+
+    // Check if user is already in an active or waiting battle
+    const existingBattle = await Battle.findOne({
+      $or: [{ player1: userId }, { player2: userId }],
+      status: { $in: ['waiting', 'active'] }
+    });
+
+    if (existingBattle) {
+      return res.json({ roomCode: existingBattle.roomCode, status: existingBattle.status, isAdmin: req.user.role === 'admin' });
     }
 
     // Fetch questions
@@ -374,7 +394,7 @@ router.get('/:roomCode', protect, async (req, res) => {
     const battle = await Battle.findOne({ roomCode: req.params.roomCode.toUpperCase() })
       .populate('player1', 'name avatar')
       .populate('player2', 'name avatar')
-      .populate('questions', '-options.isCorrect -explanation');
+      .populate('questions', '-options.isCorrect -explanation -correctInteger');
       
     if (!battle) {
       return res.status(404).json({ error: 'Battle not found' });

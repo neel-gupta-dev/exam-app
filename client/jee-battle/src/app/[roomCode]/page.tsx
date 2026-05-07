@@ -162,16 +162,16 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
 
   const targetTimeRef = useRef<number | null>(null);
 
-  const submitAnswer = useCallback(async (manualIndices?: number[], manualInteger?: number) => {
+  const submitAnswer = useCallback(async (manualIndices?: number[] | null, manualInteger?: number | null) => {
     if (!token || !battleState || submittingRef.current) return;
 
     const currentQuestion = battleState.questions[currentQuestionIndex];
     const isMulti = currentQuestion.type === 'multi';
     const isInteger = currentQuestion.type === 'integer';
 
-    // Special value -1111 for skip/timeout
-    const indices = manualIndices || (isMulti ? selectedOptions : (selectedOptions.length > 0 ? [selectedOptions[0]] : [-1111]));
-    const integerVal = manualInteger !== undefined ? manualInteger : (typedAnswer !== '' ? Number(typedAnswer) : -1111);
+    // Special value null for skip/timeout
+    const indices = manualIndices !== undefined ? manualIndices : (isMulti ? selectedOptions : (selectedOptions.length > 0 ? [selectedOptions[0]] : null));
+    const integerVal = manualInteger !== undefined ? manualInteger : (typedAnswer !== '' ? Number(typedAnswer) : null);
 
     submittingRef.current = true;
     setSubmitting(true);
@@ -190,8 +190,8 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
         body: JSON.stringify({
           roomCode,
           questionId,
-          selectedOptionIndex: isInteger ? -3 : (isMulti ? -2 : (indices[0] ?? -1111)),
-          selectedOptionIndices: indices,
+          selectedOptionIndex: isInteger ? -3 : (isMulti ? -2 : (indices && indices.length > 0 ? indices[0] : null)),
+          selectedOptionIndices: indices || [],
           submittedInteger: integerVal,
           timeTakenSeconds: timeTaken
         })
@@ -238,7 +238,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
       if (remaining <= 0) {
         if (lastSubmittedIndex.current !== currentQuestionIndex && !submittingRef.current) {
           lastSubmittedIndex.current = currentQuestionIndex;
-          submitAnswer([-1111], -1111);
+          submitAnswer(null, null);
         }
         clearInterval(timerInterval);
       }

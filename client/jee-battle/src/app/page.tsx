@@ -128,7 +128,7 @@ function LobbyContent() {
     if (!token) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchOnlineCount();
-    const interval = setInterval(fetchOnlineCount, 15000);
+    const interval = setInterval(fetchOnlineCount, 45000); // Increased interval to mitigate DB write amplification
     return () => clearInterval(interval);
   }, [token, fetchOnlineCount]);
 
