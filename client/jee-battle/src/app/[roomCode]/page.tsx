@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { MathJax } from 'better-react-mathjax';
-import { Timer, ArrowRight, CheckCircle2, Zap } from 'lucide-react';
+import { Timer, ArrowRight, CheckCircle2, Zap, Delete } from 'lucide-react';
 
 type BattleQuestionType = 'single' | 'multi' | 'integer';
 
@@ -593,16 +593,46 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
             <div className={`grid gap-4 ${currentQuestion.type === 'integer' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
               {currentQuestion.type === 'integer' ? (
                 <div className="space-y-4">
-                  <p className="text-sm text-gray-400 font-medium italic">Type your numerical answer below:</p>
-                  <input
-                    type="number"
-                    value={typedAnswer}
-                    onChange={(e) => setTypedAnswer(e.target.value)}
-                    placeholder="Enter integer answer..."
-                    className="w-full bg-[#1c2128] border border-white/10 rounded-2xl p-6 text-2xl font-bold text-center focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all placeholder:text-white/5"
-                    autoFocus
-                  />
-                  <p className="text-[10px] text-gray-500 text-center uppercase tracking-widest font-bold">Integer Type • +4 / -1 Marking</p>
+                  <p className="text-sm text-gray-400 font-medium italic text-center">Use the keypad to enter your numerical answer:</p>
+                  
+                  <div className="w-full bg-[#1c2128] border border-white/10 rounded-2xl p-6 text-2xl font-bold text-center text-white h-20 flex items-center justify-center shadow-inner">
+                    {typedAnswer || <span className="text-white/20 text-lg">Enter integer answer...</span>}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 max-w-[280px] mx-auto pt-4">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+                      <button
+                        key={num}
+                        onClick={() => setTypedAnswer(prev => prev + num)}
+                        disabled={submitting}
+                        className="bg-white/5 hover:bg-white/10 text-white font-bold py-4 rounded-xl text-xl transition-all active:scale-95 shadow-sm border border-white/5"
+                      >
+                        {num}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setTypedAnswer(prev => prev.startsWith('-') ? prev.slice(1) : '-' + prev)}
+                      disabled={submitting}
+                      className="bg-white/5 hover:bg-white/10 text-white font-bold py-4 rounded-xl text-xl transition-all active:scale-95 shadow-sm border border-white/5"
+                    >
+                      +/-
+                    </button>
+                    <button
+                      onClick={() => setTypedAnswer(prev => prev + '0')}
+                      disabled={submitting}
+                      className="bg-white/5 hover:bg-white/10 text-white font-bold py-4 rounded-xl text-xl transition-all active:scale-95 shadow-sm border border-white/5"
+                    >
+                      0
+                    </button>
+                    <button
+                      onClick={() => setTypedAnswer(prev => prev.slice(0, -1))}
+                      disabled={submitting}
+                      className="bg-white/5 hover:bg-red-500/20 text-red-400 font-bold py-4 rounded-xl text-xl transition-all active:scale-95 flex items-center justify-center shadow-sm border border-red-500/10"
+                    >
+                      <Delete className="w-6 h-6" />
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-gray-500 text-center uppercase tracking-widest font-bold pt-2">Integer Type • +4 / -1 Marking</p>
                 </div>
               ) : (
                 currentQuestion.options.map((option, index: number) => {
