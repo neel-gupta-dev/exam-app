@@ -661,24 +661,41 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
           </div>
         )}
 
-        {/* Submit Button */}
-        <button
-          onClick={() => (currentQuestion.type === 'integer' ? typedAnswer !== '' : selectedOptions.length > 0) && submitAnswer()}
-          disabled={(currentQuestion.type === 'integer' ? typedAnswer === '' : selectedOptions.length === 0) || submitting}
-          className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all ${(currentQuestion.type === 'integer' ? typedAnswer !== '' : selectedOptions.length > 0) && !submitting
-              ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xl shadow-indigo-600/20 hover:scale-[1.02] active:scale-[0.98]'
-              : 'bg-white/5 text-white/20 cursor-not-allowed'
-            }`}
-        >
-          {submitting ? (
-            <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-          ) : (
-            <>
-              {(currentQuestion.type === 'integer' ? typedAnswer !== '' : selectedOptions.length > 0) ? 'Confirm Answer' : 'Input Answer'}
-              <ArrowRight className="w-5 h-5" />
-            </>
-          )}
-        </button>
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={() => {
+              if (submitting) return;
+              submitAnswer(null, null);
+            }}
+            disabled={submitting}
+            className={`w-full sm:w-1/3 py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center transition-all ${
+                !submitting
+                ? 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white shadow-xl border border-white/10 active:scale-[0.98]'
+                : 'bg-white/5 text-white/20 cursor-not-allowed border border-transparent'
+              }`}
+          >
+            Skip
+          </button>
+
+          <button
+            onClick={() => (currentQuestion.type === 'integer' ? typedAnswer !== '' : selectedOptions.length > 0) && submitAnswer()}
+            disabled={(currentQuestion.type === 'integer' ? typedAnswer === '' : selectedOptions.length === 0) || submitting}
+            className={`w-full sm:w-2/3 py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all ${(currentQuestion.type === 'integer' ? typedAnswer !== '' : selectedOptions.length > 0) && !submitting
+                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xl shadow-indigo-600/20 hover:scale-[1.02] active:scale-[0.98]'
+                : 'bg-white/5 text-white/20 cursor-not-allowed'
+              }`}
+          >
+            {submitting ? (
+              <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+            ) : (
+              <>
+                {(currentQuestion.type === 'integer' ? typedAnswer !== '' : selectedOptions.length > 0) ? 'Confirm Answer' : 'Input Answer'}
+                <ArrowRight className="w-5 h-5" />
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

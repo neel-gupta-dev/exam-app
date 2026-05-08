@@ -596,8 +596,8 @@ router.post('/submit', protect, async (req, res) => {
           wrongAnswers: lbWrong,
         },
       };
-      const userFinished = isPlayer1 ? p1Finished : (battle.player2 ? p2Finished : false);
-      if (userFinished) {
+      const isFirstAnswer = isPlayer1 ? (battle.player1Answers.length === 1) : (battle.player2Answers.length === 1);
+      if (isFirstAnswer) {
         lbUpdate.$inc.gamesPlayed = 1;
       }
 
