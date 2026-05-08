@@ -575,11 +575,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
                 <span className="px-3 py-1 bg-indigo-500/10 text-indigo-400 text-[10px] font-black uppercase tracking-widest rounded-full border border-indigo-500/20">
                   Question {currentQuestionIndex + 1} / {battleState.questions.length}
                 </span>
-                {currentQuestion.questionCode && (
-                  <span className="text-[10px] font-black uppercase tracking-widest text-white/30 border border-white/10 px-2 py-1 rounded-full">
-                    {currentQuestion.questionCode}
-                  </span>
-                )}
+
               </div>
               <span className="text-[10px] font-black uppercase tracking-widest text-white/40">
                 {currentQuestion.subject}
