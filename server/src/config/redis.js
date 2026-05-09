@@ -13,8 +13,13 @@ export const connectRedis = async () => {
   try {
     redisClient = createClient({ url: REDIS_URL });
 
+    let lastRedisErrorLog = 0;
     redisClient.on('error', (err) => {
-      console.error('[Redis] Connection error:', err.message);
+      // Throttle error logs to once per 30s to prevent log spam when Redis is down
+      if (Date.now() - lastRedisErrorLog > 30_000) {
+        console.error('[Redis] Connection error:', err.message);
+        lastRedisErrorLog = Date.now();
+      }
       isRedisReady = false;
     });
 

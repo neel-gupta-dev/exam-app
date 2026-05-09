@@ -22,16 +22,6 @@ function generateRoomCode() {
   return code;
 }
 
-/** Generate a unique room code (retry on collision) */
-async function uniqueRoomCode() {
-  for (let i = 0; i < 10; i++) {
-    const code = generateRoomCode();
-    const existing = await Battle.findOne({ roomCode: code });
-    if (!existing) return code;
-  }
-  throw new Error('Failed to generate unique room code');
-}
-
 /** Auto-abandon stale waiting/active rooms */
 async function cleanupStaleRooms() {
   const waitingThreshold = new Date(Date.now() - 10 * 60 * 1000); // 10 min
@@ -46,6 +36,14 @@ async function cleanupStaleRooms() {
     },
     { $set: { status: 'abandoned' } }
   );
+}
+
+/** Throttled cleanup — runs at most once per 60 seconds */
+let lastCleanupAt = 0;
+async function maybeCleanupStaleRooms() {
+  if (Date.now() - lastCleanupAt < 60_000) return;
+  lastCleanupAt = Date.now();
+  await cleanupStaleRooms();
 }
 
 /**
@@ -84,7 +82,7 @@ router.post('/queue', protect, async (req, res) => {
     const userId = req.user._id;
 
     // Cleanup stale waiting rooms first
-    await cleanupStaleRooms();
+    await maybeCleanupStaleRooms();
 
     // Check if user is already in an active or waiting battle
     const existingBattle = await Battle.findOne({
@@ -169,7 +167,7 @@ router.post('/create', protect, async (req, res) => {
     const userId = req.user._id;
 
     // Cleanup stale waiting rooms first
-    await cleanupStaleRooms();
+    await maybeCleanupStaleRooms();
 
     // Check if user is already in an active or waiting battle
     const existingBattle = await Battle.findOne({
@@ -220,7 +218,7 @@ router.post('/join', protect, async (req, res) => {
     }
 
     // Cleanup stale rooms
-    await cleanupStaleRooms();
+    await maybeCleanupStaleRooms();
 
     // Check if user is already in an active or waiting battle
     const existingBattle = await Battle.findOne({
@@ -530,6 +528,7 @@ router.post('/submit', protect, async (req, res) => {
     const { roomCode, questionId, selectedOptionIndex, selectedOptionIndices, submittedInteger, timeTakenSeconds } = req.body;
     const userId = req.user._id;
 
+    // Step 1: Read battle state (for scoring calculations only)
     const battle = await Battle.findOne({ roomCode: roomCode.toUpperCase() });
     if (!battle || battle.status !== 'active') {
       return res.status(400).json({ error: 'Invalid battle or battle not active' });
@@ -542,10 +541,9 @@ router.post('/submit', protect, async (req, res) => {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
-    const existingAnswers = isPlayer1 ? battle.player1Answers : battle.player2Answers;
-    if (existingAnswers.some(a => a.questionId.toString() === questionId)) {
-      return res.status(400).json({ error: 'Already answered this question' });
-    }
+    const answerField = isPlayer1 ? 'player1Answers' : 'player2Answers';
+    const scoreField = isPlayer1 ? 'player1Score' : 'player2Score';
+    const lastAnswerField = isPlayer1 ? 'player1LastAnswerAt' : 'player2LastAnswerAt';
 
     const question = await BattleQuestion.findById(questionId);
     if (!question) {
@@ -633,12 +631,6 @@ router.post('/submit', protect, async (req, res) => {
       }
     }
 
-    if (isPlayer1) {
-      battle.player1LastAnswerAt = new Date();
-    } else {
-      battle.player2LastAnswerAt = new Date();
-    }
-
     const answerRecord = {
       questionId,
       selectedOptionIndex: qType === 'integer' ? -3 : (qType === 'multi' ? -2 : (selectedOptionIndex ?? -1)),
@@ -650,62 +642,78 @@ router.post('/submit', protect, async (req, res) => {
       points
     };
 
-    if (isPlayer1) {
-      battle.player1Answers.push(answerRecord);
-      battle.player1Score += points;
-    } else {
-      battle.player2Answers.push(answerRecord);
-      battle.player2Score += points;
+    // Step 2: Atomic push — the $ne guard on questionId prevents duplicate answers
+    // even under concurrent requests (double-click, network retry).
+    const updated = await Battle.findOneAndUpdate(
+      {
+        _id: battle._id,
+        status: 'active',
+        [`${answerField}.questionId`]: { $ne: question._id } // atomic duplicate guard
+      },
+      {
+        $push: { [answerField]: answerRecord },
+        $inc: { [scoreField]: points },
+        $set: { [lastAnswerField]: new Date() }
+      },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(400).json({ error: 'Already answered this question' });
     }
 
-    const totalQuestions = battle.questions.length;
-    const p1Finished = battle.player1Answers.length === totalQuestions;
-    const p2Finished = battle.player2 ? (battle.player2Answers.length === totalQuestions) : true;
+    // Step 3: Check if battle is finished and update status
+    const totalQuestions = updated.questions.length;
+    const p1Finished = updated.player1Answers.length === totalQuestions;
+    const p2Finished = updated.player2 ? (updated.player2Answers.length === totalQuestions) : true;
 
-    if (p1Finished && p2Finished) {
-      battle.status = 'finished';
-      battle.finishedAt = new Date();
-      if (battle.player2) {
-        if (battle.player1Score > battle.player2Score) {
-          battle.winner = battle.player1;
-        } else if (battle.player2Score > battle.player1Score) {
-          battle.winner = battle.player2;
+    if (p1Finished && p2Finished && updated.status !== 'finished') {
+      const finishUpdate = { status: 'finished', finishedAt: new Date() };
+      if (updated.player2) {
+        if (updated.player1Score > updated.player2Score) {
+          finishUpdate.winner = updated.player1;
+        } else if (updated.player2Score > updated.player1Score) {
+          finishUpdate.winner = updated.player2;
         }
       }
+      await Battle.updateOne({ _id: updated._id, status: 'active' }, { $set: finishUpdate });
     }
 
-    await battle.save();
+    // Step 4: Update leaderboard (best-effort — logged on failure)
+    try {
+      if (battle.isSolo) {
+        await User.findByIdAndUpdate(userId, { $inc: { soloPoints: lbPoints } });
+      } else {
+        const todayIST = getTodayIST();
+        const lbUpdate = {
+          $inc: {
+            points: lbPoints,
+            correctAnswers: lbCorrect,
+            wrongAnswers: lbWrong,
+          },
+        };
+        const currentAnswerCount = isPlayer1 ? updated.player1Answers.length : updated.player2Answers.length;
+        if (currentAnswerCount === 1) {
+          lbUpdate.$inc.gamesPlayed = 1;
+        }
 
-    if (battle.isSolo) {
-      await User.findByIdAndUpdate(userId, { $inc: { soloPoints: lbPoints } });
-    } else {
-      const todayIST = getTodayIST();
-      const lbUpdate = {
-        $inc: {
-          points: lbPoints,
-          correctAnswers: lbCorrect,
-          wrongAnswers: lbWrong,
-        },
-      };
-      const isFirstAnswer = isPlayer1 ? (battle.player1Answers.length === 1) : (battle.player2Answers.length === 1);
-      if (isFirstAnswer) {
-        lbUpdate.$inc.gamesPlayed = 1;
+        await BattleLeaderboard.findOneAndUpdate(
+          { userId, date: todayIST },
+          lbUpdate,
+          { upsert: true, new: true }
+        );
       }
-
-      await BattleLeaderboard.findOneAndUpdate(
-        { userId, date: todayIST },
-        lbUpdate,
-        { upsert: true, new: true }
-      );
+    } catch (lbError) {
+      console.error('[Battle] Leaderboard update failed (answer was saved):', lbError.message);
     }
 
     res.json({
       success: true,
       isCorrect,
       points,
-      lbPoints, // Added for clarity
-      currentScore: isPlayer1 ? battle.player1Score : battle.player2Score,
-      matchFinished: battle.status === 'finished'
+      lbPoints,
+      currentScore: isPlayer1 ? updated.player1Score : updated.player2Score,
+      matchFinished: p1Finished && p2Finished
     });
 
   } catch (error) {
@@ -715,3 +723,4 @@ router.post('/submit', protect, async (req, res) => {
 });
 
 export default router;
+

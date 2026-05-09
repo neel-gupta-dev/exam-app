@@ -114,13 +114,17 @@ export const getMe = asyncHandler(async (req, res) => {
   
   // Catch-up logic for users who onboarded but haven't received a Vault ID yet
   if (user.isOnboarded && !user.vaultId) {
-    try {
-      user.vaultId = generateVaultId(user);
-      await user.save();
-    } catch (e) {
-      // Suffix collision is rare but possible
-      user.vaultId = generateVaultId(user);
-      await user.save();
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        user.vaultId = generateVaultId(user);
+        await user.save();
+        break;
+      } catch (e) {
+        if (attempt === 2) {
+          console.error('[Auth] VaultID generation failed after 3 attempts for user:', user._id);
+          // Don't block /me — return user without vaultId rather than crashing
+        }
+      }
     }
   }
 

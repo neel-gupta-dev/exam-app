@@ -79,6 +79,12 @@ const BattleSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
+// Matchmaking & cleanup queries filter by status + creation time
+BattleSchema.index({ status: 1, createdAt: -1 });
+// Player lookup for "already in a battle" checks
+BattleSchema.index({ player1: 1, status: 1 });
+BattleSchema.index({ player2: 1, status: 1 });
+
 const Battle = mongoose.models.Battle || mongoose.model('Battle', BattleSchema);
 
 export default Battle;
