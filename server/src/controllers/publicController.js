@@ -89,9 +89,15 @@ export const storePredictorLead = asyncHandler(async (req, res) => {
   try {
     const data = req.body;
     
+    const allowedFields = ['name', 'jee_mains_rank', 'jee_advanced_rank', 'bitsat_score', 'category', 'gender', 'home_state', 'is_pwd', 'round', 'branch_preferences', 'use_market_ranking', 'college_preferences', 'results_summary', 'device_info'];
+    const safeData = {};
+    for (const field of allowedFields) {
+      if (data[field] !== undefined) safeData[field] = data[field];
+    }
+    
     // Create new lead document
     const lead = new PredictorLead({
-      ...data,
+      ...safeData,
       ip_address: req.ip || req.headers['x-forwarded-for'] || 'unknown',
     });
     
@@ -117,6 +123,25 @@ export const getUrlMetadata = asyncHandler(async (req, res) => {
     // Ensure URL has protocol
     const targetUrl = url.startsWith('http') ? url : `https://${url}`;
     
+    // SSRF Mitigation
+    try {
+      const parsedUrl = new URL(targetUrl);
+      const hostname = parsedUrl.hostname;
+      
+      const isLocalhost = hostname === 'localhost' || hostname.endsWith('.localhost');
+      const isLoopback = hostname.startsWith('127.');
+      const isPrivateA = hostname.startsWith('10.');
+      const isPrivateB = /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname);
+      const isPrivateC = hostname.startsWith('192.168.');
+      const isAWSMetadata = hostname === '169.254.169.254';
+      
+      if (isLocalhost || isLoopback || isPrivateA || isPrivateB || isPrivateC || isAWSMetadata) {
+        return res.status(403).json({ message: 'Fetching metadata from private or local addresses is strictly prohibited.' });
+      }
+    } catch (e) {
+      return res.status(400).json({ message: 'Invalid URL format' });
+    }
+
     const response = await fetch(targetUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',

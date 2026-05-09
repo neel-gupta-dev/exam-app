@@ -102,38 +102,57 @@ router.post('/queue', protect, async (req, res) => {
       return res.status(500).json({ error: 'No battle questions available in the database' });
     }
 
-    // Atomically find a waiting room and join it (prevents race conditions)
-    const matchedBattle = await Battle.findOneAndUpdate(
-      {
-        status: 'waiting',
-        player1: { $ne: userId },
-        isCustomRoom: { $ne: true } // Don't match custom/private rooms
-      },
-      {
-        $set: {
-          player2: userId,
-          status: 'active',
-          startedAt: new Date(Date.now() + 5000),
-          player1LastAnswerAt: new Date(Date.now() + 5000),
-          player2LastAnswerAt: new Date(Date.now() + 5000),
-          questions: questions.map(q => q._id)
-        }
-      },
-      { new: true }
-    );
+    // Find waiting rooms and check if player1 is online (Heartbeat < 45s)
+    const cutoff = new Date(Date.now() - 45 * 1000);
+    const waitingRooms = await Battle.find({
+      status: 'waiting',
+      player1: { $ne: userId },
+      isCustomRoom: { $ne: true }
+    }).sort({ createdAt: 1 }).limit(10).populate('player1', 'battleLastSeen');
+
+    let matchedBattle = null;
+    for (const room of waitingRooms) {
+      if (room.player1 && room.player1.battleLastSeen >= cutoff) {
+        matchedBattle = await Battle.findOneAndUpdate(
+          { _id: room._id, status: 'waiting' },
+          {
+            $set: {
+              player2: userId,
+              status: 'active',
+              startedAt: new Date(Date.now() + 5000),
+              player1LastAnswerAt: new Date(Date.now() + 5000),
+              player2LastAnswerAt: new Date(Date.now() + 5000),
+              questions: questions.map(q => q._id)
+            }
+          },
+          { new: true }
+        );
+        if (matchedBattle) break;
+      }
+    }
 
     if (matchedBattle) {
       return res.json({ roomCode: matchedBattle.roomCode, status: 'active', matched: true, isAdmin: req.user.role === 'admin' });
     }
 
-    // No waiting room found — create a new one
-    const roomCode = await uniqueRoomCode();
-    const newBattle = await Battle.create({
-      roomCode,
-      player1: userId,
-      status: 'waiting',
-      isCustomRoom: false
-    });
+    // No waiting room found — create a new one with robust collision handling
+    let newBattle = null;
+    for (let i = 0; i < 5; i++) {
+      try {
+        const roomCode = generateRoomCode();
+        newBattle = await Battle.create({
+          roomCode,
+          player1: userId,
+          status: 'waiting',
+          isCustomRoom: false
+        });
+        break;
+      } catch (err) {
+        if (err.code === 11000) continue;
+        throw err;
+      }
+    }
+    if (!newBattle) return res.status(500).json({ error: 'Failed to generate room code' });
     return res.json({ roomCode: newBattle.roomCode, status: 'waiting', matched: false, isAdmin: req.user.role === 'admin' });
   } catch (error) {
     console.error(error);
@@ -162,13 +181,23 @@ router.post('/create', protect, async (req, res) => {
       return res.json({ roomCode: existingBattle.roomCode, status: existingBattle.status, isAdmin: req.user.role === 'admin' });
     }
 
-    const roomCode = await uniqueRoomCode();
-    const newBattle = await Battle.create({
-      roomCode,
-      player1: userId,
-      status: 'waiting',
-      isCustomRoom: true // Mark as custom so random queue won't pick it up
-    });
+    let newBattle = null;
+    for (let i = 0; i < 5; i++) {
+      try {
+        const roomCode = generateRoomCode();
+        newBattle = await Battle.create({
+          roomCode,
+          player1: userId,
+          status: 'waiting',
+          isCustomRoom: true
+        });
+        break;
+      } catch (err) {
+        if (err.code === 11000) continue;
+        throw err;
+      }
+    }
+    if (!newBattle) return res.status(500).json({ error: 'Failed to create room' });
 
     return res.json({ roomCode: newBattle.roomCode, status: 'waiting', isAdmin: req.user.role === 'admin' });
   } catch (error) {
@@ -282,23 +311,32 @@ router.post('/cancel', protect, async (req, res) => {
 router.post('/solo/create', protect, async (req, res) => {
   try {
     const userId = req.user._id;
-    const roomCode = await uniqueRoomCode();
-
     // Fetch 5 random questions for Solo Rush
     const questions = await BattleQuestion.aggregate([{ $sample: { size: 5 } }]);
     if (questions.length === 0) {
       return res.status(500).json({ error: 'No battle questions available' });
     }
 
-    const battle = await Battle.create({
-      roomCode,
-      player1: userId,
-      status: 'active', // Immediately active
-      isSolo: true,
-      questions: questions.map(q => q._id),
-      startedAt: new Date(),
-      player1LastAnswerAt: new Date(),
-    });
+    let battle = null;
+    for (let i = 0; i < 5; i++) {
+      try {
+        const roomCode = generateRoomCode();
+        battle = await Battle.create({
+          roomCode,
+          player1: userId,
+          status: 'active',
+          isSolo: true,
+          questions: questions.map(q => q._id),
+          startedAt: new Date(),
+          player1LastAnswerAt: new Date(),
+        });
+        break;
+      } catch (err) {
+        if (err.code === 11000) continue;
+        throw err;
+      }
+    }
+    if (!battle) return res.status(500).json({ error: 'Failed to create room' });
 
     res.json({ roomCode: battle.roomCode, status: 'active' });
   } catch (error) {
@@ -407,6 +445,59 @@ router.get('/:roomCode', protect, async (req, res) => {
       return res.status(403).json({ error: 'Not authorized for this battle' });
     }
 
+    let stateChanged = false;
+    const totalQuestions = battle.questions.length;
+    const p1Progress = battle.player1Answers.length;
+    const p2Progress = battle.player2Answers.length;
+
+    // Auto-submit for disconnected player 1
+    if (p1Progress < totalQuestions && battle.player1LastAnswerAt) {
+      if (Date.now() - battle.player1LastAnswerAt.getTime() > 130 * 1000) {
+        battle.player1Answers.push({
+          questionId: battle.questions[p1Progress]._id,
+          selectedOptionIndex: -1,
+          selectedOptionIndices: [],
+          isCorrect: false,
+          lbPoints: 0,
+          timeTakenSeconds: 120,
+          points: 0
+        });
+        battle.player1LastAnswerAt = new Date();
+        stateChanged = true;
+      }
+    }
+
+    // Auto-submit for disconnected player 2
+    if (battle.player2 && p2Progress < totalQuestions && battle.player2LastAnswerAt) {
+      if (Date.now() - battle.player2LastAnswerAt.getTime() > 130 * 1000) {
+        battle.player2Answers.push({
+          questionId: battle.questions[p2Progress]._id,
+          selectedOptionIndex: -1,
+          selectedOptionIndices: [],
+          isCorrect: false,
+          lbPoints: 0,
+          timeTakenSeconds: 120,
+          points: 0
+        });
+        battle.player2LastAnswerAt = new Date();
+        stateChanged = true;
+      }
+    }
+
+    if (stateChanged) {
+      const p1Finished = battle.player1Answers.length === totalQuestions;
+      const p2Finished = battle.player2 ? (battle.player2Answers.length === totalQuestions) : true;
+      if (p1Finished && p2Finished && battle.status !== 'finished') {
+        battle.status = 'finished';
+        battle.finishedAt = new Date();
+        if (battle.player2) {
+          if (battle.player1Score > battle.player2Score) battle.winner = battle.player1;
+          else if (battle.player2Score > battle.player1Score) battle.winner = battle.player2;
+        }
+      }
+      await battle.save();
+    }
+
     res.json({
       roomCode: battle.roomCode,
       status: battle.status,
@@ -484,7 +575,7 @@ router.post('/submit', protect, async (req, res) => {
         isCorrect = true;
         const timeBonus = battle.isSolo ? 0 : Math.max(0, Math.floor((120 - actualTimeTaken) * (50 / 120)));
         points = 100 + timeBonus;
-      } else if (selectedOptionIndex !== -1111) {
+      } else if (selectedOptionIndex !== null && selectedOptionIndex !== undefined && selectedOptionIndex !== -1111 && selectedOptionIndex !== -1) {
         lbPoints = -1;
         lbWrong = 1;
       }
@@ -495,7 +586,7 @@ router.post('/submit', protect, async (req, res) => {
         isCorrect = true;
         const timeBonus = battle.isSolo ? 0 : Math.max(0, Math.floor((120 - actualTimeTaken) * (50 / 120)));
         points = 100 + timeBonus;
-      } else if (submittedInteger !== -1111) {
+      } else if (submittedInteger !== null && submittedInteger !== undefined && submittedInteger !== -1111) {
         lbPoints = -1;
         lbWrong = 1;
       }

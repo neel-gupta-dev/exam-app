@@ -388,7 +388,7 @@ router.post('/battle-questions', asyncHandler(async (req, res) => {
  * Update a battle question.
  */
 router.patch('/battle-questions/:id', asyncHandler(async (req, res) => {
-  const { subject, questionText, options, difficulty, explanation, imageUrl, type } = req.body;
+  const { subject, questionText, options, difficulty, explanation, imageUrl, type, correctInteger } = req.body;
   
   const question = await BattleQuestion.findById(req.params.id);
   if (!question) {
