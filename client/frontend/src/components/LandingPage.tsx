@@ -618,9 +618,11 @@ export default function LandingPage() {
             <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-on-surface">Platform</h4>
             <ul className="space-y-4 text-xs font-interface font-medium text-on-surface-variant">
               <li><Link href="/about" className="hover:text-primary transition-colors">Mission</Link></li>
+              <li><Link href="/faq" className="hover:text-primary transition-colors">FAQs & Ecosystem</Link></li>
               <li><Link href="/contact" className="hover:text-primary transition-colors">Support</Link></li>
               <li><Link href="/login" className="hover:text-primary transition-colors">Access Portal</Link></li>
               <li><a href="https://predictor.vayl.in" className="hover:text-primary transition-colors">College Predictor</a></li>
+              <li><a href="https://battle.vayl.in" className="hover:text-primary transition-colors">JEE Battle</a></li>
             </ul>
           </motion.div>
           <motion.div
