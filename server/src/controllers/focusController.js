@@ -2,6 +2,7 @@ import asyncHandler from 'express-async-handler';
 import FocusSession from '../models/FocusSession.js';
 import User from '../models/User.js';
 import mongoose from 'mongoose';
+import { logActivity } from '../utils/telemetry.js';
 
 /**
  * @desc    Start a new focus/break session
@@ -10,10 +11,11 @@ import mongoose from 'mongoose';
  */
 export const startFocus = asyncHandler(async (req, res) => {
   const { type, plannedDuration, resourceId } = req.body;
+  const parsedPlannedDuration = Number(plannedDuration);
 
-  if (!type || !plannedDuration) {
+  if (!type || !Number.isFinite(parsedPlannedDuration) || parsedPlannedDuration <= 0 || parsedPlannedDuration > 24 * 60 * 60) {
     res.status(400);
-    throw new Error('Type and planned duration are required');
+    throw new Error('Type and a planned duration between 1 second and 24 hours are required');
   }
 
   const session = await FocusSession.create({
@@ -23,13 +25,24 @@ export const startFocus = asyncHandler(async (req, res) => {
     status: 'active',
     timing: {
       startTime: new Date(),
-      plannedDuration,
+      plannedDuration: Math.round(parsedPlannedDuration),
     },
   });
 
   res.status(201).json({
     message: 'Session started',
     sessionId: session._id,
+  });
+
+  logActivity({
+    userId: req.user._id,
+    actionType: 'SESSION_STARTED',
+    resourceId: resourceId || null,
+    metadata: {
+      sessionId: session._id,
+      sessionType: type,
+      plannedDuration: session.timing.plannedDuration,
+    },
   });
 });
 
@@ -58,15 +71,29 @@ export const endFocus = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: 'Session already completed' });
   }
 
+  if (status && !['completed', 'abandoned'].includes(status)) {
+    res.status(400);
+    throw new Error('Invalid focus session status');
+  }
+
   const endTime = new Date();
   // Duration Drift Fix: Accept actualDuration from frontend but cap it at plannedDuration
-  const rawDuration = req.body.actualDuration || 0;
-  const actualDuration = Math.min(rawDuration, session.timing.plannedDuration);
+  const rawDuration = req.body.actualDuration === undefined ? 0 : Number(req.body.actualDuration);
+  if (!Number.isFinite(rawDuration) || rawDuration < 0) {
+    res.status(400);
+    throw new Error('Actual duration must be a non-negative number');
+  }
+  const actualDuration = Math.round(Math.min(rawDuration, session.timing.plannedDuration));
+  const parsedInterruptions = interruptionCount === undefined ? 0 : Number(interruptionCount);
+  if (!Number.isInteger(parsedInterruptions) || parsedInterruptions < 0 || parsedInterruptions > 1000) {
+    res.status(400);
+    throw new Error('Interruption count must be a non-negative integer');
+  }
 
   session.status = status || 'completed';
   session.timing.endTime = endTime;
   session.timing.actualDuration = actualDuration;
-  session.interruptionCount = interruptionCount || 0;
+  session.interruptionCount = parsedInterruptions;
 
   await session.save();
 
@@ -77,6 +104,19 @@ export const endFocus = asyncHandler(async (req, res) => {
     message: 'Session ended',
     actualDuration,
     xpEarned: session.type === 'focus' ? Math.round((actualDuration / 3600) * 50) : 0,
+  });
+
+  logActivity({
+    userId: req.user._id,
+    actionType: 'SESSION_ENDED',
+    resourceId: session.resourceId || null,
+    metadata: {
+      sessionId: session._id,
+      sessionType: session.type,
+      status: session.status,
+      timeSpentSeconds: actualDuration,
+      interruptionCount: session.interruptionCount,
+    },
   });
 });
 

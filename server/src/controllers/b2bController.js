@@ -14,6 +14,26 @@ function generateUsername(fullName, coachingCode, rowIndex) {
   return `${base}_${coachingCode.toLowerCase()}_${seq}`;
 }
 
+function normalizeStudentRow(student, index) {
+  const name = typeof student?.name === 'string' ? student.name.trim() : '';
+  if (!name) {
+    const error = new Error(`Student row ${index + 1} is missing a valid name.`);
+    error.statusCode = 400;
+    throw error;
+  }
+  if (name.length > 120) {
+    const error = new Error(`Student row ${index + 1} name is too long.`);
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!/[a-z0-9]/i.test(name)) {
+    const error = new Error(`Student row ${index + 1} name must contain at least one letter or number.`);
+    error.statusCode = 400;
+    throw error;
+  }
+  return { name };
+}
+
 /**
  * @desc    Create a new Tenant (Coaching Institute)
  * @route   POST /api/b2b/tenants
@@ -84,13 +104,18 @@ export const bulkCreateStudents = asyncHandler(async (req, res) => {
     throw new Error('Students array is required and must not be empty');
   }
 
-  const password = defaultPassword || 'Exam@2025';
+  const normalizedStudents = students.map(normalizeStudentRow);
+  const password = String(defaultPassword || 'Exam@2025');
+  if (password.length < 6 || password.length > 128) {
+    res.status(400);
+    throw new Error('Default password must be between 6 and 128 characters');
+  }
 
   // Check seat limit
   const currentCount = await User.countDocuments({ tenantId: tenant._id, role: 'student' });
-  if (currentCount + students.length > tenant.maxStudents) {
+  if (currentCount + normalizedStudents.length > tenant.maxStudents) {
     res.status(400);
-    throw new Error(`Seat limit exceeded. Current: ${currentCount}, Trying to add: ${students.length}, Max: ${tenant.maxStudents}`);
+    throw new Error(`Seat limit exceeded. Current: ${currentCount}, Trying to add: ${normalizedStudents.length}, Max: ${tenant.maxStudents}`);
   }
 
   // Hash password once (all students get the same default)
@@ -100,13 +125,13 @@ export const bulkCreateStudents = asyncHandler(async (req, res) => {
   const createdUsers = [];
   const credentials = [];
 
-  for (let i = 0; i < students.length; i++) {
-    const { name, phone } = students[i];
+  for (let i = 0; i < normalizedStudents.length; i++) {
+    const { name } = normalizedStudents[i];
     const username = generateUsername(name, tenant.code, currentCount + i);
 
     try {
       const user = await User.create({
-        name: name.trim(),
+        name,
         email: `${username}@b2b.internal`, // Placeholder — never used for email
         username,
         password: hashedPassword,
@@ -119,13 +144,13 @@ export const bulkCreateStudents = asyncHandler(async (req, res) => {
       });
 
       createdUsers.push(user._id);
-      credentials.push({ name: name.trim(), username, password }); // Plaintext password for CSV export
+      credentials.push({ name, username, password }); // Plaintext password for CSV export
     } catch (err) {
       // If username collision, append random suffix
       if (err.code === 11000) {
         const fallbackUsername = `${username}_${Date.now().toString(36).slice(-3)}`;
         const user = await User.create({
-          name: name.trim(),
+          name,
           email: `${fallbackUsername}@b2b.internal`,
           username: fallbackUsername,
           password: hashedPassword,
@@ -137,7 +162,7 @@ export const bulkCreateStudents = asyncHandler(async (req, res) => {
           isOnboarded: true,
         });
         createdUsers.push(user._id);
-        credentials.push({ name: name.trim(), username: fallbackUsername, password });
+        credentials.push({ name, username: fallbackUsername, password });
       } else {
         throw err;
       }

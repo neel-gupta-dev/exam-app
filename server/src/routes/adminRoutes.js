@@ -6,6 +6,19 @@ import Resource from '../models/Resource.js';
 import Feedback from '../models/Feedback.js';
 import Note from '../models/Note.js';
 import Blog from '../models/Blog.js';
+import ActivityLog from '../models/ActivityLog.js';
+import Battle from '../models/Battle.js';
+import BattleLeaderboard from '../models/BattleLeaderboard.js';
+import ChapterList from '../models/ChapterList.js';
+import Deck from '../models/Deck.js';
+import Flashcard from '../models/Flashcard.js';
+import FocusSession from '../models/FocusSession.js';
+import Follow from '../models/Follow.js';
+import Group from '../models/Group.js';
+import Notification from '../models/Notification.js';
+import TestAttempt from '../models/TestAttempt.js';
+import TestResult from '../models/TestResult.js';
+import UserCardProgress from '../models/UserCardProgress.js';
 import asyncHandler from 'express-async-handler';
 import mongoose from 'mongoose';
 import { getDashboardStats, getUserAnalytics } from '../controllers/adminController.js';
@@ -171,7 +184,7 @@ router.patch('/users/:id/role', asyncHandler(async (req, res) => {
   if (req.params.id === req.user._id.toString() && role !== 'admin') {
     res.status(400); throw new Error('You cannot demote yourself.');
   }
-  const user = await User.findByIdAndUpdate(req.params.id, { role }, { new: true }).select('-password');
+  const user = await User.findByIdAndUpdate(req.params.id, { role }, { new: true }).select('-password -googleAccessToken -googleRefreshToken');
   if (!user) { res.status(404); throw new Error('User not found'); }
   res.json({ message: `Role updated to ${role}`, user });
 }));
@@ -186,7 +199,7 @@ router.patch('/users/:id', asyncHandler(async (req, res) => {
   for (const key of allowed) {
     if (req.body[key] !== undefined) updates[key] = req.body[key];
   }
-  const user = await User.findByIdAndUpdate(req.params.id, updates, { new: true }).select('-password');
+  const user = await User.findByIdAndUpdate(req.params.id, updates, { new: true }).select('-password -googleAccessToken -googleRefreshToken');
   if (!user) { res.status(404); throw new Error('User not found'); }
   res.json(user);
 }));
@@ -206,6 +219,19 @@ router.delete('/users/:id', asyncHandler(async (req, res) => {
     Session.deleteMany({ userId: user._id }),
     Resource.deleteMany({ userId: user._id }),
     Note.deleteMany({ userId: user._id }),
+    FocusSession.deleteMany({ userId: user._id }),
+    TestResult.deleteMany({ userId: user._id }),
+    TestAttempt.deleteMany({ userId: user._id }),
+    ChapterList.deleteMany({ user: user._id }),
+    ActivityLog.deleteMany({ user: user._id }),
+    Deck.deleteMany({ userId: user._id }),
+    Flashcard.deleteMany({ userId: user._id }),
+    UserCardProgress.deleteMany({ userId: user._id }),
+    Follow.deleteMany({ $or: [{ followerId: user._id }, { followingId: user._id }] }),
+    Notification.deleteMany({ $or: [{ recipient: user._id }, { sender: user._id }] }),
+    Battle.deleteMany({ $or: [{ player1: user._id }, { player2: user._id }] }),
+    BattleLeaderboard.deleteMany({ userId: user._id }),
+    Group.updateMany({ members: user._id }, { $pull: { members: user._id } }),
     User.deleteOne({ _id: user._id }),
   ]);
 

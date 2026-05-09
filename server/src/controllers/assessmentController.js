@@ -3,6 +3,7 @@ import Test from '../models/Test.js';
 import Question from '../models/Question.js';
 import TestAttempt from '../models/TestAttempt.js';
 import { getRedis } from '../config/redis.js';
+import { assertCanAttemptTest } from '../services/attemptService.js';
 
 /**
  * Start Assessment / Resume Assessment
@@ -23,6 +24,7 @@ export const startAssessment = asyncHandler(async (req, res) => {
   if (!test) {
     return res.status(404).json({ message: 'Test not found' });
   }
+  await assertCanAttemptTest(test, req.user);
 
   // Removed the block so students can attempt the test again (retakes).
   const sessionKey = `cbt_session:${userId}:${testId}`;
@@ -81,6 +83,21 @@ export const syncAssessment = asyncHandler(async (req, res) => {
 
   const { answers, timeLeft } = req.body;
   const sessionKey = `cbt_session:${userId}:${testId}`;
+  const parsedTimeLeft = timeLeft === undefined ? null : Number(timeLeft);
+
+  if (timeLeft !== undefined && (!Number.isFinite(parsedTimeLeft) || parsedTimeLeft < 0)) {
+    return res.status(400).json({ message: 'timeLeft must be a non-negative number' });
+  }
+
+  if (answers !== undefined && (typeof answers !== 'object' || Array.isArray(answers) || answers === null)) {
+    return res.status(400).json({ message: 'answers must be an object keyed by question ID' });
+  }
+
+  const test = await Test.findById(testId);
+  if (!test) {
+    return res.status(404).json({ message: 'Test not found' });
+  }
+  await assertCanAttemptTest(test, req.user);
 
   const activeSessionRaw = await redis.hGet(sessionKey, 'data');
   if (!activeSessionRaw) {
@@ -90,8 +107,10 @@ export const syncAssessment = asyncHandler(async (req, res) => {
   const activeSession = JSON.parse(activeSessionRaw);
   
   // Merge answers
-  activeSession.timeLeft = timeLeft;
-  activeSession.answers = { ...activeSession.answers, ...answers };
+  if (parsedTimeLeft !== null) {
+    activeSession.timeLeft = Math.round(parsedTimeLeft);
+  }
+  activeSession.answers = { ...activeSession.answers, ...(answers || {}) };
 
   // Update Redis
   await redis.hSet(sessionKey, 'data', JSON.stringify(activeSession));
@@ -114,6 +133,11 @@ export const submitAssessment = asyncHandler(async (req, res) => {
   }
 
   const sessionKey = `cbt_session:${userId}:${testId}`;
+  const test = await Test.findById(testId);
+  if (!test) {
+    return res.status(404).json({ message: 'Test not found' });
+  }
+  await assertCanAttemptTest(test, req.user);
 
   const activeSessionRaw = await redis.hGet(sessionKey, 'data');
   if (!activeSessionRaw) {

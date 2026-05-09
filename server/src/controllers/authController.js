@@ -13,8 +13,8 @@ const normalizeIp = (ip) => {
 // @route   POST /api/auth/register
 // @access  Public
 export const register = asyncHandler(async (req, res) => {
-  const { name, email, password, publicIp } = req.body;
-  let ipAddress = publicIp || req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  const { name, email, password } = req.body;
+  let ipAddress = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
   ipAddress = normalizeIp(ipAddress);
 
   if (!name || !email || !password) {
@@ -30,8 +30,8 @@ export const register = asyncHandler(async (req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 export const login = asyncHandler(async (req, res) => {
-  const { email, username, password, publicIp } = req.body;
-  let ipAddress = publicIp || req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  const { email, username, password } = req.body;
+  let ipAddress = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
   ipAddress = normalizeIp(ipAddress);
 
   const identifier = email || username;

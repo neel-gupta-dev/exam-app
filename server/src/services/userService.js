@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import { generateVaultId } from '../utils/generateVaultId.js';
+import { logActivity } from '../utils/telemetry.js';
 
 /**
  * Update user academic profile
@@ -42,16 +43,28 @@ export const updateUserProfile = async ({ userId, dreamColleges, currentCoaching
 export const updateStudyConfidence = async ({ userId, rating }) => {
   const user = await User.findById(userId);
   if (!user) throw new Error('User not found');
+  const numericRating = Number(rating);
+
+  if (!Number.isFinite(numericRating) || numericRating < 1 || numericRating > 5) {
+    const error = new Error('Rating must be between 1 and 5');
+    error.statusCode = 400;
+    throw error;
+  }
 
   const oldAvg = user.analytics.studyConfidence || 0;
   const count = user.analytics.studyConfidenceCount || 0;
   
-  const newAvg = ((oldAvg * count) + rating) / (count + 1);
+  const newAvg = ((oldAvg * count) + numericRating) / (count + 1);
   
   user.analytics.studyConfidence = newAvg;
   user.analytics.studyConfidenceCount = count + 1;
   
   await user.save();
+  logActivity({
+    userId,
+    actionType: 'CONFIDENCE_RATED',
+    metadata: { score: numericRating, previousScore: oldAvg, newAverage: newAvg },
+  });
   return user;
 };
 
@@ -60,12 +73,14 @@ export const updateStudyConfidence = async ({ userId, rating }) => {
  */
 export const logSearch = async ({ userId, term }) => {
   if (!term) return null;
+  const cleanTerm = String(term).trim().slice(0, 200);
+  if (!cleanTerm) return null;
   
   const user = await User.findById(userId);
   if (!user) throw new Error('User not found');
 
   // Add to front of array
-  user.analytics.searchHistory.unshift({ term, timestamp: new Date() });
+  user.analytics.searchHistory.unshift({ term: cleanTerm, timestamp: new Date() });
   
   // Keep last 20
   if (user.analytics.searchHistory.length > 20) {
@@ -73,5 +88,10 @@ export const logSearch = async ({ userId, term }) => {
   }
 
   await user.save();
+  logActivity({
+    userId,
+    actionType: 'SEARCH_PERFORMED',
+    metadata: { term: cleanTerm },
+  });
   return user;
 };

@@ -158,10 +158,12 @@ const userSchema = new mongoose.Schema(
     googleAccessToken: {
       type: String,
       default: null,
+      select: false,
     },
     googleRefreshToken: {
       type: String,
       default: null,
+      select: false,
     },
     googleTokenExpiresAt: {
       type: Date,
@@ -211,8 +213,24 @@ const userSchema = new mongoose.Schema(
   },
   { 
     timestamps: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true }
+    toJSON: {
+      virtuals: true,
+      transform: (_doc, ret) => {
+        delete ret.password;
+        delete ret.googleAccessToken;
+        delete ret.googleRefreshToken;
+        return ret;
+      },
+    },
+    toObject: {
+      virtuals: true,
+      transform: (_doc, ret) => {
+        delete ret.password;
+        delete ret.googleAccessToken;
+        delete ret.googleRefreshToken;
+        return ret;
+      },
+    }
   }
 );
 

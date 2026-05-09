@@ -4,6 +4,49 @@ import Follow from '../models/Follow.js';
 import PredictorLead from '../models/PredictorLead.js';
 import { load } from 'cheerio';
 
+const MAX_TEXT = 500;
+const MAX_ARRAY_ITEMS = 50;
+
+const cleanString = (value, max = MAX_TEXT) => (
+  typeof value === 'string' ? value.trim().slice(0, max) : undefined
+);
+
+const cleanNumber = (value, { min = 0, max = Number.MAX_SAFE_INTEGER } = {}) => {
+  if (value === undefined || value === null || value === '') return undefined;
+  const num = Number(value);
+  return Number.isFinite(num) && num >= min && num <= max ? num : undefined;
+};
+
+const cleanBoolean = (value, defaultValue = false) => {
+  if (value === undefined || value === null || value === '') return defaultValue;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (['true', '1', 'yes'].includes(normalized)) return true;
+    if (['false', '0', 'no'].includes(normalized)) return false;
+  }
+  if (typeof value === 'number') return value === 1;
+  return defaultValue;
+};
+
+const cleanStringArray = (value, maxItems = MAX_ARRAY_ITEMS) => {
+  if (!Array.isArray(value)) return undefined;
+  return value
+    .map((item) => cleanString(item, 120))
+    .filter(Boolean)
+    .slice(0, maxItems);
+};
+
+const cleanDeviceInfo = (value) => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  return {
+    user_agent: cleanString(value.user_agent, 300),
+    screen_width: cleanNumber(value.screen_width, { min: 0, max: 100000 }),
+    language: cleanString(value.language, 50),
+    referrer: cleanString(value.referrer, 500),
+  };
+};
+
 // @desc    Get public profile by roll number (vaultId)
 // @route   GET /api/public/profile/:rollNo
 // @access  Public
@@ -88,11 +131,46 @@ export const getPublicProfile = asyncHandler(async (req, res) => {
 export const storePredictorLead = asyncHandler(async (req, res) => {
   try {
     const data = req.body;
-    
-    const allowedFields = ['name', 'jee_mains_rank', 'jee_advanced_rank', 'bitsat_score', 'category', 'gender', 'home_state', 'is_pwd', 'round', 'branch_preferences', 'use_market_ranking', 'college_preferences', 'results_summary', 'device_info'];
-    const safeData = {};
-    for (const field of allowedFields) {
-      if (data[field] !== undefined) safeData[field] = data[field];
+
+    const safeData = {
+      name: cleanString(data.name, 120),
+      jee_mains_rank: cleanNumber(data.jee_mains_rank, { min: 1, max: 2000000 }),
+      jee_advanced_rank: cleanNumber(data.jee_advanced_rank, { min: 1, max: 500000 }),
+      bitsat_score: cleanNumber(data.bitsat_score, { min: 0, max: 450 }),
+      category: cleanString(data.category, 40),
+      gender: cleanString(data.gender, 40),
+      home_state: cleanString(data.home_state, 80),
+      is_pwd: cleanBoolean(data.is_pwd, false),
+      round: cleanNumber(data.round, { min: 1, max: 20 }),
+      branch_preferences: cleanStringArray(data.branch_preferences),
+      use_market_ranking: cleanBoolean(data.use_market_ranking, true),
+      device_info: cleanDeviceInfo(data.device_info),
+    };
+
+    if (!safeData.name) {
+      return res.status(400).json({ success: false, error: 'Name is required' });
+    }
+
+    if (data.college_preferences && typeof data.college_preferences === 'object' && !Array.isArray(data.college_preferences)) {
+      safeData.college_preferences = {
+        city_life: cleanNumber(data.college_preferences.city_life, { min: 0, max: 10 }),
+        placements: cleanNumber(data.college_preferences.placements, { min: 0, max: 10 }),
+        reputation: cleanNumber(data.college_preferences.reputation, { min: 0, max: 10 }),
+        campus_life: cleanNumber(data.college_preferences.campus_life, { min: 0, max: 10 }),
+      };
+    }
+
+    if (data.results_summary && typeof data.results_summary === 'object' && !Array.isArray(data.results_summary)) {
+      safeData.results_summary = {
+        total_safe: cleanNumber(data.results_summary.total_safe, { min: 0, max: 100000 }),
+        total_moderate: cleanNumber(data.results_summary.total_moderate, { min: 0, max: 100000 }),
+        total_low: cleanNumber(data.results_summary.total_low, { min: 0, max: 100000 }),
+        total_results: cleanNumber(data.results_summary.total_results, { min: 0, max: 100000 }),
+      };
+    }
+
+    for (const key of Object.keys(safeData)) {
+      if (safeData[key] === undefined) delete safeData[key];
     }
     
     // Create new lead document

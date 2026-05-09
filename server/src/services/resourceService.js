@@ -1,5 +1,6 @@
 import Resource from '../models/Resource.js';
 import User from '../models/User.js';
+import { logActivity } from '../utils/telemetry.js';
 
 /** Escape special regex characters in user input to prevent ReDoS */
 const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -20,6 +21,13 @@ export const createResource = async ({ userId, type, url, title, folderName }) =
       [`analytics.subjectDistribution.${safeFolder}`]: folderName ? 1 : 0,
       'analytics.resourceCount': 1
     }
+  });
+
+  logActivity({
+    userId,
+    actionType: 'RESOURCE_SAVED',
+    resourceId: resource._id,
+    metadata: { type, title, folderName: folderName || 'Uncategorized' },
   });
   
   return resource;
@@ -58,6 +66,14 @@ export const getUserResources = async ({ userId, page = 1, limit = 20, folder, s
  */
 export const getResourceById = async ({ id, userId }) => {
   const resource = await Resource.findOne({ _id: id, userId });
+  if (resource) {
+    logActivity({
+      userId,
+      actionType: 'RESOURCE_VIEWED',
+      resourceId: resource._id,
+      metadata: { type: resource.type, title: resource.title, folderName: resource.folderName },
+    });
+  }
   return resource;
 };
 
@@ -78,6 +94,13 @@ export const deleteResource = async ({ id, userId }) => {
       [`analytics.subjectDistribution.${safeFolder}`]: folderName ? -1 : 0,
       'analytics.resourceCount': -1
     }
+  });
+
+  logActivity({
+    userId,
+    actionType: 'RESOURCE_DELETED',
+    resourceId: resource._id,
+    metadata: { type: resource.type, title: resource.title, folderName: resource.folderName },
   });
 
   return resource;

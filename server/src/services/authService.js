@@ -17,11 +17,14 @@ const getLocationInfo = (ip) => {
   return { city: 'Unknown', region: 'Unknown', country: 'Unknown' };
 };
 
+const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
+
 /**
  * Register a new user (requires prior email verification via OTP)
  */
 export const registerUser = async ({ name, email, password, ipAddress }) => {
-  const existingUser = await User.findOne({ email });
+  const cleanEmail = normalizeEmail(email);
+  const existingUser = await User.findOne({ email: cleanEmail });
   if (existingUser) {
     const error = new Error('User already exists');
     error.statusCode = 400;
@@ -29,7 +32,7 @@ export const registerUser = async ({ name, email, password, ipAddress }) => {
   }
 
   // Verify the email was pre-confirmed via signup OTP
-  const verifiedOtp = await OtpCode.findOne({ email, type: 'signup', isVerified: true });
+  const verifiedOtp = await OtpCode.findOne({ email: cleanEmail, type: 'signup', isVerified: true });
   if (!verifiedOtp) {
     const error = new Error('Email not verified. Please verify your email address first.');
     error.statusCode = 403;
@@ -37,11 +40,11 @@ export const registerUser = async ({ name, email, password, ipAddress }) => {
   }
 
   // Clean up the verified OTP record now that we're creating the account
-  await OtpCode.deleteMany({ email, type: 'signup' });
+  await OtpCode.deleteMany({ email: cleanEmail, type: 'signup' });
 
   const user = await User.create({ 
     name, 
-    email, 
+    email: cleanEmail,
     password,
     lastLoginDate: new Date().toISOString().split('T')[0],
     currentStreak: 1,
@@ -190,12 +193,12 @@ export const pingUser = async ({ sessionId, userId }) => {
 
 export const logoutUser = async ({ sessionId, userId }) => {
   if (!sessionId) return { success: false };
-  const session = await Session.findById(sessionId);
+  const session = await Session.findOne({ _id: sessionId, userId });
   if (!session || session.logoutAt) return { success: false };
 
   session.logoutAt = new Date();
   session.lastActiveAt = session.logoutAt;
-  const duration = Math.floor((session.logoutAt.getTime() - session.loginAt.getTime()) / 1000);
+  const duration = Math.max(0, Math.floor((session.logoutAt.getTime() - session.loginAt.getTime()) / 1000));
   
   await session.save();
 
@@ -241,8 +244,9 @@ export const closeExpiredSessions = async () => {
  * Generate and save a 6-digit OTP for student verification
  */
 export const sendOtp = async (email) => {
+  const cleanEmail = normalizeEmail(email);
   const validDomains = ['.ac.in', '.edu.in', '.edu', '.res.in'];
-  const isValidDomain = validDomains.some((domain) => email.endsWith(domain));
+  const isValidDomain = validDomains.some((domain) => cleanEmail.endsWith(domain));
 
   if (!isValidDomain) {
     const error = new Error(
@@ -253,22 +257,22 @@ export const sendOtp = async (email) => {
   }
 
   // Delete any existing OTP for this email
-  await OtpCode.deleteMany({ email });
+  await OtpCode.deleteMany({ email: cleanEmail, type: 'student_verify' });
 
   const code = Math.floor(100000 + Math.random() * 900000).toString();
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-  await OtpCode.create({ email, code, expiresAt });
+  await OtpCode.create({ email: cleanEmail, code, expiresAt, type: 'student_verify' });
 
   // Send OTP via ZeptoMail in production, log to console in development
   if (process.env.NODE_ENV === 'production') {
-    const sent = await sendOtpEmail(email, code);
+    const sent = await sendOtpEmail(cleanEmail, code);
     if (!sent) {
-      console.error(`[OTP] Failed to send OTP email to ${email}`);
+      console.error(`[OTP] Failed to send OTP email to ${cleanEmail}`);
       // Still return success — OTP is saved in DB, user can retry
     }
   } else {
-    console.log(`[DEV] OTP for ${email}: ${code}`);
+    console.log(`[DEV] OTP for ${cleanEmail}: ${code}`);
   }
 
   return { message: 'OTP sent successfully' };
@@ -278,7 +282,8 @@ export const sendOtp = async (email) => {
  * Verify OTP and mark user as verified student
  */
 export const verifyOtp = async ({ email, code }) => {
-  const otpRecord = await OtpCode.findOne({ email, code });
+  const cleanEmail = normalizeEmail(email);
+  const otpRecord = await OtpCode.findOne({ email: cleanEmail, code, type: 'student_verify' });
 
   if (!otpRecord) {
     const error = new Error('Invalid or expired OTP');
@@ -293,7 +298,7 @@ export const verifyOtp = async ({ email, code }) => {
     throw error;
   }
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email: cleanEmail });
   if (!user) {
     const error = new Error('User not found');
     error.statusCode = 404;
@@ -304,7 +309,7 @@ export const verifyOtp = async ({ email, code }) => {
   await user.save();
 
   // Clean up used OTP
-  await OtpCode.deleteMany({ email });
+  await OtpCode.deleteMany({ email: cleanEmail, type: 'student_verify' });
 
   return { message: 'Student verified successfully' };
 };
@@ -313,7 +318,7 @@ export const verifyOtp = async ({ email, code }) => {
  * Send signup verification OTP to any email address
  */
 export const sendSignupOtp = async (email) => {
-  const cleanEmail = email.trim().toLowerCase();
+  const cleanEmail = normalizeEmail(email);
 
   // Don't send if user already exists
   const existingUser = await User.findOne({ email: cleanEmail });
@@ -347,7 +352,7 @@ export const sendSignupOtp = async (email) => {
  * Verify signup OTP — marks it as verified so registerUser can proceed
  */
 export const verifySignupOtp = async ({ email, code }) => {
-  const cleanEmail = email.trim().toLowerCase();
+  const cleanEmail = normalizeEmail(email);
 
   const otpRecord = await OtpCode.findOne({ email: cleanEmail, code, type: 'signup' });
 
@@ -425,14 +430,15 @@ export const updateUserProfile = async ({ userId, name, email, bio, targetScore,
   }
 
   if (name) user.name = name;
-  if (email && email !== user.email) {
-    const existing = await User.findOne({ email });
+  const cleanEmail = email ? normalizeEmail(email) : '';
+  if (cleanEmail && cleanEmail !== user.email) {
+    const existing = await User.findOne({ email: cleanEmail });
     if (existing) {
       const error = new Error('Email already in use');
       error.statusCode = 400;
       throw error;
     }
-    user.email = email;
+    user.email = cleanEmail;
   }
   if (bio !== undefined) user.bio = bio;
   if (targetScore !== undefined) user.targetScore = targetScore;

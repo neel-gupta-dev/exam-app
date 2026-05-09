@@ -37,7 +37,7 @@ const getAuthClient = async (user) => {
  * Lists events from the user's primary calendar within a given time range.
  */
 export const listEvents = async (userId, timeMin, timeMax) => {
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).select('+googleAccessToken +googleRefreshToken');
   if (!user || !user.googleCalendarLinked) {
     throw new Error('User not connected to Google Calendar');
   }
@@ -60,7 +60,7 @@ export const listEvents = async (userId, timeMin, timeMax) => {
  * Creates a new event in the user's primary calendar.
  */
 export const createEvent = async (userId, eventData) => {
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).select('+googleAccessToken +googleRefreshToken');
   if (!user || !user.googleCalendarLinked) {
     throw new Error('User not connected to Google Calendar');
   }
@@ -96,7 +96,7 @@ export const createEvent = async (userId, eventData) => {
  * Updates an existing event in the user's primary calendar.
  */
 export const updateEvent = async (userId, eventId, eventData) => {
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).select('+googleAccessToken +googleRefreshToken');
   if (!user || !user.googleCalendarLinked) {
     throw new Error('User not connected to Google Calendar');
   }
@@ -122,7 +122,7 @@ export const updateEvent = async (userId, eventId, eventData) => {
  * Deletes an event from the user's primary calendar.
  */
 export const deleteEvent = async (userId, eventId) => {
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).select('+googleAccessToken +googleRefreshToken');
   if (!user || !user.googleCalendarLinked) {
     throw new Error('User not connected to Google Calendar');
   }

@@ -6,6 +6,7 @@ import Deck from '../models/Deck.js';
 import Flashcard from '../models/Flashcard.js';
 import UserCardProgress from '../models/UserCardProgress.js';
 import { calculateNextReview } from '../utils/srs.js';
+import { logActivity } from '../utils/telemetry.js';
 
 const router = Router();
 
@@ -78,6 +79,13 @@ router.post(
       title,
       description,
       category,
+    });
+
+    logActivity({
+      userId: req.user._id,
+      actionType: 'DECK_CREATED',
+      resourceId: deck._id,
+      metadata: { title, category },
     });
 
     res.status(201).json(deck);
@@ -173,10 +181,11 @@ router.post(
   asyncHandler(async (req, res) => {
     const { cardId, deckId, grade, isCram } = req.body;
     const userId = req.user.id;
+    const numericGrade = Number(grade);
 
-    // If Cram Mode, do not update anything in DB, just return success
-    if (isCram) {
-      return res.status(200).json({ message: "Cram review logged (no DB update)" });
+    if (!Number.isFinite(numericGrade) || numericGrade < 0 || numericGrade > 5) {
+      res.status(400);
+      throw new Error('Please provide a grade between 0 and 5');
     }
 
     // Validate ownership/existence of card
@@ -184,6 +193,22 @@ router.post(
     if (!card) {
       res.status(404);
       throw new Error('Flashcard not found or not owned by you');
+    }
+
+    if (deckId && card.deckId.toString() !== deckId.toString()) {
+      res.status(400);
+      throw new Error('deckId does not match the flashcard');
+    }
+
+    // If Cram Mode, do not update anything in DB, just return success
+    if (isCram) {
+      logActivity({
+        userId,
+        actionType: 'FLASHCARD_RATED',
+        resourceId: cardId,
+        metadata: { deckId: card.deckId, grade: numericGrade, mode: 'cram' },
+      });
+      return res.status(200).json({ message: "Cram review logged (no DB update)" });
     }
 
     // Find or create progress doc
@@ -194,7 +219,7 @@ router.post(
     const currentEaseFactor = progress ? progress.easeFactor : 2.5;
 
     const updated = calculateNextReview(
-      grade,
+      numericGrade,
       currentInterval,
       currentRepetition,
       currentEaseFactor
@@ -210,13 +235,20 @@ router.post(
       progress = await UserCardProgress.create({
         userId,
         cardId,
-        deckId,
+        deckId: card.deckId,
         interval: updated.interval,
         repetition: updated.repetition,
         easeFactor: updated.easeFactor,
         nextReviewDate: updated.nextReviewDate,
       });
     }
+
+    logActivity({
+      userId,
+      actionType: 'FLASHCARD_RATED',
+      resourceId: cardId,
+      metadata: { deckId: card.deckId, grade: numericGrade, mode: 'srs' },
+    });
 
     res.json(progress);
   })

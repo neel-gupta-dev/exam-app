@@ -2,6 +2,7 @@ import asyncHandler from 'express-async-handler';
 import UserCardProgress from '../models/UserCardProgress.js';
 import Flashcard from '../models/Flashcard.js';
 import { calculateSM2 } from '../utils/sm2.js';
+import { logActivity } from '../utils/telemetry.js';
 
 /**
  * @desc    Get all flashcards in a specific deck that are due for review
@@ -23,17 +24,19 @@ export const getDueCards = asyncHandler(async (req, res) => {
     .lean();
 
   // Map to a cleaner format for the frontend
-  const dueCards = dueProgress.map((p) => ({
-    _id: p.cardId._id,
-    frontText: p.cardId.frontText,
-    backText: p.cardId.backText,
-    progress: {
-      interval: p.interval,
-      repetition: p.repetition,
-      efactor: p.easeFactor,
-      nextReviewDate: p.nextReviewDate,
-    },
-  }));
+  const dueCards = dueProgress
+    .filter((p) => p.cardId)
+    .map((p) => ({
+      _id: p.cardId._id,
+      frontText: p.cardId.frontText,
+      backText: p.cardId.backText,
+      progress: {
+        interval: p.interval,
+        repetition: p.repetition,
+        efactor: p.easeFactor,
+        nextReviewDate: p.nextReviewDate,
+      },
+    }));
 
   res.json(dueCards);
 });
@@ -51,6 +54,17 @@ export const reviewFlashcard = asyncHandler(async (req, res) => {
   if (quality === undefined || quality < 0 || quality > 5) {
     res.status(400);
     throw new Error('Please provide a quality score between 0 and 5');
+  }
+
+  const card = await Flashcard.findOne({ _id: cardId, userId });
+  if (!card) {
+    res.status(404);
+    throw new Error('Flashcard not found or not owned by you');
+  }
+
+  if (deckId && card.deckId.toString() !== deckId.toString()) {
+    res.status(400);
+    throw new Error('deckId does not match the flashcard');
   }
 
   // 1. Fetch existing progress or initialize defaults
@@ -80,16 +94,10 @@ export const reviewFlashcard = asyncHandler(async (req, res) => {
     progress.nextReviewDate = nextReviewDate;
     await progress.save();
   } else {
-    // We need deckId to create a new progress doc
-    if (!deckId) {
-      res.status(400);
-      throw new Error('deckId is required for the first review of this card');
-    }
-
     progress = await UserCardProgress.create({
       userId,
       cardId,
-      deckId,
+      deckId: card.deckId,
       interval: updatedStats.interval,
       repetition: updatedStats.repetition,
       easeFactor: updatedStats.efactor,
@@ -98,4 +106,11 @@ export const reviewFlashcard = asyncHandler(async (req, res) => {
   }
 
   res.json(progress);
+
+  logActivity({
+    userId,
+    actionType: 'FLASHCARD_RATED',
+    resourceId: cardId,
+    metadata: { deckId: card.deckId, quality, algorithm: 'sm2' },
+  });
 });

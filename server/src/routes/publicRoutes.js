@@ -6,15 +6,34 @@ import Cutoff from '../models/Cutoff.js';
 import Shortlist from '../models/Shortlist.js';
 import UpcomingExam from '../models/UpcomingExam.js';
 import { protectAdmin } from '../middlewares/adminMiddleware.js';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
+
+const predictorLeadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: 'Too many submissions, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const shortlistLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  message: { error: 'Too many shortlist requests, please slow down' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const isValidPublicSessionId = (value) => /^[A-Za-z0-9:_-]{8,128}$/.test(String(value || ''));
 
 // ── Link Shortener Redirect ──────────────────────────────────────────────────
 router.get('/v/:slug', handleRedirect);
 
 router.get('/profile/:rollNo', getPublicProfile);
 
-router.post('/predictor-lead', storePredictorLead);
+router.post('/predictor-lead', predictorLeadLimiter, storePredictorLead);
 
 router.get('/exams', async (req, res) => {
   try {
@@ -30,6 +49,9 @@ router.get('/exams', async (req, res) => {
 // GET all shortlisted colleges for a session
 router.get('/shortlist/:sessionId', async (req, res) => {
   try {
+    if (!isValidPublicSessionId(req.params.sessionId)) {
+      return res.status(400).json({ error: 'Invalid sessionId' });
+    }
     const items = await Shortlist.find({ sessionId: String(req.params.sessionId) }).lean().sort({ createdAt: -1 });
     res.json(items);
   } catch (err) {
@@ -38,14 +60,15 @@ router.get('/shortlist/:sessionId', async (req, res) => {
 });
 
 // POST add a college to shortlist
-router.post('/shortlist', async (req, res) => {
+router.post('/shortlist', shortlistLimiter, async (req, res) => {
   try {
     const { sessionId, ...data } = req.body;
     if (!sessionId) return res.status(400).json({ error: 'sessionId required' });
+    if (!isValidPublicSessionId(sessionId)) return res.status(400).json({ error: 'Invalid sessionId' });
     const item = await Shortlist.findOneAndUpdate(
       { sessionId: String(sessionId), institute_code: String(data.institute_code), program_code: String(data.program_code) },
       { sessionId: String(sessionId), ...data },
-      { upsert: true, new: true }
+      { upsert: true, new: true, runValidators: true }
     );
     res.status(201).json(item);
   } catch (err) {
@@ -56,6 +79,9 @@ router.post('/shortlist', async (req, res) => {
 // DELETE a specific college from shortlist
 router.delete('/shortlist/:sessionId/:instituteCode/:programCode', async (req, res) => {
   try {
+    if (!isValidPublicSessionId(req.params.sessionId)) {
+      return res.status(400).json({ error: 'Invalid sessionId' });
+    }
     await Shortlist.deleteOne({
       sessionId: String(req.params.sessionId),
       institute_code: String(req.params.instituteCode),

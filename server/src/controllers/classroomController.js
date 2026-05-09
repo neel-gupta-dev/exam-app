@@ -38,7 +38,7 @@ const getOAuth2Client = async (user) => {
  * GET List of Courses
  */
 export const getCourses = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
+  const user = await User.findById(req.user._id).select('+googleAccessToken +googleRefreshToken');
   if (!user.googleAccessToken) {
     return res.status(401).json({ message: 'Google Classroom is not connected. Please connect your account first.' });
   }
@@ -67,7 +67,7 @@ export const getCourses = asyncHandler(async (req, res) => {
  */
 export const getCoursework = asyncHandler(async (req, res) => {
   const { courseId } = req.params;
-  const user = await User.findById(req.user._id);
+  const user = await User.findById(req.user._id).select('+googleAccessToken +googleRefreshToken');
   
   const auth = await getOAuth2Client(user);
   const classroom = google.classroom({ version: 'v1', auth });
@@ -93,7 +93,7 @@ export const getCoursework = asyncHandler(async (req, res) => {
  * GET All Assignments across all courses (Synced Overview)
  */
 export const getAllAssignments = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
+  const user = await User.findById(req.user._id).select('+googleAccessToken +googleRefreshToken');
   const auth = await getOAuth2Client(user);
   const classroom = google.classroom({ version: 'v1', auth });
 
@@ -135,7 +135,7 @@ export const getAllAssignments = asyncHandler(async (req, res) => {
  */
 export const getAnnouncements = asyncHandler(async (req, res) => {
   const { courseId } = req.params;
-  const user = await User.findById(req.user._id);
+  const user = await User.findById(req.user._id).select('+googleAccessToken +googleRefreshToken');
 
   if (!user || !user.googleAccessToken) {
     return res.status(401).json({ message: 'Google account not linked' });

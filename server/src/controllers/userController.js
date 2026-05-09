@@ -2,6 +2,9 @@ import asyncHandler from 'express-async-handler';
 import User from '../models/User.js';
 import * as userService from '../services/userService.js';
 
+const DEFAULT_HEARTBEAT_SECONDS = 30;
+const MAX_HEARTBEAT_SECONDS = 120;
+
 // @desc    Update user academic profile
 // @route   PATCH /api/users/profile
 // @access  Private
@@ -54,10 +57,16 @@ export const logSearch = asyncHandler(async (req, res) => {
 export const updateHeartbeat = asyncHandler(async (req, res) => {
   const { duration } = req.body; // seconds to add
   const userId = req.user._id;
+  const parsedDuration = duration === undefined ? DEFAULT_HEARTBEAT_SECONDS : Number(duration);
+
+  if (!Number.isFinite(parsedDuration) || parsedDuration <= 0 || parsedDuration > MAX_HEARTBEAT_SECONDS) {
+    res.status(400);
+    throw new Error(`Heartbeat duration must be between 1 and ${MAX_HEARTBEAT_SECONDS} seconds`);
+  }
 
   const user = await User.findByIdAndUpdate(
     userId,
-    { $inc: { totalActiveSeconds: duration || 30 } },
+    { $inc: { totalActiveSeconds: Math.round(parsedDuration) } },
     { new: true }
   ).select('totalActiveSeconds levelData');
 

@@ -1,10 +1,21 @@
 import Note from '../models/Note.js';
+import { logActivity } from '../utils/telemetry.js';
 
 /**
  * Create a new note
  */
 export const createNote = async ({ userId, resourceId, content, videoTimestamp }) => {
   const note = await Note.create({ userId, resourceId, content, videoTimestamp });
+  logActivity({
+    userId,
+    actionType: 'NOTE_CREATED',
+    resourceId,
+    metadata: {
+      noteId: note._id,
+      videoTimestamp: videoTimestamp ?? null,
+      contentLength: String(content || '').length,
+    },
+  });
   return note;
 };
 

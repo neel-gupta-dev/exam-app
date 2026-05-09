@@ -10,7 +10,7 @@ const QUESTION_CACHE_TTL = 60 * 60 * 24; // 24 hours
  * Verifies the student is eligible to see this test based on
  * visibility rules (B2C public, B2B coaching, groups).
  */
-const verifyEligibility = async (test, user) => {
+export const verifyEligibility = async (test, user) => {
   const { visibility, targetTenants, targetGroups } = test;
 
   if (visibility === 'b2c_public') return true;
@@ -29,6 +29,33 @@ const verifyEligibility = async (test, user) => {
   return false;
 };
 
+export const assertCanAttemptTest = async (test, user) => {
+  if (!test.isPublished) {
+    const err = new Error('This test is not available');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const eligible = await verifyEligibility(test, user);
+  if (!eligible) {
+    const err = new Error('You are not authorized to take this test');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const now = new Date();
+  if (test.scheduledStartAt && now < test.scheduledStartAt) {
+    const err = new Error('This test has not started yet');
+    err.statusCode = 403;
+    throw err;
+  }
+  if (test.scheduledEndAt && now > test.scheduledEndAt) {
+    const err = new Error('This test window has expired');
+    err.statusCode = 403;
+    throw err;
+  }
+};
+
 /**
  * Start or resume a test session.
  * - Validates eligibility.
@@ -45,34 +72,10 @@ export const startSession = async (testId, user) => {
     throw err;
   }
 
-  if (!test.isPublished) {
-    const err = new Error('This test is not available');
-    err.statusCode = 403;
-    throw err;
-  }
+  // 2. Eligibility and schedule window
+  await assertCanAttemptTest(test, user);
 
-  // 2. Eligibility
-  const eligible = await verifyEligibility(test, user);
-  if (!eligible) {
-    const err = new Error('You are not authorized to take this test');
-    err.statusCode = 403;
-    throw err;
-  }
-
-  // 3. Schedule window check
-  const now = new Date();
-  if (test.scheduledStartAt && now < test.scheduledStartAt) {
-    const err = new Error('This test has not started yet');
-    err.statusCode = 403;
-    throw err;
-  }
-  if (test.scheduledEndAt && now > test.scheduledEndAt) {
-    const err = new Error('This test window has expired');
-    err.statusCode = 403;
-    throw err;
-  }
-
-  // 4. Get questions — try Redis first, fallback to Mongo
+  // 3. Get questions — try Redis first, fallback to Mongo
   let questions;
   const redis = getRedis();
   const cacheKey = `test:${testId}:questions`;
@@ -102,7 +105,7 @@ export const startSession = async (testId, user) => {
     }
   }
 
-  // 5. Find or create the attempt
+  // 4. Find or create the attempt
   let attempt = await TestAttempt.findOne({
     userId: user._id,
     testId,
@@ -126,7 +129,7 @@ export const startSession = async (testId, user) => {
     });
   }
 
-  // 6. Also try to restore answer state from Redis
+  // 5. Also try to restore answer state from Redis
   let redisAnswers = null;
   if (redis) {
     try {
