@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import { Cookie, Check } from "lucide-react";
+import { CONSENT_EVENT, CONSENT_KEY } from "./AnalyticsGate";
 
 export default function CookieConsent() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    const consent = localStorage.getItem("battle_cookie_consent");
+    const consent = localStorage.getItem(CONSENT_KEY);
     if (!consent) {
       const timer = setTimeout(() => setShow(true), 2000);
       return () => clearTimeout(timer);
@@ -15,12 +16,14 @@ export default function CookieConsent() {
   }, []);
 
   const accept = () => {
-    localStorage.setItem("battle_cookie_consent", "accepted");
+    localStorage.setItem(CONSENT_KEY, "accepted");
+    window.dispatchEvent(new Event(CONSENT_EVENT));
     setShow(false);
   };
 
   const decline = () => {
-    localStorage.setItem("battle_cookie_consent", "declined");
+    localStorage.setItem(CONSENT_KEY, "declined");
+    window.dispatchEvent(new Event(CONSENT_EVENT));
     setShow(false);
   };
 

@@ -78,8 +78,30 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
   // Refs to avoid stale closures in intervals/timers
   const battleStatusRef = useRef<string | null>(null);
   const submittingRef = useRef(false);
+  const timeRemainingRef = useRef(120);
+  const previousQuestionIndexRef = useRef(0);
+  const battleStateRef = useRef<BattleState | null>(null);
+  const currentQuestionIndexRef = useRef(0);
+  const selectedOptionsRef = useRef<number[]>([]);
+  const typedAnswerRef = useRef('');
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in';
+
+  useEffect(() => {
+    battleStateRef.current = battleState;
+  }, [battleState]);
+
+  useEffect(() => {
+    currentQuestionIndexRef.current = currentQuestionIndex;
+  }, [currentQuestionIndex]);
+
+  useEffect(() => {
+    selectedOptionsRef.current = selectedOptions;
+  }, [selectedOptions]);
+
+  useEffect(() => {
+    typedAnswerRef.current = typedAnswer;
+  }, [typedAnswer]);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('kv_token');
@@ -120,9 +142,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
         setCurrentQuestionIndex(data.myProgress);
         if (data.startedAt && data.serverNow) {
           const deltaMs = new Date(data.startedAt).getTime() - data.serverNow;
-          if (deltaMs > 0 && countdownMs === 0) {
-            setCountdownMs(deltaMs);
-          }
+          setCountdownMs(prev => (deltaMs > 0 && prev === 0 ? deltaMs : prev));
         }
       }
       setLoading(false);
@@ -130,7 +150,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
       setError(err instanceof Error ? err.message : 'Failed to fetch battle state');
       setLoading(false);
     }
-  }, [apiUrl, countdownMs, roomCode, token]);
+  }, [apiUrl, roomCode, token]);
 
   useEffect(() => {
     if (!token) return;
@@ -162,23 +182,37 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
 
   const targetTimeRef = useRef<number | null>(null);
 
-  const submitAnswer = useCallback(async (manualIndices?: number[] | null, manualInteger?: number | null) => {
-    if (!token || !battleState || submittingRef.current) return;
+  useEffect(() => {
+    if (previousQuestionIndexRef.current !== currentQuestionIndex) {
+      setSelectedOptions([]);
+      setTypedAnswer('');
+      setSubmitError(null);
+      previousQuestionIndexRef.current = currentQuestionIndex;
+    }
+  }, [currentQuestionIndex]);
 
-    const currentQuestion = battleState.questions[currentQuestionIndex];
+  const submitAnswer = useCallback(async (manualIndices?: number[] | null, manualInteger?: number | null) => {
+    const currentBattleState = battleStateRef.current;
+    const questionIndex = currentQuestionIndexRef.current;
+    if (!token || !currentBattleState || submittingRef.current) return;
+
+    const currentQuestion = currentBattleState.questions[questionIndex];
+    if (!currentQuestion) return;
     const isMulti = currentQuestion.type === 'multi';
     const isInteger = currentQuestion.type === 'integer';
 
     // Special value null for skip/timeout
-    const indices = manualIndices !== undefined ? manualIndices : (isMulti ? selectedOptions : (selectedOptions.length > 0 ? [selectedOptions[0]] : null));
-    const integerVal = manualInteger !== undefined ? manualInteger : (typedAnswer !== '' ? Number(typedAnswer) : null);
+    const currentSelectedOptions = selectedOptionsRef.current;
+    const currentTypedAnswer = typedAnswerRef.current;
+    const indices = manualIndices !== undefined ? manualIndices : (isMulti ? currentSelectedOptions : (currentSelectedOptions.length > 0 ? [currentSelectedOptions[0]] : null));
+    const integerVal = manualInteger !== undefined ? manualInteger : (/^-?\d+$/.test(currentTypedAnswer) ? Number(currentTypedAnswer) : null);
 
     submittingRef.current = true;
     setSubmitting(true);
     setSubmitError(null);
 
     const questionId = currentQuestion._id;
-    const timeTaken = 120 - timeRemaining;
+    const timeTaken = 120 - timeRemainingRef.current;
 
     try {
       const res = await fetch(`${apiUrl}/battle/submit`, {
@@ -216,13 +250,15 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
       submittingRef.current = false;
       setSubmitting(false);
     }
-  }, [apiUrl, battleState, currentQuestionIndex, fetchState, roomCode, selectedOptions, timeRemaining, token, typedAnswer]);
+  }, [apiUrl, fetchState, roomCode, token]);
 
   useEffect(() => {
-    if (battleState?.status !== 'active' || currentQuestionIndex >= (battleState?.questions?.length || 0) || countdownMs > 0) return;
+    const questionCount = battleState?.questions?.length || 0;
+    if (battleState?.status !== 'active' || currentQuestionIndex >= questionCount || countdownMs > 0) return;
 
     // Set target time to 120 seconds from now
     targetTimeRef.current = Date.now() + 120000;
+    timeRemainingRef.current = 120;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setTimeRemaining(120);
 
@@ -233,6 +269,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
       const diff = targetTimeRef.current - now;
       const remaining = Math.max(0, Math.ceil(diff / 1000));
       
+      timeRemainingRef.current = remaining;
       setTimeRemaining(remaining);
 
       if (remaining <= 0) {
@@ -245,7 +282,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
     }, 250); // High frequency check for smooth UI and accurate timeout
 
     return () => clearInterval(timerInterval);
-  }, [battleState, countdownMs, currentQuestionIndex, fetchState, roomCode, submitAnswer]);
+  }, [battleState?.status, battleState?.questions?.length, countdownMs, currentQuestionIndex, submitAnswer]);
 
   const soloStart = async () => {
     if (!token) return;
@@ -493,6 +530,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
 
   // ── Active Game ──
   const currentQuestion = battleState.questions[currentQuestionIndex];
+  const isIntegerAnswerValid = /^-?\d+$/.test(typedAnswer);
 
   return (
     <div className="min-h-screen bg-[#0f1115] text-white flex flex-col items-center justify-center p-4 md:p-8 overflow-x-hidden">
@@ -599,7 +637,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
                       <button
                         key={num}
-                        onClick={() => setTypedAnswer(prev => prev + num)}
+                        onClick={() => setTypedAnswer(prev => (prev.replace('-', '').length >= 9 ? prev : prev + num))}
                         disabled={submitting}
                         className="bg-white/5 hover:bg-white/10 text-white font-bold py-4 rounded-xl text-xl transition-all active:scale-95 shadow-sm border border-white/5"
                       >
@@ -614,7 +652,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
                       +/-
                     </button>
                     <button
-                      onClick={() => setTypedAnswer(prev => prev + '0')}
+                      onClick={() => setTypedAnswer(prev => (prev.replace('-', '').length >= 9 ? prev : prev + '0'))}
                       disabled={submitting}
                       className="bg-white/5 hover:bg-white/10 text-white font-bold py-4 rounded-xl text-xl transition-all active:scale-95 shadow-sm border border-white/5"
                     >
@@ -705,9 +743,9 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
           </button>
 
           <button
-            onClick={() => (currentQuestion.type === 'integer' ? typedAnswer !== '' : selectedOptions.length > 0) && submitAnswer()}
-            disabled={(currentQuestion.type === 'integer' ? typedAnswer === '' : selectedOptions.length === 0) || submitting}
-            className={`w-full sm:w-2/3 py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all ${(currentQuestion.type === 'integer' ? typedAnswer !== '' : selectedOptions.length > 0) && !submitting
+            onClick={() => (currentQuestion.type === 'integer' ? isIntegerAnswerValid : selectedOptions.length > 0) && submitAnswer()}
+            disabled={(currentQuestion.type === 'integer' ? !isIntegerAnswerValid : selectedOptions.length === 0) || submitting}
+            className={`w-full sm:w-2/3 py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all ${(currentQuestion.type === 'integer' ? isIntegerAnswerValid : selectedOptions.length > 0) && !submitting
                 ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xl shadow-indigo-600/20 hover:scale-[1.02] active:scale-[0.98]'
                 : 'bg-white/5 text-white/20 cursor-not-allowed'
               }`}
@@ -716,7 +754,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
               <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
             ) : (
               <>
-                {(currentQuestion.type === 'integer' ? typedAnswer !== '' : selectedOptions.length > 0) ? 'Confirm Answer' : 'Input Answer'}
+                {(currentQuestion.type === 'integer' ? isIntegerAnswerValid : selectedOptions.length > 0) ? 'Confirm Answer' : 'Input Answer'}
                 <ArrowRight className="w-5 h-5" />
               </>
             )}

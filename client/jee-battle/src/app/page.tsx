@@ -7,7 +7,11 @@ import Link from 'next/link';
 /** Parse user ID from a JWT token (no verification — just decode payload) */
 function getUserIdFromToken(token: string): string | null {
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    const payloadPart = token.split('.')[1];
+    if (!payloadPart) return null;
+    const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+    const payload = JSON.parse(atob(padded));
     return payload.id || payload._id || payload.sub || null;
   } catch {
     return null;
@@ -47,6 +51,13 @@ function LobbyContent() {
   const pollRef = useRef<NodeJS.Timeout | null>(null);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in';
+
+  const clearOpponentPoll = useCallback(() => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }, []);
 
   // Decode current user ID from token
   const currentUserId = token ? getUserIdFromToken(token) : null;
@@ -144,11 +155,11 @@ function LobbyContent() {
 
       if (data.status === 'active') {
         // Opponent joined! Navigate to room
-        if (pollRef.current) clearInterval(pollRef.current);
+        clearOpponentPoll();
         router.push(`/${roomCode}`);
       } else if (data.status === 'abandoned') {
         // Room was abandoned
-        if (pollRef.current) clearInterval(pollRef.current);
+        clearOpponentPoll();
         setStatus('idle');
         setWaitingRoomCode(null);
         setError('Room expired. Try again.');
@@ -156,14 +167,14 @@ function LobbyContent() {
     } catch {
       // Ignore polling errors
     }
-  }, [token, apiUrl, router]);
+  }, [token, apiUrl, router, clearOpponentPoll]);
 
   // Cleanup polling on unmount
   useEffect(() => {
     return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
+      clearOpponentPoll();
     };
-  }, []);
+  }, [clearOpponentPoll]);
 
   const handleGoogleLogin = () => {
     window.location.href = `${apiUrl}/auth/google?origin=battle`;
@@ -198,6 +209,7 @@ function LobbyContent() {
 
   const findMatch = async () => {
     if (!token) return;
+    clearOpponentPoll();
     setStatus('searching');
     setError(null);
     try {
@@ -215,6 +227,7 @@ function LobbyContent() {
         // Created a waiting room — start polling
         setStatus('waiting');
         setWaitingRoomCode(data.roomCode);
+        pollForOpponent(data.roomCode);
         pollRef.current = setInterval(() => pollForOpponent(data.roomCode), 3000);
       }
     } catch (err: unknown) {
@@ -225,7 +238,7 @@ function LobbyContent() {
 
   const cancelSearch = async () => {
     if (!token || !waitingRoomCode) return;
-    if (pollRef.current) clearInterval(pollRef.current);
+    clearOpponentPoll();
 
     try {
       await fetch(`${apiUrl}/battle/cancel`, {
@@ -245,6 +258,7 @@ function LobbyContent() {
 
   const createRoom = async () => {
     if (!token) return;
+    clearOpponentPoll();
     setCreating(true);
     setError(null);
     try {
@@ -270,6 +284,7 @@ function LobbyContent() {
 
   const joinRoom = async () => {
     if (!token || !joinCode.trim()) return;
+    clearOpponentPoll();
     setJoining(true);
     setError(null);
     try {
