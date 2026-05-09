@@ -31,11 +31,15 @@ export const metadata: Metadata = {
     "JEE college predictor",
     "JEE Mains college predictor",
     "JEE Advanced college predictor",
+    "BITSAT college predictor",
+    "BITS Pilani predictor",
+    "BITS Goa predictor",
+    "BITS Hyderabad predictor",
+    "BITSAT marks to college",
+    "BITSAT score predictor",
     "NIT predictor",
     "IIT predictor",
     "IIIT predictor",
-    "BITS predictor",
-    "BITSAT college predictor",
     "JoSAA cutoff",
     "CSAB cutoff",
     "college predictor rank wise",
@@ -159,7 +163,7 @@ export default function RootLayout({
                     url: "https://vayl.in",
                   },
                   keywords:
-                    "JEE college predictor, NIT predictor, IIT predictor, JoSAA cutoff, JEE rank college",
+                    "JEE college predictor, BITSAT predictor, BITS Pilani predictor, NIT predictor, IIT predictor, JoSAA cutoff, JEE rank college",
                 },
                 {
                   "@type": "FAQPage",
@@ -185,7 +189,7 @@ export default function RootLayout({
                       name: "Which colleges does this predictor cover?",
                       acceptedAnswer: {
                         "@type": "Answer",
-                        text: "This predictor covers all 23 IITs, 31 NITs, 25 IIITs, 30+ GFTIs, and all BITS Pilani campuses (Pilani, Goa, Hyderabad), using real JoSAA and CSAB cutoff data.",
+                        text: "This predictor covers all 23 IITs, 31 NITs, 25 IIITs, 30+ GFTIs, and all BITS Pilani campuses (BITS Pilani, BITS Goa, BITS Hyderabad), using real JoSAA, CSAB, and BITSAT iteration cutoff data.",
                       },
                     },
                     {
