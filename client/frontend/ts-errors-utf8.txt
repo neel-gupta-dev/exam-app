@@ -1,2 +1,0 @@
-src/app/layout.tsx(212,10): error TS2559: Type '{ children: Element; }' has no properties in common with type 'IntrinsicAttributes'.
-src/hooks/useActivityTracker.ts(12,17): error TS2339: Property 'authenticated' does not exist on type 'AuthContextType'.
