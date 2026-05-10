@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { CaptchaProvider } from "../components/CaptchaProvider";
 import "./globals.css";
+import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import Clarity from "@microsoft/clarity";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -232,20 +234,37 @@ export default function RootLayout({
         <header className="w-full border-b border-navy-800/50 bg-navy-900/40 backdrop-blur-md sticky top-0 z-50">
           <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <img src="/vayl-logo.png" alt="Vayl Logo" className="w-6 h-6 object-contain" />
+              <img
+                src="/vayl-logo.png"
+                alt="Vayl Logo"
+                className="w-6 h-6 object-contain"
+              />
               <span className="font-[family-name:var(--font-heading)] font-bold text-white text-xl tracking-tight">
-                Vayl <span className="text-blue-500 font-medium">Predictor</span>
+                Vayl{" "}
+                <span className="text-blue-500 font-medium">Predictor</span>
               </span>
             </div>
           </div>
         </header>
 
-        <CaptchaProvider>
-          {children}
-        </CaptchaProvider>
-
-        <Analytics />
-        {process.env.NEXT_PUBLIC_GA_ID && <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />}
+        {process.env.NEXT_PUBLIC_GA_ID && (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+        )}
+        {process.env.NODE_ENV === "production" && (
+          <>
+            <CaptchaProvider>{children}</CaptchaProvider>
+            <Analytics />
+            <Script id="clarity-script" strategy="lazyOnload">
+              {`
+                (function(c,l,a,r,i,t,y){
+                  c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                  t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                  y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+                })(window, document, "clarity", "script", "wawvue9wgw");
+              `}
+            </Script>
+          </>
+        )}
       </body>
     </html>
   );

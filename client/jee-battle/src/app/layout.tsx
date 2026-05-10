@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
+import Clarity from "@microsoft/clarity";
 
 const SITE_URL = "https://battle.vayl.in";
 const TITLE = "JEE Battle | 1v1 Live Quiz Challenges for Aspirants";
@@ -95,13 +96,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
-  const isProd = process.env.NODE_ENV === 'production';
+  const isProd = process.env.NODE_ENV === "production";
 
   return (
-    <html
-      lang="en"
-      className="h-full antialiased"
-    >
+    <html lang="en" className="h-full antialiased">
       <head>
         <link
           href="https://api.fontshare.com/v2/css?f[]=clash-grotesk@200,300,400,500,600,700&display=swap"
@@ -116,7 +114,8 @@ export default function RootLayout({
               "@type": "WebApplication",
               name: "JEE Battle",
               url: SITE_URL,
-              description: "A real-time 1v1 quiz platform for JEE aspirants to practice Physics, Chemistry, and Maths through friendly competition.",
+              description:
+                "A real-time 1v1 quiz platform for JEE aspirants to practice Physics, Chemistry, and Maths through friendly competition.",
               applicationCategory: "Educational Game",
               operatingSystem: "Web",
               offers: {
@@ -151,6 +150,15 @@ export default function RootLayout({
               `}
             </Script>
             <Analytics />
+            <Script id="clarity-script" strategy="lazyOnload">
+              {`
+                (function(c,l,a,r,i,t,y){
+                  c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                  t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                  y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+                })(window, document, "clarity", "script", "wawvue9wgw");
+              `}
+            </Script>
           </>
         )}
         <MathProvider>
