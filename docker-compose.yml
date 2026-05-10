@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # 1. Your First Next.js Application
+  vayl-frontend:
+    # Change this to the actual folder name of your first Next.js app
+    build: ./client/frontend
+    ports:
+      - "5001:3000"
+    restart: always
+
+  # 2. Your Second Next.js Application (If you have one)
+  vayl-jee-battle:
+    # Change this to the actual folder name of your second Next.js app
+    build: ./client/jee-battle 
+    ports:
+      - "5002:3000"
+    restart: always
+
+  vayl-college-predictor:
+    # Change this to the actual folder name of your second Next.js app
+    build: ./client/college-predictor
+    ports:
+      - "5003:3000"
+    restart: always
+    
+  vayl-physics-engine:
+    # Change this to the actual folder name of your second Next.js app
+    build: ./client/physics-engine
+    ports:
+      - "5004:3000"
+    restart: always
+
+  # vayl-test-dashboard:
+  #   build: ./client/test-dashboard
+  #   ports:
+  #     - "5173:5173"
+  #   # 👇 This maps your local folder into the container so you can edit code live!
+  #   volumes:
+  #     - ./client/test-dashboard:/app
+  #     - /app/node_modules
+  #   restart: always
+
+  # 3. Your Express API Server
+  express-server:
+    # Change this to the actual folder name of your Express app
+    build: ./server
+    ports:
+      - "6000:5000"
+    restart: always
