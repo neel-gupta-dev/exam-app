@@ -5,7 +5,7 @@ This guide will help you set up and run the Vayl project on a new system.
 ## Prerequisites
 
 Before you begin, ensure you have the following installed on your system:
-- **Node.js** (v18 or higher recommended)
+- **Node.js** (v22 or higher recommended)
 - **npm** (comes with Node.js)
 - **MongoDB** (Local instance running on port 27017)
 
@@ -17,7 +17,7 @@ The project uses MongoDB as its database. Follow these steps to connect to a loc
 
 1.  **Install MongoDB:** Download and install [MongoDB Community Server](https://www.mongodb.com/try/download/community).
 2.  **Start MongoDB Service:** Ensure the MongoDB service is running. On Windows, you can check this in the "Services" app or run `mongod` in a terminal.
-3.  **Database URI:** By default, the app connects to `mongodb://localhost:27017/knowledge-vault`. You don't need to manually create the database; Mongoose will create it for you when the server starts.
+3.  **Database URI:** By default, the app connects to `mongodb://localhost:27017/vayl`. You don't need to manually create the database; Mongoose will create it for you when the server starts.
 
 ---
 
@@ -29,12 +29,12 @@ The project uses MongoDB as its database. Follow these steps to connect to a loc
     ```
 2.  **Install dependencies:**
     ```bash
-    npm install
+    npm i
     ```
 3.  **Configure Environment Variables:**
     - Create a file named `.env` in the `server` directory.
     - Copy the contents from `.env.example` into `.env`.
-    - Ensure `MONGO_URI` is set to `mongodb://localhost:27017/knowledge-vault`.
+    - Ensure `MONGO_URI` is set to `mongodb://localhost:27017/vayl`.
     - Set a `JWT_SECRET` (e.g., `JWT_SECRET=any_random_string`).
 4.  **Start the Server:**
     ```bash
@@ -52,13 +52,13 @@ The project uses MongoDB as its database. Follow these steps to connect to a loc
     ```
 2.  **Install dependencies:**
     ```bash
-    npm install
+    npm i
     ```
 3.  **Configure Environment Variables:**
     - Ensure `.env.local` exists (or create it).
     - It should contain:
       ```env
-      NEXT_PUBLIC_API_URL=http://localhost:5000/api
+      NEXT_PUBLIC_API_URL=http://localhost:5000
       ```
 4.  **Start the Frontend:**
     ```bash
@@ -71,5 +71,9 @@ The project uses MongoDB as its database. Follow these steps to connect to a loc
 ## Project Structure
 
 - `/server`: Node.js/Express backend.
+- `/design`: Contains Frontend Designs of the Apps.
 - `/client/frontend`: Next.js frontend application.
+- `/client/jee-battle`: Next.js JEE Battle frontend application.
+- `/client/test-dashboard`: Next.js Tests Dashboard for JEE Studs.
+- `/client/physics-engine`: Next.js Physics Engine for JEE Studs.
 - `/shared`: Shared types or utilities (if any).

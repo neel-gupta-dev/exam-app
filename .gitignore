@@ -17,5 +17,8 @@ client/admin/.env.local
 client/test-dashboard/.env
 client/test-dashboard/.env.local
 
+.env*
+!.env.example
+
 # client/test-dashboard/node_modules
 
