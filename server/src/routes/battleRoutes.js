@@ -864,5 +864,49 @@ router.post('/submit', protect, async (req, res) => {
   }
 });
 
+/**
+ * POST /battle/tab-switch
+ * Anti-cheat: Record when a user switches tabs or minimizes the window.
+ */
+router.post('/tab-switch', protect, async (req, res) => {
+  try {
+    const { roomCode, durationMs } = req.body;
+    const userId = req.user._id;
+
+    if (!roomCode) return res.status(400).json({ error: 'Room code required' });
+
+    const battle = await Battle.findOne({ roomCode: roomCode.toUpperCase(), status: 'active' });
+    if (!battle) return res.status(404).json({ error: 'Active battle not found' });
+
+    const isPlayer1 = battle.player1.toString() === userId.toString();
+    const isPlayer2 = battle.player2 && battle.player2.toString() === userId.toString();
+
+    if (!isPlayer1 && !isPlayer2) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const switchField = isPlayer1 ? 'player1TabSwitches' : 'player2TabSwitches';
+    const awayField = isPlayer1 ? 'player1TabAwaySeconds' : 'player2TabAwaySeconds';
+    
+    // Add seconds (cap at 0 if negative, though shouldn't happen)
+    const awaySeconds = Math.max(0, Math.floor((durationMs || 0) / 1000));
+
+    await Battle.updateOne(
+      { _id: battle._id },
+      { 
+        $inc: { 
+          [switchField]: 1,
+          [awayField]: awaySeconds
+        } 
+      }
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[Battle] Failed to record tab switch:', error);
+    res.status(500).json({ error: 'Failed to record tab switch' });
+  }
+});
+
 export default router;
 

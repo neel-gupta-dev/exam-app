@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { MathJax } from 'better-react-mathjax';
 import { Timer, ArrowRight, CheckCircle2, Zap, Delete } from 'lucide-react';
+import { toast } from 'sonner';
 
 type BattleQuestionType = 'single' | 'multi' | 'integer';
 
@@ -84,6 +85,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
   const currentQuestionIndexRef = useRef(0);
   const selectedOptionsRef = useRef<number[]>([]);
   const typedAnswerRef = useRef('');
+  const tabLeaveTimeRef = useRef<number | null>(null);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in';
 
@@ -181,6 +183,59 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
   }, [countdownMs]);
 
   const targetTimeRef = useRef<number | null>(null);
+
+  // Auto-fullscreen when battle becomes active
+  useEffect(() => {
+    if (battleState?.status === 'active') {
+      try {
+        if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {
+            // Browsers often block fullscreen without a direct user gesture.
+            // We catch and ignore the error silently to prevent console spam.
+          });
+        }
+      } catch (e) {
+        // Ignore synchronous errors
+      }
+    }
+  }, [battleState?.status]);
+
+  // Anti-Cheat: Track tab switches
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (battleStatusRef.current !== 'active') return;
+
+      if (document.hidden) {
+        // User left the tab
+        tabLeaveTimeRef.current = Date.now();
+        toast.error("⚠️ Tab switch detected! Time away is being recorded.", { duration: 5000 });
+      } else {
+        // User returned to the tab
+        if (tabLeaveTimeRef.current) {
+          const durationMs = Date.now() - tabLeaveTimeRef.current;
+          tabLeaveTimeRef.current = null;
+          
+          if (token) {
+            // Send violation report to the backend using fetch (keepalive ensures it sends even if unmounting soon)
+            fetch(`${apiUrl}/battle/tab-switch`, {
+              method: 'POST',
+              headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ roomCode, durationMs }),
+              keepalive: true
+            }).catch(console.error);
+          }
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [apiUrl, roomCode, token]);
 
   useEffect(() => {
     if (previousQuestionIndexRef.current !== currentQuestionIndex) {

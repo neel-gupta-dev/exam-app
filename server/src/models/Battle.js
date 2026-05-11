@@ -53,6 +53,22 @@ const BattleSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  player1TabSwitches: {
+    type: Number,
+    default: 0,
+  },
+  player2TabSwitches: {
+    type: Number,
+    default: 0,
+  },
+  player1TabAwaySeconds: {
+    type: Number,
+    default: 0,
+  },
+  player2TabAwaySeconds: {
+    type: Number,
+    default: 0,
+  },
   isCustomRoom: {
     type: Boolean,
     default: false,

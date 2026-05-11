@@ -89,6 +89,7 @@ export const metadata: Metadata = {
 
 import MathProvider from "@/components/MathProvider";
 import CookieConsent from "@/components/CookieConsent";
+import { Toaster } from "sonner";
 
 export default function RootLayout({
   children,
@@ -164,6 +165,7 @@ export default function RootLayout({
         <MathProvider>
           {children}
           <CookieConsent />
+          <Toaster theme="dark" position="top-center" />
         </MathProvider>
       </body>
     </html>
