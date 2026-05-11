@@ -31,6 +31,7 @@ function LobbyContent() {
   const [waitingRoomCode, setWaitingRoomCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [showSoloPrompt, setShowSoloPrompt] = useState(false);
 
   // Leaderboard state
   type LeaderboardEntry = {
@@ -107,6 +108,17 @@ function LobbyContent() {
     return () => clearInterval(interval);
   }, []);
 
+  // Show Solo Rush prompt after 4 seconds of waiting/searching
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (status === 'waiting' || status === 'searching') {
+      timer = setTimeout(() => setShowSoloPrompt(true), 4000);
+    } else {
+      setShowSoloPrompt(false);
+    }
+    return () => clearTimeout(timer);
+  }, [status]);
+
   useEffect(() => {
     const urlToken = searchParams.get('token');
     if (urlToken) {
@@ -180,14 +192,7 @@ function LobbyContent() {
     window.location.href = `${apiUrl}/auth/google?origin=battle`;
   };
 
-  const handleSoloRush = async () => {
-    if (!token || creating) return;
-
-    const confirmed = window.confirm(
-      "Solo Rush is for practice only. Points earned in this mode will be added to your Solo XP and will NOT count toward the Daily Competitive Leaderboard. Continue?"
-    );
-    if (!confirmed) return;
-
+  const executeSoloRush = async () => {
     setCreating(true);
     setError(null);
 
@@ -202,9 +207,47 @@ function LobbyContent() {
       router.push(`/${data.roomCode}`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to create solo room');
-    } finally {
       setCreating(false);
     }
+  };
+
+  const handleSoloRush = async () => {
+    if (!token || creating) return;
+
+    const confirmed = window.confirm(
+      "Solo Rush is for practice only. Points earned in this mode will be added to your Solo XP and will NOT count toward the Daily Competitive Leaderboard. Continue?"
+    );
+    if (!confirmed) return;
+
+    executeSoloRush();
+  };
+
+  const onSoloPromptClick = async () => {
+    if (!token || creating) return;
+    
+    const confirmed = window.confirm(
+      "Solo Rush is for practice only. Points earned in this mode will be added to your Solo XP and will NOT count toward the Daily Competitive Leaderboard. Continue?"
+    );
+    if (!confirmed) return;
+
+    if (status === 'waiting') {
+      // Cancel the current search without triggering state resets that break flow
+      try {
+        await fetch(`${apiUrl}/battle/cancel`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ roomCode: waitingRoomCode })
+        });
+      } catch {
+        // Best effort
+      }
+    }
+    
+    clearOpponentPoll();
+    executeSoloRush();
   };
 
   const findMatch = async () => {
@@ -403,9 +446,25 @@ function LobbyContent() {
               </button>
             </div>
 
+            {showSoloPrompt && (
+              <div className="bg-amber-500/10 rounded-xl p-5 border border-amber-500/20 space-y-3 mt-4 text-left animate-in fade-in zoom-in duration-300">
+                <p className="text-sm font-semibold text-amber-400">Can't find an opponent?</p>
+                <p className="text-xs text-amber-400/80 mb-2">You can practice instantly by playing a Solo Rush instead.</p>
+                <button
+                  onClick={onSoloPromptClick}
+                  disabled={creating}
+                  className="w-full py-3 rounded-xl font-bold text-sm transition-all duration-300 disabled:opacity-50
+                    bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 
+                    text-black shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:shadow-[0_0_25px_rgba(245,158,11,0.4)] active:scale-[0.98]"
+                >
+                  {creating ? 'Creating...' : '⚡ Play Solo Rush'}
+                </button>
+              </div>
+            )}
+
             <button
               onClick={cancelSearch}
-              className="text-red-400/60 hover:text-red-400 text-sm transition-colors font-medium"
+              className="text-red-400/60 hover:text-red-400 text-sm transition-colors font-medium mt-4 inline-block"
             >
               ✕ Cancel Search
             </button>

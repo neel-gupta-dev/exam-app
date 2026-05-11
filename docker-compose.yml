@@ -46,5 +46,5 @@ services:
     # Change this to the actual folder name of your Express app
     build: ./server
     ports:
-      - "6000:5000"
+      - "5000:5000"
     restart: always
