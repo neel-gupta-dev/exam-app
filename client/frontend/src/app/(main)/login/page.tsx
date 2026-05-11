@@ -66,11 +66,28 @@ function LoginContent() {
 
   /**
    * OAuth Token Interceptor
-   * When Google auth redirects back to this page, it appends a `?token=XYZ` query.
-   * We intercept this, save the token, and finish the login sequence via AuthContext.
+   * When Google auth redirects back, it appends a #token=XYZ hash fragment
+   * (secure — hash fragments are never sent to the server, preventing token
+   * leakage in CDN/proxy logs). Falls back to ?token= for backward compatibility.
    */
   useEffect(() => {
-    const token = searchParams.get('token');
+    // Try hash fragment first (new secure method)
+    let token: string | null = null;
+
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      token = hashParams.get('token');
+      // Clean hash from URL immediately
+      if (token) {
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+
+    // Fall back to query params (backward compatibility)
+    if (!token) {
+      token = searchParams.get('token');
+    }
+
     if (token) {
       setGoogleLoading(true);
       

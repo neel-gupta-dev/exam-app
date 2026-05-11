@@ -147,7 +147,19 @@ function LobbyContent() {
   }, [token, apiUrl, clearOpponentPoll, router]);
 
   useEffect(() => {
-    const urlToken = searchParams.get('token');
+    // Read token from hash fragment first (secure — never sent to server),
+    // then fall back to query params (backward compatibility).
+    let urlToken: string | null = null;
+
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      urlToken = hashParams.get('token');
+    }
+
+    if (!urlToken) {
+      urlToken = searchParams.get('token');
+    }
+
     if (urlToken) {
       localStorage.setItem('kv_token', urlToken);
       // Clean token from URL immediately to prevent leaking via history/referrer

@@ -61,12 +61,15 @@ router.get('/google/callback',
     // Clear the cookie immediately — single use
     res.clearCookie('oauth_origin');
 
+    // SECURITY: Use hash fragments (#token=) instead of query params (?token=).
+    // Hash fragments are never sent to the server in HTTP requests, so they
+    // won't appear in CDN/proxy access logs, Referer headers, or server logs.
     if (origin === 'battle') {
-      return res.redirect(`${BATTLE_FRONTEND_URL}/?token=${token}`);
+      return res.redirect(`${BATTLE_FRONTEND_URL}/#token=${token}`);
     }
 
     // Default: redirect to main frontend
-    res.redirect(`${FRONTEND_URL}/login?token=${token}`);
+    res.redirect(`${FRONTEND_URL}/login#token=${token}`);
   }
 );
 

@@ -199,14 +199,21 @@ export const logoutUser = async ({ sessionId, userId }) => {
   session.logoutAt = new Date();
   session.lastActiveAt = session.logoutAt;
   const duration = Math.max(0, Math.floor((session.logoutAt.getTime() - session.loginAt.getTime()) / 1000));
-  
+
+  // Save session first (marks it as logged out)
   await session.save();
 
+  // Credit the duration to the user
   const user = await User.findById(userId);
   if (user) {
     user.totalActiveSeconds += duration;
     await user.save();
   }
+
+  // Mark the session as credited — if this fails, the janitor will recover it
+  session.durationCredited = true;
+  await session.save();
+
   return { success: true };
 };
 
@@ -216,7 +223,8 @@ export const logoutUser = async ({ sessionId, userId }) => {
 export const closeExpiredSessions = async () => {
   try {
     const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000);
-    
+
+    // 1. Close sessions that are still open but inactive for >15 minutes
     const expiredSessions = await Session.find({
       logoutAt: null,
       lastActiveAt: { $lt: fifteenMinsAgo },
@@ -225,16 +233,44 @@ export const closeExpiredSessions = async () => {
     for (const session of expiredSessions) {
       session.logoutAt = session.lastActiveAt;
       const duration = Math.floor((session.logoutAt.getTime() - session.loginAt.getTime()) / 1000);
-      session.activeDuration = duration > 0 ? duration : 0;
+      const safeDuration = duration > 0 ? duration : 0;
       await session.save();
 
       const user = await User.findById(session.userId);
       if (user) {
-        user.totalActiveSeconds += session.activeDuration;
+        user.totalActiveSeconds += safeDuration;
         await user.save();
       }
+      session.durationCredited = true;
+      await session.save();
     }
-    console.log(`[Janitor] Closed ${expiredSessions.length} expired sessions.`);
+
+    // 2. Recover orphaned sessions: logoutAt was set (by logoutUser) but
+    //    the user.totalActiveSeconds update failed before durationCredited
+    //    could be set to true. Without this, those durations are lost forever.
+    const orphanedSessions = await Session.find({
+      logoutAt: { $ne: null },
+      durationCredited: { $ne: true },
+      // Only process sessions older than 2 minutes to avoid racing with
+      // a logoutUser call that's still in progress.
+      updatedAt: { $lt: new Date(Date.now() - 2 * 60 * 1000) },
+    });
+
+    for (const session of orphanedSessions) {
+      const duration = Math.max(0, Math.floor((session.logoutAt.getTime() - session.loginAt.getTime()) / 1000));
+      const user = await User.findById(session.userId);
+      if (user) {
+        user.totalActiveSeconds += duration;
+        await user.save();
+      }
+      session.durationCredited = true;
+      await session.save();
+    }
+
+    const totalProcessed = expiredSessions.length + orphanedSessions.length;
+    if (totalProcessed > 0) {
+      console.log(`[Janitor] Closed ${expiredSessions.length} expired, recovered ${orphanedSessions.length} orphaned sessions.`);
+    }
   } catch (error) {
     console.error("[Janitor] Error closing expired sessions:", error);
   }
@@ -392,11 +428,18 @@ export const onboardUser = async ({ userId, targetExam, targetYear }) => {
   
   // Generate Vault ID if it doesn't exist yet
   if (!user.vaultId) {
-    try {
-      user.vaultId = generateVaultId(user);
-    } catch (e) {
-      // Suffix collision is rare but possible
-      user.vaultId = generateVaultId(user);
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        user.vaultId = generateVaultId(user);
+        break;
+      } catch (e) {
+        // Suffix collision — retry with a new random suffix.
+        // generateVaultId uses Math.random() so each call produces
+        // a different suffix. Only fail after 5 attempts.
+        if (attempt === 4) {
+          console.error('[Auth] VaultID generation failed after 5 attempts for user:', user._id);
+        }
+      }
     }
   }
 
@@ -473,6 +516,7 @@ export const updateUserPassword = async ({ userId, oldPassword, newPassword }) =
   }
 
   user.password = newPassword;
+  user.hasChangedPassword = true;
   await user.save();
   return { message: 'Password updated successfully' };
 };
