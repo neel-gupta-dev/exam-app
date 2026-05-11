@@ -21,6 +21,9 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
  */
 export const metadata: Metadata = {
   metadataBase: new URL("https://vayl.in"),
+  alternates: {
+    canonical: '/',
+  },
   title: "Vayl | The Silent Architect of Academic Success",
   description:
     "Vayl is the standard operating system for elite academic preparation. A high-fidelity productivity suite for aspirants (UPSC, NEET, JEE, CAT, GATE) to manage high-yield resources, master concepts in a Deep Focus Room, and track progress via the Mistake Vault for structural revision.",

@@ -82,7 +82,7 @@ export const metadata: Metadata = {
 
   // ── Other ─────────────────────────────────────────────
   alternates: {
-    canonical: SITE_URL,
+    canonical: '/',
   },
   category: "education",
 };
