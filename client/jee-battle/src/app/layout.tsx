@@ -1,8 +1,46 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
+import localFont from "next/font/local";
 import "./globals.css";
 import Clarity from "@microsoft/clarity";
+
+const clashGrotesk = localFont({
+  src: [
+    {
+      path: "../../public/fonts/ClashGrotesk-Extralight.woff2",
+      weight: "200",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/ClashGrotesk-Light.woff2",
+      weight: "300",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/ClashGrotesk-Regular.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/ClashGrotesk-Medium.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/ClashGrotesk-Semibold.woff2",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/ClashGrotesk-Bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-clash-grotesk",
+  display: "swap",
+});
 
 const SITE_URL = "https://battle.vayl.in";
 const TITLE = "JEE Battle | 1v1 Live Quiz Challenges for Aspirants";
@@ -102,10 +140,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <head>
-        <link
-          href="https://api.fontshare.com/v2/css?f[]=clash-grotesk@200,300,400,500,600,700&display=swap"
-          rel="stylesheet"
-        />
+        {/* Render-blocking CSS removed */}
         {/* Structured Data — WebApplication */}
         <script
           type="application/ld+json"
@@ -133,7 +168,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-[#0f1115] text-white font-['Clash_Grotesk',sans-serif]">
+      <body className={`min-h-full flex flex-col bg-[#0f1115] text-white font-sans ${clashGrotesk.variable}`}>
         {isProd && GA_ID && (
           <>
             <Script
