@@ -5,6 +5,7 @@ import BattleQuestion from '../models/BattleQuestion.js';
 import BattleLeaderboard from '../models/BattleLeaderboard.js';
 import User from '../models/User.js';
 import { getRandomBotName, computeBotAnswers } from '../services/botEngine.js';
+import { getRedis } from '../config/redis.js';
 
 /** Get today's date string in IST ("YYYY-MM-DD") */
 function getTodayIST() {
@@ -39,11 +40,24 @@ async function cleanupStaleRooms() {
   );
 }
 
-/** Throttled cleanup — runs at most once per 60 seconds */
+/** Throttled cleanup — runs at most once per 60 seconds (globally via Redis lock) */
 let lastCleanupAt = 0;
 async function maybeCleanupStaleRooms() {
-  if (Date.now() - lastCleanupAt < 60_000) return;
-  lastCleanupAt = Date.now();
+  const redis = getRedis();
+  if (redis) {
+    try {
+      const locked = await redis.set('battle_cleanup_lock', '1', { NX: true, EX: 60 });
+      if (!locked) return; // Another instance is handling cleanup
+    } catch (e) {
+      if (Date.now() - lastCleanupAt < 60_000) return;
+      lastCleanupAt = Date.now();
+    }
+  } else {
+    // Fallback if Redis is unavailable
+    if (Date.now() - lastCleanupAt < 60_000) return;
+    lastCleanupAt = Date.now();
+  }
+  
   await cleanupStaleRooms();
 }
 
@@ -530,7 +544,18 @@ router.get('/:roomCode', protect, async (req, res) => {
     // Pre-computed bot answers are revealed based on elapsed time.
     if (battle.isBot && battle.botAnswers && battle.startedAt && battle.status === 'active') {
       const elapsed = Date.now() - battle.startedAt.getTime();
-      const shouldHaveAnswered = battle.botTimestamps.filter(t => t <= elapsed).length;
+      let shouldHaveAnswered = battle.botTimestamps.filter(t => t <= elapsed).length;
+
+      // Bug #10 Fix: Fast-forward bot if human has finished, to avoid long waits
+      const humanProgress = battle.player1Answers.length;
+      if (humanProgress === totalQuestions && battle.player1LastAnswerAt) {
+        const timeSinceHumanFinished = Date.now() - battle.player1LastAnswerAt.getTime();
+        // Give the bot a realistic 5 second grace period before instantly finishing
+        if (timeSinceHumanFinished > 5000) {
+          shouldHaveAnswered = battle.botAnswers.length;
+        }
+      }
+
       const currentlyAnswered = battle.player2Answers.length;
 
       if (shouldHaveAnswered > currentlyAnswered) {

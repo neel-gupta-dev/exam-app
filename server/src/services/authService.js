@@ -120,7 +120,7 @@ export const loginUser = async ({ email, username, password, ipAddress }) => {
   }
 
   // Session & Streak Logic
-  const todayDateStr = new Date().toISOString().split('T')[0];
+  const todayDateStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
   if (user.lastLoginDate) {
     const today = new Date(todayDateStr);
     const lastLogin = new Date(user.lastLoginDate);
