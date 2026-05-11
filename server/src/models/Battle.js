@@ -61,6 +61,30 @@ const BattleSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  /**
+   * Bot opponent fields.
+   * When isBot is true, player2 is null and the bot's answers are
+   * pre-computed at creation time. The GET polling route lazily reveals
+   * them into player2Answers based on elapsed time vs botTimestamps.
+   */
+  isBot: {
+    type: Boolean,
+    default: false,
+  },
+  botName: {
+    type: String,
+  },
+  botAnswers: [{
+    questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'BattleQuestion' },
+    selectedOptionIndex: Number,
+    selectedOptionIndices: [Number],
+    submittedInteger: Number,
+    isCorrect: Boolean,
+    lbPoints: Number,
+    timeTakenSeconds: Number,
+    points: Number,
+  }],
+  botTimestamps: [Number], // Cumulative ms offsets from startedAt
   winner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

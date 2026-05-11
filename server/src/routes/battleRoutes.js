@@ -4,6 +4,7 @@ import Battle from '../models/Battle.js';
 import BattleQuestion from '../models/BattleQuestion.js';
 import BattleLeaderboard from '../models/BattleLeaderboard.js';
 import User from '../models/User.js';
+import { getRandomBotName, computeBotAnswers } from '../services/botEngine.js';
 
 /** Get today's date string in IST ("YYYY-MM-DD") */
 function getTodayIST() {
@@ -422,6 +423,81 @@ router.get('/leaderboard', async (req, res) => {
 });
 
 /**
+ * POST /battle/bot/assign
+ * Convert a waiting room into a bot match. Called automatically by the
+ * client after 6 seconds of matchmaking with no opponent.
+ */
+router.post('/bot/assign', protect, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { roomCode } = req.body;
+
+    if (!roomCode) {
+      return res.status(400).json({ error: 'Room code required' });
+    }
+
+    // Check if the room is still waiting and belongs to this user
+    const battle = await Battle.findOne({
+      roomCode: roomCode.toUpperCase(),
+      player1: userId,
+      status: 'waiting',
+    });
+
+    if (!battle) {
+      // Room might have been matched with a real player already — check
+      const activeBattle = await Battle.findOne({
+        roomCode: roomCode.toUpperCase(),
+        $or: [{ player1: userId }, { player2: userId }],
+        status: 'active',
+      });
+      if (activeBattle) {
+        return res.json({ roomCode: activeBattle.roomCode, status: 'active', alreadyMatched: true });
+      }
+      return res.status(404).json({ error: 'Waiting room not found' });
+    }
+
+    // Fetch questions
+    const questions = await BattleQuestion.aggregate([{ $sample: { size: 10 } }]);
+    if (questions.length === 0) {
+      return res.status(500).json({ error: 'No battle questions available' });
+    }
+
+    // Pre-compute bot answers
+    const { botAnswers, botTimestamps } = computeBotAnswers(questions);
+    const botName = getRandomBotName();
+    const startAt = new Date(Date.now() + 5000);
+
+    // Atomically convert to bot match
+    const updated = await Battle.findOneAndUpdate(
+      { _id: battle._id, status: 'waiting' },
+      {
+        $set: {
+          status: 'active',
+          isBot: true,
+          botName,
+          botAnswers,
+          botTimestamps,
+          questions: questions.map(q => q._id),
+          startedAt: startAt,
+          player1LastAnswerAt: startAt,
+          player2LastAnswerAt: startAt,
+        },
+      },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(409).json({ error: 'Room was matched before bot could be assigned' });
+    }
+
+    return res.json({ roomCode: updated.roomCode, status: 'active' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to assign bot' });
+  }
+});
+
+/**
  * GET /battle/:roomCode
  * Polling route — fetch current match state by room code.
  */
@@ -439,12 +515,34 @@ router.get('/:roomCode', protect, async (req, res) => {
     const isPlayer1 = battle.player1 && battle.player1._id.toString() === req.user._id.toString();
     const isPlayer2 = battle.player2 && battle.player2._id.toString() === req.user._id.toString();
 
-    if (!isPlayer1 && !isPlayer2) {
+    // For bot matches, only player1 (the human) is a real user
+    if (!isPlayer1 && !isPlayer2 && !battle.isBot) {
+      return res.status(403).json({ error: 'Not authorized for this battle' });
+    }
+    if (battle.isBot && !isPlayer1) {
       return res.status(403).json({ error: 'Not authorized for this battle' });
     }
 
     let stateChanged = false;
     const totalQuestions = battle.questions.length;
+
+    // ── Lazy bot answer reveal ──
+    // Pre-computed bot answers are revealed based on elapsed time.
+    if (battle.isBot && battle.botAnswers && battle.startedAt && battle.status === 'active') {
+      const elapsed = Date.now() - battle.startedAt.getTime();
+      const shouldHaveAnswered = battle.botTimestamps.filter(t => t <= elapsed).length;
+      const currentlyAnswered = battle.player2Answers.length;
+
+      if (shouldHaveAnswered > currentlyAnswered) {
+        for (let i = currentlyAnswered; i < shouldHaveAnswered && i < battle.botAnswers.length; i++) {
+          battle.player2Answers.push(battle.botAnswers[i]);
+          battle.player2Score += (battle.botAnswers[i].points || 0);
+        }
+        battle.player2LastAnswerAt = new Date();
+        stateChanged = true;
+      }
+    }
+
     const p1Progress = battle.player1Answers.length;
     const p2Progress = battle.player2Answers.length;
 
@@ -484,11 +582,17 @@ router.get('/:roomCode', protect, async (req, res) => {
 
     if (stateChanged) {
       const p1Finished = battle.player1Answers.length === totalQuestions;
-      const p2Finished = battle.player2 ? (battle.player2Answers.length === totalQuestions) : true;
+      const p2Finished = (battle.isBot || battle.player2)
+        ? (battle.player2Answers.length === totalQuestions)
+        : true;
       if (p1Finished && p2Finished && battle.status !== 'finished') {
         battle.status = 'finished';
         battle.finishedAt = new Date();
-        if (battle.player2) {
+        // Determine winner (for bot matches, winner is always player1 or null — no player2 ObjectId)
+        if (battle.isBot) {
+          if (battle.player1Score > battle.player2Score) battle.winner = battle.player1;
+          // Bot wins: no winner set (winner field expects a User ObjectId)
+        } else if (battle.player2) {
           if (battle.player1Score > battle.player2Score) battle.winner = battle.player1;
           else if (battle.player2Score > battle.player1Score) battle.winner = battle.player2;
         }
@@ -496,12 +600,18 @@ router.get('/:roomCode', protect, async (req, res) => {
       await battle.save();
     }
 
+    // For bot matches, return a synthetic player2 so the frontend displays
+    // a name. The human never knows the opponent is a bot.
+    const player2Data = battle.isBot
+      ? { _id: 'bot', name: battle.botName || 'Opponent', avatar: null }
+      : battle.player2;
+
     res.json({
       roomCode: battle.roomCode,
       status: battle.status,
       questions: battle.questions,
       player1: battle.player1,
-      player2: battle.player2,
+      player2: player2Data,
       player1Score: battle.player1Score,
       player2Score: battle.player2Score,
       opponentProgress: isPlayer1 ? battle.player2Answers.length : battle.player1Answers.length,
@@ -665,11 +775,18 @@ router.post('/submit', protect, async (req, res) => {
     // Step 3: Check if battle is finished and update status
     const totalQuestions = updated.questions.length;
     const p1Finished = updated.player1Answers.length === totalQuestions;
-    const p2Finished = updated.player2 ? (updated.player2Answers.length === totalQuestions) : true;
+    const p2Finished = (updated.isBot || updated.player2)
+      ? (updated.player2Answers.length === totalQuestions)
+      : true;
 
     if (p1Finished && p2Finished && updated.status !== 'finished') {
       const finishUpdate = { status: 'finished', finishedAt: new Date() };
-      if (updated.player2) {
+      if (updated.isBot) {
+        if (updated.player1Score > updated.player2Score) {
+          finishUpdate.winner = updated.player1;
+        }
+        // Bot wins: no winner ObjectId (bot has no User doc)
+      } else if (updated.player2) {
         if (updated.player1Score > updated.player2Score) {
           finishUpdate.winner = updated.player1;
         } else if (updated.player2Score > updated.player1Score) {

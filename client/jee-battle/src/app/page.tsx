@@ -48,8 +48,9 @@ function LobbyContent() {
   const [lbLoading, setLbLoading] = useState(true);
   const [countdown, setCountdown] = useState('');
 
-  // Track polling interval for cleanup
+  // Track polling interval and bot assignment timer for cleanup
   const pollRef = useRef<NodeJS.Timeout | null>(null);
+  const botTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in';
 
@@ -57,6 +58,10 @@ function LobbyContent() {
     if (pollRef.current) {
       clearInterval(pollRef.current);
       pollRef.current = null;
+    }
+    if (botTimerRef.current) {
+      clearTimeout(botTimerRef.current);
+      botTimerRef.current = null;
     }
   }, []);
 
@@ -118,6 +123,28 @@ function LobbyContent() {
     }
     return () => clearTimeout(timer);
   }, [status]);
+
+  // Auto-assign bot after 6 seconds of waiting with no opponent
+  const assignBot = useCallback(async (roomCode: string) => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${apiUrl}/battle/bot/assign`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ roomCode })
+      });
+      const data = await res.json();
+      if (res.ok && data.roomCode) {
+        clearOpponentPoll();
+        router.push(`/${data.roomCode}`);
+      }
+    } catch {
+      // Silently fail — polling will keep trying for a real opponent
+    }
+  }, [token, apiUrl, clearOpponentPoll, router]);
 
   useEffect(() => {
     const urlToken = searchParams.get('token');
@@ -272,6 +299,8 @@ function LobbyContent() {
         setWaitingRoomCode(data.roomCode);
         pollForOpponent(data.roomCode);
         pollRef.current = setInterval(() => pollForOpponent(data.roomCode), 3000);
+        // Auto-assign bot after 6 seconds if no real opponent joins
+        botTimerRef.current = setTimeout(() => assignBot(data.roomCode), 6000);
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to queue');
