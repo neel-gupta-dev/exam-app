@@ -28,6 +28,8 @@ export async function generateMetadata({ params }: { params: Promise<{ roomCode:
   };
 }
 
+import MathProvider from "@/components/MathProvider";
+
 export default async function BattleRoomLayout({ children, params }: Props) {
   const { roomCode } = await params;
   const uppercaseCode = roomCode.toUpperCase();
@@ -50,7 +52,9 @@ export default async function BattleRoomLayout({ children, params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
-      {children}
+      <MathProvider>
+        {children}
+      </MathProvider>
     </>
   );
 }

@@ -125,7 +125,6 @@ export const metadata: Metadata = {
   category: "education",
 };
 
-import MathProvider from "@/components/MathProvider";
 import CookieConsent from "@/components/CookieConsent";
 import { Toaster } from "sonner";
 
@@ -197,11 +196,9 @@ export default function RootLayout({
             </Script>
           </>
         )}
-        <MathProvider>
-          {children}
-          <CookieConsent />
-          <Toaster theme="dark" position="top-center" />
-        </MathProvider>
+        {children}
+        <CookieConsent />
+        <Toaster theme="dark" position="top-center" />
       </body>
     </html>
   );

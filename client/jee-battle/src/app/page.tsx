@@ -399,14 +399,6 @@ function LobbyContent() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (checking) {
-    return (
-      <div className="max-w-md w-full flex items-center justify-center py-16">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-500"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       {/* ── Left Column: Actions ── */}
@@ -433,7 +425,11 @@ function LobbyContent() {
           )}
         </div>
 
-        {!token ? (
+        {checking ? (
+          <div className="bg-[#16191f] rounded-2xl border border-white/5 p-8 flex items-center justify-center min-h-[200px] shadow-2xl">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-500"></div>
+          </div>
+        ) : !token ? (
           /* Not logged in */
           <div className="bg-[#16191f] rounded-2xl border border-white/5 p-8 text-center space-y-4 shadow-2xl">
             <p className="text-gray-500 text-sm">Sign in to start battling</p>
