@@ -15,7 +15,7 @@ interface NormalizationContext {
   sortedNirfRanks: number[];
 }
 
-let normCtx: NormalizationContext = {
+const normCtx: NormalizationContext = {
   sortedPlacements: [],
   sortedNirfRanks: [],
 };

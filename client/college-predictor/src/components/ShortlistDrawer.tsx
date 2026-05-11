@@ -82,7 +82,7 @@ export default function ShortlistDrawer({ items, onRemove }: ShortlistDrawerProp
                 <AnimatePresence>
                   {items.map((item) => {
                     const chance = getChanceColor(item.chance);
-                    const typeColor = getInstituteTypeColor(item.institute_type as any);
+                    const typeColor = getInstituteTypeColor(item.institute_type as "IIT" | "NIT" | "IIIT" | "GFTI" | "BITS");
                     return (
                       <motion.div
                         key={`${item.institute_code}-${item.program_code}`}

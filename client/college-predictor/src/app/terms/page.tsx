@@ -20,7 +20,7 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-xl font-semibold text-white mb-3">1. Acceptance of Terms</h2>
             <p className="text-gray-400">
-              By accessing and using the Vayl College Predictor ("the Service"), you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you must not use the Service.
+              By accessing and using the Vayl College Predictor (&quot;the Service&quot;), you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you must not use the Service.
             </p>
           </section>
 

@@ -5,7 +5,7 @@ import "./globals.css";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { GoogleAnalytics } from "@next/third-parties/google";
-import Clarity from "@microsoft/clarity";
+
 
 const inter = Inter({
   subsets: ["latin"],

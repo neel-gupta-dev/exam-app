@@ -178,7 +178,7 @@ export default function InputForm({ onSubmit, loading, onReset, hasResults }: In
                 Enter Your Ranks
               </h2>
               <p className="text-gray-400 mb-6 text-sm">
-                Enter at least one rank or score. We'll show results across all applicable exams simultaneously.
+                Enter at least one rank or score. We&apos;ll show results across all applicable exams simultaneously.
               </p>
 
               <div className="space-y-5">
@@ -475,7 +475,7 @@ export default function InputForm({ onSubmit, loading, onReset, hasResults }: In
                     </p>
                   </div>
                   <div className="flex flex-col gap-5 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
-                    {BRANCH_GROUPS.map((group: any) => {
+                    {BRANCH_GROUPS.map((group: { name: string, branches: readonly string[] }) => {
                       const availableBranches = group.branches.filter(
                         (b: string) => !selectedBranches.includes(b)
                       );

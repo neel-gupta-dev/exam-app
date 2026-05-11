@@ -37,8 +37,12 @@ export function useCutoffData() {
       try {
         setLoading(true);
 
+        // Yield the main thread to the browser to ensure the Hero section paints (LCP) 
+        // before we lock up the CPU parsing megabytes of JSON data.
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         // Load all data in parallel
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+
         const [metaRes, branchRes, cutoffRes, statsRes, demandRes] = await Promise.all([
           fetch("/data/institute-metadata.json"),
           fetch("/data/branch-rankings.json"),
@@ -49,6 +53,7 @@ export function useCutoffData() {
 
         const metaData: InstituteMetadata[] = await metaRes.json();
         const branchData: BranchRanking[] = await branchRes.json();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const rawCutoffs: any[] = await cutoffRes.json();
         const statsData: ProgramStats[] = await statsRes.json();
         const demandData: DemandIndex = await demandRes.json();
