@@ -70,11 +70,13 @@ export default function TestEngine({ testId, user, onSubmitted }) {
         // Calculate remaining time
         setTimeLeft(data.session ? data.session.timeLeft : data.test.durationMinutes * 60);
 
-        // Set initial section
-        if (data.test.sections?.length > 0) {
+        // Set initial section with safety checks
+        if (data.test.sections && data.test.sections.length > 0) {
           setActiveSection(data.test.sections[0].name);
-        } else if (data.questions.length > 0) {
-          setActiveSection(data.questions[0].section);
+        } else if (data.questions && data.questions.length > 0) {
+          setActiveSection(data.questions[0].section || 'General');
+        } else {
+          setActiveSection('General');
         }
 
         setLoading(false);
@@ -238,6 +240,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   };
 
   const goNext = () => {
+    if (!currentQuestion) return;
     const filteredQuestions = getFilteredQuestions();
     const currentFilterIdx = filteredQuestions.findIndex((q) => q._id === currentQuestion._id);
     if (currentFilterIdx >= 0 && currentFilterIdx < filteredQuestions.length - 1) {
@@ -317,7 +320,30 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   };
 
   if (loading) {
-    return <div className="flex h-screen items-center justify-center bg-white"><div className="animate-spin text-[#3b82f6] text-4xl">↻</div></div>;
+    return (
+      <div className="flex flex-col h-screen items-center justify-center bg-white">
+        <div className="animate-spin text-[#3b82f6] text-4xl mb-4">↻</div>
+        <p className="text-slate-500 font-medium animate-pulse">Loading examination content...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col h-screen items-center justify-center bg-white p-6 text-center">
+        <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4">
+          <span className="material-symbols-outlined text-3xl">error</span>
+        </div>
+        <h2 className="text-xl font-bold text-slate-800 mb-2">Failed to Start Test</h2>
+        <p className="text-slate-600 mb-6 max-w-md">{error}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold shadow-lg hover:bg-indigo-700 transition-all"
+        >
+          Try Again
+        </button>
+      </div>
+    );
   }
 
   if (isSubmitting) {
