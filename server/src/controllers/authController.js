@@ -1,6 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import * as authService from '../services/authService.js';
 import { generateVaultId } from '../utils/generateVaultId.js';
+import { logActivity } from '../utils/telemetry.js';
 
 const normalizeIp = (ip) => {
   if (!ip) return 'unknown';
@@ -46,6 +47,21 @@ export const login = asyncHandler(async (req, res) => {
     password, 
     ipAddress 
   });
+
+  // Implicit Telemetry: Environment Profiling
+  // Capturing client headers allows us to adapt bot difficulty, 
+  // UI density, or flag suspicious login environments silently.
+  logActivity({
+    userId: data._id,
+    actionType: 'IMPLICIT_ENVIRONMENT_LOG',
+    metadata: {
+      platform: req.headers['sec-ch-ua-platform'] || 'unknown',
+      isMobile: req.headers['sec-ch-ua-mobile'] || 'unknown',
+      userAgent: req.headers['user-agent'] || 'unknown',
+      ipAddress
+    }
+  });
+
   res.json(data);
 });
 
@@ -191,6 +207,3 @@ export const verifySignupOtp = asyncHandler(async (req, res) => {
   const data = await authService.verifySignupOtp({ email, code });
   res.json(data);
 });
-
-
-

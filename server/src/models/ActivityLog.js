@@ -52,6 +52,9 @@ const activityLogSchema = new mongoose.Schema(
         // Analytics/Search events
         'SEARCH_PERFORMED',
         'CONFIDENCE_RATED',
+        // Implicit Tracking events
+        'IMPLICIT_GUESS_DETECTED',
+        'IMPLICIT_ENVIRONMENT_LOG',
       ],
       index: true, // Index for filtering by action type in analytics queries
     },

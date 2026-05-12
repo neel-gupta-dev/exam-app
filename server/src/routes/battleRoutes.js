@@ -6,6 +6,7 @@ import BattleLeaderboard from '../models/BattleLeaderboard.js';
 import User from '../models/User.js';
 import { getRandomBotName, computeBotAnswers } from '../services/botEngine.js';
 import { getRedis } from '../config/redis.js';
+import { logActivity } from '../utils/telemetry.js';
 
 /** Get today's date string in IST ("YYYY-MM-DD") */
 function getTodayIST() {
@@ -795,6 +796,23 @@ router.post('/submit', protect, async (req, res) => {
 
     if (!updated) {
       return res.status(400).json({ error: 'Already answered this question' });
+    }
+
+    // Implicit Telemetry: Guessing Detection
+    // A JEE-level math/physics question cannot physically be read and solved in under 3 seconds.
+    // We log this silently to profile guess rates without penalizing them explicitly in the game.
+    if (actualTimeTaken < 3) {
+      logActivity({
+        userId,
+        actionType: 'IMPLICIT_GUESS_DETECTED',
+        resourceId: questionId,
+        metadata: {
+          feature: 'battle',
+          timeTakenSeconds: actualTimeTaken,
+          isCorrect,
+          questionDifficulty: question.difficulty || 'unknown',
+        }
+      });
     }
 
     // Step 3: Check if battle is finished and update status
