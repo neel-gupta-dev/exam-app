@@ -34,7 +34,18 @@ export default function App() {
       fetch(`${API_BASE}/tests`, {
         headers: { 'Authorization': `Bearer ${user.token}` }
       })
-      .then(res => res.json())
+      .then(async res => {
+        const text = await res.text();
+        let data;
+        try {
+          data = text ? JSON.parse(text) : [];
+        } catch {
+          throw new Error(text || 'Invalid tests response');
+        }
+        if (!res.ok) throw new Error(data.message || 'Failed to load tests');
+        if (!Array.isArray(data)) throw new Error('Invalid tests response');
+        return data;
+      })
       .then(data => {
         setTests(data);
         setLoadingTests(false);
@@ -289,6 +300,7 @@ export default function App() {
                         <div className="flex items-center">
                           {test.state === 'in-progress' && <span className={`material-symbols-outlined text-sm mr-2 opacity-60 text-yellow-500`}>pending</span>}
                           {test.state === 'completed' && <span className={`material-symbols-outlined text-sm mr-2 opacity-60 text-green-500`}>check_circle</span>}
+                          {test.state === 'evaluating' && <span className={`material-symbols-outlined text-sm mr-2 opacity-60 text-yellow-500`}>sync</span>}
                           {(!test.state || test.state === 'default') && <span className={`material-symbols-outlined text-sm mr-2 opacity-60 text-slate-500`}>radio_button_checked</span>}
                           {test.status || 'Not Started'}
                         </div>
@@ -297,8 +309,8 @@ export default function App() {
                     <div className="mt-6 md:mt-0 md:ml-8">
                       <button 
                         onClick={() => {
-                          if (test.state === 'completed') {
-                            alert("Your detailed performance report will be generated shortly. Report view feature is coming in the next update.");
+                          if (test.state === 'evaluating') {
+                            alert("Your detailed performance report is still being generated. Please check back shortly.");
                             return;
                           }
                           if (test.state !== 'locked') {
@@ -306,9 +318,9 @@ export default function App() {
                             setView('instructions');
                           }
                         }}
-                        className={`cursor-pointer w-full md:w-auto px-8 py-3 font-bold rounded-lg transition-all ${test.state === 'in-progress' ? 'bg-indigo-500 text-on-primary shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20' : test.state === 'locked' ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : test.state === 'completed' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 hover:border-indigo-500/40'}`}
+                        className={`cursor-pointer w-full md:w-auto px-8 py-3 font-bold rounded-lg transition-all ${test.state === 'in-progress' ? 'bg-indigo-500 text-on-primary shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20' : test.state === 'locked' ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : test.state === 'evaluating' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : test.state === 'completed' ? 'bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-green-500/20' : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 hover:border-indigo-500/40'}`}
                       >
-                        {test.state === 'in-progress' ? 'Resume Test' : test.state === 'completed' ? 'View Result' : 'Attempt Test'}
+                        {test.state === 'in-progress' ? 'Resume Test' : test.state === 'evaluating' ? 'Evaluating' : test.state === 'completed' ? 'Attempt Again' : 'Attempt Test'}
                       </button>
                     </div>
                   </div>

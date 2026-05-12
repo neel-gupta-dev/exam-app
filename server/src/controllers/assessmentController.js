@@ -5,6 +5,122 @@ import TestAttempt from '../models/TestAttempt.js';
 import { getRedis } from '../config/redis.js';
 import { assertCanAttemptTest } from '../services/attemptService.js';
 
+const VALID_ANSWER_STATUSES = new Set([
+  'unanswered',
+  'answered',
+  'marked-for-review',
+  'answered-and-marked',
+]);
+
+const computeTimeLeft = (test, startTime) => {
+  const startedAt = new Date(startTime).getTime();
+  if (!Number.isFinite(startedAt)) return test.durationMinutes * 60;
+
+  const elapsedSeconds = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+  return Math.max(0, (test.durationMinutes * 60) - elapsedSeconds);
+};
+
+const toSafeQuestions = (questions) => questions.map((q) => {
+  const qObj = typeof q.toObject === 'function' ? q.toObject() : { ...q };
+  delete qObj.correctAnswer;
+  delete qObj.solution;
+  delete qObj.solutionImageUrl;
+  return qObj;
+});
+
+const normalizeSelectedAnswer = (answer = {}) => {
+  const selected = answer.selectedOption ?? answer.selectedAnswer ?? [];
+  if (Array.isArray(selected)) return selected.map(String);
+  if (selected === null || selected === undefined || selected === '') return [];
+  return [String(selected)];
+};
+
+const normalizeStatus = (status, selectedAnswer) => {
+  if (VALID_ANSWER_STATUSES.has(status)) return status;
+  return selectedAnswer.length ? 'answered' : 'unanswered';
+};
+
+const sessionAnswersToRows = (answers = {}) => Object.entries(answers).map(([questionId, answer]) => {
+  const selectedAnswer = normalizeSelectedAnswer(answer);
+  return {
+    questionId,
+    selectedAnswer,
+    status: normalizeStatus(answer?.status, selectedAnswer),
+    timeSpentSeconds: Number(answer?.timeSpentSeconds) || 0,
+  };
+});
+
+const answerRowsToSessionMap = (rows = []) => rows.reduce((acc, row) => {
+  acc[row.questionId.toString()] = {
+    selectedOption: row.selectedAnswer || [],
+    status: normalizeStatus(row.status, row.selectedAnswer || []),
+    timeSpentSeconds: row.timeSpentSeconds || 0,
+  };
+  return acc;
+}, {});
+
+const buildCompleteAnswerRows = (questions, answers = {}) => questions.map((question) => {
+  const answer = answers?.[question._id.toString()] || {};
+  const selectedAnswer = normalizeSelectedAnswer(answer);
+  return {
+    questionId: question._id,
+    selectedAnswer,
+    status: normalizeStatus(answer.status, selectedAnswer),
+    timeSpentSeconds: Number(answer.timeSpentSeconds) || 0,
+  };
+});
+
+const gradeAttempt = (attempt, test, questions) => {
+  const questionMap = new Map(questions.map((q) => [q._id.toString(), q]));
+  let totalScore = 0;
+  let maxPossibleScore = 0;
+  const sectionScores = {};
+
+  for (const answer of attempt.answers || []) {
+    const question = questionMap.get(answer.questionId.toString());
+    if (!question) continue;
+
+    const pos = question.positiveMarks ?? test.defaultPositiveMarks;
+    const neg = question.negativeMarks ?? test.defaultNegativeMarks;
+    const section = question.section || 'General';
+    maxPossibleScore += pos;
+
+    if (!sectionScores[section]) {
+      sectionScores[section] = { correct: 0, wrong: 0, unattempted: 0, score: 0 };
+    }
+
+    const selected = [...(answer.selectedAnswer || [])].sort();
+    if (selected.length === 0) {
+      sectionScores[section].unattempted += 1;
+      continue;
+    }
+
+    const expected = [...(question.correctAnswer || [])].sort();
+    const isCorrect =
+      selected.length === expected.length &&
+      selected.every((option, idx) => option === expected[idx]);
+
+    if (isCorrect) {
+      totalScore += pos;
+      sectionScores[section].correct += 1;
+      sectionScores[section].score += pos;
+    } else {
+      totalScore -= neg;
+      sectionScores[section].wrong += 1;
+      sectionScores[section].score -= neg;
+    }
+  }
+
+  attempt.totalScore = totalScore;
+  attempt.maxPossibleScore = maxPossibleScore;
+  attempt.percentage = maxPossibleScore > 0
+    ? Math.round((totalScore / maxPossibleScore) * 10000) / 100
+    : 0;
+  attempt.sectionScores = sectionScores;
+  attempt.submittedAt = new Date();
+  attempt.status = 'completed';
+};
+
 /**
  * Start Assessment / Resume Assessment
  * Validates access, fetches questions (stripping answers), initializes/retrieves Redis session.
@@ -15,16 +131,42 @@ export const startAssessment = asyncHandler(async (req, res) => {
   const userId = req.user._id.toString();
   const redis = getRedis();
 
-  if (!redis) {
-    return res.status(503).json({ message: "Assessment engine unavailable (Redis down)" });
-  }
-
   // Check if test exists
   const test = await Test.findById(testId);
   if (!test) {
     return res.status(404).json({ message: 'Test not found' });
   }
   await assertCanAttemptTest(test, req.user);
+
+  const questions = await Question.find({ testId }).sort({ order: 1 });
+  const safeQuestions = toSafeQuestions(questions);
+
+  if (!redis) {
+    let attempt = await TestAttempt.findOne({
+      userId,
+      testId,
+      status: 'in-progress',
+    }).sort({ createdAt: -1 });
+
+    if (!attempt) {
+      attempt = await TestAttempt.create({
+        userId,
+        testId,
+        status: 'in-progress',
+        answers: [],
+      });
+    }
+
+    return res.status(200).json({
+      test: test.toRedisPayload(),
+      questions: safeQuestions,
+      session: {
+        startTime: attempt.startedAt,
+        timeLeft: computeTimeLeft(test, attempt.startedAt),
+        answers: answerRowsToSessionMap(attempt.answers),
+      },
+    });
+  }
 
   // Removed the block so students can attempt the test again (retakes).
   const sessionKey = `cbt_session:${userId}:${testId}`;
@@ -46,19 +188,7 @@ export const startAssessment = asyncHandler(async (req, res) => {
     // Set expiry for safety (duration + 1 hour buffer)
     await redis.expire(sessionKey, (test.durationMinutes * 60) + 3600);
   }
-
-  // Fetch Questions
-  // Depending on indexing, we sort by order
-  const questions = await Question.find({ testId }).sort({ order: 1 });
-
-  // Map to safe payload (strip correctAnswer and solution)
-  const safeQuestions = questions.map((q) => {
-    const qObj = q.toObject();
-    delete qObj.correctAnswer;
-    delete qObj.solution;
-    delete qObj.solutionImageUrl;
-    return qObj;
-  });
+  activeSession.timeLeft = computeTimeLeft(test, activeSession.startTime);
 
   res.status(200).json({
     test: test.toRedisPayload(),
@@ -76,10 +206,6 @@ export const syncAssessment = asyncHandler(async (req, res) => {
   const { testId } = req.params;
   const userId = req.user._id.toString();
   const redis = getRedis();
-
-  if (!redis) {
-    return res.status(503).json({ message: "Assessment engine unavailable" });
-  }
 
   const { answers, timeLeft } = req.body;
   const sessionKey = `cbt_session:${userId}:${testId}`;
@@ -99,6 +225,27 @@ export const syncAssessment = asyncHandler(async (req, res) => {
   }
   await assertCanAttemptTest(test, req.user);
 
+  if (!redis) {
+    const attempt = await TestAttempt.findOne({
+      userId,
+      testId,
+      status: 'in-progress',
+    }).sort({ createdAt: -1 });
+
+    if (!attempt) {
+      return res.status(404).json({ message: 'Active session not found or expired' });
+    }
+
+    if (answers !== undefined) {
+      attempt.answers = sessionAnswersToRows(answers);
+    }
+    await attempt.save();
+    return res.status(200).json({
+      message: 'Synced',
+      timeLeft: computeTimeLeft(test, attempt.startedAt),
+    });
+  }
+
   const activeSessionRaw = await redis.hGet(sessionKey, 'data');
   if (!activeSessionRaw) {
     return res.status(404).json({ message: 'Active session not found or expired' });
@@ -107,9 +254,7 @@ export const syncAssessment = asyncHandler(async (req, res) => {
   const activeSession = JSON.parse(activeSessionRaw);
   
   // Merge answers
-  if (parsedTimeLeft !== null) {
-    activeSession.timeLeft = Math.round(parsedTimeLeft);
-  }
+  activeSession.timeLeft = computeTimeLeft(test, activeSession.startTime);
   activeSession.answers = { ...activeSession.answers, ...(answers || {}) };
 
   // Update Redis
@@ -128,16 +273,33 @@ export const submitAssessment = asyncHandler(async (req, res) => {
   const userId = req.user._id.toString();
   const redis = getRedis();
 
-  if (!redis) {
-    return res.status(503).json({ message: "Assessment engine unavailable" });
-  }
-
   const sessionKey = `cbt_session:${userId}:${testId}`;
   const test = await Test.findById(testId);
   if (!test) {
     return res.status(404).json({ message: 'Test not found' });
   }
   await assertCanAttemptTest(test, req.user);
+
+  if (!redis) {
+    const attempt = await TestAttempt.findOne({
+      userId,
+      testId,
+      status: 'in-progress',
+    }).sort({ createdAt: -1 });
+
+    if (!attempt) {
+      return res.status(404).json({ message: 'Session expired or not found. Cannot evaluate.' });
+    }
+
+    const questions = await Question.find({ testId }).sort({ order: 1 }).lean();
+    const answers = answerRowsToSessionMap(attempt.answers);
+    attempt.durationUsedMinutes = Math.round((Date.now() - new Date(attempt.startedAt).getTime()) / 60000);
+    attempt.answers = buildCompleteAnswerRows(questions, answers);
+    gradeAttempt(attempt, test, questions);
+    await attempt.save();
+
+    return res.status(201).json({ message: 'Evaluation completed', attempt });
+  }
 
   const activeSessionRaw = await redis.hGet(sessionKey, 'data');
   if (!activeSessionRaw) {
@@ -148,34 +310,21 @@ export const submitAssessment = asyncHandler(async (req, res) => {
 
   const endTime = new Date();
   const durationUsedMinutes = Math.round((endTime.getTime() - new Date(startTime).getTime()) / 60000);
-  const questions = await Question.find({ testId }).select('_id').lean();
-  const answerRows = questions.map((question) => {
-    const answer = answers?.[question._id.toString()] || {};
-    const selected = answer.selectedOption || answer.selectedAnswer || [];
-    const selectedAnswer = Array.isArray(selected)
-      ? selected
-      : selected === null || selected === undefined || selected === ''
-      ? []
-      : [String(selected)];
-    return {
-      questionId: question._id,
-      selectedAnswer,
-      status: answer.status || (selectedAnswer.length ? 'answered' : 'unanswered'),
-      timeSpentSeconds: answer.timeSpentSeconds || 0,
-    };
-  });
+  const questions = await Question.find({ testId }).sort({ order: 1 }).lean();
+  const answerRows = buildCompleteAnswerRows(questions, answers);
 
-  // Store raw result for background evaluation queue
-  const attempt = await TestAttempt.create({
+  const attempt = new TestAttempt({
     userId,
     testId,
-    status: 'evaluating', // Pushed to queue
+    status: 'completed',
     durationUsedMinutes,
     answers: answerRows,
   });
+  gradeAttempt(attempt, test, questions);
+  await attempt.save();
 
   // Cleanup Redis
   await redis.del(sessionKey);
 
-  res.status(201).json({ message: 'Evaluation pending', attempt });
+  res.status(201).json({ message: 'Evaluation completed', attempt });
 });

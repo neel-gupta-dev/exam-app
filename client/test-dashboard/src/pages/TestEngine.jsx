@@ -26,6 +26,8 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   const timerRef = useRef(null);
   const syncRef = useRef(null);
   const submitLock = useRef(false);
+  const latestAnswersRef = useRef([]);
+  const latestTimeLeftRef = useRef(0);
   const token = user?.token || localStorage.getItem('test_token');
 
   // ─── API helper ───
@@ -38,7 +40,13 @@ export default function TestEngine({ testId, user, onSubmitted }) {
         ...opts.headers,
       },
     });
-    const data = await res.json();
+    const text = await res.text();
+    let data = {};
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      data = { message: text || 'Invalid server response' };
+    }
     if (!res.ok) throw new Error(data.message || 'Request failed');
     return data;
   }, [token]);
@@ -47,8 +55,19 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   useEffect(() => {
     const init = async () => {
       try {
+        if (!testId) {
+          throw new Error('Missing test session. Please start the test again from the dashboard.');
+        }
+
         // We use assessment start route which is tied to /assessment if we updated the server
         const data = await apiFetch(`/assessment/${testId}/start`, { method: 'GET' });
+        if (!data.test) {
+          throw new Error('Invalid assessment response: missing test metadata.');
+        }
+        if (!Array.isArray(data.questions) || data.questions.length === 0) {
+          throw new Error('No questions are available for this test.');
+        }
+
         setTestMeta(data.test);
         setQuestions(data.questions);
         
@@ -88,6 +107,17 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     init();
   }, [testId, apiFetch]);
 
+  const currentQuestion = questions[currentIdx];
+  const currentAnswer = answers.find((a) => a.questionId === currentQuestion?._id);
+
+  useEffect(() => {
+    latestAnswersRef.current = answers;
+  }, [answers]);
+
+  useEffect(() => {
+    latestTimeLeftRef.current = timeLeft;
+  }, [timeLeft]);
+
   // Disable right-click
   useEffect(() => {
     const handleContextMenu = (e) => e.preventDefault();
@@ -97,7 +127,11 @@ export default function TestEngine({ testId, user, onSubmitted }) {
 
   // ─── Countdown timer ───
   useEffect(() => {
-    if (loading || submitted || timeLeft <= 0) return;
+    if (loading || submitted) return;
+    if (timeLeft <= 0) {
+      handleSubmit(true);
+      return;
+    }
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -153,11 +187,11 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     return () => document.removeEventListener('visibilitychange', handler);
   }, [submitted]);
 
-  const doSync = async () => {
+  const doSync = async ({ silent = true } = {}) => {
     try {
       // Map back to Object for Redis
       const outAnswers = {};
-      answers.forEach(a => {
+      latestAnswersRef.current.forEach(a => {
         outAnswers[a.questionId] = {
            status: a.status,
            selectedOption: a.selectedAnswer
@@ -165,11 +199,14 @@ export default function TestEngine({ testId, user, onSubmitted }) {
       });
       await apiFetch(`/assessment/${testId}/sync`, {
         method: 'POST',
-        body: JSON.stringify({ answers: outAnswers, timeLeft }),
+        body: JSON.stringify({ answers: outAnswers, timeLeft: latestTimeLeftRef.current }),
       });
       syncDirty.current = false;
+      return true;
     } catch (e) {
       console.warn('[Sync] Failed:', e.message);
+      if (!silent) throw e;
+      return false;
     }
   };
 
@@ -183,9 +220,6 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     });
     syncDirty.current = true;
   };
-
-  const currentQuestion = questions[currentIdx];
-  const currentAnswer = answers.find((a) => a.questionId === currentQuestion?._id);
 
   const handleOptionSelect = (optionLabel) => {
     if (!currentQuestion) return;
@@ -267,10 +301,20 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     if (submitted || submitLock.current) return;
     submitLock.current = true;
     setIsSubmitting(true);
-    await doSync();
+    try {
+      await doSync({ silent: isAutoSubmit });
+    } catch (e) {
+      alert('Failed to save your latest answers: ' + e.message);
+      setIsSubmitting(false);
+      submitLock.current = false;
+      return;
+    }
     
     let success = false;
-    while (!success) {
+    let attempts = 0;
+    const maxAttempts = isAutoSubmit ? 20 : 1;
+    while (!success && attempts < maxAttempts) {
+      attempts += 1;
       try {
         const res = await apiFetch(`/assessment/${testId}/submit`, { method: 'POST' });
         setResult(res);
@@ -288,6 +332,9 @@ export default function TestEngine({ testId, user, onSubmitted }) {
           await new Promise((resolve) => setTimeout(resolve, 3000));
         }
       }
+    }
+    if (!success) {
+      setError('Auto-submit could not reach the server. Please reconnect and try submitting again.');
     }
     setIsSubmitting(false);
     submitLock.current = false;
@@ -363,7 +410,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
       <div className="flex flex-col h-screen bg-[#E8EDF2] items-center justify-center p-4">
           <div className="bg-white p-8 rounded shadow text-center max-w-lg w-full border-t-4 border-[#3b82f6]">
             <h1 className="text-2xl font-bold mb-4 text-[#3a5c8e]">Evaluation Submitted</h1>
-            <p className="mb-6 text-slate-600 font-medium">Your test has been successfully submitted to the evaluation queue. Your final score and detailed report will be available on your dashboard shortly.</p>
+            <p className="mb-6 text-slate-600 font-medium">Your test has been successfully submitted. Your final score and detailed report will be available on your dashboard shortly.</p>
             <div className="flex justify-center mt-6">
               <button onClick={() => {
                 // If Fullscreen, exit first
@@ -371,7 +418,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
                    document.exitFullscreen().catch(e => console.log('Exit fullscreen failed', e));
                 }
                 const btn = document.createElement('a'); 
-                btn.href = '/dashboard'; 
+                btn.href = '/';
                 btn.click();
                 if (onSubmitted) onSubmitted(); 
               }} className="px-8 py-2.5 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded font-bold shadow-sm transition">

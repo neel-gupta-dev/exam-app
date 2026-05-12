@@ -141,23 +141,26 @@ export const getStudentTests = asyncHandler(async (req, res) => {
     
     let state = 'default';
     let status = 'Not Started';
+    let hasRedisSession = false;
     
-    if (attempt) {
-      if (attempt.status === 'completed' || attempt.status === 'auto-submitted') {
+    if (redis) {
+      const sessionKey = `cbt_session:${userId.toString()}:${t._id.toString()}`;
+      hasRedisSession = Boolean(await redis.exists(sessionKey));
+    }
+
+    if (hasRedisSession) {
+      state = 'in-progress';
+      status = 'In Progress';
+    } else if (attempt) {
+      if (attempt.status === 'in-progress') {
+        state = 'in-progress';
+        status = 'In Progress';
+      } else if (attempt.status === 'completed' || attempt.status === 'auto-submitted') {
         state = 'completed';
         status = attempt.status === 'auto-submitted' ? 'Auto-submitted' : 'Completed';
       } else if (attempt.status === 'evaluating') {
-        state = 'completed';
+        state = 'evaluating';
         status = 'Evaluating';
-      }
-    } else {
-      if (redis) {
-        const sessionKey = `cbt_session:${userId.toString()}:${t._id.toString()}`;
-        const hasSession = await redis.exists(sessionKey);
-        if (hasSession) {
-          state = 'in-progress';
-          status = 'In Progress';
-        }
       }
     }
     
