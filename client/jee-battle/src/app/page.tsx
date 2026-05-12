@@ -412,17 +412,19 @@ function LobbyContent() {
           <p className="text-gray-400 text-sm">Compete head-to-head. Prove your speed and accuracy.</p>
 
           {/* Online indicator */}
-          {token && onlineCount !== null && (
-            <div className="flex items-center justify-center gap-2 pt-1">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-              </span>
-              <span className="text-xs text-emerald-400/80 font-medium">
-                {onlineCount} player{onlineCount !== 1 ? 's' : ''} online
-              </span>
-            </div>
-          )}
+          <div className="min-h-[28px]">
+            {token && onlineCount !== null && (
+              <div className="flex items-center justify-center gap-2 pt-1">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                <span className="text-xs text-emerald-400/80 font-medium">
+                  {onlineCount} player{onlineCount !== 1 ? 's' : ''} online
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         {checking ? (
@@ -483,21 +485,23 @@ function LobbyContent() {
               </button>
             </div>
 
-            {showSoloPrompt && (
-              <div className="bg-amber-500/10 rounded-xl p-5 border border-amber-500/20 space-y-3 mt-4 text-left animate-in fade-in zoom-in duration-300">
-                <p className="text-sm font-semibold text-amber-400">Can't find an opponent?</p>
-                <p className="text-xs text-amber-400/80 mb-2">You can practice instantly by playing a Solo Rush instead.</p>
-                <button
-                  onClick={onSoloPromptClick}
-                  disabled={creating}
-                  className="w-full py-3 rounded-xl font-bold text-sm transition-all duration-300 disabled:opacity-50
-                    bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 
-                    text-black shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:shadow-[0_0_25px_rgba(245,158,11,0.4)] active:scale-[0.98]"
-                >
-                  {creating ? 'Creating...' : '⚡ Play Solo Rush'}
-                </button>
-              </div>
-            )}
+            <div className="min-h-[180px] mt-4 w-full">
+              {showSoloPrompt && (
+                <div className="bg-amber-500/10 rounded-xl p-5 border border-amber-500/20 space-y-3 text-left animate-in fade-in zoom-in duration-300">
+                  <p className="text-sm font-semibold text-amber-400">Can't find an opponent?</p>
+                  <p className="text-xs text-amber-400/80 mb-2">You can practice instantly by playing a Solo Rush instead.</p>
+                  <button
+                    onClick={onSoloPromptClick}
+                    disabled={creating}
+                    className="w-full py-3 rounded-xl font-bold text-sm transition-all duration-300 disabled:opacity-50
+                      bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 
+                      text-black shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:shadow-[0_0_25px_rgba(245,158,11,0.4)] active:scale-[0.98]"
+                  >
+                    {creating ? 'Creating...' : '⚡ Play Solo Rush'}
+                  </button>
+                </div>
+              )}
+            </div>
 
             <button
               onClick={cancelSearch}

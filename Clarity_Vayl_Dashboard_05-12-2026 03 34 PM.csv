@@ -1,0 +1,69 @@
+﻿"Project name","Vayl"
+"Date range","05/10/2026 12:00 AM - 05/12/2026 11:59 PM"
+
+
+"Metric","Sessions"
+"","Total sessions","18"
+"","Bot sessions","6"
+
+"Metric","Pages per session"
+"","Average","1.8333333333333333"
+
+"Metric","Scroll depth"
+"","Average","79.39"
+
+"Metric","Active time spent"
+"","Active time","44"
+"","Total time","80"
+
+"Metric","Users overview"
+"","Unique users","13"
+"","Sessions with new users","14"
+"","Sessions with returning users","4"
+
+"Metric","Insights","No. of sessions","% of sessions"
+"","Rage clicks","0","0%"
+"","Dead click","1","5.56%"
+"","Excessive scrolling","0","0%"
+"","Quick back click","0","0%"
+
+"Metric","Browsers","No. of sessions","% of sessions"
+"","Chrome","12","66.67%"
+"","ChromeMobile","5","27.78%"
+"","Firefox","1","5.56%"
+
+"Metric","Top pages","No. of sessions"
+"","https://battle.vayl.in/","18"
+"","https://battle.vayl.in/BQHKS","1"
+"","https://battle.vayl.in/BSYEF","1"
+"","https://battle.vayl.in/NFLEH","1"
+"","https://battle.vayl.in/SGVVY","1"
+"","https://battle.vayl.in/TSFRN","1"
+"","https://battle.vayl.in/ZLDZH","1"
+
+"Metric","Smart events","No. of sessions","% of sessions"
+"","Outbound click","2","11.11%"
+"","Search","1","5.56%"
+
+"Metric","Referrer","No. of sessions"
+"","www.google.com","8"
+
+"Metric","JavaScript errors"
+"","Sessions with JavaScript errors"
+""," total JavaScript errors","0"
+"","","No. of sessions","% of sessions"
+
+"Metric","Performance overview"
+"","Score","67"
+"","LCP (Largest Contentful Paint)","3.853s"
+"","INP (Interaction to Next Paint)","192ms"
+"","CLS (Cumulative Layout Shift)","0.375s"
+
+"Metric","Bot traffic"
+"webScraperBotSessions","0"
+"suspiciousDeviceBotSessions","1"
+"suspiciousNetworkBotSessions","6"
+"suspiciousInteractionBotSessions","6"
+"ppcAdFraudBotSessions","0"
+"otherBotsSessions","0"
+"__typename","BotTypes"

@@ -618,7 +618,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
           <div className="flex flex-col items-center shrink-0">
             <div className={`flex items-center gap-2 font-black italic ${timeRemaining <= 10 ? 'text-red-500 animate-pulse' : 'text-yellow-500'}`}>
               <Timer className="w-5 h-5" />
-              <span className="text-xl">{timeRemaining}s</span>
+              <span className="text-xl tabular-nums w-[4ch] text-center inline-block">{timeRemaining}s</span>
             </div>
           </div>
 
@@ -746,7 +746,7 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
                       key={index}
                       onClick={toggleOption}
                       disabled={submitting}
-                      className={`group relative p-5 rounded-2xl border transition-all text-left flex items-center gap-4 ${isSelected
+                      className={`group relative min-h-[5rem] p-5 rounded-2xl border transition-all text-left flex items-center gap-4 ${isSelected
                           ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-500/20 -translate-y-1'
                           : 'bg-[#1c2128] border-white/5 text-gray-300 hover:border-white/20 hover:bg-[#252b35]'
                         }`}
