@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Info, User as UserIcon, List } from 'lucide-react';
+import { User as UserIcon, List, ChevronLeft, ChevronRight } from 'lucide-react';
 import LatexRenderer from '../components/LatexRenderer';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -345,10 +345,39 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     return questions.filter((q) => q.section === activeSection);
   };
 
+  const goPrevious = () => {
+    if (!currentQuestion) return;
+    const filteredQuestions = getFilteredQuestions();
+    const currentFilterIdx = filteredQuestions.findIndex((q) => q._id === currentQuestion._id);
+    if (currentFilterIdx > 0) {
+      const previousQ = filteredQuestions[currentFilterIdx - 1];
+      const globalIdx = questions.findIndex((q) => q._id === previousQ._id);
+      setCurrentIdx(globalIdx);
+      return;
+    }
+
+    const currSectionIdx = sections.findIndex(s => s.name === activeSection);
+    if (currSectionIdx > 0) {
+      for (let i = currSectionIdx - 1; i >= 0; i--) {
+        const previousSection = sections[i].name;
+        const previousQuestions = questions.filter(q => q.section === previousSection);
+        if (previousQuestions.length) {
+          setActiveSection(previousSection);
+          setCurrentIdx(questions.indexOf(previousQuestions[previousQuestions.length - 1]));
+          break;
+        }
+      }
+    }
+  };
+
   const formatTime = (seconds) => {
-    if (seconds <= 0) return '00:00';
-    const m = Math.floor(seconds / 60);
+    if (seconds <= 0) return '00:00:00';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
+    if (h > 0) {
+      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
@@ -420,7 +449,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
                 const btn = document.createElement('a'); 
                 btn.href = '/';
                 btn.click();
-                if (onSubmitted) onSubmitted(); 
+                if (onSubmitted) onSubmitted();
               }} className="px-8 py-2.5 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded font-bold shadow-sm transition">
                 Return to Dashboard
               </button>
@@ -430,211 +459,296 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     );
   }
 
-  const sections = testMeta?.sections || [{ name: 'General'}];
+  const sections = testMeta?.sections?.length ? testMeta.sections : [{ name: 'General'}];
   const summary = getSummary();
-  const fullName = user?.name || 'Student';
+  const fullName = user?.name || user?.username || user?.email || 'Student';
+  const activeSectionQuestions = getFilteredQuestions();
+  const currentLocalIdx = Math.max(0, activeSectionQuestions.findIndex((q) => q._id === currentQuestion?._id));
+  const questionTypeLabels = {
+    single: 'Single Correct Question',
+    multiple: 'Multiple Select Question',
+    integer: 'Numerical Answer Question',
+    subjective: 'Subjective Question',
+  };
+  const questionTypeLabel = questionTypeLabels[currentQuestion?.type] || currentQuestion?.type || 'Question';
+  const paperTabs = testMeta?.parts?.length
+    ? testMeta.parts
+    : [
+        { name: `${testMeta?.category || 'Paper'} A` },
+        { name: `${testMeta?.category || 'Paper'} B` },
+      ];
 
-  // NTA icon renderer mapping
-  const TcsIcon = ({ status, text }) => {
+  const TcsIcon = ({ status, text, large = false }) => {
+    const size = large ? 'w-[68px] h-[54px] text-[21px]' : 'w-[38px] h-[34px] text-[16px]';
+    const base = `${size} flex items-center justify-center font-bold shrink-0 leading-none`;
     switch(status) {
-      case 'not-visited': return <div className="w-[30px] h-[26px] flex items-center justify-center bg-gradient-to-b from-[#fdfdfd] to-[#e6e6e6] border border-[#999] rounded-[3px] font-bold text-[#333] shrink-0 text-[14px]" style={{boxShadow: 'inset 0px -6px 8px -4px rgba(0,0,0,0.1)'}}>{text}</div>;
-      case 'unanswered': return <div className="relative w-[30px] h-[30px] bg-gradient-to-b from-[#eb6a47] to-[#c73111] text-white flex flex-col items-center justify-center font-bold shrink-0" style={{ clipPath: 'polygon(0% 0%, 100% 0%, 100% 65%, 50% 100%, 0% 65%)', borderTopLeftRadius: 3, borderTopRightRadius: 3 }}><span className="relative z-10 text-[14px] leading-none mb-[3px] drop-shadow-sm">{text}</span></div>;
-      case 'answered': return <div className="relative w-[30px] h-[30px] bg-gradient-to-b from-[#8fc938] to-[#518a10] text-white flex flex-col items-center justify-center font-bold shrink-0" style={{ clipPath: 'polygon(50% 0%, 100% 28%, 100% 100%, 0% 100%, 0% 28%)', borderBottomLeftRadius: 3, borderBottomRightRadius: 3 }}><span className="relative z-10 text-[14px] leading-none mt-1 drop-shadow-sm">{text}</span></div>;
-      case 'marked-for-review': return <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-b from-[#7c51a8] to-[#48287a] text-white flex items-center justify-center font-bold shrink-0 shadow-inner"><span className="text-[14px] leading-none drop-shadow-sm">{text}</span></div>;
-      case 'answered-and-marked': return <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-b from-[#7c51a8] to-[#48287a] text-white flex items-center justify-center font-bold shrink-0 shadow-inner relative"><span className="text-[14px] leading-none drop-shadow-sm">{text}</span><div className="absolute -bottom-0.5 -right-0.5 w-[13px] h-[13px] bg-[#609919] rounded-[2px] border border-white flex items-center justify-center shadow-sm"><div className="w-[5px] h-[5px] bg-white rounded-sm mt-0.5"></div></div></div>;
-      default: return <div className="w-[30px] h-[26px] flex items-center justify-center bg-gradient-to-b from-[#fdfdfd] to-[#e6e6e6] border border-[#999] rounded-[3px] font-bold text-[#333] shrink-0 text-[14px]" style={{boxShadow: 'inset 0px -6px 8px -4px rgba(0,0,0,0.1)'}}>{text}</div>;
+      case 'not-visited':
+        return (
+          <div
+            className={`${base} text-[#111] rounded-[3px] border border-[#9d9d9d] bg-gradient-to-b from-white to-[#dfdfdf]`}
+            style={{ boxShadow: 'inset 0 -7px 8px -5px rgba(0,0,0,0.25), 0 1px 1px rgba(0,0,0,0.2)' }}
+          >
+            {text}
+          </div>
+        );
+      case 'answered':
+        return (
+          <div
+            className={`${base} text-white bg-gradient-to-b from-[#8ad734] to-[#3f8f0d]`}
+            style={{ clipPath: 'polygon(15% 0%, 85% 0%, 100% 28%, 100% 100%, 0% 100%, 0% 28%)', textShadow: '0 1px 1px rgba(0,0,0,0.55)' }}
+          >
+            {text}
+          </div>
+        );
+      case 'unanswered':
+        return (
+          <div
+            className={`${base} text-white bg-gradient-to-b from-[#ff6b17] to-[#c62902]`}
+            style={{ clipPath: 'polygon(0% 0%, 100% 0%, 100% 68%, 70% 100%, 30% 100%, 0% 68%)', textShadow: '0 1px 1px rgba(0,0,0,0.55)' }}
+          >
+            {text}
+          </div>
+        );
+      case 'marked-for-review':
+        return (
+          <div className={`${base} rounded-full text-white bg-gradient-to-b from-[#8e62b5] to-[#56317d]`} style={{ textShadow: '0 1px 1px rgba(0,0,0,0.55)' }}>
+            {text}
+          </div>
+        );
+      case 'answered-and-marked':
+        return (
+          <div className={`${base} relative rounded-full text-white bg-gradient-to-b from-[#8e62b5] to-[#56317d]`} style={{ textShadow: '0 1px 1px rgba(0,0,0,0.55)' }}>
+            {text}
+            <div className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-[3px] border border-white bg-[#70b72b]">
+              <div className="h-2 w-2 rounded-[1px] bg-white" />
+            </div>
+          </div>
+        );
+      default:
+        return (
+          <div className={`${base} text-[#111] rounded-[3px] border border-[#9d9d9d] bg-gradient-to-b from-white to-[#dfdfdf]`}>
+            {text}
+          </div>
+        );
     }
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-white text-black font-sans overflow-hidden select-none">
-      
+    <div className="flex h-screen w-screen flex-col overflow-hidden bg-white font-sans text-black select-none">
       {showWarning && (
         <div className="fixed inset-0 z-50 bg-red-600 flex items-center justify-center text-white text-3xl font-bold p-10 text-center animate-pulse">
            Warning! Navigating away is not permitted. Final warning will submit test.
         </div>
       )}
 
-      {/* 1. Header */}
-      <div className="h-7 bg-[#212121] text-white flex items-center px-4 text-xs font-semibold">
-        <span>Assessment Examination Center</span>
-      </div>
-
-      {/* 2. Subheader */}
-      <div className="flex justify-between items-stretch border-b border-[#ccc] h-12">
-        <div className="bg-[#4a89dc] text-white font-bold px-4 flex items-center flex-1 text-[17px]">
+      <div className="flex h-[42px] shrink-0 items-center justify-between bg-[#333] pl-[14px] text-white">
+        <div className="min-w-0 truncate text-[16px] font-normal text-[#ffff00]">
           {testMeta?.title || 'Mock Test'}
         </div>
-        
-        <div className="flex bg-[#4a89dc] items-stretch hidden md:flex">
-          <button className="flex items-center gap-1 px-4 text-white hover:bg-white/10 text-sm font-semibold border-r border-white/20">
-            <Info className="w-4 h-4" /> Instructions
+        <div className="flex h-full items-center text-[16px] font-bold">
+          <button className="flex h-full items-center gap-2 px-4 text-white hover:bg-[#3f3f3f]">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4aaee8] text-[18px] italic leading-none text-white shadow-inner">i</span>
+            Instructions
           </button>
-          <button className="flex items-center gap-1 px-4 text-white hover:bg-white/10 text-sm font-semibold border-r border-[#ccc]">
-            <List className="w-4 h-4" /> Question Paper
+          <button className="flex h-full items-center gap-2 px-4 text-white hover:bg-[#3f3f3f]">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#39b873] text-white shadow-inner">
+              <List className="h-4 w-4" />
+            </span>
+            Question Paper
           </button>
-        </div>
-
-        <div className="w-[200px] bg-[#f8f8f8] flex items-center px-2 py-1 gap-2 border-l border-[#ccc]">
-          <div className="w-10 h-10 rounded bg-[#e0e0e0] flex items-center justify-center overflow-hidden shrink-0 border border-[#ccc]">
-            <UserIcon className="w-8 h-8 text-[#999] mt-2" />
-          </div>
-          <span className="text-[14px] font-bold text-[#333] truncate">{fullName}</span>
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left Column Canvas */}
-        <div className="flex-1 flex flex-col relative md:w-[calc(100%-250px)]">
-          <div className="bg-[#f2f2f2] border-b border-[#ccc] px-2 py-[2px] flex items-center relative overflow-x-auto scroller-hide">
-            <button className="bg-white border-t-2 border-t-[#3b82f6] border-x border-b border-b-transparent border-x-[#ccc] px-4 text-sm font-bold text-[#333] flex items-center gap-1 min-h-[28px] shrink-0 mt-0.5 rounded-t-sm z-10 -mb-[1.5px]">
-              Paper Overview <Info className="w-3.5 h-3.5 text-[#3b82f6]" />
-            </button>
-          </div>
-
-          <div className="flex justify-between items-center px-4 py-1.5 border-b border-[#ccc] bg-white">
-            <span className="text-xs font-bold text-[#333]">Sections</span>
-            <span className="text-[13px] font-bold text-[#333]">
-              Time Left : {formatTime(timeLeft)}
-            </span>
-          </div>
-
-          <div className="bg-[#e6f0fa] border-b border-[#ccc] px-2 py-1 flex items-center gap-1 relative z-0 flex-wrap">
-            {sections.map(s => (
-              <button 
-                key={s.name} 
-                onClick={() => {
-                   setActiveSection(s.name);
-                   const firstQ = questions.find((q) => q.section === s.name);
-                   if (firstQ) setCurrentIdx(questions.indexOf(firstQ));
-                }}
-                className={`${activeSection === s.name ? 'bg-[#3b82f6] text-white border-[#3b82f6]' : 'bg-white border-[#ccc] text-[#333] hover:bg-[#f8f8f8]'} border px-3 py-1.5 text-xs font-bold rounded flex items-center gap-1 shrink-0`}
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        <div className="relative flex min-w-0 flex-1 flex-col border-l border-[#c4c4c4]">
+          <div className="flex h-[60px] shrink-0 items-center gap-1 border-b border-[#ddd] bg-[#e9e9e9] px-8">
+            <ChevronLeft className="absolute left-1 h-5 w-5 text-[#b8c0c8]" />
+            {paperTabs.map((part, idx) => (
+              <button
+                key={part.name || idx}
+                className={`relative h-[39px] min-w-[102px] border px-3 text-[16px] shadow-sm ${
+                  idx === 0
+                    ? 'border-[#1988be] bg-[#1b86b9] text-white'
+                    : 'border-[#c7c7c7] bg-white text-[#333]'
+                }`}
               >
-                {s.name} <Info className={`w-3 h-3 ${activeSection === s.name ? 'text-white' : 'text-[#3b82f6]'}`} />
+                <span className="flex items-center justify-center gap-2">
+                  <span className="truncate">{part.name}</span>
+                  <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[16px] italic text-white ${idx === 0 ? 'bg-[#67c8fa]' : 'bg-[#79cafa]'}`}>i</span>
+                </span>
+                {idx === 0 && <span className="absolute left-1/2 top-full -translate-x-1/2 border-x-[8px] border-t-[8px] border-x-transparent border-t-[#1b86b9]" />}
               </button>
             ))}
           </div>
 
-          <div className="flex justify-between items-center px-4 py-2 border-b border-[#ccc] bg-white">
-            <span className="text-sm font-bold text-[#333]">Question Type: {currentQuestion?.type}</span>
-            <div className="text-xs">
-              <span className="text-green-600 font-bold">Marks for correct answer: {currentQuestion?.positiveMarks ?? testMeta?.defaultPositiveMarks}</span>
-              <span className="mx-1 text-[#ccc]">|</span>
-              <span className="text-red-500 font-bold">Negative Marks: {currentQuestion?.negativeMarks ?? testMeta?.defaultNegativeMarks}</span>
+          <div className="flex h-[41px] shrink-0 items-center justify-between border-b border-[#c7c7c7] bg-white pl-4 pr-3">
+            <span className="text-[16px] font-bold text-[#2b4259]">Sections</span>
+            <span className="text-[21px] font-semibold text-[#111]">Time Left : {formatTime(timeLeft)}</span>
+          </div>
+
+          <div className="relative flex h-[55px] shrink-0 items-center gap-[6px] border-b border-[#c7c7c7] bg-white px-10">
+            <ChevronLeft className="absolute left-1 h-5 w-5 text-[#b8c0c8]" />
+            {sections.map(s => {
+              const isActive = activeSection === s.name;
+              return (
+                <button
+                  key={s.name}
+                  onClick={() => {
+                    setActiveSection(s.name);
+                    const firstQ = questions.find((q) => q.section === s.name);
+                    if (firstQ) setCurrentIdx(questions.indexOf(firstQ));
+                  }}
+                  className={`h-[43px] border px-3 text-[16px] font-bold ${
+                    isActive
+                      ? 'border-[#1682b5] bg-[#1b86b9] text-white'
+                      : 'border-[#c9c9c9] bg-white text-[#0069a7]'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="max-w-[190px] truncate">{s.name}</span>
+                    <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[16px] italic text-white ${isActive ? 'bg-[#67c8fa]' : 'bg-[#80cfff]'}`}>i</span>
+                  </span>
+                </button>
+              );
+            })}
+            <ChevronRight className="absolute right-1 h-5 w-5 text-[#b8c0c8]" />
+          </div>
+
+          <div className="flex h-[43px] shrink-0 items-center justify-between border-b border-[#cfcfcf] bg-white px-4 text-[16px]">
+            <span className="font-bold">Question Type: {questionTypeLabel}</span>
+            <div className="pr-2 text-[16px]">
+              <span>Marks for correct answer: <span className="text-[#0080a5]">{currentQuestion?.positiveMarks ?? testMeta?.defaultPositiveMarks}</span></span>
+              <span className="mx-2 text-[#555]">|</span>
+              <span>Negative Marks: <span className="text-[#b01818]">{currentQuestion?.negativeMarks ?? testMeta?.defaultNegativeMarks}</span></span>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-4 py-3 bg-white scroll-smooth relative mb-14">
-            <h3 className="text-[15px] font-bold mb-4 text-[#333]">Question No. {currentIdx + 1}</h3>
-            <div className="text-[14.5px] text-black pr-2 mb-6 font-medium whitespace-pre-wrap">
-              <LatexRenderer text={currentQuestion?.content} />
-              {currentQuestion?.imageUrl && <img src={currentQuestion.imageUrl} alt="" className="mt-4 max-w-full" />}
+          <div className="min-h-0 flex-1 overflow-y-auto border-b border-[#cfcfcf] bg-white">
+            <div className="border-b border-[#ddd] px-[6px] py-[7px]">
+              <h3 className="text-[21px] font-bold">Question No. {currentLocalIdx + 1}</h3>
             </div>
-
-            <div className="pl-2 space-y-3">
+            <div className="px-[18px] py-[14px] text-[21px] leading-[1.45]">
+              <div className="mb-7 min-h-[34px] whitespace-pre-wrap text-black">
+                <LatexRenderer text={currentQuestion?.content} />
+                {currentQuestion?.imageUrl && <img src={currentQuestion.imageUrl} alt="" className="mt-4 max-w-full" />}
+              </div>
               {currentQuestion?.type !== 'integer' && currentQuestion?.options?.map((opt, i) => {
-                 const isSelected = currentAnswer?.selectedAnswer?.includes(opt.label);
-                 return (
-                   <label key={opt.label} className="flex flex-row items-start gap-2 cursor-pointer font-medium hover:bg-gray-50 rounded p-1 p-2 border-b border-gray-100">
-                     <input 
-                       type={currentQuestion.type === 'multiple' ? 'checkbox' : 'radio'} 
-                       name={`q-${currentQuestion._id}`}
-                       checked={isSelected || false}
-                       onChange={() => handleOptionSelect(opt.label)}
-                       className="w-4 h-4 mt-1 accent-[#3b82f6] cursor-pointer shrink-0"
-                     />
-                     <span className="text-[14.5px] flex-1">
-                       <b className="mr-1">{opt.label}.</b> 
-                       <LatexRenderer text={opt.content} />
-                     </span>
-                     {opt.imageUrl && <img src={opt.imageUrl} alt="" className="max-h-24 ml-2" />}
-                   </label>
-                 )
+                const isSelected = currentAnswer?.selectedAnswer?.includes(opt.label);
+                return (
+                  <label key={opt.label || i} className="mb-[16px] flex cursor-pointer items-start gap-[8px] text-[21px] leading-[1.35]">
+                    <input
+                      type={currentQuestion.type === 'multiple' ? 'checkbox' : 'radio'}
+                      name={`q-${currentQuestion._id}`}
+                      checked={isSelected || false}
+                      onChange={() => handleOptionSelect(opt.label)}
+                      className="mt-[6px] h-[18px] w-[18px] shrink-0 accent-[#1b86b9]"
+                    />
+                    <span className="flex-1">
+                      <LatexRenderer text={opt.content} />
+                    </span>
+                    {opt.imageUrl && <img src={opt.imageUrl} alt="" className="max-h-28 ml-2" />}
+                  </label>
+                );
               })}
               {currentQuestion?.type === 'integer' && (
-                 <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded max-w-sm">
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Numerical Answer</label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={currentAnswer?.selectedAnswer?.[0] || ''}
-                      onChange={(e) => handleIntegerSelect(e.target.value)}
-                      placeholder="Enter value"
-                      className="border border-gray-300 rounded px-3 py-2 w-full text-sm focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6] bg-white transition-shadow"
-                    />
-                 </div>
+                <div className="mt-4 max-w-sm border border-[#c7c7c7] bg-[#f7f7f7] p-4">
+                  <label className="mb-2 block text-[16px] font-bold text-[#333]">Numerical Answer</label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={currentAnswer?.selectedAnswer?.[0] || ''}
+                    onChange={(e) => handleIntegerSelect(e.target.value)}
+                    placeholder="Enter value"
+                    className="w-full border border-[#aaa] bg-white px-3 py-2 text-[18px] focus:border-[#1b86b9] focus:outline-none"
+                  />
+                </div>
               )}
             </div>
           </div>
 
-          <div className="absolute bottom-0 left-0 right-0 border-t border-[#ccc] bg-white flex justify-between items-center py-2.5 px-4 shadow-[0_-2px_5px_rgba(0,0,0,0.04)] z-10">
-            <div className="flex gap-2">
-              <button onClick={handleMarkForReview} className="border border-[#ccc] hover:bg-[#ebf3fa] text-[#333] px-3.5 py-1.5 text-[13px] font-bold rounded shadow-sm">
+          <div className="flex h-[70px] shrink-0 items-center justify-between border-b border-[#c7c7c7] bg-white px-[10px]">
+            <div className="flex gap-[25px]">
+              <button onClick={handleMarkForReview} className="h-[53px] min-w-[260px] border border-[#c7c7c7] bg-white px-6 text-[20px] text-[#333] hover:bg-[#f5f5f5]">
                 Mark for Review & Next
               </button>
-              <button onClick={handleClearResponse} className="border border-[#ccc] hover:bg-[#ebf3fa] text-[#333] px-3.5 py-1.5 text-[13px] font-bold rounded shadow-sm hidden sm:block">
+              <button onClick={handleClearResponse} className="h-[53px] min-w-[195px] border border-[#c7c7c7] bg-white px-6 text-[20px] text-[#333] hover:bg-[#f5f5f5]">
                 Clear Response
               </button>
             </div>
-            <button onClick={handleSaveNext} className="bg-[#2481c4] hover:bg-[#1a5f91] text-white px-8 py-1.5 text-[13px] font-bold rounded shadow-sm duration-150">
-              Save & Next
-            </button>
+            <div className="flex gap-[20px]">
+              <button onClick={goPrevious} className="h-[53px] min-w-[132px] border border-[#c7c7c7] bg-white px-6 text-[20px] text-[#333] hover:bg-[#f5f5f5]">
+                Previous
+              </button>
+              <button onClick={handleSaveNext} className="h-[53px] min-w-[164px] border border-[#0e6d9b] bg-[#1b86b9] px-7 text-[20px] font-bold text-white hover:bg-[#126f99]">
+                Save & Next
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Right Column Palette */}
-        <div className="w-[250px] bg-[#eef3f6] hidden sm:flex flex-col border-l border-[#ccc] shrink-0">
-          <div className="p-3 bg-white border-b border-[#ccc] shrink-0">
-            <div className="grid grid-cols-2 gap-y-3 gap-x-1 text-[11.5px] font-medium leading-[1.1] text-[#333] px-1">
-              <div className="flex gap-2 items-center">
+        <div className="hidden w-[335px] shrink-0 flex-col border-l border-[#c7c7c7] bg-[#dff4fc] sm:flex">
+          <div className="flex h-[155px] shrink-0 items-start gap-[12px] border-b border-[#c7c7c7] bg-[#f3f7fb] px-[3px] pt-[2px]">
+            <div className="flex h-[135px] w-[120px] items-center justify-center border border-[#c7c7c7] bg-white">
+              <div className="flex h-[118px] w-[102px] items-center justify-center rounded-full border border-[#9ba9b4] bg-gradient-to-b from-[#d5ebf4] via-[#eef7fb] to-[#8ca2b2]">
+                <UserIcon className="h-[92px] w-[92px] text-[#233848]" strokeWidth={1.4} />
+              </div>
+            </div>
+            <div className="min-w-0 pt-[8px] text-[25px] font-normal leading-tight text-[#111]">
+              <span className="block truncate">{fullName}</span>
+            </div>
+          </div>
+
+          <div className="shrink-0 border-b border-[#c7c7c7] bg-white px-[14px] py-[13px]">
+            <div className="grid grid-cols-2 gap-x-[16px] gap-y-[18px] text-[16px] leading-tight text-[#111]">
+              <div className="flex items-center gap-[12px]">
                 <TcsIcon status="answered" text={summary.answered} />
                 <span>Answered</span>
               </div>
-              <div className="flex gap-2 items-center">
+              <div className="flex items-center gap-[12px]">
                 <TcsIcon status="unanswered" text={summary.unanswered} />
                 <span>Not<br/>Answered</span>
               </div>
-              <div className="flex gap-2 items-center">
+              <div className="flex items-center gap-[12px]">
                 <TcsIcon status="not-visited" text={summary.notVisited} />
                 <span>Not<br/>Visited</span>
               </div>
-              <div className="flex gap-2 items-center">
+              <div className="flex items-center gap-[12px]">
                 <TcsIcon status="marked-for-review" text={summary.markedForReview} />
                 <span>Marked<br/>for Review</span>
               </div>
             </div>
-            <div className="flex gap-2 items-start mt-4 px-1 text-[11.5px] font-medium text-[#333]">
-               <TcsIcon status="answered-and-marked" text={summary.answeredAndMarked} />
-               <span className="leading-[1.1]">Answered & Marked for Review (will be considered for evaluation)</span>
+            <div className="mt-[14px] flex items-start gap-[12px] text-[16px] leading-tight text-[#111]">
+              <TcsIcon status="answered-and-marked" text={summary.answeredAndMarked} />
+              <span>Answered & Marked for Review (will also be evaluated)</span>
             </div>
           </div>
 
-          <div className="bg-[#2481c4] text-white text-[13px] font-bold px-3 py-1.5 shrink-0 flex justify-between">
+          <div className="flex h-[44px] shrink-0 items-center bg-[#1b86b9] px-[18px] text-[24px] font-bold text-white">
             {activeSection || 'General'}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-3 bg-[#eef3f6]">
-            <div className="text-[12px] font-bold mb-3 text-[#333]">Choose a Question</div>
-            <div className="flex flex-wrap gap-2">
-              {getFilteredQuestions().map((q) => {
-                 const globalIdx = questions.indexOf(q);
-                 const ans = answers.find(a => a.questionId === q._id);
-                 const status = ans ? ans.status : 'not-visited';
-                 return (
-                   <button 
-                     key={q._id} 
-                     onClick={() => setCurrentIdx(globalIdx)}
-                     className="focus:outline-none transition-transform hover:scale-[1.05]"
-                   >
-                     <TcsIcon status={status} text={globalIdx + 1} />
-                   </button>
-                 )
+          <div className="min-h-0 flex-1 overflow-y-auto bg-[#dff4fc] px-[13px] py-[9px]">
+            <div className="mb-[20px] text-[16px] font-bold text-[#111]">Choose a Question</div>
+            <div className="flex flex-wrap gap-x-[4px] gap-y-[14px]">
+              {activeSectionQuestions.map((q, idx) => {
+                const globalIdx = questions.indexOf(q);
+                const ans = answers.find(a => a.questionId === q._id);
+                const status = ans ? ans.status : 'not-visited';
+                return (
+                  <button
+                    key={q._id}
+                    onClick={() => setCurrentIdx(globalIdx)}
+                    className={`${globalIdx === currentIdx ? 'scale-[1.04]' : ''} focus:outline-none`}
+                  >
+                    <TcsIcon status={status} text={idx + 1} large />
+                  </button>
+                );
               })}
             </div>
           </div>
 
-          <div className="py-2.5 px-0 border-t border-[#ccc] bg-[#f2f2f2] flex items-center justify-center shadow-inner shrink-0 gap-2">
-            <button onClick={() => setShowSubmitConfirm(true)} className="bg-[#4eb3a1] hover:bg-[#3d8c7e] text-white font-bold text-sm px-10 py-1.5 rounded transition shadow-sm">
+          <div className="flex h-[70px] shrink-0 items-center justify-center border-t border-[#c7c7c7] bg-[#dff4fc]">
+            <button onClick={() => setShowSubmitConfirm(true)} className="h-[53px] min-w-[118px] rounded-[2px] bg-[#66afd0] px-7 text-[18px] font-bold text-white hover:bg-[#4d9bbd]">
               Submit
             </button>
           </div>
