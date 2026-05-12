@@ -50,6 +50,9 @@ import { FRONTEND_URL } from '../config/index.js';
 const BATTLE_FRONTEND_URL = process.env.BATTLE_FRONTEND_URL || 
   (process.env.NODE_ENV === 'production' ? 'https://battle.vayl.in' : 'http://localhost:3001');
 
+const TESTS_FRONTEND_URL = process.env.TESTS_FRONTEND_URL || 
+  (process.env.NODE_ENV === 'production' ? 'https://tests.vayl.in' : 'http://localhost:5173');
+
 router.get('/google/callback', 
   passport.authenticate('google', { session: false, failureRedirect: FRONTEND_URL }),
   (req, res) => {
@@ -66,6 +69,10 @@ router.get('/google/callback',
     // won't appear in CDN/proxy access logs, Referer headers, or server logs.
     if (origin === 'battle') {
       return res.redirect(`${BATTLE_FRONTEND_URL}/#token=${token}`);
+    }
+
+    if (origin === 'test') {
+      return res.redirect(`${TESTS_FRONTEND_URL}/#token=${token}`);
     }
 
     // Default: redirect to main frontend

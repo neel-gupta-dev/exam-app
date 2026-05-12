@@ -56,7 +56,7 @@ export default function LoginPage({ isDark, onLogin }) {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${API_BASE}/auth/google`;
+    window.location.href = `${API_BASE}/auth/google?origin=test`;
   };
 
   return (

@@ -69,6 +69,29 @@ export default function App() {
     }
   }, [isDark]);
 
+  // Handle OAuth Token from URL hash
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.startsWith('#token=')) {
+      const token = hash.split('=')[1];
+      // Clean URL hash
+      window.history.replaceState(null, '', window.location.pathname);
+      
+      // Fetch user profile to verify token and complete login
+      fetch(`${API_BASE}/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Token verification failed');
+        return res.json();
+      })
+      .then(data => {
+        handleLogin({ ...data, token });
+      })
+      .catch(err => console.error('OAuth Login Error:', err));
+    }
+  }, []);
+
   const toggleTheme = () => setIsDark(!isDark);
 
   // Router override for the popup test engine
