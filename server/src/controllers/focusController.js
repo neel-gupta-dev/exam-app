@@ -126,9 +126,14 @@ export const endFocus = asyncHandler(async (req, res) => {
  * @access  Private
  */
 export const getFocusStats = asyncHandler(async (req, res) => {
-  // 1. Start of today in UTC
-  const startOfToday = new Date();
-  startOfToday.setUTCHours(0, 0, 0, 0);
+  // 1. Start of today in IST (00:00 IST = UTC-5:30)
+  // This matches the IST-aware convention used across the analytics system.
+  const now = new Date();
+  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+  const nowIST = new Date(now.getTime() + IST_OFFSET_MS);
+  const todayMidnightIST = new Date(nowIST);
+  todayMidnightIST.setUTCHours(0, 0, 0, 0);
+  const startOfToday = new Date(todayMidnightIST.getTime() - IST_OFFSET_MS);
 
   // 2. Today's focus time (only completed focus sessions)
   const todayAgg = await FocusSession.aggregate([

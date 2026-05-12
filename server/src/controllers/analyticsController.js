@@ -3,6 +3,11 @@ import FocusSession from '../models/FocusSession.js';
 import Resource from '../models/Resource.js';
 import UserCardProgress from '../models/UserCardProgress.js';
 
+/** Convert a JS Date to an IST date string "YYYY-MM-DD" */
+function toISTDateString(date) {
+  return date.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+}
+
 /**
  * @desc    Get activity heatmap data for the last 21 days
  * @route   GET /api/analytics/heatmap
@@ -12,11 +17,11 @@ export const getActivityHeatmap = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const daysToFetch = 21;
   
-  // Calculate the start date (21 days ago from today's midnight)
-  const endDate = new Date();
+  // Calculate the start date (21 days ago from today in IST)
+  // We go back far enough in UTC to cover any IST day boundary offset
   const startDate = new Date();
-  startDate.setDate(endDate.getDate() - (daysToFetch - 1));
-  startDate.setHours(0, 0, 0, 0);
+  startDate.setDate(startDate.getDate() - daysToFetch);
+  startDate.setUTCHours(0, 0, 0, 0);
 
   // 1. Fetch Focus Sessions in range
   const focusSessions = await FocusSession.find({
@@ -31,36 +36,39 @@ export const getActivityHeatmap = asyncHandler(async (req, res) => {
     createdAt: { $gte: startDate }
   }).select('createdAt').lean();
 
-  // 3. Mock/Optional: Fetch Flashcard reviews if possible
-  // For now let's stick to Focus (2 units) and Resources (1 unit)
-
-  // Initialize heatmap structure
+  // 3. Initialize heatmap structure using IST dates
+  const todayIST = toISTDateString(new Date());
   const heatmap = [];
-  for (let i = 0; i < daysToFetch; i++) {
-    const d = new Date(startDate);
-    d.setDate(d.getDate() + i);
-    const dateStr = d.toISOString().split('T')[0];
-    heatmap.push({
+  const heatmapMap = {};
+  for (let i = daysToFetch - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = toISTDateString(d);
+    // Avoid duplicates (DST edge case guard)
+    if (heatmapMap[dateStr]) continue;
+    const entry = {
       date: dateStr,
-      displayDay: d.getDate(),
+      displayDay: parseInt(dateStr.split('-')[2], 10),
       units: 0,
       level: 0
-    });
+    };
+    heatmap.push(entry);
+    heatmapMap[dateStr] = entry;
   }
 
-  // Aggregate Focus Sessions
+  // Aggregate Focus Sessions (bucket by IST date)
   focusSessions.forEach(session => {
-    const dateStr = session.createdAt.toISOString().split('T')[0];
-    const dayObj = heatmap.find(h => h.date === dateStr);
+    const dateStr = toISTDateString(session.createdAt);
+    const dayObj = heatmapMap[dateStr];
     if (dayObj) {
       dayObj.units += 2; // Focus session is high value
     }
   });
 
-  // Aggregate Resources
+  // Aggregate Resources (bucket by IST date)
   resources.forEach(resource => {
-    const dateStr = resource.createdAt.toISOString().split('T')[0];
-    const dayObj = heatmap.find(h => h.date === dateStr);
+    const dateStr = toISTDateString(resource.createdAt);
+    const dayObj = heatmapMap[dateStr];
     if (dayObj) {
       dayObj.units += 1;
     }

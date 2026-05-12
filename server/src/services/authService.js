@@ -203,12 +203,12 @@ export const logoutUser = async ({ sessionId, userId }) => {
   // Save session first (marks it as logged out)
   await session.save();
 
-  // Credit the duration to the user
-  const user = await User.findById(userId);
-  if (user) {
-    user.totalActiveSeconds += duration;
-    await user.save();
-  }
+  // Credit the duration to the user atomically — $inc is safe under
+  // concurrent writes (no read-modify-write race condition).
+  await User.updateOne(
+    { _id: userId },
+    { $inc: { totalActiveSeconds: duration } }
+  );
 
   // Mark the session as credited — if this fails, the janitor will recover it
   session.durationCredited = true;
@@ -236,11 +236,11 @@ export const closeExpiredSessions = async () => {
       const safeDuration = duration > 0 ? duration : 0;
       await session.save();
 
-      const user = await User.findById(session.userId);
-      if (user) {
-        user.totalActiveSeconds += safeDuration;
-        await user.save();
-      }
+      // Atomic $inc — safe under concurrent janitor runs and logoutUser calls
+      await User.updateOne(
+        { _id: session.userId },
+        { $inc: { totalActiveSeconds: safeDuration } }
+      );
       session.durationCredited = true;
       await session.save();
     }
@@ -258,11 +258,11 @@ export const closeExpiredSessions = async () => {
 
     for (const session of orphanedSessions) {
       const duration = Math.max(0, Math.floor((session.logoutAt.getTime() - session.loginAt.getTime()) / 1000));
-      const user = await User.findById(session.userId);
-      if (user) {
-        user.totalActiveSeconds += duration;
-        await user.save();
-      }
+      // Atomic $inc — safe under concurrent recovery attempts
+      await User.updateOne(
+        { _id: session.userId },
+        { $inc: { totalActiveSeconds: duration } }
+      );
       session.durationCredited = true;
       await session.save();
     }
