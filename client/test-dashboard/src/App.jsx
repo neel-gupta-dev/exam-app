@@ -41,8 +41,7 @@ export default function App() {
   });
 
   useEffect(() => {
-    if (user && view === 'dashboard') {
-      setLoadingTests(true);
+    if (user && (view === 'dashboard' || view === 'test-series')) { setLoadingTests(true);
       fetch(`${API_BASE}/tests`, {
         headers: { 'Authorization': `Bearer ${user.token}` }
       })
@@ -70,8 +69,7 @@ export default function App() {
   }, [user, view]);
 
   useEffect(() => {
-    if (user && (view === 'analytics' || view === 'dashboard')) {
-      setLoadingResults(true);
+    if (user && (view === 'analytics' || view === 'dashboard' || view === 'test-series')) { setLoadingResults(true);
       setResultsError('');
       fetch(`${API_BASE}/assessment/results`, {
         headers: { 'Authorization': `Bearer ${user.token}` }
@@ -149,6 +147,10 @@ export default function App() {
     setView('dashboard');
     setSelectedTest(null);
   };
+  const showTestSeries = () => {
+    setView('test-series');
+    setSelectedTest(null);
+  };
 
   // Router override for the popup test engine
   const searchParams = new URL(window.location.href).searchParams;
@@ -214,6 +216,18 @@ export default function App() {
     return haystack.includes(normalizedSearch);
   });
   const completedResults = results.filter((result) => result.status === 'completed' || result.status === 'auto-submitted');
+  
+  const sortedResults = [...completedResults].sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+  const lastThreeResults = sortedResults.slice(0, 3);
+  const hasThreeTests = lastThreeResults.length >= 3;
+  const lastThreeAvg = hasThreeTests 
+    ? Math.round(lastThreeResults.reduce((sum, res) => sum + (res.percentage || 0), 0) / 3)
+    : null;
+
+  const givenCount = tests.filter(t => t.state === 'completed' || t.state === 'evaluating').length;
+  const missedCount = tests.filter(t => t.state === 'missed').length;
+  const ongoingCount = tests.filter(t => t.state === 'in-progress').length;
+  const upcomingCount = tests.filter(t => t.state === 'upcoming').length;
   const bestResult = completedResults.reduce((best, result) => {
     if (!best) return result;
     return (result.percentage || 0) > (best.percentage || 0) ? result : best;
@@ -236,23 +250,14 @@ export default function App() {
     <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-background text-on-surface' : 'bg-slate-50 text-slate-900'}`}>
       {/* SideNavBar */}
       <aside className={`fixed left-0 top-0 h-screen w-64 flex flex-col py-6 px-4 z-50 transition-colors duration-300 ${isDark ? 'bg-slate-900' : 'bg-white shadow-xl'}`}>
-        <div className="mb-10 px-2">
-          <h1 className="text-xl font-bold tracking-tight text-indigo-500 font-headline">The Scholar</h1>
-          <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-medium mt-1">Productivity Suite</p>
-        </div>
-
         <nav className="flex-1 space-y-1">
-          <button onClick={showDashboard} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'dashboard' || view === 'instructions' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+          <button onClick={showDashboard} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'dashboard' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
             <span className="material-symbols-outlined mr-3">dashboard</span>
             <span className="text-sm font-medium">Dashboard</span>
           </button>
-          <button onClick={showDashboard} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
-            <span className="material-symbols-outlined mr-3">assignment</span>
-            <span className="text-sm font-medium">Exams</span>
-          </button>
-          <button onClick={showDashboard} className={`w-full border-none bg-transparent flex items-center px-3 py-3 border-l-2 border-indigo-500 font-semibold transition-colors duration-200 group ${view === 'dashboard' || view === 'instructions' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+          <button onClick={showTestSeries} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'test-series' || view === 'instructions' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
             <span className="material-symbols-outlined mr-3">layers</span>
-            <span className="text-sm">Test Series</span>
+            <span className="text-sm font-medium">Test Series</span>
           </button>
           <button onClick={() => setView('analytics')} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'analytics' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
             <span className="material-symbols-outlined mr-3">insights</span>
@@ -276,7 +281,7 @@ export default function App() {
               </div>
               <div className="ml-3 overflow-hidden pr-2">
                 <p className={`text-xs font-semibold truncate ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>{user.name}</p>
-                <p className="text-[10px] text-slate-500 truncate">{user.authMethod === 'b2b' ? 'Coaching Scholar' : 'Pro Member'}</p>
+                <p className="text-[10px] text-slate-500 truncate">{user.authMethod === 'b2b' ? 'Coaching Member' : 'Pro Member'}</p>
               </div>
             </div>
             <button
@@ -329,6 +334,109 @@ export default function App() {
       <main className="ml-64 pt-24 px-10 pb-20 min-h-screen">
 
         {view === 'dashboard' ? (
+          <div className="max-w-5xl space-y-10 animate-in fade-in duration-500">
+            <header className="flex flex-col gap-2">
+              <h2 className={`text-4xl font-extrabold font-headline tracking-tight ${isDark ? 'text-on-background' : 'text-slate-900'}`}>
+                Dashboard
+              </h2>
+              <p className={`text-lg font-medium opacity-70 ${isDark ? 'text-on-surface-variant' : 'text-slate-600'}`}>
+                Welcome back, {user?.name || 'Scholar'}. Here is an overview of your progress.
+              </p>
+            </header>
+
+            {loadingTests || loadingResults ? (
+              <div className={`p-12 text-center rounded-2xl border ${isDark ? 'bg-surface-container border-outline-variant/20' : 'bg-white border-slate-100 shadow-sm'}`}>
+                <span className="material-symbols-outlined animate-spin text-indigo-500 text-4xl">sync</span>
+                <p className={`mt-3 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Calculating real-time stats...</p>
+              </div>
+            ) : (
+              <div className="space-y-10">
+                {/* Stats Cards Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className={`p-6 rounded-2xl border flex flex-col transition-all duration-200 ${isDark ? 'bg-surface-container border-outline-variant/10 hover:bg-surface-container-high' : 'bg-white shadow-sm border-slate-100 hover:shadow-md'}`}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center text-green-500">
+                        <span className="material-symbols-outlined text-2xl font-bold">check_circle</span>
+                      </div>
+                      <span className={`text-[10px] tracking-widest font-extrabold uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Tests Given</span>
+                    </div>
+                    <span className={`text-4xl font-black font-headline ${isDark ? 'text-white' : 'text-slate-900'}`}>{givenCount}</span>
+                  </div>
+
+                  <div className={`p-6 rounded-2xl border flex flex-col transition-all duration-200 ${isDark ? 'bg-surface-container border-outline-variant/10 hover:bg-surface-container-high' : 'bg-white shadow-sm border-slate-100 hover:shadow-md'}`}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                        <span className="material-symbols-outlined text-2xl font-bold">pending</span>
+                      </div>
+                      <span className={`text-[10px] tracking-widest font-extrabold uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Ongoing</span>
+                    </div>
+                    <span className={`text-4xl font-black font-headline ${isDark ? 'text-white' : 'text-slate-900'}`}>{ongoingCount}</span>
+                  </div>
+
+                  <div className={`p-6 rounded-2xl border flex flex-col transition-all duration-200 ${isDark ? 'bg-surface-container border-outline-variant/10 hover:bg-surface-container-high' : 'bg-white shadow-sm border-slate-100 hover:shadow-md'}`}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                        <span className="material-symbols-outlined text-2xl font-bold">event</span>
+                      </div>
+                      <span className={`text-[10px] tracking-widest font-extrabold uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Upcoming</span>
+                    </div>
+                    <span className={`text-4xl font-black font-headline ${isDark ? 'text-white' : 'text-slate-900'}`}>{upcomingCount}</span>
+                  </div>
+
+                  <div className={`p-6 rounded-2xl border flex flex-col transition-all duration-200 ${isDark ? 'bg-surface-container border-outline-variant/10 hover:bg-surface-container-high' : 'bg-white shadow-sm border-slate-100 hover:shadow-md'}`}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                        <span className="material-symbols-outlined text-2xl font-bold">cancel</span>
+                      </div>
+                      <span className={`text-[10px] tracking-widest font-extrabold uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Missed</span>
+                    </div>
+                    <span className={`text-4xl font-black font-headline ${isDark ? 'text-white' : 'text-slate-900'}`}>{missedCount}</span>
+                  </div>
+                </div>
+
+                {/* Performance Average Banner */}
+                <div className={`relative overflow-hidden rounded-3xl border p-8 transition-all duration-300 ${isDark ? 'bg-surface-container border-outline-variant/20 bg-gradient-to-br from-surface-container to-indigo-500/5' : 'bg-white border-slate-100 shadow-lg bg-gradient-to-br from-white to-indigo-50/30'}`}>
+                  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+                    <div className="max-w-xl flex flex-col gap-2">
+                      <h3 className={`text-sm font-extrabold uppercase tracking-widest ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>Performance Analytics</h3>
+                      <h4 className={`text-2xl font-black font-headline tracking-tight leading-tight mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                        Average consistency of last 3 tests
+                      </h4>
+                      <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                        Tracks your performance baseline based on recent evaluation data to measure overall readiness.
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center justify-center">
+                      {hasThreeTests ? (
+                        <div className={`flex flex-col items-center justify-center w-32 h-32 rounded-full border-4 border-indigo-500 shadow-[0_0_30px_rgba(99,102,241,0.25)] ${isDark ? 'bg-indigo-500/10' : 'bg-indigo-50'}`}>
+                          <span className={`text-3xl font-black font-headline ${isDark ? 'text-white' : 'text-slate-900'}`}>{lastThreeAvg}%</span>
+                          <span className="text-[9px] font-black uppercase tracking-widest text-indigo-500 mt-1">Avg Score</span>
+                        </div>
+                      ) : (
+                        <div className={`px-6 py-4 rounded-2xl flex items-center gap-3 border ${isDark ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-amber-50 border-amber-100 text-amber-700'}`}>
+                          <span className="material-symbols-outlined">info</span>
+                          <span className="text-sm font-bold">you have to give atleast 3 tests to get avg %</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className={`absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 w-96 h-96 rounded-full blur-[120px] pointer-events-none ${isDark ? 'bg-indigo-500/15' : 'bg-indigo-200/40'}`}></div>
+                </div>
+
+                {/* CTA: Launch Exam Engine */}
+                <div className="flex pt-2">
+                  <button 
+                    onClick={showTestSeries}
+                    className="cursor-pointer border-none py-4 px-10 bg-indigo-600 text-white font-bold rounded-2xl text-lg transition-all shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:scale-[0.98] flex items-center justify-center gap-3"
+                  >
+                    <span className="material-symbols-outlined text-2xl font-bold">rocket_launch</span>
+                    Explore Test Series
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : view === 'test-series' ? (
           <>
             {/* Header Section */}
             <header className="mb-12">
@@ -397,6 +505,8 @@ export default function App() {
                           {test.state === 'in-progress' && <span className={`material-symbols-outlined text-sm mr-2 opacity-60 text-yellow-500`}>pending</span>}
                           {test.state === 'completed' && <span className={`material-symbols-outlined text-sm mr-2 opacity-60 text-green-500`}>check_circle</span>}
                           {test.state === 'evaluating' && <span className={`material-symbols-outlined text-sm mr-2 opacity-60 text-yellow-500`}>sync</span>}
+                          {test.state === 'upcoming' && <span className={`material-symbols-outlined text-sm mr-2 opacity-60 text-blue-500`}>event</span>}
+                          {test.state === 'missed' && <span className={`material-symbols-outlined text-sm mr-2 opacity-60 text-red-500`}>cancel</span>}
                           {(!test.state || test.state === 'default') && <span className={`material-symbols-outlined text-sm mr-2 opacity-60 text-slate-500`}>radio_button_checked</span>}
                           {test.status || 'Not Started'}
                         </div>
@@ -409,14 +519,22 @@ export default function App() {
                             alert("Your detailed performance report is still being generated. Please check back shortly.");
                             return;
                           }
+                          if (test.state === 'upcoming') {
+                            alert("This test hasn't started yet. Check scheduled start date.");
+                            return;
+                          }
+                          if (test.state === 'missed') {
+                            alert("The attempt window for this test has already ended.");
+                            return;
+                          }
                           if (test.state !== 'locked') {
                             setSelectedTest(test);
                             setView('instructions');
                           }
                         }}
-                        className={`cursor-pointer w-full md:w-auto px-8 py-3 font-bold rounded-lg transition-all ${test.state === 'in-progress' ? 'bg-indigo-500 text-on-primary shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20' : test.state === 'locked' ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : test.state === 'evaluating' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : test.state === 'completed' ? 'bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-green-500/20' : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 hover:border-indigo-500/40'}`}
+                        className={`cursor-pointer w-full md:w-auto px-8 py-3 font-bold rounded-lg transition-all ${test.state === 'in-progress' ? 'bg-indigo-500 text-on-primary shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20' : (test.state === 'locked' || test.state === 'upcoming' || test.state === 'missed') ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : test.state === 'evaluating' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : test.state === 'completed' ? 'bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-green-500/20' : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 hover:border-indigo-500/40'}`}
                       >
-                        {test.state === 'in-progress' ? 'Resume Test' : test.state === 'evaluating' ? 'Evaluating' : test.state === 'completed' ? 'Attempt Again' : 'Attempt Test'}
+                        {test.state === 'in-progress' ? 'Resume Test' : test.state === 'evaluating' ? 'Evaluating' : test.state === 'completed' ? 'Attempt Again' : test.state === 'upcoming' ? 'Locked' : test.state === 'missed' ? 'Ended' : 'Attempt Test'}
                       </button>
                     </div>
                   </div>
@@ -602,8 +720,7 @@ export default function App() {
           <div className="max-w-4xl mx-auto">
             {/* Breadcrumb / Back */}
             <button
-              onClick={() => setView('dashboard')}
-              className={`flex items-center mb-8 text-sm font-medium transition-colors cursor-pointer border-none bg-transparent ${isDark ? 'text-slate-400 hover:text-indigo-400' : 'text-slate-500 hover:text-indigo-600'}`}
+              onClick={() => setView('test-series')} className={`flex items-center mb-8 text-sm font-medium transition-colors cursor-pointer border-none bg-transparent ${isDark ? 'text-slate-400 hover:text-indigo-400' : 'text-slate-500 hover:text-indigo-600'}`}
             >
               <span className="material-symbols-outlined mr-2 text-lg">arrow_back</span>
               Back to Test Series

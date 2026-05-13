@@ -118,12 +118,7 @@ export const getStudentTests = asyncHandler(async (req, res) => {
   const now = new Date();
   const rawTests = await Test.find({
     isPublished: true,
-    ...audienceFilter,
-    // Schedule check: only show if start time has passed (or is null)
-    $and: [
-      { $or: [{ scheduledStartAt: null }, { scheduledStartAt: { $lte: now } }] },
-      { $or: [{ scheduledEndAt: null }, { scheduledEndAt: { $gte: now } }] },
-    ],
+    ...audienceFilter
   })
     .select('title description category durationMinutes totalMarks sections syllabus instructions questionCount visibility scheduledStartAt scheduledEndAt')
     .sort({ createdAt: -1 });
@@ -165,6 +160,15 @@ export const getStudentTests = asyncHandler(async (req, res) => {
       } else if (attempt.status === 'evaluating') {
         state = 'evaluating';
         status = 'Evaluating';
+      }
+    } else {
+      const currentTime = new Date();
+      if (t.scheduledStartAt && new Date(t.scheduledStartAt) > currentTime) {
+        state = 'upcoming';
+        status = 'Upcoming';
+      } else if (t.scheduledEndAt && new Date(t.scheduledEndAt) < currentTime) {
+        state = 'missed';
+        status = 'Missed';
       }
     }
     
