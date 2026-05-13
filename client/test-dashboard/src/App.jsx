@@ -32,6 +32,10 @@ export default function App() {
   const [results, setResults] = useState([]);
   const [loadingResults, setLoadingResults] = useState(false);
   const [resultsError, setResultsError] = useState('');
+  const [selectedLeaderboardTest, setSelectedLeaderboardTest] = useState(null);
+  const [leaderboardData, setLeaderboardData] = useState(null);
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
+  const [leaderboardError, setLeaderboardError] = useState('');
 
   const [user, setUser] = useState(() => {
     try {
@@ -69,7 +73,7 @@ export default function App() {
   }, [user, view]);
 
   useEffect(() => {
-    if (user && (view === 'analytics' || view === 'dashboard' || view === 'test-series')) { setLoadingResults(true);
+    if (user && (view === 'analytics' || view === 'dashboard' || view === 'test-series' || view === 'leaderboard')) { setLoadingResults(true);
       setResultsError('');
       fetch(`${API_BASE}/assessment/results`, {
         headers: { 'Authorization': `Bearer ${user.token}` }
@@ -95,6 +99,30 @@ export default function App() {
         });
     }
   }, [user, view]);
+  useEffect(() => {
+    if (user && view === 'leaderboard' && selectedLeaderboardTest) {
+      setLoadingLeaderboard(true);
+      setLeaderboardError('');
+      fetch(`${API_BASE}/assessment/results/${selectedLeaderboardTest._id}/leaderboard`, {
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      })
+        .then(async res => {
+          const text = await res.text();
+          let data;
+          try { data = text ? JSON.parse(text) : null; } catch { throw new Error('Invalid response'); }
+          if (!res.ok) throw new Error(data?.message || 'Failed to fetch leaderboard');
+          return data;
+        })
+        .then(data => {
+          setLeaderboardData(data);
+          setLoadingLeaderboard(false);
+        })
+        .catch(err => {
+          setLeaderboardError(err.message);
+          setLoadingLeaderboard(false);
+        });
+    }
+  }, [user, view, selectedLeaderboardTest]);
 
   const handleLogin = (userData) => {
     localStorage.setItem('test_user', JSON.stringify(userData));
@@ -258,6 +286,10 @@ export default function App() {
           <button onClick={showTestSeries} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'test-series' || view === 'instructions' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
             <span className="material-symbols-outlined mr-3">layers</span>
             <span className="text-sm font-medium">Test Series</span>
+          </button>
+          <button onClick={() => { setView('leaderboard'); setSelectedLeaderboardTest(null); }} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'leaderboard' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+            <span className="material-symbols-outlined mr-3">emoji_events</span>
+            <span className="text-sm font-medium">Leaderboard</span>
           </button>
           <button onClick={() => setView('analytics')} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'analytics' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
             <span className="material-symbols-outlined mr-3">insights</span>
@@ -593,6 +625,198 @@ export default function App() {
               </div>
             </div>
           </>
+        ) : view === 'leaderboard' ? (
+          <div className="max-w-6xl space-y-8 animate-in fade-in duration-500">
+            {!selectedLeaderboardTest ? (
+              <>
+                <header className="flex flex-col gap-2">
+                  <h2 className={`text-4xl font-extrabold font-headline tracking-tight ${isDark ? 'text-on-background' : 'text-slate-900'}`}>
+                    Leaderboards
+                  </h2>
+                  <p className={`text-lg font-medium opacity-70 ${isDark ? 'text-on-surface-variant' : 'text-slate-600'}`}>
+                    Compare your performance and rank with peers.
+                  </p>
+                </header>
+
+                {loadingResults ? (
+                  <div className={`p-12 text-center rounded-2xl border ${isDark ? 'bg-surface-container border-outline-variant/20' : 'bg-white border-slate-100 shadow-sm'}`}>
+                    <span className="material-symbols-outlined animate-spin text-indigo-500 text-4xl">sync</span>
+                    <p className={`mt-3 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Loading your tests...</p>
+                  </div>
+                ) : completedResults.length === 0 ? (
+                  <div className={`p-12 text-center rounded-2xl border flex flex-col items-center ${isDark ? 'bg-surface-container border-outline-variant/20' : 'bg-white border-slate-100 shadow-sm'}`}>
+                    <div className="w-16 h-16 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-500 mb-4">
+                      <span className="material-symbols-outlined text-3xl">emoji_events</span>
+                    </div>
+                    <h3 className="text-xl font-bold">No Leaderboards Available</h3>
+                    <p className={`mt-2 max-w-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>You must complete at least one test in the series to access its comparative leaderboard.</p>
+                    <button onClick={showTestSeries} className="mt-6 px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl border-none cursor-pointer hover:bg-indigo-500">
+                      Take a Test Now
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {completedResults.map((result) => (
+                      <div 
+                        key={result._id}
+                        className={`p-6 rounded-2xl border flex flex-col justify-between transition-all duration-200 ${isDark ? 'bg-surface-container border-outline-variant/10 hover:bg-surface-container-high' : 'bg-white shadow-sm border-slate-100 hover:shadow-md'}`}
+                      >
+                        <div>
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${isDark ? 'bg-indigo-500/20 text-indigo-300' : 'bg-indigo-50 text-indigo-600'}`}>
+                              {result.test?.category || 'Test'}
+                            </span>
+                          </div>
+                          <h4 className={`text-lg font-extrabold tracking-tight leading-snug ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                            {result.test?.title}
+                          </h4>
+                          <p className={`text-xs mt-2 opacity-65 flex items-center gap-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                            <span className="material-symbols-outlined text-sm">event</span>
+                            {result.submittedAt ? new Date(result.submittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Date Unknown'}
+                          </p>
+                        </div>
+                        <button 
+                          onClick={() => setSelectedLeaderboardTest(result.test)}
+                          className="mt-6 cursor-pointer border-none py-3 px-4 bg-indigo-600 text-white font-bold rounded-xl text-sm transition-all hover:bg-indigo-500 flex items-center justify-center gap-2"
+                        >
+                          <span className="material-symbols-outlined text-lg">emoji_events</span>
+                          View Leaderboard
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-4 mb-6">
+                  <button 
+                    onClick={() => {
+                      setSelectedLeaderboardTest(null);
+                      setLeaderboardData(null);
+                    }}
+                    className={`p-2 rounded-xl border transition-all cursor-pointer flex items-center justify-center ${isDark ? 'bg-surface-container border-outline-variant/20 text-white hover:bg-surface-container-high' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                  >
+                    <span className="material-symbols-outlined">arrow_back</span>
+                  </button>
+                  <div>
+                    <h2 className={`text-3xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                      {selectedLeaderboardTest.title}
+                    </h2>
+                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                      Live Leaderboard Rankings
+                    </p>
+                  </div>
+                </div>
+
+                {loadingLeaderboard ? (
+                  <div className={`p-12 text-center rounded-2xl border ${isDark ? 'bg-surface-container border-outline-variant/20' : 'bg-white border-slate-100 shadow-sm'}`}>
+                    <span className="material-symbols-outlined animate-spin text-indigo-500 text-4xl">sync</span>
+                    <p className={`mt-3 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Fetching rankings...</p>
+                  </div>
+                ) : leaderboardError ? (
+                  <div className={`p-6 rounded-2xl border text-red-500 ${isDark ? 'bg-red-500/10 border-red-500/20' : 'bg-red-50 border-red-100'}`}>
+                    {leaderboardError}
+                  </div>
+                ) : leaderboardData ? (
+                  <div className="space-y-8">
+                    {/* Quick Summary Widget for User Rank */}
+                    {leaderboardData.myRank && (
+                      <div className={`p-6 rounded-2xl border flex items-center justify-between bg-gradient-to-r from-indigo-600 to-violet-700 text-white border-none shadow-xl shadow-indigo-500/20`}>
+                        <div className="flex items-center gap-4">
+                          <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-yellow-300 font-black text-2xl shadow-inner">
+                            #{leaderboardData.myRank}
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-xl">Your Current Rank</h4>
+                            <p className="text-indigo-100 text-xs opacity-80">Position computed across {leaderboardData.leaderboard.length} completed attempts.</p>
+                          </div>
+                        </div>
+                        <div className="hidden sm:flex flex-col text-right">
+                          <span className="text-xs opacity-75 font-medium uppercase tracking-widest">Your Total Score</span>
+                          <span className="text-2xl font-black">{leaderboardData.leaderboard.find(l => l.isMe)?.totalScore} / {selectedLeaderboardTest.totalMarks}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Leaderboard Table Container */}
+                    <div className={`rounded-2xl border overflow-hidden ${isDark ? 'bg-surface-container border-outline-variant/20' : 'bg-white border-slate-100 shadow-sm'}`}>
+                      <div className="overflow-x-auto">
+                        <table className="w-full border-collapse">
+                          <thead>
+                            <tr className={`border-b text-left ${isDark ? 'border-outline-variant/10 bg-surface-container-high' : 'border-slate-100 bg-slate-50'}`}>
+                              <th className={`py-4 px-6 text-xs font-black uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Rank</th>
+                              <th className={`py-4 px-6 text-xs font-black uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Student</th>
+                              {/* Map dynamic section headers */}
+                              {(leaderboardData.test?.sections?.map(s => s.name) || (leaderboardData.leaderboard?.[0] ? Object.keys(leaderboardData.leaderboard[0].sectionScores) : [])).map(sect => (
+                                <th key={sect} className={`py-4 px-6 text-xs font-black uppercase tracking-widest text-center ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{sect}</th>
+                              ))}
+                              <th className={`py-4 px-6 text-xs font-black uppercase tracking-widest text-center ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Marks</th>
+                              <th className={`py-4 px-6 text-xs font-black uppercase tracking-widest text-center ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Percentage</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {leaderboardData.leaderboard.map((student) => {
+                              const sections = leaderboardData.test?.sections?.map(s => s.name) || Object.keys(student.sectionScores);
+                              return (
+                                <tr 
+                                  key={student.username + student.rank}
+                                  className={`border-b last:border-none transition-colors duration-150 ${student.isMe ? (isDark ? 'bg-indigo-500/10 hover:bg-indigo-500/15' : 'bg-indigo-50/50 hover:bg-indigo-50') : (isDark ? 'border-outline-variant/5 hover:bg-surface-container-highest' : 'border-slate-50 hover:bg-slate-50/50')}`}
+                                >
+                                  <td className="py-4 px-6 font-black text-lg">
+                                    {student.rank === 1 ? (
+                                      <span className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-500/20 text-amber-500 text-base" title="1st Place">🥇</span>
+                                    ) : student.rank === 2 ? (
+                                      <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-400/20 text-slate-400 text-base" title="2nd Place">🥈</span>
+                                    ) : student.rank === 3 ? (
+                                      <span className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-700/20 text-amber-700 text-base" title="3rd Place">🥉</span>
+                                    ) : (
+                                      <span className={`flex items-center justify-center w-8 h-8 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>#{student.rank}</span>
+                                    )}
+                                  </td>
+                                  <td className="py-4 px-6">
+                                    <div className="flex flex-col">
+                                      <span className={`font-bold ${student.isMe ? 'text-indigo-500' : (isDark ? 'text-white' : 'text-slate-900')}`}>
+                                        {student.name}
+                                      </span>
+                                      <span className={`text-xs font-medium opacity-60 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                                        @{student.username}
+                                      </span>
+                                    </div>
+                                  </td>
+                                  {/* Subject Wise Marks */}
+                                  {sections.map(sect => (
+                                    <td key={sect} className="py-4 px-6 text-center font-semibold">
+                                      <span className={student.sectionScores[sect]?.score >= 0 ? (isDark ? 'text-green-400' : 'text-green-600') : 'text-red-500'}>
+                                        {student.sectionScores[sect] !== undefined ? student.sectionScores[sect].score : '-'}
+                                      </span>
+                                    </td>
+                                  ))}
+                                  {/* Total Marks */}
+                                  <td className="py-4 px-6 text-center">
+                                    <span className={`font-extrabold ${student.isMe ? 'text-indigo-500 text-lg' : (isDark ? 'text-white' : 'text-slate-900')}`}>
+                                      {student.totalScore}
+                                    </span>
+                                    <span className="text-xs opacity-50 font-medium"> / {student.maxPossibleScore || selectedLeaderboardTest.totalMarks}</span>
+                                  </td>
+                                  {/* Percentage */}
+                                  <td className="py-4 px-6 text-center">
+                                    <span className={`px-3 py-1 rounded-full text-xs font-black ${isDark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-700'}`}>
+                                      {student.percentage ? student.percentage.toFixed(1) : '0.0'}%
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+              </>
+            )}
+          </div>
         ) : view === 'analytics' ? (
           <div className="space-y-8">
             <header>

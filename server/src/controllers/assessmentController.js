@@ -378,3 +378,52 @@ export const getMyAssessmentResults = asyncHandler(async (req, res) => {
     };
   }));
 });
+
+export const getTestLeaderboard = asyncHandler(async (req, res) => {
+  const { testId } = req.params;
+  const userId = req.user._id.toString();
+
+  const test = await Test.findById(testId).select('title totalMarks sections');
+  if (!test) {
+    return res.status(404).json({ message: 'Test not found' });
+  }
+
+  const attempts = await TestAttempt.find({
+    testId,
+    status: { $in: ['completed', 'auto-submitted'] }
+  })
+    .populate('userId', 'name username')
+    .sort({ totalScore: -1, submittedAt: 1 });
+
+  let myAttempt = null;
+  const mappedLeaderboard = attempts.map((attempt, index) => {
+    const isMe = attempt.userId?._id?.toString() === userId;
+    
+    const sectionScores = attempt.sectionScores instanceof Map
+      ? Object.fromEntries(attempt.sectionScores)
+      : attempt.sectionScores || {};
+
+    const entry = {
+      rank: index + 1,
+      name: isMe ? 'You' : (attempt.userId?.name || 'Anonymous Student'),
+      username: attempt.userId?.username || 'anonymous',
+      totalScore: attempt.totalScore,
+      maxPossibleScore: attempt.maxPossibleScore,
+      percentage: attempt.percentage,
+      sectionScores,
+      isMe,
+    };
+
+    if (isMe) {
+      myAttempt = entry;
+    }
+
+    return entry;
+  });
+
+  res.json({
+    test,
+    myRank: myAttempt ? myAttempt.rank : null,
+    leaderboard: mappedLeaderboard
+  });
+});
