@@ -305,27 +305,33 @@ export default function App() {
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-background text-on-surface' : 'bg-slate-50 text-slate-900'}`}>
       {/* SideNavBar */}
-      <aside className={`fixed left-0 top-0 h-screen w-64 flex flex-col py-6 px-4 z-50 transition-colors duration-300 ${isDark ? 'bg-slate-900' : 'bg-white shadow-xl'}`}>
-        <nav className="flex-1 space-y-1">
-          <button onClick={showDashboard} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'dashboard' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
-            <span className="material-symbols-outlined mr-3">dashboard</span>
-            <span className="text-sm font-medium">Dashboard</span>
+      <aside className={`fixed bottom-0 lg:top-0 left-0 z-50 w-full lg:w-64 h-16 lg:h-screen flex flex-row lg:flex-col px-2 lg:px-4 py-1 lg:py-6 border-t lg:border-t-0 transition-all duration-300 ${isDark ? 'bg-slate-950/95 border-slate-900 backdrop-blur-md' : 'bg-white/95 border-slate-200/80 backdrop-blur-md shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.05)] lg:shadow-xl'}`}>
+        <nav className="flex lg:flex-col items-center lg:items-stretch justify-around lg:justify-start w-full lg:flex-1 space-y-0 lg:space-y-1 h-full lg:h-auto">
+          <button onClick={showDashboard} className={`flex-1 lg:flex-initial w-full border-none bg-transparent flex flex-col lg:flex-row items-center justify-center lg:justify-start px-1 lg:px-3 py-1 lg:py-3 transition-all duration-200 rounded-xl lg:rounded-lg group ${view === 'dashboard' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+            <span className="material-symbols-outlined mb-0.5 lg:mb-0 lg:mr-3 text-[22px] lg:text-2xl flex-shrink-0">dashboard</span>
+            <span className="text-[9px] lg:text-sm font-extrabold lg:font-medium tracking-tight">Dashboard</span>
           </button>
-          <button onClick={showTestSeries} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'test-series' || view === 'instructions' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
-            <span className="material-symbols-outlined mr-3">layers</span>
-            <span className="text-sm font-medium">Test Series</span>
+          <button onClick={showTestSeries} className={`flex-1 lg:flex-initial w-full border-none bg-transparent flex flex-col lg:flex-row items-center justify-center lg:justify-start px-1 lg:px-3 py-1 lg:py-3 transition-all duration-200 rounded-xl lg:rounded-lg group ${view === 'test-series' || view === 'instructions' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+            <span className="material-symbols-outlined mb-0.5 lg:mb-0 lg:mr-3 text-[22px] lg:text-2xl flex-shrink-0">layers</span>
+            <span className="text-[9px] lg:text-sm font-extrabold lg:font-medium tracking-tight">Tests</span>
           </button>
-          <button onClick={() => { setView('leaderboard'); setSelectedLeaderboardTest(null); }} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'leaderboard' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
-            <span className="material-symbols-outlined mr-3">emoji_events</span>
-            <span className="text-sm font-medium">Leaderboard</span>
+          <button onClick={() => { setView('leaderboard'); setSelectedLeaderboardTest(null); }} className={`flex-1 lg:flex-initial w-full border-none bg-transparent flex flex-col lg:flex-row items-center justify-center lg:justify-start px-1 lg:px-3 py-1 lg:py-3 transition-all duration-200 rounded-xl lg:rounded-lg group ${view === 'leaderboard' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+            <span className="material-symbols-outlined mb-0.5 lg:mb-0 lg:mr-3 text-[22px] lg:text-2xl flex-shrink-0">emoji_events</span>
+            <span className="text-[9px] lg:text-sm font-extrabold lg:font-medium tracking-tight">Ranks</span>
           </button>
-          <button onClick={() => setView('analytics')} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'analytics' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
-            <span className="material-symbols-outlined mr-3">insights</span>
-            <span className="text-sm font-medium">Analytics</span>
+          <button onClick={() => setView('analytics')} className={`flex-1 lg:flex-initial w-full border-none bg-transparent flex flex-col lg:flex-row items-center justify-center lg:justify-start px-1 lg:px-3 py-1 lg:py-3 transition-all duration-200 rounded-xl lg:rounded-lg group ${view === 'analytics' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+            <span className="material-symbols-outlined mb-0.5 lg:mb-0 lg:mr-3 text-[22px] lg:text-2xl flex-shrink-0">insights</span>
+            <span className="text-[9px] lg:text-sm font-extrabold lg:font-medium tracking-tight">Stats</span>
+          </button>
+          
+          {/* Mobile-Only Settings button inserted into bottom nav */}
+          <button onClick={() => setView('settings')} className={`flex lg:hidden flex-1 w-full border-none bg-transparent flex flex-col items-center justify-center px-1 py-1 transition-all duration-200 rounded-xl group ${view === 'settings' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600'}`}>
+            <span className="material-symbols-outlined mb-0.5 text-[22px]">settings</span>
+            <span className="text-[9px] font-extrabold tracking-tight">Settings</span>
           </button>
         </nav>
 
-        <div className={`mt-auto pt-6 border-t space-y-1 ${isDark ? 'border-slate-800/50' : 'border-slate-200'}`}>
+        <div className={`hidden lg:flex flex-col mt-auto pt-6 border-t space-y-1 ${isDark ? 'border-slate-800/50' : 'border-slate-200'}`}>
           <button onClick={() => setView('settings')} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'settings' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
             <span className="material-symbols-outlined mr-3">settings</span>
             <span className="text-sm font-medium">Settings</span>
@@ -356,8 +362,15 @@ export default function App() {
       </aside>
 
       {/* TopNavBar */}
-      <header className={`fixed top-0 right-0 w-[calc(100%-16rem)] h-16 backdrop-blur-xl z-40 flex justify-between items-center px-8 transition-colors duration-300 ${isDark ? 'bg-slate-950/80 shadow-[0_40px_40px_-15px_rgba(0,0,0,0.06)]' : 'bg-white/80 shadow-md'}`}>
-        <div className="flex items-center w-1/2">
+      <header className={`fixed top-0 right-0 w-full lg:w-[calc(100%-16rem)] h-16 backdrop-blur-xl z-40 flex justify-between items-center px-4 lg:px-8 transition-all duration-300 border-b ${isDark ? 'bg-slate-950/80 shadow-[0_40px_40px_-15px_rgba(0,0,0,0.06)]' : 'bg-white/80 shadow-md'}`}>
+        {/* Mobile-Only Brand Badge */}
+        <div className="flex lg:hidden items-center gap-2 mr-2 shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 text-white flex items-center justify-center font-black text-base shadow-md">
+            V
+          </div>
+          <span className={`font-black font-headline text-xs tracking-wider uppercase hidden xs:block ${isDark ? 'text-white' : 'text-slate-800'}`}>Vayl</span>
+        </div>
+        <div className="flex items-center flex-1 max-w-xs lg:max-w-md mr-2">
           <div className="relative w-full max-w-md">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-lg">search</span>
             <input
@@ -370,7 +383,7 @@ export default function App() {
                 if (view !== 'dashboard' && view !== 'instructions') showDashboard();
               }}
             />
-            <div className={`absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[10px] font-bold ${isDark ? 'bg-secondary-container text-on-surface-variant' : 'bg-slate-200 text-slate-500'}`}>⌘ K</div>
+            <div className={`absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[10px] font-bold hidden md:block ${isDark ? 'bg-secondary-container text-on-surface-variant' : 'bg-slate-200 text-slate-500'}`}>⌘ K</div>
           </div>
         </div>
         <div className="flex items-center space-x-4">
@@ -391,7 +404,7 @@ export default function App() {
       </header>
 
       {/* Main Content Canvas */}
-      <main className="ml-64 pt-24 px-10 pb-20 min-h-screen">
+      <main className="ml-0 lg:ml-64 pt-20 lg:pt-24 px-4 md:px-10 pb-24 lg:pb-20 min-h-screen">
 
         {view === 'dashboard' ? (
           <div className="max-w-5xl space-y-10 animate-in fade-in duration-500">
@@ -1002,8 +1015,55 @@ export default function App() {
                       </div>
                     )}
 
-                    {/* Leaderboard Table Container */}
-                    <div className={`rounded-2xl border overflow-hidden ${isDark ? 'bg-surface-container border-outline-variant/20' : 'bg-white border-slate-100 shadow-sm'}`}>
+                    {/* Mobile Leaderboard Grid (Visible below 768px) */}
+                    <div className="grid grid-cols-1 gap-4 md:hidden">
+                      {leaderboardData.leaderboard.map((student) => {
+                        const sections = leaderboardData.test?.sections?.map(s => s.name) || Object.keys(student.sectionScores);
+                        return (
+                          <div 
+                            key={student.username + student.rank} 
+                            className={`p-4 rounded-2xl border flex flex-col gap-4 transition-all ${student.isMe ? (isDark ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-indigo-50 border-indigo-200') : (isDark ? 'bg-surface-container border-outline-variant/10' : 'bg-white border-slate-100 shadow-sm')}`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-base ${
+                                  student.rank === 1 ? 'bg-amber-500/20 text-amber-500' :
+                                  student.rank === 2 ? 'bg-slate-400/20 text-slate-400' :
+                                  student.rank === 3 ? 'bg-amber-700/20 text-amber-700' :
+                                  (isDark ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500')
+                                }`}>
+                                  {student.rank === 1 ? '🥇' : student.rank === 2 ? '🥈' : student.rank === 3 ? '🥉' : `#${student.rank}`}
+                                </div>
+                                <div>
+                                  <div className={`font-bold text-sm ${student.isMe ? 'text-indigo-500' : (isDark ? 'text-white' : 'text-slate-900')}`}>{student.name}</div>
+                                  <div className="text-[10px] opacity-60">@{student.username}</div>
+                                </div>
+                              </div>
+                              <div className="text-right flex flex-col items-end">
+                                <div className={`text-lg font-black leading-none ${student.isMe ? 'text-indigo-400' : (isDark ? 'text-white' : 'text-slate-800')}`}>{student.totalScore}</div>
+                                <div className="text-[9px] font-extrabold uppercase opacity-60 tracking-wider mt-1">Total Marks</div>
+                              </div>
+                            </div>
+                            
+                            <div className={`grid grid-cols-3 gap-2 p-3 rounded-xl text-center text-xs font-bold ${isDark ? 'bg-slate-900/30' : 'bg-slate-50'}`}>
+                              <div>
+                                <div className="opacity-60 mb-0.5 text-[8px] uppercase tracking-wider">Percent</div>
+                                <div className={isDark ? 'text-slate-200' : 'text-slate-700'}>{student.percentage}%</div>
+                              </div>
+                              {sections.slice(0, 2).map(sect => (
+                                <div key={sect} className="border-l border-slate-500/10">
+                                  <div className="opacity-60 mb-0.5 text-[8px] uppercase tracking-wider truncate px-1">{sect}</div>
+                                  <div className={isDark ? 'text-slate-200' : 'text-slate-700'}>{student.sectionScores[sect] ?? '-'}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Desktop Leaderboard Table (Hidden below 768px) */}
+                    <div className={`hidden md:block rounded-2xl border overflow-hidden ${isDark ? 'bg-surface-container border-outline-variant/20' : 'bg-white border-slate-100 shadow-sm'}`}>
                       <div className="overflow-x-auto">
                         <table className="w-full border-collapse">
                           <thead>
