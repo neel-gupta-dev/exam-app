@@ -32,6 +32,7 @@ export default function App() {
   const [results, setResults] = useState([]);
   const [loadingResults, setLoadingResults] = useState(false);
   const [resultsError, setResultsError] = useState('');
+  const [resultsRefreshKey, setResultsRefreshKey] = useState(0);
   const [selectedLeaderboardTest, setSelectedLeaderboardTest] = useState(null);
   const [leaderboardData, setLeaderboardData] = useState(null);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
@@ -102,7 +103,7 @@ export default function App() {
           setLoadingResults(false);
         });
     }
-  }, [user, view]);
+  }, [user, view, resultsRefreshKey]);
   useEffect(() => {
     if (user && view === 'leaderboard' && selectedLeaderboardTest) {
       setLoadingLeaderboard(true);
@@ -164,6 +165,30 @@ export default function App() {
     setUser(null);
     setView('dashboard');
   };
+
+  useEffect(() => {
+    const openAnalytics = () => {
+      setSelectedTest(null);
+      setResultsRefreshKey((key) => key + 1);
+      setView('analytics');
+    };
+    const handleAttemptMessage = (event) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === 'cbt:submitted') openAnalytics();
+    };
+    const handleStorage = (event) => {
+      if (event.key === 'post_submit_view' && event.newValue === 'analytics') {
+        localStorage.removeItem('post_submit_view');
+        openAnalytics();
+      }
+    };
+    window.addEventListener('message', handleAttemptMessage);
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('message', handleAttemptMessage);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
 
   useEffect(() => {
     if (isDark) {
@@ -301,6 +326,19 @@ export default function App() {
     : tests[0]
       ? 'Open the test details, read the instructions, and begin when ready.'
       : 'Published tests from your admin will appear here.';
+  const latestResult = sortedResults[0] || null;
+  const trendResults = sortedResults.slice(0, 8).reverse();
+  const trendPoints = trendResults.map((result, idx) => {
+    const x = trendResults.length <= 1 ? 50 : (idx / (trendResults.length - 1)) * 100;
+    const y = 100 - Math.max(0, Math.min(100, Number(result.percentage) || 0));
+    return `${x},${y}`;
+  }).join(' ');
+  const latestSectionEntries = Object.entries(latestResult?.sectionScores || {});
+  const latestTelemetryQuestions = latestResult?.telemetry?.questions || [];
+  const maxQuestionTime = Math.max(1, ...latestTelemetryQuestions.map((question) => question.timeSpentSeconds || 0));
+  const totalTelemetryMinutes = latestResult?.telemetry?.totalTimeSpentSeconds
+    ? Math.round(latestResult.telemetry.totalTimeSpentSeconds / 60)
+    : 0;
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-background text-on-surface' : 'bg-slate-50 text-slate-900'}`}>
@@ -1176,6 +1214,92 @@ export default function App() {
                     <p className="text-3xl font-bold mt-2">{bestResult?.percentage ?? 0}%</p>
                   </div>
                 </div>
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+                  <div className={`xl:col-span-2 p-6 rounded-xl ${isDark ? 'bg-surface-container' : 'bg-white shadow-sm border border-slate-100'}`}>
+                    <div className="flex items-center justify-between gap-4 mb-5">
+                      <div>
+                        <p className="text-xs uppercase tracking-widest text-slate-500 font-bold">Score Trend</p>
+                        <h3 className="text-xl font-bold mt-1">Recent Test Performance</h3>
+                      </div>
+                      <span className="text-sm font-bold text-indigo-400">{trendResults.length} attempts</span>
+                    </div>
+                    <div className={`h-56 rounded-xl p-4 ${isDark ? 'bg-slate-950/30' : 'bg-slate-50'}`}>
+                      {trendResults.length > 1 ? (
+                        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full overflow-visible">
+                          <polyline points={trendPoints} fill="none" stroke="#6366f1" strokeWidth="3" vectorEffect="non-scaling-stroke" />
+                          {trendResults.map((result, idx) => {
+                            const x = trendResults.length <= 1 ? 50 : (idx / (trendResults.length - 1)) * 100;
+                            const y = 100 - Math.max(0, Math.min(100, Number(result.percentage) || 0));
+                            return <circle key={result._id} cx={x} cy={y} r="2.4" fill="#6366f1" />;
+                          })}
+                        </svg>
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-sm text-slate-500">Submit more tests to build a trend.</div>
+                      )}
+                    </div>
+                  </div>
+                  <div className={`p-6 rounded-xl ${isDark ? 'bg-surface-container' : 'bg-white shadow-sm border border-slate-100'}`}>
+                    <p className="text-xs uppercase tracking-widest text-slate-500 font-bold">Latest Attempt Timing</p>
+                    <h3 className="text-xl font-bold mt-1">{totalTelemetryMinutes} mins tracked</h3>
+                    <div className="mt-5 space-y-4">
+                      <div>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>Avg/question</span>
+                          <span className="font-bold">{latestResult?.telemetry?.averageQuestionTimeSeconds || 0}s</span>
+                        </div>
+                        <div className={`h-2 rounded-full overflow-hidden ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
+                          <div className="h-full bg-indigo-500" style={{ width: `${Math.min(100, ((latestResult?.telemetry?.averageQuestionTimeSeconds || 0) / maxQuestionTime) * 100)}%` }} />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>Question visits</span>
+                          <span className="font-bold">{latestResult?.telemetry?.totalVisits || 0}</span>
+                        </div>
+                        <div className={`h-2 rounded-full overflow-hidden ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
+                          <div className="h-full bg-emerald-500" style={{ width: `${Math.min(100, ((latestResult?.telemetry?.totalVisits || 0) / Math.max(1, latestResult?.totalQuestions || 1)) * 35)}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                  <div className={`p-6 rounded-xl ${isDark ? 'bg-surface-container' : 'bg-white shadow-sm border border-slate-100'}`}>
+                    <p className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-4">Latest Section Score</p>
+                    <div className="space-y-3">
+                      {latestSectionEntries.length ? latestSectionEntries.map(([section, score]) => {
+                        const maxSection = Math.max(...latestSectionEntries.map(([, item]) => Math.abs(item.score || 0)), 1);
+                        return (
+                          <div key={section}>
+                            <div className="flex justify-between text-sm mb-1">
+                              <span className="font-semibold truncate">{section}</span>
+                              <span className={(score.score || 0) >= 0 ? 'text-emerald-500 font-bold' : 'text-red-500 font-bold'}>{score.score || 0} pts</span>
+                            </div>
+                            <div className={`h-2 rounded-full overflow-hidden ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
+                              <div className={`${(score.score || 0) >= 0 ? 'bg-emerald-500' : 'bg-red-500'} h-full`} style={{ width: `${Math.min(100, (Math.abs(score.score || 0) / maxSection) * 100)}%` }} />
+                            </div>
+                          </div>
+                        );
+                      }) : <p className="text-sm text-slate-500">No section score data yet.</p>}
+                    </div>
+                  </div>
+                  <div className={`p-6 rounded-xl ${isDark ? 'bg-surface-container' : 'bg-white shadow-sm border border-slate-100'}`}>
+                    <p className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-4">Question Time Distribution</p>
+                    <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                      {latestTelemetryQuestions.length ? latestTelemetryQuestions.map((question, idx) => (
+                        <div key={question.questionId || idx}>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span className="font-bold">Q{idx + 1}</span>
+                            <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>{question.timeSpentSeconds || 0}s • {question.visitCount || 0} visits</span>
+                          </div>
+                          <div className={`h-2 rounded-full overflow-hidden ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
+                            <div className="h-full bg-indigo-500" style={{ width: `${Math.min(100, ((question.timeSpentSeconds || 0) / maxQuestionTime) * 100)}%` }} />
+                          </div>
+                        </div>
+                      )) : <p className="text-sm text-slate-500">Telemetry will appear after the next submitted test.</p>}
+                    </div>
+                  </div>
+                </div>
                 <div className="space-y-4">
                   {results.map((result) => {
                     const sectionEntries = Object.entries(result.sectionScores || {});
@@ -1198,6 +1322,10 @@ export default function App() {
                           <div className={`p-3 rounded-lg ${isDark ? 'bg-surface-container-low' : 'bg-slate-50'}`}>
                             <p className="text-[10px] uppercase text-slate-500 font-bold">Answered</p>
                             <p className="font-bold">{result.answered} / {result.totalQuestions}</p>
+                          </div>
+                          <div className={`p-3 rounded-lg ${isDark ? 'bg-surface-container-low' : 'bg-slate-50'}`}>
+                            <p className="text-[10px] uppercase text-slate-500 font-bold">Tracked Time</p>
+                            <p className="font-bold">{Math.round((result.telemetry?.totalTimeSpentSeconds || 0) / 60)} mins</p>
                           </div>
                           {sectionEntries.slice(0, 3).map(([section, score]) => (
                             <div key={section} className={`p-3 rounded-lg ${isDark ? 'bg-surface-container-low' : 'bg-slate-50'}`}>

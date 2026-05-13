@@ -31,6 +31,8 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   const submitLock = useRef(false);
   const latestAnswersRef = useRef([]);
   const latestTimeLeftRef = useRef(0);
+  const telemetryRef = useRef({});
+  const activeVisitRef = useRef(null);
   const token = user?.token || localStorage.getItem('test_token');
 
   // ─── API helper ───
@@ -78,15 +80,25 @@ export default function TestEngine({ testId, user, onSubmitted }) {
         // But the previous API returned attempt.answers. Let's assume assessmentController returns data in array or map format.
         // In assessmentController I wrote: answers: {} Map of questionId -> { status, selectedOption }
         const parsedAnswers = [];
+        const restoredTelemetry = {};
         if (data.session && data.session.answers) {
           Object.keys(data.session.answers).forEach(qId => {
+             const sessionAnswer = data.session.answers[qId] || {};
              parsedAnswers.push({
                questionId: qId,
-               selectedAnswer: data.session.answers[qId].selectedOption || [],
-               status: data.session.answers[qId].status
+               selectedAnswer: sessionAnswer.selectedOption || [],
+               status: sessionAnswer.status
              })
+             restoredTelemetry[qId] = {
+               timeSpentSeconds: Number(sessionAnswer.timeSpentSeconds) || 0,
+               visitCount: Number(sessionAnswer.visitCount) || 0,
+               firstVisitedAt: sessionAnswer.firstVisitedAt || null,
+               lastVisitedAt: sessionAnswer.lastVisitedAt || null,
+               visitLog: Array.isArray(sessionAnswer.visitLog) ? sessionAnswer.visitLog : [],
+             };
           })
         }
+        telemetryRef.current = restoredTelemetry;
         setAnswers(parsedAnswers);
 
         // Calculate remaining time
@@ -114,6 +126,102 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   const currentQuestion = questions[currentIdx];
   const currentAnswer = answers.find((a) => a.questionId === currentQuestion?._id);
 
+  const closeActiveVisit = useCallback((leftAtMs = Date.now()) => {
+    const activeVisit = activeVisitRef.current;
+    if (!activeVisit?.questionId) return;
+
+    const durationSeconds = Math.max(0, Math.round((leftAtMs - activeVisit.enteredAtMs) / 1000));
+    const previous = telemetryRef.current[activeVisit.questionId] || {
+      timeSpentSeconds: 0,
+      visitCount: 0,
+      firstVisitedAt: null,
+      lastVisitedAt: null,
+      visitLog: [],
+    };
+    const enteredAt = new Date(activeVisit.enteredAtMs).toISOString();
+    const leftAt = new Date(leftAtMs).toISOString();
+
+    telemetryRef.current = {
+      ...telemetryRef.current,
+      [activeVisit.questionId]: {
+        ...previous,
+        timeSpentSeconds: (previous.timeSpentSeconds || 0) + durationSeconds,
+        firstVisitedAt: previous.firstVisitedAt || enteredAt,
+        lastVisitedAt: enteredAt,
+        visitLog: [
+          ...(previous.visitLog || []),
+          { enteredAt, leftAt, durationSeconds },
+        ],
+      },
+    };
+    activeVisitRef.current = null;
+    syncDirty.current = true;
+  }, []);
+
+  const openQuestionVisit = useCallback((questionId) => {
+    if (!questionId) return;
+    const now = Date.now();
+    if (activeVisitRef.current?.questionId === questionId) return;
+    closeActiveVisit(now);
+
+    const previous = telemetryRef.current[questionId] || {
+      timeSpentSeconds: 0,
+      visitCount: 0,
+      firstVisitedAt: null,
+      lastVisitedAt: null,
+      visitLog: [],
+    };
+    const enteredAt = new Date(now).toISOString();
+    telemetryRef.current = {
+      ...telemetryRef.current,
+      [questionId]: {
+        ...previous,
+        visitCount: (previous.visitCount || 0) + 1,
+        firstVisitedAt: previous.firstVisitedAt || enteredAt,
+        lastVisitedAt: enteredAt,
+      },
+    };
+    activeVisitRef.current = { questionId, enteredAtMs: now };
+    syncDirty.current = true;
+  }, [closeActiveVisit]);
+
+  const getTelemetrySnapshot = useCallback(({ closeCurrent = false } = {}) => {
+    if (closeCurrent) {
+      closeActiveVisit(Date.now());
+      return telemetryRef.current;
+    }
+
+    const snapshot = { ...telemetryRef.current };
+    const activeVisit = activeVisitRef.current;
+    if (activeVisit?.questionId) {
+      const previous = snapshot[activeVisit.questionId] || {
+        timeSpentSeconds: 0,
+        visitCount: 0,
+        firstVisitedAt: null,
+        lastVisitedAt: null,
+        visitLog: [],
+      };
+      const elapsedSeconds = Math.max(0, Math.round((Date.now() - activeVisit.enteredAtMs) / 1000));
+      snapshot[activeVisit.questionId] = {
+        ...previous,
+        timeSpentSeconds: (previous.timeSpentSeconds || 0) + elapsedSeconds,
+      };
+    }
+    return snapshot;
+  }, [closeActiveVisit]);
+
+  const closeAttemptWindow = useCallback(() => {
+    localStorage.setItem('post_submit_view', 'analytics');
+    if (window.opener && !window.opener.closed) {
+      window.opener.postMessage({ type: 'cbt:submitted' }, window.location.origin);
+    }
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+    if (onSubmitted) onSubmitted();
+    window.close();
+  }, [onSubmitted]);
+
   useEffect(() => {
     latestAnswersRef.current = answers;
   }, [answers]);
@@ -121,6 +229,21 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   useEffect(() => {
     latestTimeLeftRef.current = timeLeft;
   }, [timeLeft]);
+
+  useEffect(() => {
+    if (!currentQuestion || submitted) return;
+    openQuestionVisit(currentQuestion._id);
+  }, [currentQuestion?._id, openQuestionVisit, submitted]);
+
+  useEffect(() => {
+    return () => closeActiveVisit(Date.now());
+  }, [closeActiveVisit]);
+
+  useEffect(() => {
+    if (!submitted || !result) return;
+    const closeTimer = setTimeout(() => closeAttemptWindow(), 900);
+    return () => clearTimeout(closeTimer);
+  }, [submitted, result, closeAttemptWindow]);
 
   // Disable right-click
   useEffect(() => {
@@ -191,14 +314,33 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     return () => document.removeEventListener('visibilitychange', handler);
   }, [submitted]);
 
-  const doSync = async ({ silent = true } = {}) => {
+  const doSync = async ({ silent = true, closeCurrent = false } = {}) => {
     try {
       // Map back to Object for Redis
       const outAnswers = {};
+      const telemetrySnapshot = getTelemetrySnapshot({ closeCurrent });
       latestAnswersRef.current.forEach(a => {
+        const telemetry = telemetrySnapshot[a.questionId] || {};
         outAnswers[a.questionId] = {
            status: a.status,
-           selectedOption: a.selectedAnswer
+           selectedOption: a.selectedAnswer,
+           timeSpentSeconds: telemetry.timeSpentSeconds || 0,
+           visitCount: telemetry.visitCount || 0,
+           firstVisitedAt: telemetry.firstVisitedAt || null,
+           lastVisitedAt: telemetry.lastVisitedAt || null,
+           visitLog: telemetry.visitLog || [],
+        };
+      });
+      Object.entries(telemetrySnapshot).forEach(([questionId, telemetry]) => {
+        if (outAnswers[questionId]) return;
+        outAnswers[questionId] = {
+          status: 'unanswered',
+          selectedOption: [],
+          timeSpentSeconds: telemetry.timeSpentSeconds || 0,
+          visitCount: telemetry.visitCount || 0,
+          firstVisitedAt: telemetry.firstVisitedAt || null,
+          lastVisitedAt: telemetry.lastVisitedAt || null,
+          visitLog: telemetry.visitLog || [],
         };
       });
       await apiFetch(`/assessment/${testId}/sync`, {
@@ -306,8 +448,9 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     submitLock.current = true;
     setIsSubmitting(true);
     try {
-      await doSync({ silent: isAutoSubmit });
+      await doSync({ silent: isAutoSubmit, closeCurrent: true });
     } catch (e) {
+      if (currentQuestion) openQuestionVisit(currentQuestion._id);
       alert('Failed to save your latest answers: ' + e.message);
       setIsSubmitting(false);
       submitLock.current = false;
@@ -328,6 +471,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
         clearInterval(syncRef.current);
       } catch (e) {
         if (!isAutoSubmit) {
+          if (currentQuestion) openQuestionVisit(currentQuestion._id);
           alert('Failed to submit: ' + e.message);
           setIsSubmitting(false);
           submitLock.current = false;
@@ -439,20 +583,10 @@ export default function TestEngine({ testId, user, onSubmitted }) {
       <div className="flex flex-col h-screen bg-[#E8EDF2] items-center justify-center p-4">
           <div className="bg-white p-8 rounded shadow text-center max-w-lg w-full border-t-4 border-[#3b82f6]">
             <h1 className="text-2xl font-bold mb-4 text-[#3a5c8e]">Evaluation Submitted</h1>
-            <p className="mb-6 text-slate-600 font-medium">Your test has been successfully submitted. Your final score and detailed report will be available on your dashboard shortly.</p>
+            <p className="mb-6 text-slate-600 font-medium">Your test has been successfully submitted. This attempt window will close automatically.</p>
             <div className="flex justify-center mt-6">
-              <button onClick={() => {
-                // If Fullscreen, exit first
-                if (document.fullscreenElement) {
-                   document.exitFullscreen().catch(e => console.log('Exit fullscreen failed', e));
-                }
-                localStorage.setItem('post_submit_view', 'analytics');
-                const btn = document.createElement('a'); 
-                btn.href = '/';
-                btn.click();
-                if (onSubmitted) onSubmitted();
-              }} className="px-8 py-2.5 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded font-bold shadow-sm transition">
-                Return to Dashboard
+              <button onClick={closeAttemptWindow} className="px-8 py-2.5 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded font-bold shadow-sm transition">
+                Close Window
               </button>
             </div>
           </div>

@@ -48,13 +48,47 @@ const normalizeStatus = (status, selectedAnswer) => {
   return selectedAnswer.length ? 'answered' : 'unanswered';
 };
 
+const toValidDate = (value) => {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const normalizeVisitLog = (visitLog = []) => {
+  if (!Array.isArray(visitLog)) return [];
+  return visitLog.slice(-500).map((visit) => ({
+    enteredAt: toValidDate(visit?.enteredAt),
+    leftAt: toValidDate(visit?.leftAt),
+    durationSeconds: Math.max(0, Math.round(Number(visit?.durationSeconds) || 0)),
+  }));
+};
+
+const normalizeTelemetry = (answer = {}) => {
+  const visitLog = normalizeVisitLog(answer.visitLog);
+  const visitCount = Math.max(Number(answer.visitCount) || 0, visitLog.length);
+  const timeFromVisits = visitLog.reduce((sum, visit) => sum + (visit.durationSeconds || 0), 0);
+  const timeSpentSeconds = Math.max(
+    Math.round(Number(answer.timeSpentSeconds) || 0),
+    Math.round(timeFromVisits)
+  );
+
+  return {
+    timeSpentSeconds,
+    visitCount,
+    firstVisitedAt: toValidDate(answer.firstVisitedAt) || visitLog[0]?.enteredAt || null,
+    lastVisitedAt: toValidDate(answer.lastVisitedAt) || visitLog[visitLog.length - 1]?.enteredAt || null,
+    visitLog,
+  };
+};
+
 const sessionAnswersToRows = (answers = {}) => Object.entries(answers).map(([questionId, answer]) => {
   const selectedAnswer = normalizeSelectedAnswer(answer);
+  const telemetry = normalizeTelemetry(answer);
   return {
     questionId,
     selectedAnswer,
     status: normalizeStatus(answer?.status, selectedAnswer),
-    timeSpentSeconds: Number(answer?.timeSpentSeconds) || 0,
+    ...telemetry,
   };
 });
 
@@ -63,6 +97,10 @@ const answerRowsToSessionMap = (rows = []) => rows.reduce((acc, row) => {
     selectedOption: row.selectedAnswer || [],
     status: normalizeStatus(row.status, row.selectedAnswer || []),
     timeSpentSeconds: row.timeSpentSeconds || 0,
+    visitCount: row.visitCount || 0,
+    firstVisitedAt: row.firstVisitedAt || null,
+    lastVisitedAt: row.lastVisitedAt || null,
+    visitLog: row.visitLog || [],
   };
   return acc;
 }, {});
@@ -70,11 +108,12 @@ const answerRowsToSessionMap = (rows = []) => rows.reduce((acc, row) => {
 const buildCompleteAnswerRows = (questions, answers = {}) => questions.map((question) => {
   const answer = answers?.[question._id.toString()] || {};
   const selectedAnswer = normalizeSelectedAnswer(answer);
+  const telemetry = normalizeTelemetry(answer);
   return {
     questionId: question._id,
     selectedAnswer,
     status: normalizeStatus(answer.status, selectedAnswer),
-    timeSpentSeconds: Number(answer.timeSpentSeconds) || 0,
+    ...telemetry,
   };
 });
 
@@ -360,6 +399,20 @@ export const getMyAssessmentResults = asyncHandler(async (req, res) => {
     const sectionScores = attempt.sectionScores instanceof Map
       ? Object.fromEntries(attempt.sectionScores)
       : attempt.sectionScores || {};
+    const questionTelemetry = (attempt.answers || []).map((answer) => ({
+      questionId: answer.questionId,
+      timeSpentSeconds: Math.max(0, Math.round(Number(answer.timeSpentSeconds) || 0)),
+      visitCount: Math.max(0, Math.round(Number(answer.visitCount) || 0)),
+      firstVisitedAt: answer.firstVisitedAt || null,
+      lastVisitedAt: answer.lastVisitedAt || null,
+      visitLog: answer.visitLog || [],
+      status: answer.status,
+      answered: Boolean(answer.selectedAnswer?.length),
+    }));
+    const totalTimeSpentSeconds = questionTelemetry.reduce((sum, item) => sum + item.timeSpentSeconds, 0);
+    const mostTimeSpentQuestion = questionTelemetry.reduce((max, item) => (
+      item.timeSpentSeconds > (max?.timeSpentSeconds || 0) ? item : max
+    ), null);
 
     return {
       _id: attempt._id,
@@ -375,6 +428,15 @@ export const getMyAssessmentResults = asyncHandler(async (req, res) => {
       answered: attempt.answers?.filter((answer) => answer.selectedAnswer?.length > 0).length || 0,
       totalQuestions: attempt.answers?.length || 0,
       ipAddress: attempt.ipAddress || '',
+      telemetry: {
+        totalTimeSpentSeconds,
+        averageQuestionTimeSeconds: questionTelemetry.length
+          ? Math.round(totalTimeSpentSeconds / questionTelemetry.length)
+          : 0,
+        totalVisits: questionTelemetry.reduce((sum, item) => sum + item.visitCount, 0),
+        mostTimeSpentQuestion,
+        questions: questionTelemetry,
+      },
     };
   }));
 });
@@ -474,6 +536,10 @@ export const getAssessmentReview = asyncHandler(async (req, res) => {
       userAnswer: selected,
       status: userAns.status,
       timeSpentSeconds: userAns.timeSpentSeconds,
+      visitCount: userAns.visitCount || 0,
+      firstVisitedAt: userAns.firstVisitedAt || null,
+      lastVisitedAt: userAns.lastVisitedAt || null,
+      visitLog: userAns.visitLog || [],
       resultStatus: isUnanswered ? 'skipped' : (isCorrect ? 'correct' : 'wrong'),
     };
   });

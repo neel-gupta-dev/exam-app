@@ -126,3 +126,106 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
     totalUsers, totalSessions, activeSessions, totalResources, totalFeedback, adminCount, googleUsers, localUsers, recentSignups, topUsers,
   });
 });
+
+export const getTestTelemetry = asyncHandler(async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(100, parseInt(req.query.limit) || 25);
+  const skip = (page - 1) * limit;
+  const filter = {};
+
+  if (req.query.userId && mongoose.Types.ObjectId.isValid(req.query.userId)) {
+    filter.userId = new mongoose.Types.ObjectId(req.query.userId);
+  }
+  if (req.query.testId && mongoose.Types.ObjectId.isValid(req.query.testId)) {
+    filter.testId = new mongoose.Types.ObjectId(req.query.testId);
+  }
+  if (req.query.status) {
+    filter.status = String(req.query.status);
+  }
+
+  const [attempts, total] = await Promise.all([
+    TestAttempt.find(filter)
+      .populate('userId', 'name username email')
+      .populate('testId', 'title category totalMarks durationMinutes')
+      .sort({ submittedAt: -1, createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    TestAttempt.countDocuments(filter),
+  ]);
+
+  const rows = attempts.map((attempt) => {
+    const questionTelemetry = (attempt.answers || []).map((answer, index) => ({
+      questionNumber: index + 1,
+      questionId: answer.questionId,
+      status: answer.status,
+      answered: Boolean(answer.selectedAnswer?.length),
+      selectedAnswer: answer.selectedAnswer || [],
+      timeSpentSeconds: Math.max(0, Math.round(Number(answer.timeSpentSeconds) || 0)),
+      visitCount: Math.max(0, Math.round(Number(answer.visitCount) || 0)),
+      firstVisitedAt: answer.firstVisitedAt || null,
+      lastVisitedAt: answer.lastVisitedAt || null,
+      visitLog: answer.visitLog || [],
+    }));
+    const totalTimeSpentSeconds = questionTelemetry.reduce((sum, item) => sum + item.timeSpentSeconds, 0);
+    const totalVisits = questionTelemetry.reduce((sum, item) => sum + item.visitCount, 0);
+    const slowestQuestion = questionTelemetry.reduce((max, item) => (
+      item.timeSpentSeconds > (max?.timeSpentSeconds || 0) ? item : max
+    ), null);
+    const mostVisitedQuestion = questionTelemetry.reduce((max, item) => (
+      item.visitCount > (max?.visitCount || 0) ? item : max
+    ), null);
+
+    return {
+      _id: attempt._id,
+      user: attempt.userId,
+      test: attempt.testId,
+      status: attempt.status,
+      startedAt: attempt.startedAt,
+      submittedAt: attempt.submittedAt,
+      durationUsedMinutes: attempt.durationUsedMinutes,
+      ipAddress: attempt.ipAddress || '',
+      score: {
+        totalScore: attempt.totalScore,
+        maxPossibleScore: attempt.maxPossibleScore,
+        percentage: attempt.percentage,
+        sectionScores: attempt.sectionScores instanceof Map ? Object.fromEntries(attempt.sectionScores) : attempt.sectionScores || {},
+      },
+      integrity: {
+        tabSwitchCount: attempt.tabSwitchCount || 0,
+        warnings: attempt.warnings || [],
+      },
+      telemetry: {
+        totalTimeSpentSeconds,
+        averageQuestionTimeSeconds: questionTelemetry.length ? Math.round(totalTimeSpentSeconds / questionTelemetry.length) : 0,
+        totalVisits,
+        answeredQuestions: questionTelemetry.filter((item) => item.answered).length,
+        totalQuestions: questionTelemetry.length,
+        slowestQuestion,
+        mostVisitedQuestion,
+        questions: questionTelemetry,
+      },
+    };
+  });
+
+  const summary = rows.reduce((acc, row) => {
+    acc.totalTrackedSeconds += row.telemetry.totalTimeSpentSeconds;
+    acc.totalVisits += row.telemetry.totalVisits;
+    acc.totalTabSwitches += row.integrity.tabSwitchCount;
+    return acc;
+  }, { totalTrackedSeconds: 0, totalVisits: 0, totalTabSwitches: 0 });
+
+  res.json({
+    rows,
+    summary: {
+      attempts: total,
+      pageAttempts: rows.length,
+      totalTrackedSeconds: summary.totalTrackedSeconds,
+      totalVisits: summary.totalVisits,
+      totalTabSwitches: summary.totalTabSwitches,
+    },
+    total,
+    page,
+    pages: Math.ceil(total / limit),
+  });
+});

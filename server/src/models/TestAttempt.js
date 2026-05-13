@@ -20,6 +20,25 @@ const answerSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    visitCount: {
+      type: Number,
+      default: 0,
+    },
+    firstVisitedAt: {
+      type: Date,
+      default: null,
+    },
+    lastVisitedAt: {
+      type: Date,
+      default: null,
+    },
+    visitLog: [
+      {
+        enteredAt: { type: Date, default: null },
+        leftAt: { type: Date, default: null },
+        durationSeconds: { type: Number, default: 0 },
+      },
+    ],
   },
   { _id: false }
 );

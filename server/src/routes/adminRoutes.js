@@ -21,7 +21,7 @@ import TestResult from '../models/TestResult.js';
 import UserCardProgress from '../models/UserCardProgress.js';
 import asyncHandler from 'express-async-handler';
 import mongoose from 'mongoose';
-import { getDashboardStats, getUserAnalytics } from '../controllers/adminController.js';
+import { getDashboardStats, getUserAnalytics, getTestTelemetry } from '../controllers/adminController.js';
 import { sendFeedbackEmail } from '../utils/mailer.js';
 import multer from 'multer';
 import Cutoff from '../models/Cutoff.js';
@@ -50,6 +50,7 @@ router.use(protectAdmin);
  * Returns aggregate counts for the dashboard overview.
  */
 router.get('/stats', getDashboardStats);
+router.get('/test-telemetry', getTestTelemetry);
 
 // ── Link Shortener Management ────────────────────────────────────────────────
 router.post('/short-links', shortLinkController.createShortLink);

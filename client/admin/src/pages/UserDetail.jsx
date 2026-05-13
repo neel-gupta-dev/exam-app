@@ -158,8 +158,8 @@ export default function UserDetail() {
                             <span style={{ color: '#d97706', fontWeight: 'bold' }}>Queued</span>
                           ) : (
                             <>
-                              <strong style={{ color: att.score >= 0 ? '#166534' : '#991b1b' }}>{att.score}</strong>
-                              <span className="text-muted" style={{ fontSize: '11px' }}> / {att.testId?.totalMarks || '?'}</span>
+                              <strong style={{ color: (att.totalScore ?? 0) >= 0 ? '#166534' : '#991b1b' }}>{att.totalScore ?? '-'}</strong>
+                              <span className="text-muted" style={{ fontSize: '11px' }}> / {att.maxPossibleScore || att.testId?.totalMarks || '?'}</span>
                             </>
                           )}
                         </td>
@@ -168,9 +168,9 @@ export default function UserDetail() {
                             <span className="text-muted">Evaluating...</span>
                           ) : (
                             <>
-                              <span style={{ color: 'green' }}>{att.correctCount} ✓</span> &nbsp;
-                              <span style={{ color: 'red' }}>{att.incorrectCount} ✗</span> &nbsp;
-                              <span style={{ color: 'gray' }}>{att.skippedCount} —</span>
+                              <span style={{ color: '#4f46e5', fontWeight: 600 }}>{att.percentage ?? 0}%</span> &nbsp;
+                              <span style={{ color: '#64748b' }}>{Math.round((att.answers || []).reduce((sum, answer) => sum + (answer.timeSpentSeconds || 0), 0) / 60)}m</span> &nbsp;
+                              <span style={{ color: '#64748b' }}>{(att.answers || []).reduce((sum, answer) => sum + (answer.visitCount || 0), 0)} visits</span>
                             </>
                           )}
                         </td>

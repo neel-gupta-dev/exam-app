@@ -11,6 +11,7 @@ import FeedbackPage from './pages/Feedback';
 import Health from './pages/Health';
 import Settings from './pages/Settings';
 import TestManagement from './pages/TestManagement';
+import TestTelemetry from './pages/TestTelemetry';
 import B2BManagement from './pages/B2BManagement';
 import Cheatsheets from './pages/Cheatsheets';
 import CutoffsManagement from './pages/CutoffsManagement';
@@ -60,6 +61,7 @@ export default function App() {
             <Route path="/resources" element={<Resources />} />
             <Route path="/feedback" element={<FeedbackPage />} />
             <Route path="/tests" element={<TestManagement />} />
+            <Route path="/test-telemetry" element={<TestTelemetry />} />
             <Route path="/b2b" element={<B2BManagement />} />
             <Route path="/cheatsheets" element={<Cheatsheets />} />
             <Route path="/cutoffs" element={<CutoffsManagement />} />
