@@ -427,3 +427,66 @@ export const getTestLeaderboard = asyncHandler(async (req, res) => {
     leaderboard: mappedLeaderboard
   });
 });
+
+export const getAssessmentReview = asyncHandler(async (req, res) => {
+  const { attemptId } = req.params;
+  const userId = req.user._id.toString();
+
+  const attempt = await TestAttempt.findById(attemptId)
+    .populate('testId', 'title category durationMinutes totalMarks');
+
+  if (!attempt) {
+    return res.status(404).json({ message: 'Attempt not found.' });
+  }
+
+  if (attempt.userId.toString() !== userId) {
+    return res.status(403).json({ message: 'Access denied.' });
+  }
+
+  if (attempt.status !== 'completed' && attempt.status !== 'auto-submitted') {
+    return res.status(400).json({ message: 'Attempt must be completed to review answers.' });
+  }
+
+  const questions = await Question.find({ testId: attempt.testId._id }).sort({ order: 1 }).lean();
+
+  const userAnswersMap = new Map();
+  for (const ans of attempt.answers || []) {
+    userAnswersMap.set(ans.questionId.toString(), ans);
+  }
+
+  const reviewedQuestions = questions.map((q) => {
+    const userAns = userAnswersMap.get(q._id.toString()) || {
+      selectedAnswer: [],
+      status: 'unanswered',
+      timeSpentSeconds: 0,
+    };
+
+    const expected = [...(q.correctAnswer || [])].sort();
+    const selected = [...(userAns.selectedAnswer || [])].sort();
+    
+    const isUnanswered = selected.length === 0;
+    const isCorrect = !isUnanswered && 
+      selected.length === expected.length && 
+      selected.every((val, idx) => val === expected[idx]);
+
+    return {
+      ...q,
+      userAnswer: selected,
+      status: userAns.status,
+      timeSpentSeconds: userAns.timeSpentSeconds,
+      resultStatus: isUnanswered ? 'skipped' : (isCorrect ? 'correct' : 'wrong'),
+    };
+  });
+
+  res.json({
+    attemptSummary: {
+      testTitle: attempt.testId.title,
+      totalScore: attempt.totalScore,
+      maxPossibleScore: attempt.maxPossibleScore,
+      percentage: attempt.percentage,
+      submittedAt: attempt.submittedAt,
+      sectionScores: attempt.sectionScores instanceof Map ? Object.fromEntries(attempt.sectionScores) : attempt.sectionScores || {},
+    },
+    questions: reviewedQuestions,
+  });
+});

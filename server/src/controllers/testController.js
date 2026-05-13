@@ -176,6 +176,7 @@ export const getStudentTests = asyncHandler(async (req, res) => {
       ...testObj,
       state,
       status,
+      latestAttemptId: attempt ? attempt._id : null,
     };
   }));
 

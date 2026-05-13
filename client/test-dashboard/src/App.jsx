@@ -36,6 +36,10 @@ export default function App() {
   const [leaderboardData, setLeaderboardData] = useState(null);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
   const [leaderboardError, setLeaderboardError] = useState('');
+  const [selectedReviewAttemptId, setSelectedReviewAttemptId] = useState(null);
+  const [reviewData, setReviewData] = useState(null);
+  const [loadingReview, setLoadingReview] = useState(false);
+  const [reviewError, setReviewError] = useState('');
 
   const [user, setUser] = useState(() => {
     try {
@@ -123,6 +127,30 @@ export default function App() {
         });
     }
   }, [user, view, selectedLeaderboardTest]);
+  useEffect(() => {
+    if (user && view === 'review' && selectedReviewAttemptId) {
+      setLoadingReview(true);
+      setReviewError('');
+      fetch(`${API_BASE}/assessment/attempts/${selectedReviewAttemptId}/review`, {
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      })
+        .then(async res => {
+          const text = await res.text();
+          let data;
+          try { data = text ? JSON.parse(text) : null; } catch { throw new Error('Invalid response'); }
+          if (!res.ok) throw new Error(data?.message || 'Failed to fetch review data');
+          return data;
+        })
+        .then(data => {
+          setReviewData(data);
+          setLoadingReview(false);
+        })
+        .catch(err => {
+          setReviewError(err.message);
+          setLoadingReview(false);
+        });
+    }
+  }, [user, view, selectedReviewAttemptId]);
 
   const handleLogin = (userData) => {
     localStorage.setItem('test_user', JSON.stringify(userData));
@@ -544,7 +572,7 @@ export default function App() {
                         </div>
                       </div>
                     </div>
-                    <div className="mt-6 md:mt-0 md:ml-8">
+                    <div className="mt-6 md:mt-0 md:ml-8 flex flex-col sm:flex-row md:flex-col lg:flex-row gap-3">
                       <button
                         onClick={() => {
                           if (test.state === 'evaluating') {
@@ -625,6 +653,231 @@ export default function App() {
               </div>
             </div>
           </>
+        ) : view === 'review' ? (
+          <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <button 
+                onClick={() => {
+                  setView('test-series');
+                  setReviewData(null);
+                  setSelectedReviewAttemptId(null);
+                }}
+                className={`p-2 px-4 rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-2 ${isDark ? 'bg-surface-container border-outline-variant/20 text-white hover:bg-surface-container-high' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+              >
+                <span className="material-symbols-outlined text-lg">arrow_back</span>
+                <span className="text-sm font-bold">Back to Series</span>
+              </button>
+              
+              {reviewData && (
+                <div className="flex gap-2 flex-wrap">
+                  <div className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-black ${isDark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
+                    <span className="material-symbols-outlined text-base">check_circle</span>
+                    {reviewData.questions.filter(q => q.resultStatus === 'correct').length} Correct
+                  </div>
+                  <div className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-black ${isDark ? 'bg-rose-500/10 text-rose-400' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
+                    <span className="material-symbols-outlined text-base">cancel</span>
+                    {reviewData.questions.filter(q => q.resultStatus === 'wrong').length} Wrong
+                  </div>
+                  <div className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-black ${isDark ? 'bg-slate-500/10 text-slate-400' : 'bg-slate-50 text-slate-600 border border-slate-100'}`}>
+                    <span className="material-symbols-outlined text-base">radio_button_unchecked</span>
+                    {reviewData.questions.filter(q => q.resultStatus === 'skipped').length} Skipped
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {loadingReview ? (
+              <div className={`p-12 text-center rounded-2xl border ${isDark ? 'bg-surface-container border-outline-variant/20' : 'bg-white border-slate-100 shadow-sm'}`}>
+                <span className="material-symbols-outlined animate-spin text-indigo-500 text-4xl">sync</span>
+                <p className={`mt-3 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Analyzing paper performance...</p>
+              </div>
+            ) : reviewError ? (
+              <div className={`p-6 rounded-2xl border text-red-500 ${isDark ? 'bg-red-500/10 border-red-500/20' : 'bg-red-50 border-red-100'}`}>
+                {reviewError}
+              </div>
+            ) : reviewData ? (
+              <div className="space-y-8">
+                <div className={`relative overflow-hidden p-8 rounded-3xl border bg-gradient-to-br ${isDark ? 'from-slate-900 to-indigo-950/30 border-indigo-500/10' : 'from-white to-indigo-50/30 border-slate-100 shadow-lg'}`}>
+                  <div className="relative z-10 flex flex-col md:flex-row justify-between gap-6 items-start md:items-center">
+                    <div>
+                      <span className="text-xs font-black tracking-widest text-indigo-500 uppercase">Performance Analysis</span>
+                      <h2 className={`text-3xl font-black tracking-tight mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                        {reviewData.attemptSummary.testTitle}
+                      </h2>
+                      <p className={`text-sm mt-1 opacity-60 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                        Submitted {new Date(reviewData.attemptSummary.submittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    <div className="flex gap-4 shrink-0 w-full md:w-auto">
+                      <div className={`flex-1 md:flex-initial px-6 py-4 rounded-2xl text-center border ${isDark ? 'bg-indigo-500/5 border-indigo-500/10' : 'bg-white border-slate-100 shadow-sm'}`}>
+                        <span className="text-[10px] uppercase font-black text-indigo-500 tracking-wider">Your Score</span>
+                        <div className={`text-2xl font-black mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>{reviewData.attemptSummary.totalScore} / {reviewData.attemptSummary.maxPossibleScore}</div>
+                      </div>
+                      <div className={`flex-1 md:flex-initial px-6 py-4 rounded-2xl text-center border ${isDark ? 'bg-emerald-500/5 border-emerald-500/10' : 'bg-white border-slate-100 shadow-sm'}`}>
+                        <span className="text-[10px] uppercase font-black text-emerald-500 tracking-wider">Accuracy</span>
+                        <div className={`text-2xl font-black mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>{reviewData.attemptSummary.percentage}%</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  {reviewData.questions.map((q, idx) => {
+                    const isCorrect = q.resultStatus === 'correct';
+                    const isWrong = q.resultStatus === 'wrong';
+                    const isSkipped = q.resultStatus === 'skipped';
+
+                    return (
+                      <div 
+                        key={q._id} 
+                        className={`p-6 rounded-2xl border transition-all ${
+                          isCorrect ? (isDark ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-emerald-50/20 border-emerald-100') :
+                          isWrong ? (isDark ? 'bg-rose-500/5 border-rose-500/20' : 'bg-rose-50/20 border-rose-100') :
+                          (isDark ? 'bg-surface-container border-outline-variant/20' : 'bg-white shadow-sm border-slate-100')
+                        }`}
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-4 mb-5 border-dashed border-slate-500/10">
+                          <div className="flex items-center gap-3">
+                            <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm ${isDark ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'}`}>
+                              Q{idx + 1}
+                            </span>
+                            <span className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider ${isDark ? 'bg-slate-800/80 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
+                              {q.section || 'General'}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs opacity-60 font-medium flex items-center gap-1">
+                              <span className="material-symbols-outlined text-sm">schedule</span>
+                              {q.timeSpentSeconds || 0}s spent
+                            </span>
+                            {isCorrect ? (
+                              <span className="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-emerald-500 text-white flex items-center gap-1">
+                                <span className="material-symbols-outlined text-xs">check</span> Correct (+{q.positiveMarks})
+                              </span>
+                            ) : isWrong ? (
+                              <span className="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-rose-500 text-white flex items-center gap-1">
+                                <span className="material-symbols-outlined text-xs">close</span> Incorrect (-{q.negativeMarks})
+                              </span>
+                            ) : (
+                              <span className="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-slate-500 text-white flex items-center gap-1">
+                                <span className="material-symbols-outlined text-xs">remove</span> Skipped (0)
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <p className={`text-base md:text-lg font-medium leading-relaxed whitespace-pre-wrap ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                            {q.content}
+                          </p>
+                          {q.imageUrl && (
+                            <div className="my-4 p-2 rounded-xl border border-slate-500/10 max-w-xl inline-block bg-white">
+                              <img src={q.imageUrl} alt={`Question ${idx + 1}`} className="max-h-64 object-contain rounded-lg" />
+                            </div>
+                          )}
+                        </div>
+
+                        {q.type === 'mcq' && q.options && (
+                          <div className="grid grid-cols-1 gap-3 mt-6">
+                            {q.options.map((opt, oIdx) => {
+                              const optLetter = String.fromCharCode(65 + oIdx);
+                              const isUserMarked = q.userAnswer?.includes(optLetter);
+                              const isCorrectAnswer = q.correctAnswer?.includes(optLetter);
+
+                              let optionStyleClass = isDark 
+                                ? 'bg-surface-container border-outline-variant/20 text-slate-300' 
+                                : 'bg-white border-slate-200 text-slate-700';
+
+                              if (isUserMarked && isCorrectAnswer) {
+                                optionStyleClass = isDark
+                                  ? 'border-emerald-500/60 bg-emerald-500/10 text-emerald-300'
+                                  : 'border-emerald-500 bg-emerald-50 text-emerald-800 font-bold shadow-sm';
+                              } else if (isUserMarked && !isCorrectAnswer) {
+                                optionStyleClass = isDark
+                                  ? 'border-rose-500/60 bg-rose-500/10 text-rose-300'
+                                  : 'border-rose-500 bg-rose-50 text-rose-800 font-bold shadow-sm';
+                              } else if (!isUserMarked && isCorrectAnswer) {
+                                optionStyleClass = isDark
+                                  ? 'border-emerald-500/40 bg-emerald-500/5 text-emerald-300 border-dashed border-2'
+                                  : 'border-emerald-500/40 bg-emerald-50/30 text-emerald-700 font-semibold border-dashed border-2';
+                              }
+
+                              return (
+                                <div 
+                                  key={oIdx}
+                                  className={`p-4 rounded-xl border-2 transition-all flex items-center justify-between gap-4 ${optionStyleClass}`}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-black border-2 ${
+                                      isCorrectAnswer ? 'bg-emerald-500 text-white border-emerald-500' :
+                                      isUserMarked ? 'bg-rose-500 text-white border-rose-500' :
+                                      (isDark ? 'border-slate-700 bg-slate-800 text-slate-400' : 'border-slate-300 bg-slate-100 text-slate-500')
+                                    }`}>
+                                      {optLetter}
+                                    </span>
+                                    <span className="text-sm md:text-base">{opt}</span>
+                                  </div>
+
+                                  <div className="flex gap-2">
+                                    {isUserMarked && isCorrectAnswer && (
+                                      <span className="px-2 py-1 bg-emerald-500/20 text-emerald-500 text-[10px] font-black rounded uppercase tracking-wider">Your Answer & Correct</span>
+                                    )}
+                                    {isUserMarked && !isCorrectAnswer && (
+                                      <span className="px-2 py-1 bg-rose-500/20 text-rose-500 text-[10px] font-black rounded uppercase tracking-wider">Your Incorrect Answer</span>
+                                    )}
+                                    {!isUserMarked && isCorrectAnswer && (
+                                      <span className="px-2 py-1 bg-emerald-500/20 text-emerald-500 text-[10px] font-black rounded uppercase tracking-wider">Correct Key</span>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {q.type !== 'mcq' && (
+                          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className={`p-4 rounded-xl border-2 ${isSkipped ? (isDark ? 'border-slate-800 bg-slate-800/30' : 'border-slate-100 bg-slate-50') : isCorrect ? (isDark ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-emerald-200 bg-emerald-50/30') : (isDark ? 'border-rose-500/40 bg-rose-500/5' : 'border-rose-200 bg-rose-50/30')}`}>
+                              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Your Answer</span>
+                              <div className={`text-xl font-black mt-1 ${isSkipped ? 'text-slate-400 italic text-sm' : isCorrect ? (isDark ? 'text-emerald-400' : 'text-emerald-700') : (isDark ? 'text-rose-400' : 'text-rose-700')}`}>
+                                {isSkipped ? 'Not Answered' : q.userAnswer?.join(', ')}
+                              </div>
+                            </div>
+                            <div className={`p-4 rounded-xl border-2 border-emerald-500/40 ${isDark ? 'bg-emerald-500/5' : 'bg-emerald-50/30'}`}>
+                              <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600">Correct Answer</span>
+                              <div className={`text-xl font-black mt-1 ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                                {q.correctAnswer?.join(', ')}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {(q.solution || q.solutionImageUrl) && (
+                          <div className={`mt-6 p-5 rounded-xl border-t-2 border-indigo-500/40 ${isDark ? 'bg-slate-900/40' : 'bg-slate-50/50'}`}>
+                            <h5 className={`text-xs uppercase font-black tracking-widest flex items-center gap-1 mb-3 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                              <span className="material-symbols-outlined text-sm">lightbulb</span>
+                              Step-by-Step Solution
+                            </h5>
+                            {q.solution && (
+                              <p className={`text-sm leading-relaxed whitespace-pre-wrap ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                                {q.solution}
+                              </p>
+                            )}
+                            {q.solutionImageUrl && (
+                              <div className="mt-3 p-2 rounded-lg bg-white inline-block border border-slate-200 max-w-full">
+                                <img src={q.solutionImageUrl} alt="Solution representation" className="max-h-64 object-contain rounded" />
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+          </div>
         ) : view === 'leaderboard' ? (
           <div className="max-w-6xl space-y-8 animate-in fade-in duration-500">
             {!selectedLeaderboardTest ? (
@@ -1029,6 +1282,18 @@ export default function App() {
                   >
                     Start Test Now
                   </button>
+                  {selectedTest?.state === 'completed' && selectedTest.latestAttemptId && (
+                    <button
+                      onClick={() => {
+                        setSelectedReviewAttemptId(selectedTest.latestAttemptId);
+                        setView('review');
+                      }}
+                      className="cursor-pointer border-none w-full py-3.5 mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-base transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/10"
+                    >
+                      <span className="material-symbols-outlined text-lg">analytics</span>
+                      Analyse Performance
+                    </button>
+                  )}
                   <p className="text-[10px] text-center mt-4 text-slate-500 uppercase tracking-widest font-bold">Good Luck, Scholar!</p>
                 </div>
               </div>
