@@ -778,12 +778,13 @@ export default function App() {
                           )}
                         </div>
 
-                        {q.type === 'mcq' && q.options && (
+                        {(q.type === 'single' || q.type === 'multiple') && q.options && (
                           <div className="grid grid-cols-1 gap-3 mt-6">
                             {q.options.map((opt, oIdx) => {
                               const optLetter = String.fromCharCode(65 + oIdx);
-                              const isUserMarked = q.userAnswer?.includes(optLetter);
-                              const isCorrectAnswer = q.correctAnswer?.includes(optLetter);
+                              const actualLabel = opt.label || optLetter;
+                              const isUserMarked = q.userAnswer?.includes(actualLabel);
+                              const isCorrectAnswer = q.correctAnswer?.includes(actualLabel);
 
                               let optionStyleClass = isDark 
                                 ? 'bg-surface-container border-outline-variant/20 text-slate-300' 
@@ -808,18 +809,25 @@ export default function App() {
                                   key={oIdx}
                                   className={`p-4 rounded-xl border-2 transition-all flex items-center justify-between gap-4 ${optionStyleClass}`}
                                 >
-                                  <div className="flex items-center gap-3">
-                                    <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-black border-2 ${
-                                      isCorrectAnswer ? 'bg-emerald-500 text-white border-emerald-500' :
-                                      isUserMarked ? 'bg-rose-500 text-white border-rose-500' :
-                                      (isDark ? 'border-slate-700 bg-slate-800 text-slate-400' : 'border-slate-300 bg-slate-100 text-slate-500')
-                                    }`}>
-                                      {optLetter}
-                                    </span>
-                                    <span className="text-sm md:text-base">{opt}</span>
+                                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-1">
+                                    <div className="flex items-center gap-3">
+                                      <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-black border-2 flex-shrink-0 ${
+                                        isCorrectAnswer ? 'bg-emerald-500 text-white border-emerald-500' :
+                                        isUserMarked ? 'bg-rose-500 text-white border-rose-500' :
+                                        (isDark ? 'border-slate-700 bg-slate-800 text-slate-400' : 'border-slate-300 bg-slate-100 text-slate-500')
+                                      }`}>
+                                        {actualLabel}
+                                      </span>
+                                      <span className="text-sm md:text-base">{opt.content}</span>
+                                    </div>
+                                    {opt.imageUrl && (
+                                      <div className="sm:ml-2 p-1 bg-white rounded border max-w-xs mt-2 sm:mt-0">
+                                        <img src={opt.imageUrl} alt={`Option ${actualLabel}`} className="max-h-24 object-contain rounded" />
+                                      </div>
+                                    )}
                                   </div>
 
-                                  <div className="flex gap-2">
+                                  <div className="flex gap-2 flex-shrink-0">
                                     {isUserMarked && isCorrectAnswer && (
                                       <span className="px-2 py-1 bg-emerald-500/20 text-emerald-500 text-[10px] font-black rounded uppercase tracking-wider">Your Answer & Correct</span>
                                     )}
@@ -836,15 +844,17 @@ export default function App() {
                           </div>
                         )}
 
-                        {q.type !== 'mcq' && (
+                        {q.type === 'integer' && (
                           <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className={`p-4 rounded-xl border-2 ${isSkipped ? (isDark ? 'border-slate-800 bg-slate-800/30' : 'border-slate-100 bg-slate-50') : isCorrect ? (isDark ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-emerald-200 bg-emerald-50/30') : (isDark ? 'border-rose-500/40 bg-rose-500/5' : 'border-rose-200 bg-rose-50/30')}`}>
-                              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Your Answer</span>
-                              <div className={`text-xl font-black mt-1 ${isSkipped ? 'text-slate-400 italic text-sm' : isCorrect ? (isDark ? 'text-emerald-400' : 'text-emerald-700') : (isDark ? 'text-rose-400' : 'text-rose-700')}`}>
-                                {isSkipped ? 'Not Answered' : q.userAnswer?.join(', ')}
+                            {!isSkipped && (
+                              <div className={`p-4 rounded-xl border-2 ${isCorrect ? (isDark ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-emerald-200 bg-emerald-50/30') : (isDark ? 'border-rose-500/40 bg-rose-500/5' : 'border-rose-200 bg-rose-50/30')}`}>
+                                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Your Answer</span>
+                                <div className={`text-xl font-black mt-1 ${isCorrect ? (isDark ? 'text-emerald-400' : 'text-emerald-700') : (isDark ? 'text-rose-400' : 'text-rose-700')}`}>
+                                  {q.userAnswer?.join(', ')}
+                                </div>
                               </div>
-                            </div>
-                            <div className={`p-4 rounded-xl border-2 border-emerald-500/40 ${isDark ? 'bg-emerald-500/5' : 'bg-emerald-50/30'}`}>
+                            )}
+                            <div className={`p-4 rounded-xl border-2 border-emerald-500/40 ${isDark ? 'bg-emerald-500/5' : 'bg-emerald-50/30'} ${isSkipped ? 'sm:col-span-2' : ''}`}>
                               <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600">Correct Answer</span>
                               <div className={`text-xl font-black mt-1 ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
                                 {q.correctAnswer?.join(', ')}
