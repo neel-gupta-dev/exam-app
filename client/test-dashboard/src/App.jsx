@@ -9,7 +9,7 @@ export default function App() {
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('theme');
-      return saved ? saved === 'dark' : true; 
+      return saved ? saved === 'dark' : true;
     }
     return true;
   });
@@ -24,7 +24,7 @@ export default function App() {
     return 'dashboard';
   });
   const [selectedTest, setSelectedTest] = useState(null);
-  
+
   const [tests, setTests] = useState([]);
   const [loadingTests, setLoadingTests] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,26 +46,26 @@ export default function App() {
       fetch(`${API_BASE}/tests`, {
         headers: { 'Authorization': `Bearer ${user.token}` }
       })
-      .then(async res => {
-        const text = await res.text();
-        let data;
-        try {
-          data = text ? JSON.parse(text) : [];
-        } catch {
-          throw new Error(text || 'Invalid tests response');
-        }
-        if (!res.ok) throw new Error(data.message || 'Failed to load tests');
-        if (!Array.isArray(data)) throw new Error('Invalid tests response');
-        return data;
-      })
-      .then(data => {
-        setTests(data);
-        setLoadingTests(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoadingTests(false);
-      });
+        .then(async res => {
+          const text = await res.text();
+          let data;
+          try {
+            data = text ? JSON.parse(text) : [];
+          } catch {
+            throw new Error(text || 'Invalid tests response');
+          }
+          if (!res.ok) throw new Error(data.message || 'Failed to load tests');
+          if (!Array.isArray(data)) throw new Error('Invalid tests response');
+          return data;
+        })
+        .then(data => {
+          setTests(data);
+          setLoadingTests(false);
+        })
+        .catch(err => {
+          console.error(err);
+          setLoadingTests(false);
+        });
     }
   }, [user, view]);
 
@@ -76,25 +76,25 @@ export default function App() {
       fetch(`${API_BASE}/assessment/results`, {
         headers: { 'Authorization': `Bearer ${user.token}` }
       })
-      .then(async res => {
-        const text = await res.text();
-        let data;
-        try {
-          data = text ? JSON.parse(text) : [];
-        } catch {
-          throw new Error(text || 'Invalid results response');
-        }
-        if (!res.ok) throw new Error(data.message || 'Failed to load results');
-        return Array.isArray(data) ? data : [];
-      })
-      .then(data => {
-        setResults(data);
-        setLoadingResults(false);
-      })
-      .catch(err => {
-        setResultsError(err.message);
-        setLoadingResults(false);
-      });
+        .then(async res => {
+          const text = await res.text();
+          let data;
+          try {
+            data = text ? JSON.parse(text) : [];
+          } catch {
+            throw new Error(text || 'Invalid results response');
+          }
+          if (!res.ok) throw new Error(data.message || 'Failed to load results');
+          return Array.isArray(data) ? data : [];
+        })
+        .then(data => {
+          setResults(data);
+          setLoadingResults(false);
+        })
+        .catch(err => {
+          setResultsError(err.message);
+          setLoadingResults(false);
+        });
     }
   }, [user, view]);
 
@@ -128,19 +128,19 @@ export default function App() {
       const token = hash.split('=')[1];
       // Clean URL hash
       window.history.replaceState(null, '', window.location.pathname);
-      
+
       // Fetch user profile to verify token and complete login
       fetch(`${API_BASE}/auth/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
-      .then(res => {
-        if (!res.ok) throw new Error('Token verification failed');
-        return res.json();
-      })
-      .then(data => {
-        handleLogin({ ...data, token });
-      })
-      .catch(err => console.error('OAuth Login Error:', err));
+        .then(res => {
+          if (!res.ok) throw new Error('Token verification failed');
+          return res.json();
+        })
+        .then(data => {
+          handleLogin({ ...data, token });
+        })
+        .catch(err => console.error('OAuth Login Error:', err));
     }
   }, []);
 
@@ -158,12 +158,12 @@ export default function App() {
     let currentTest = null;
     try {
       currentTest = JSON.parse(localStorage.getItem('current_test'));
-    } catch {}
-    
+    } catch { }
+
     return (
-      <TestEngineApp 
-        user={user} 
-        test={currentTest} 
+      <TestEngineApp
+        user={user}
+        test={currentTest}
       />
     );
   }
@@ -174,9 +174,9 @@ export default function App() {
 
   if (user && user.hasChangedPassword === false) {
     return (
-      <ForcePasswordChange 
-        isDark={isDark} 
-        user={user} 
+      <ForcePasswordChange
+        isDark={isDark}
+        user={user}
         onPasswordChanged={() => {
           const updatedUser = { ...user, hasChangedPassword: true };
           handleLogin(updatedUser);
@@ -258,10 +258,6 @@ export default function App() {
             <span className="material-symbols-outlined mr-3">insights</span>
             <span className="text-sm font-medium">Analytics</span>
           </button>
-          <button onClick={() => setView('support')} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'support' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
-            <span className="material-symbols-outlined mr-3">menu_book</span>
-            <span className="text-sm font-medium">Support</span>
-          </button>
         </nav>
 
         <div className={`mt-auto pt-6 border-t space-y-1 ${isDark ? 'border-slate-800/50' : 'border-slate-200'}`}>
@@ -283,7 +279,7 @@ export default function App() {
                 <p className="text-[10px] text-slate-500 truncate">{user.authMethod === 'b2b' ? 'Coaching Scholar' : 'Pro Member'}</p>
               </div>
             </div>
-            <button 
+            <button
               onClick={handleLogout}
               title="Logout"
               className={`p-1.5 rounded-lg flex-shrink-0 transition-colors ${isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200'}`}
@@ -331,7 +327,7 @@ export default function App() {
 
       {/* Main Content Canvas */}
       <main className="ml-64 pt-24 px-10 pb-20 min-h-screen">
-        
+
         {view === 'dashboard' ? (
           <>
             {/* Header Section */}
@@ -351,11 +347,10 @@ export default function App() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveCategory(tab.id)}
-                  className={`cursor-pointer px-6 py-2.5 rounded-full text-sm whitespace-nowrap transition-colors ${
-                    activeCategory === tab.id
+                  className={`cursor-pointer px-6 py-2.5 rounded-full text-sm whitespace-nowrap transition-colors ${activeCategory === tab.id
                       ? 'font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/30'
                       : `font-medium bg-transparent border-none ${isDark ? 'text-on-surface-variant hover:text-on-surface' : 'text-slate-500 hover:text-slate-900'}`
-                  }`}
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -408,7 +403,7 @@ export default function App() {
                       </div>
                     </div>
                     <div className="mt-6 md:mt-0 md:ml-8">
-                      <button 
+                      <button
                         onClick={() => {
                           if (test.state === 'evaluating') {
                             alert("Your detailed performance report is still being generated. Please check back shortly.");
@@ -584,8 +579,17 @@ export default function App() {
               {[
                 ['Test did not open', 'Allow pop-ups for this site, then start the test again from Test Series.'],
                 ['Answers not saving', 'Keep the test window open and connected. Submit will stop if the latest save fails.'],
-                ['Result missing', 'Open Analytics after submission. If a result is evaluating, refresh after a short wait.'],
+                // ['Result missing', 'Open Analytics after submission. If a result is evaluating, refresh after a short wait.'],
                 ['Need admin help', 'Contact your coaching admin with test title, time, and account name.'],
+                ['Contact Support', (
+                  <span>
+                    Reach out to us directly at{' '}
+                    <a href="mailto:support@vayl.in" className={`hover:underline font-bold ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                      support@vayl.in
+                    </a>{' '}
+                    for additional assistance.
+                  </span>
+                )],
               ].map(([title, body]) => (
                 <div key={title} className={`p-6 rounded-xl ${isDark ? 'bg-surface-container' : 'bg-white shadow-sm border border-slate-100'}`}>
                   <h3 className="font-bold text-lg">{title}</h3>
@@ -597,7 +601,7 @@ export default function App() {
         ) : (
           <div className="max-w-4xl mx-auto">
             {/* Breadcrumb / Back */}
-            <button 
+            <button
               onClick={() => setView('dashboard')}
               className={`flex items-center mb-8 text-sm font-medium transition-colors cursor-pointer border-none bg-transparent ${isDark ? 'text-slate-400 hover:text-indigo-400' : 'text-slate-500 hover:text-indigo-600'}`}
             >
@@ -675,7 +679,7 @@ export default function App() {
               <div className="space-y-6">
                 <div className={`p-8 rounded-2xl sticky top-32 transition-all duration-300 ${isDark ? 'bg-surface-container' : 'bg-white shadow-2xl border border-indigo-100/50'}`}>
                   <p className={`text-sm font-medium mb-6 ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>Ready to begin your mock exam? Take a deep breath.</p>
-                  <button 
+                  <button
                     onClick={() => {
                       localStorage.setItem('current_test', JSON.stringify(selectedTest));
                       window.open(window.location.origin + '?attempt=true', 'TestEngine', 'width=1024,height=768,fullscreen=yes,toolbar=0,location=0,menubar=0');
