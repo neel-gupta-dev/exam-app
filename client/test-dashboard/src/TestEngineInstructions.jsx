@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function TestEngineInstructions({ user, onReady }) {
+export default function TestEngineInstructions({ user, test, onReady }) {
   const [page, setPage] = useState(1);
   const [isChecked, setIsChecked] = useState(false);
 
@@ -18,6 +18,18 @@ export default function TestEngineInstructions({ user, onReady }) {
 
   // Fallback name processing
   const fullName = user?.name || user?.username || 'John Smith';
+  const generalInstructions = test?.instructions?.general?.length
+    ? test.instructions.general
+    : [
+        `Total duration of examination is ${test?.durationMinutes || 0} minutes.`,
+        'The countdown timer displays the remaining time available to complete the test.',
+        'The test will automatically submit when the timer reaches zero.',
+        'Use the question palette to navigate and review answer status.',
+      ];
+  const otherInstructions = test?.instructions?.other?.length
+    ? test.instructions.other
+    : ['No additional instructions are available for this test.'];
+  const declarationText = test?.instructions?.declaration || 'I have read and understood the instructions and agree to follow the test rules.';
 
   return (
     <div className="flex flex-col h-screen text-slate-800 bg-[#E8EDF2] font-sans selection:bg-blue-200">
@@ -45,10 +57,9 @@ export default function TestEngineInstructions({ user, onReady }) {
                 
                 <p className="font-bold underline mb-4">General Instructions:</p>
                 <ol className="list-decimal pl-5 space-y-3">
-                  <li>Total duration of examination is 120 minutes.</li>
-                  <li>
-                    The clock will be set at the server. The countdown timer in the top right corner of screen will display the remaining time available for you to complete the examination. When the timer reaches zero, the examination will end by itself. You will not be required to end or submit your examination.
-                  </li>
+                  {generalInstructions.map((instruction, idx) => (
+                    <li key={idx}>{instruction}</li>
+                  ))}
                   <li>
                     The Question Palette displayed on the right side of screen will show the status of each question using one of the following symbols:
                     
@@ -105,7 +116,11 @@ export default function TestEngineInstructions({ user, onReady }) {
 
             {page === 2 && (
               <>
-                <p className="mb-4">The instructions are not available in the chosen language.</p>
+                <ol className="list-decimal pl-5 space-y-3">
+                  {otherInstructions.map((instruction, idx) => (
+                    <li key={idx}>{instruction}</li>
+                  ))}
+                </ol>
               </>
             )}
 
@@ -133,7 +148,7 @@ export default function TestEngineInstructions({ user, onReady }) {
                       onChange={(e) => setIsChecked(e.target.checked)}
                     />
                     <span className="text-[11px] leading-tight text-slate-700 font-sans">
-                      I have read and understood the instructions. All computer hardware allotted to me are in proper working condition. I declare that I am not in possession of / not wearing / not carrying any prohibited gadget like mobile phone, bluetooth devices etc. /any prohibited material with me into the Examination Hall.I agree that in case of not adhering to the instructions, I shall be liable to be debarred from this Test and/or to disciplinary action, which may include ban from future Tests / Examinations
+                      {declarationText}
                     </span>
                   </label>
                 </div>
@@ -184,11 +199,6 @@ export default function TestEngineInstructions({ user, onReady }) {
           </div>
           <h3 className="text-[#3A5C8E] font-bold text-center">{fullName}</h3>
         </div>
-      </div>
-
-      {/* Very Bottom Footer */}
-      <div className="bg-[#5C7DA3] text-white text-center py-0.5 text-[10px]">
-        Version : 17.07.00
       </div>
 
     </div>

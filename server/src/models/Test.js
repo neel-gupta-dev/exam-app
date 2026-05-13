@@ -37,6 +37,27 @@ const testSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    instructions: {
+      general: {
+        type: [String],
+        default: [
+          'The countdown timer shows the remaining time available to complete the test.',
+          'The test will be submitted automatically when the timer reaches zero.',
+          'Use the question palette to navigate between questions and review answer status.',
+        ],
+      },
+      other: {
+        type: [String],
+        default: [
+          'Do not refresh, close, or switch away from the test window unless instructed.',
+          'Ensure your internet connection remains stable for the duration of the test.',
+        ],
+      },
+      declaration: {
+        type: String,
+        default: 'I have read and understood the instructions. I agree to follow the test rules and understand that violations may lead to submission or disqualification.',
+      },
+    },
     // --- Audience Targeting ---
     visibility: {
       type: String,
@@ -110,6 +131,8 @@ testSchema.methods.toRedisPayload = function () {
     durationMinutes: this.durationMinutes,
     totalMarks: this.totalMarks,
     sections: this.sections,
+    syllabus: this.syllabus,
+    instructions: this.instructions,
     questionCount: this.questionCount,
     defaultPositiveMarks: this.defaultPositiveMarks,
     defaultNegativeMarks: this.defaultNegativeMarks,

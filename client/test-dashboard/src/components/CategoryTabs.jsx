@@ -1,20 +1,28 @@
 import React from 'react';
 
-export default function CategoryTabs() {
+export default function CategoryTabs({ activeCategory = 'full', onChange = () => {} }) {
+  const tabs = [
+    { id: 'full', label: 'Full Tests' },
+    { id: 'part', label: 'Part Tests' },
+    { id: 'chapter', label: 'Chapter-wise Tests' },
+    { id: 'pyq', label: 'Previous Year Papers' },
+  ];
+
   return (
     <div className="flex items-center space-x-1 mb-10 overflow-x-auto pb-2 scrollbar-hide">
-      <button className="cursor-pointer px-6 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
-        Full Tests
-      </button>
-      <button className="cursor-pointer px-6 py-2.5 rounded-full text-sm font-medium whitespace-nowrap text-on-surface-variant hover:text-on-surface transition-colors border-none bg-transparent">
-        Part Tests
-      </button>
-      <button className="cursor-pointer px-6 py-2.5 rounded-full text-sm font-medium whitespace-nowrap text-on-surface-variant hover:text-on-surface transition-colors border-none bg-transparent">
-        Chapter-wise Tests
-      </button>
-      <button className="cursor-pointer px-6 py-2.5 rounded-full text-sm font-medium whitespace-nowrap text-on-surface-variant hover:text-on-surface transition-colors border-none bg-transparent">
-        Previous Year Papers
-      </button>
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          onClick={() => onChange(tab.id)}
+          className={`cursor-pointer px-6 py-2.5 rounded-full text-sm whitespace-nowrap transition-colors ${
+            activeCategory === tab.id
+              ? 'font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/30'
+              : 'font-medium text-on-surface-variant hover:text-on-surface border-none bg-transparent'
+          }`}
+        >
+          {tab.label}
+        </button>
+      ))}
     </div>
   );
 }

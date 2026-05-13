@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import LoginPage from './LoginPage';
 import ForcePasswordChange from './ForcePasswordChange';
-import TestEngineLogin from './pages/TestEngineLogin';
 import TestEngineApp from './TestEngineApp';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -15,11 +14,24 @@ export default function App() {
     return true;
   });
 
-  const [view, setView] = useState('dashboard');
+  const [view, setView] = useState(() => {
+    if (typeof window === 'undefined') return 'dashboard';
+    const postSubmitView = localStorage.getItem('post_submit_view');
+    if (postSubmitView) {
+      localStorage.removeItem('post_submit_view');
+      return postSubmitView;
+    }
+    return 'dashboard';
+  });
   const [selectedTest, setSelectedTest] = useState(null);
   
   const [tests, setTests] = useState([]);
   const [loadingTests, setLoadingTests] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('full');
+  const [results, setResults] = useState([]);
+  const [loadingResults, setLoadingResults] = useState(false);
+  const [resultsError, setResultsError] = useState('');
 
   const [user, setUser] = useState(() => {
     try {
@@ -53,6 +65,35 @@ export default function App() {
       .catch(err => {
         console.error(err);
         setLoadingTests(false);
+      });
+    }
+  }, [user, view]);
+
+  useEffect(() => {
+    if (user && (view === 'analytics' || view === 'dashboard')) {
+      setLoadingResults(true);
+      setResultsError('');
+      fetch(`${API_BASE}/assessment/results`, {
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      })
+      .then(async res => {
+        const text = await res.text();
+        let data;
+        try {
+          data = text ? JSON.parse(text) : [];
+        } catch {
+          throw new Error(text || 'Invalid results response');
+        }
+        if (!res.ok) throw new Error(data.message || 'Failed to load results');
+        return Array.isArray(data) ? data : [];
+      })
+      .then(data => {
+        setResults(data);
+        setLoadingResults(false);
+      })
+      .catch(err => {
+        setResultsError(err.message);
+        setLoadingResults(false);
       });
     }
   }, [user, view]);
@@ -104,6 +145,10 @@ export default function App() {
   }, []);
 
   const toggleTheme = () => setIsDark(!isDark);
+  const showDashboard = () => {
+    setView('dashboard');
+    setSelectedTest(null);
+  };
 
   // Router override for the popup test engine
   const searchParams = new URL(window.location.href).searchParams;
@@ -141,6 +186,52 @@ export default function App() {
     );
   }
 
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+  const matchesCategory = (test) => {
+    const categoryText = `${test.category || ''} ${test.title || ''}`.toLowerCase();
+    if (activeCategory === 'full') {
+      return categoryText.includes('full')
+        || (!categoryText.includes('part')
+          && !categoryText.includes('chapter')
+          && !categoryText.includes('pyq')
+          && !categoryText.includes('previous year'));
+    }
+    if (activeCategory === 'part') return categoryText.includes('part');
+    if (activeCategory === 'chapter') return categoryText.includes('chapter');
+    if (activeCategory === 'pyq') return categoryText.includes('pyq') || categoryText.includes('previous year');
+    return true;
+  };
+  const filteredTests = tests.filter((test) => {
+    if (!matchesCategory(test)) return false;
+    if (!normalizedSearch) return true;
+    const haystack = [
+      test.title,
+      test.category,
+      test.status,
+      ...(test.sections?.map((section) => section.name) || []),
+      ...(test.syllabus || []),
+    ].filter(Boolean).join(' ').toLowerCase();
+    return haystack.includes(normalizedSearch);
+  });
+  const completedResults = results.filter((result) => result.status === 'completed' || result.status === 'auto-submitted');
+  const bestResult = completedResults.reduce((best, result) => {
+    if (!best) return result;
+    return (result.percentage || 0) > (best.percentage || 0) ? result : best;
+  }, null);
+  const averagePercentage = completedResults.length
+    ? Math.round(completedResults.reduce((sum, result) => sum + (result.percentage || 0), 0) / completedResults.length)
+    : 0;
+  const recommendedTitle = bestResult
+    ? `Review ${bestResult.test?.title || 'your latest result'}`
+    : tests[0]
+      ? `Start ${tests[0].title}`
+      : 'Start your first available test';
+  const recommendedBody = bestResult
+    ? 'Open Analytics to compare score, answered count, and section performance.'
+    : tests[0]
+      ? 'Open the test details, read the instructions, and begin when ready.'
+      : 'Published tests from your admin will appear here.';
+
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-background text-on-surface' : 'bg-slate-50 text-slate-900'}`}>
       {/* SideNavBar */}
@@ -151,38 +242,37 @@ export default function App() {
         </div>
 
         <nav className="flex-1 space-y-1">
-          <a className={`flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`} href="#">
+          <button onClick={showDashboard} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'dashboard' || view === 'instructions' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
             <span className="material-symbols-outlined mr-3">dashboard</span>
             <span className="text-sm font-medium">Dashboard</span>
-          </a>
-          <a className={`flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`} href="#">
+          </button>
+          <button onClick={showDashboard} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
             <span className="material-symbols-outlined mr-3">assignment</span>
             <span className="text-sm font-medium">Exams</span>
-          </a>
-          {/* Active Navigation Logic: Test Series matches current screen */}
-          <a className={`flex items-center px-3 py-3 border-l-2 border-indigo-500 font-semibold transition-colors duration-200 group ${isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600'}`} href="#">
+          </button>
+          <button onClick={showDashboard} className={`w-full border-none bg-transparent flex items-center px-3 py-3 border-l-2 border-indigo-500 font-semibold transition-colors duration-200 group ${view === 'dashboard' || view === 'instructions' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
             <span className="material-symbols-outlined mr-3">layers</span>
             <span className="text-sm">Test Series</span>
-          </a>
-          <a className={`flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`} href="#">
+          </button>
+          <button onClick={() => setView('analytics')} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'analytics' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
             <span className="material-symbols-outlined mr-3">insights</span>
             <span className="text-sm font-medium">Analytics</span>
-          </a>
-          <a className={`flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`} href="#">
+          </button>
+          <button onClick={() => setView('support')} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'support' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
             <span className="material-symbols-outlined mr-3">menu_book</span>
-            <span className="text-sm font-medium">Resources</span>
-          </a>
+            <span className="text-sm font-medium">Support</span>
+          </button>
         </nav>
 
         <div className={`mt-auto pt-6 border-t space-y-1 ${isDark ? 'border-slate-800/50' : 'border-slate-200'}`}>
-          <a className={`flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`} href="#">
+          <button onClick={() => setView('settings')} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'settings' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
             <span className="material-symbols-outlined mr-3">settings</span>
             <span className="text-sm font-medium">Settings</span>
-          </a>
-          <a className={`flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`} href="#">
+          </button>
+          <button onClick={() => setView('support')} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'support' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
             <span className="material-symbols-outlined mr-3">help_outline</span>
             <span className="text-sm font-medium">Support</span>
-          </a>
+          </button>
           <div className="flex items-center justify-between mt-6 px-3">
             <div className="flex items-center overflow-hidden">
               <div className="w-8 h-8 flex-shrink-0 rounded-full bg-indigo-500/20 text-indigo-500 flex items-center justify-center font-bold text-sm">
@@ -213,6 +303,11 @@ export default function App() {
               className={`w-full border-none rounded-xl py-2 pl-10 pr-4 text-sm focus:ring-1 focus:ring-indigo-500/50 transition-all outline-none ${isDark ? 'bg-surface-bright text-on-surface placeholder:text-slate-600' : 'bg-slate-100 text-slate-900 placeholder:text-slate-400'}`}
               placeholder="Search tests, topics, or results..."
               type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => {
+                if (view !== 'dashboard' && view !== 'instructions') showDashboard();
+              }}
             />
             <div className={`absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[10px] font-bold ${isDark ? 'bg-secondary-container text-on-surface-variant' : 'bg-slate-200 text-slate-500'}`}>⌘ K</div>
           </div>
@@ -247,15 +342,21 @@ export default function App() {
 
             {/* Category Tabs */}
             <div className="flex items-center space-x-1 mb-10 overflow-x-auto pb-2 scrollbar-hide">
-              <button className="cursor-pointer px-6 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
-                Full Tests
-              </button>
               {[
+                { id: 'full', label: 'Full Tests' },
                 { id: 'part', label: 'Part Tests' },
                 { id: 'chapter', label: 'Chapter-wise Tests' },
                 { id: 'pyq', label: 'Previous Year Papers' },
               ].map((tab) => (
-                <button key={tab.id} className={`cursor-pointer px-6 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors bg-transparent border-none ${isDark ? 'text-on-surface-variant hover:text-on-surface' : 'text-slate-500 hover:text-slate-900'}`}>
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveCategory(tab.id)}
+                  className={`cursor-pointer px-6 py-2.5 rounded-full text-sm whitespace-nowrap transition-colors ${
+                    activeCategory === tab.id
+                      ? 'font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/30'
+                      : `font-medium bg-transparent border-none ${isDark ? 'text-on-surface-variant hover:text-on-surface' : 'text-slate-500 hover:text-slate-900'}`
+                  }`}
+                >
                   {tab.label}
                 </button>
               ))}
@@ -270,13 +371,13 @@ export default function App() {
                     <span className="material-symbols-outlined animate-spin text-indigo-500 text-3xl">sync</span>
                     <p className={`mt-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Loading tests...</p>
                   </div>
-                ) : tests.length === 0 ? (
+                ) : filteredTests.length === 0 ? (
                   <div className={`p-8 text-center rounded-xl ${isDark ? 'bg-surface-container' : 'bg-white'}`}>
                     <span className={`material-symbols-outlined text-4xl mb-2 ${isDark ? 'text-slate-600' : 'text-slate-300'}`}>assignment_late</span>
-                    <h3 className={`text-lg font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>No Tests Available</h3>
-                    <p className={`text-sm ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Check back later or contact your coach.</p>
+                    <h3 className={`text-lg font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{searchQuery || activeCategory !== 'full' ? 'No Matching Tests' : 'No Tests Available'}</h3>
+                    <p className={`text-sm ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>{searchQuery || activeCategory !== 'full' ? 'Try a different test, subject, or category.' : 'Check back later or contact your coach.'}</p>
                   </div>
-                ) : tests.map((test) => (
+                ) : filteredTests.map((test) => (
                   <div key={test._id} className={`transition-all duration-300 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between group ${isDark ? 'bg-surface-container hover:bg-surface-container-high' : 'bg-white shadow-sm hover:shadow-md border border-slate-100'}`}>
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
@@ -336,20 +437,20 @@ export default function App() {
                     <div>
                       <div className="flex justify-between text-sm mb-2">
                         <span className={isDark ? 'text-on-surface-variant' : 'text-slate-500'}>Total Progress</span>
-                        <span className={`font-bold ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>12 / 40</span>
+                        <span className={`font-bold ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>{completedResults.length} / {tests.length}</span>
                       </div>
                       <div className={`w-full h-1 rounded-full overflow-hidden ${isDark ? 'bg-surface-variant' : 'bg-slate-100'}`}>
-                        <div className="h-full bg-indigo-500 rounded-full" style={{ width: '30%' }}></div>
+                        <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${tests.length ? Math.round((completedResults.length / tests.length) * 100) : 0}%` }}></div>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className={`p-4 rounded-lg transition-colors ${isDark ? 'bg-surface-container-low' : 'bg-slate-50'}`}>
                         <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Avg Score</p>
-                        <p className={`text-xl font-headline font-bold ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>78%</p>
+                        <p className={`text-xl font-headline font-bold ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>{averagePercentage}%</p>
                       </div>
                       <div className={`p-4 rounded-lg transition-colors ${isDark ? 'bg-surface-container-low' : 'bg-slate-50'}`}>
-                        <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Rank</p>
-                        <p className={`text-xl font-headline font-bold ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>#242</p>
+                        <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Best</p>
+                        <p className={`text-xl font-headline font-bold ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>{bestResult?.percentage ?? 0}%</p>
                       </div>
                     </div>
                   </div>
@@ -367,18 +468,132 @@ export default function App() {
                         <span className="material-symbols-outlined text-sm text-indigo-400">lightbulb</span>
                       </div>
                       <div>
-                        <p className={`text-sm font-bold ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>Focus: Organic Chemistry</p>
-                        <p className={`text-xs mt-1 ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>You missed 4 questions on Hydrocarbons in Mock 01.</p>
+                        <p className={`text-sm font-bold ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>{recommendedTitle}</p>
+                        <p className={`text-xs mt-1 ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>{recommendedBody}</p>
                       </div>
                     </div>
-                    <button className={`cursor-pointer border-none w-full py-2.5 mt-4 text-xs font-bold rounded uppercase tracking-widest transition-all ${isDark ? 'bg-surface-variant text-on-surface-variant hover:bg-indigo-500 hover:text-on-primary' : 'bg-slate-200 text-slate-600 hover:bg-slate-900 hover:text-white'}`}>
-                      View Study Plan
+                    <button onClick={() => setView(bestResult ? 'analytics' : 'dashboard')} className={`cursor-pointer border-none w-full py-2.5 mt-4 text-xs font-bold rounded uppercase tracking-widest transition-all ${isDark ? 'bg-surface-variant text-on-surface-variant hover:bg-indigo-500 hover:text-on-primary' : 'bg-slate-200 text-slate-600 hover:bg-slate-900 hover:text-white'}`}>
+                      {bestResult ? 'View Analytics' : 'View Tests'}
                     </button>
                   </div>
                 </div>
               </div>
             </div>
           </>
+        ) : view === 'analytics' ? (
+          <div className="space-y-8">
+            <header>
+              <h2 className={`text-4xl font-extrabold font-headline tracking-tight ${isDark ? 'text-on-background' : 'text-slate-900'}`}>Analytics</h2>
+              <p className={`mt-2 text-lg font-medium opacity-70 ${isDark ? 'text-on-surface-variant' : 'text-slate-600'}`}>Review submitted test results and section performance.</p>
+            </header>
+            {loadingResults ? (
+              <div className={`p-8 rounded-xl ${isDark ? 'bg-surface-container' : 'bg-white shadow-sm'}`}>Loading results...</div>
+            ) : resultsError ? (
+              <div className="p-6 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">{resultsError}</div>
+            ) : results.length === 0 ? (
+              <div className={`p-8 rounded-xl text-center ${isDark ? 'bg-surface-container' : 'bg-white shadow-sm'}`}>
+                <span className="material-symbols-outlined text-5xl text-slate-500 mb-3">analytics</span>
+                <h3 className="text-xl font-bold mb-2">No Results Yet</h3>
+                <p className={isDark ? 'text-slate-400' : 'text-slate-500'}>Submit a test to see score, accuracy, and section breakdown here.</p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div className={`p-6 rounded-xl ${isDark ? 'bg-surface-container' : 'bg-white shadow-sm border border-slate-100'}`}>
+                    <p className="text-xs uppercase tracking-widest text-slate-500 font-bold">Tests Submitted</p>
+                    <p className="text-3xl font-bold mt-2">{completedResults.length}</p>
+                  </div>
+                  <div className={`p-6 rounded-xl ${isDark ? 'bg-surface-container' : 'bg-white shadow-sm border border-slate-100'}`}>
+                    <p className="text-xs uppercase tracking-widest text-slate-500 font-bold">Average Score</p>
+                    <p className="text-3xl font-bold mt-2">{averagePercentage}%</p>
+                  </div>
+                  <div className={`p-6 rounded-xl ${isDark ? 'bg-surface-container' : 'bg-white shadow-sm border border-slate-100'}`}>
+                    <p className="text-xs uppercase tracking-widest text-slate-500 font-bold">Best Score</p>
+                    <p className="text-3xl font-bold mt-2">{bestResult?.percentage ?? 0}%</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  {results.map((result) => {
+                    const sectionEntries = Object.entries(result.sectionScores || {});
+                    return (
+                      <div key={result._id} className={`p-6 rounded-xl ${isDark ? 'bg-surface-container' : 'bg-white shadow-sm border border-slate-100'}`}>
+                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                          <div>
+                            <p className="text-xs uppercase tracking-widest text-indigo-400 font-bold">{result.test?.category || 'General'}</p>
+                            <h3 className="text-xl font-bold mt-1">{result.test?.title || 'Deleted Test'}</h3>
+                            <p className={`text-sm mt-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                              Submitted {result.submittedAt ? new Date(result.submittedAt).toLocaleString() : 'recently'} · {result.durationUsedMinutes || 0} mins · IP {result.ipAddress || 'not captured'}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-3xl font-extrabold text-indigo-400">{result.percentage ?? 0}%</p>
+                            <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{result.totalScore ?? 0} / {result.maxPossibleScore ?? result.test?.totalMarks ?? 0}</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
+                          <div className={`p-3 rounded-lg ${isDark ? 'bg-surface-container-low' : 'bg-slate-50'}`}>
+                            <p className="text-[10px] uppercase text-slate-500 font-bold">Answered</p>
+                            <p className="font-bold">{result.answered} / {result.totalQuestions}</p>
+                          </div>
+                          {sectionEntries.slice(0, 3).map(([section, score]) => (
+                            <div key={section} className={`p-3 rounded-lg ${isDark ? 'bg-surface-container-low' : 'bg-slate-50'}`}>
+                              <p className="text-[10px] uppercase text-slate-500 font-bold truncate">{section}</p>
+                              <p className="font-bold">{score.score} pts</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        ) : view === 'settings' ? (
+          <div className="max-w-3xl space-y-8">
+            <header>
+              <h2 className={`text-4xl font-extrabold font-headline tracking-tight ${isDark ? 'text-on-background' : 'text-slate-900'}`}>Settings</h2>
+              <p className={`mt-2 text-lg font-medium opacity-70 ${isDark ? 'text-on-surface-variant' : 'text-slate-600'}`}>Control dashboard preferences for your test environment.</p>
+            </header>
+            <section className={`p-6 rounded-xl ${isDark ? 'bg-surface-container' : 'bg-white shadow-sm border border-slate-100'}`}>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-bold text-lg">Theme</h3>
+                  <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Switch between dark and light dashboard modes.</p>
+                </div>
+                <button onClick={toggleTheme} className="px-5 py-2 rounded-lg bg-indigo-500 text-white font-bold border-none">
+                  {isDark ? 'Use Light' : 'Use Dark'}
+                </button>
+              </div>
+            </section>
+            <section className={`p-6 rounded-xl ${isDark ? 'bg-surface-container' : 'bg-white shadow-sm border border-slate-100'}`}>
+              <h3 className="font-bold text-lg mb-3">Account</h3>
+              <div className={`text-sm space-y-2 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                <p>Name: <strong>{user.name || user.username || 'Student'}</strong></p>
+                <p>Login type: <strong>{user.authMethod === 'b2b' ? 'Coaching' : 'Scholar'}</strong></p>
+              </div>
+            </section>
+          </div>
+        ) : view === 'support' ? (
+          <div className="max-w-4xl space-y-8">
+            <header>
+              <h2 className={`text-4xl font-extrabold font-headline tracking-tight ${isDark ? 'text-on-background' : 'text-slate-900'}`}>Support</h2>
+              <p className={`mt-2 text-lg font-medium opacity-70 ${isDark ? 'text-on-surface-variant' : 'text-slate-600'}`}>Troubleshoot CBT issues before, during, and after tests.</p>
+            </header>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {[
+                ['Test did not open', 'Allow pop-ups for this site, then start the test again from Test Series.'],
+                ['Answers not saving', 'Keep the test window open and connected. Submit will stop if the latest save fails.'],
+                ['Result missing', 'Open Analytics after submission. If a result is evaluating, refresh after a short wait.'],
+                ['Need admin help', 'Contact your coaching admin with test title, time, and account name.'],
+              ].map(([title, body]) => (
+                <div key={title} className={`p-6 rounded-xl ${isDark ? 'bg-surface-container' : 'bg-white shadow-sm border border-slate-100'}`}>
+                  <h3 className="font-bold text-lg">{title}</h3>
+                  <p className={`text-sm mt-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         ) : (
           <div className="max-w-4xl mx-auto">
             {/* Breadcrumb / Back */}
@@ -444,10 +659,14 @@ export default function App() {
                     Important Guidelines
                   </h3>
                   <div className={`space-y-4 text-sm leading-relaxed ${isDark ? 'text-on-surface-variant' : 'text-slate-600'}`}>
-                    <p>• The test will automatically conclude when the timer reaches zero.</p>
-                    <p>• Correct answers award **+4 marks**, while incorrect ones deduct **-1 mark**.</p>
-                    <p>• No marks are deducted for unattempted questions.</p>
-                    <p>• Ensure a stable internet connection for the duration of the test.</p>
+                    {(selectedTest?.instructions?.general?.length ? selectedTest.instructions.general : [
+                      'The test will automatically conclude when the timer reaches zero.',
+                      `Correct answers award +${selectedTest?.defaultPositiveMarks ?? 4} marks, while incorrect ones deduct ${selectedTest?.defaultNegativeMarks ?? 1} mark.`,
+                      'No marks are deducted for unattempted questions.',
+                      'Ensure a stable internet connection for the duration of the test.',
+                    ]).map((instruction, idx) => (
+                      <p key={idx}>• {instruction}</p>
+                    ))}
                   </div>
                 </section>
               </div>

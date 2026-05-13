@@ -26,6 +26,8 @@ export const createTest = asyncHandler(async (req, res) => {
     defaultNegativeMarks,
     scheduledStartAt,
     scheduledEndAt,
+    syllabus,
+    instructions,
   } = req.body;
 
   const test = await Test.create({
@@ -40,6 +42,8 @@ export const createTest = asyncHandler(async (req, res) => {
     targetTenants: targetTenants || [],
     defaultPositiveMarks: defaultPositiveMarks || 4,
     defaultNegativeMarks: defaultNegativeMarks || 1,
+    syllabus: syllabus || [],
+    instructions: instructions || undefined,
     scheduledStartAt: scheduledStartAt || null,
     scheduledEndAt: scheduledEndAt || null,
     createdBy: req.user._id,
@@ -121,7 +125,7 @@ export const getStudentTests = asyncHandler(async (req, res) => {
       { $or: [{ scheduledEndAt: null }, { scheduledEndAt: { $gte: now } }] },
     ],
   })
-    .select('title description category durationMinutes totalMarks sections questionCount visibility scheduledStartAt scheduledEndAt')
+    .select('title description category durationMinutes totalMarks sections syllabus instructions questionCount visibility scheduledStartAt scheduledEndAt')
     .sort({ createdAt: -1 });
 
   const redis = getRedis();
@@ -208,7 +212,7 @@ export const updateTest = asyncHandler(async (req, res) => {
     'title', 'description', 'category', 'durationMinutes', 'totalMarks',
     'sections', 'visibility', 'targetGroups', 'targetTenants',
     'defaultPositiveMarks', 'defaultNegativeMarks',
-    'scheduledStartAt', 'scheduledEndAt',
+    'scheduledStartAt', 'scheduledEndAt', 'instructions', 'syllabus',
   ];
 
   for (const key of allowed) {

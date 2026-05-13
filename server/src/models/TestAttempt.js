@@ -55,6 +55,10 @@ const testAttemptSchema = new mongoose.Schema(
       type: Number,
       default: null,
     },
+    ipAddress: {
+      type: String,
+      default: '',
+    },
     /**
      * Per-question answer state.
      * During live test, this is synced from Redis periodically.

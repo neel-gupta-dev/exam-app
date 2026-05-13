@@ -12,6 +12,14 @@ const VALID_ANSWER_STATUSES = new Set([
   'answered-and-marked',
 ]);
 
+const getClientIp = (req) => {
+  const forwarded = req.headers['x-forwarded-for'];
+  const rawIp = Array.isArray(forwarded)
+    ? forwarded[0]
+    : forwarded?.split(',')[0] || req.ip || req.socket?.remoteAddress || '';
+  return rawIp.replace(/^::ffff:/, '').trim();
+};
+
 const computeTimeLeft = (test, startTime) => {
   const startedAt = new Date(startTime).getTime();
   if (!Number.isFinite(startedAt)) return test.durationMinutes * 60;
@@ -153,8 +161,12 @@ export const startAssessment = asyncHandler(async (req, res) => {
         userId,
         testId,
         status: 'in-progress',
+        ipAddress: getClientIp(req),
         answers: [],
       });
+    } else if (!attempt.ipAddress) {
+      attempt.ipAddress = getClientIp(req);
+      await attempt.save();
     }
 
     return res.status(200).json({
@@ -163,6 +175,7 @@ export const startAssessment = asyncHandler(async (req, res) => {
       session: {
         startTime: attempt.startedAt,
         timeLeft: computeTimeLeft(test, attempt.startedAt),
+        publicIp: attempt.ipAddress || getClientIp(req),
         answers: answerRowsToSessionMap(attempt.answers),
       },
     });
@@ -182,6 +195,7 @@ export const startAssessment = asyncHandler(async (req, res) => {
     activeSession = {
       startTime: new Date().toISOString(),
       timeLeft: test.durationMinutes * 60, // in seconds
+      publicIp: getClientIp(req),
       answers: {}, // map of questionId -> { status: 'not_visited', selectedOption: null, markedForReview: false }
     };
     await redis.hSet(sessionKey, 'data', JSON.stringify(activeSession));
@@ -189,6 +203,7 @@ export const startAssessment = asyncHandler(async (req, res) => {
     await redis.expire(sessionKey, (test.durationMinutes * 60) + 3600);
   }
   activeSession.timeLeft = computeTimeLeft(test, activeSession.startTime);
+  activeSession.publicIp = activeSession.publicIp || getClientIp(req);
 
   res.status(200).json({
     test: test.toRedisPayload(),
@@ -294,6 +309,7 @@ export const submitAssessment = asyncHandler(async (req, res) => {
     const questions = await Question.find({ testId }).sort({ order: 1 }).lean();
     const answers = answerRowsToSessionMap(attempt.answers);
     attempt.durationUsedMinutes = Math.round((Date.now() - new Date(attempt.startedAt).getTime()) / 60000);
+    attempt.ipAddress = attempt.ipAddress || getClientIp(req);
     attempt.answers = buildCompleteAnswerRows(questions, answers);
     gradeAttempt(attempt, test, questions);
     await attempt.save();
@@ -306,7 +322,7 @@ export const submitAssessment = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'Session expired or not found. Cannot evaluate.' });
   }
 
-  const { answers, startTime } = JSON.parse(activeSessionRaw);
+  const { answers, startTime, publicIp } = JSON.parse(activeSessionRaw);
 
   const endTime = new Date();
   const durationUsedMinutes = Math.round((endTime.getTime() - new Date(startTime).getTime()) / 60000);
@@ -318,6 +334,7 @@ export const submitAssessment = asyncHandler(async (req, res) => {
     testId,
     status: 'completed',
     durationUsedMinutes,
+    ipAddress: publicIp || getClientIp(req),
     answers: answerRows,
   });
   gradeAttempt(attempt, test, questions);
@@ -327,4 +344,37 @@ export const submitAssessment = asyncHandler(async (req, res) => {
   await redis.del(sessionKey);
 
   res.status(201).json({ message: 'Evaluation completed', attempt });
+});
+
+export const getMyAssessmentResults = asyncHandler(async (req, res) => {
+  const attempts = await TestAttempt.find({
+    userId: req.user._id,
+    status: { $in: ['completed', 'auto-submitted', 'evaluating'] },
+  })
+    .populate('testId', 'title category totalMarks durationMinutes sections')
+    .sort({ submittedAt: -1, createdAt: -1 })
+    .limit(50)
+    .lean();
+
+  res.json(attempts.map((attempt) => {
+    const sectionScores = attempt.sectionScores instanceof Map
+      ? Object.fromEntries(attempt.sectionScores)
+      : attempt.sectionScores || {};
+
+    return {
+      _id: attempt._id,
+      status: attempt.status,
+      test: attempt.testId,
+      startedAt: attempt.startedAt,
+      submittedAt: attempt.submittedAt,
+      durationUsedMinutes: attempt.durationUsedMinutes,
+      totalScore: attempt.totalScore,
+      maxPossibleScore: attempt.maxPossibleScore,
+      percentage: attempt.percentage,
+      sectionScores,
+      answered: attempt.answers?.filter((answer) => answer.selectedAnswer?.length > 0).length || 0,
+      totalQuestions: attempt.answers?.length || 0,
+      ipAddress: attempt.ipAddress || '',
+    };
+  }));
 });

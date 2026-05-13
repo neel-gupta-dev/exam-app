@@ -9,7 +9,8 @@ export default function TestCard({
   status, 
   statusIcon,
   buttonText,
-  state 
+  state,
+  onAction,
 }) {
   // Determine styles dynamically to match the 3 states from code.html
   let wrapperClass = "bg-surface-container hover:bg-surface-container-high transition-all duration-300 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between group";
@@ -65,7 +66,7 @@ export default function TestCard({
         </div>
       </div>
       <div className="mt-6 md:mt-0 md:ml-8">
-        <button className={buttonClass}>
+        <button onClick={onAction} disabled={state === 'locked'} className={buttonClass}>
           {buttonText}
         </button>
       </div>

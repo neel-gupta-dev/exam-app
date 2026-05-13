@@ -1,6 +1,16 @@
 import React from 'react';
 
-export default function StatsPanel() {
+export default function StatsPanel({ tests = [], results = [], onNavigate }) {
+  const completedResults = results.filter((result) => result.status === 'completed' || result.status === 'auto-submitted');
+  const averagePercentage = completedResults.length
+    ? Math.round(completedResults.reduce((sum, result) => sum + (result.percentage || 0), 0) / completedResults.length)
+    : 0;
+  const bestResult = completedResults.reduce((best, result) => {
+    if (!best) return result;
+    return (result.percentage || 0) > (best.percentage || 0) ? result : best;
+  }, null);
+  const progress = tests.length ? Math.round((completedResults.length / tests.length) * 100) : 0;
+
   return (
     <div className="col-span-12 lg:col-span-4 space-y-8">
       {/* Performance Card */}
@@ -10,20 +20,20 @@ export default function StatsPanel() {
           <div>
             <div className="flex justify-between text-sm mb-2">
               <span className="text-on-surface-variant">Total Progress</span>
-              <span className="text-on-surface font-bold">12 / 40</span>
+              <span className="text-on-surface font-bold">{completedResults.length} / {tests.length}</span>
             </div>
             <div className="w-full h-1 bg-surface-variant rounded-full overflow-hidden">
-              <div className="h-full bg-indigo-500 rounded-full" style={{ width: '30%' }}></div>
+              <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${progress}%` }}></div>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 bg-surface-container-low rounded-lg">
               <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Avg Score</p>
-              <p className="text-xl font-headline font-bold text-on-surface">78%</p>
+              <p className="text-xl font-headline font-bold text-on-surface">{averagePercentage}%</p>
             </div>
             <div className="p-4 bg-surface-container-low rounded-lg">
-              <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Rank</p>
-              <p className="text-xl font-headline font-bold text-on-surface">#242</p>
+              <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Best</p>
+              <p className="text-xl font-headline font-bold text-on-surface">{bestResult?.percentage ?? 0}%</p>
             </div>
           </div>
         </div>
@@ -41,12 +51,12 @@ export default function StatsPanel() {
               <span className="material-symbols-outlined text-sm text-indigo-400">lightbulb</span>
             </div>
             <div>
-              <p className="text-sm font-bold text-on-surface">Focus: Organic Chemistry</p>
-              <p className="text-xs text-on-surface-variant mt-1">You missed 4 questions on Hydrocarbons in Mock 01.</p>
+              <p className="text-sm font-bold text-on-surface">{bestResult ? `Review ${bestResult.test?.title || 'latest result'}` : 'Start your next test'}</p>
+              <p className="text-xs text-on-surface-variant mt-1">{bestResult ? 'Open Analytics for score and section performance.' : 'Choose a published test and read the instructions before starting.'}</p>
             </div>
           </div>
-          <button className="cursor-pointer border-none w-full py-2.5 mt-4 bg-surface-variant text-on-surface-variant text-xs font-bold rounded uppercase tracking-widest hover:bg-indigo-500 hover:text-on-primary transition-all">
-            View Study Plan
+          <button onClick={() => onNavigate?.(bestResult ? 'analytics' : 'dashboard')} className="cursor-pointer border-none w-full py-2.5 mt-4 bg-surface-variant text-on-surface-variant text-xs font-bold rounded uppercase tracking-widest hover:bg-indigo-500 hover:text-on-primary transition-all">
+            {bestResult ? 'View Analytics' : 'View Tests'}
           </button>
         </div>
       </div>

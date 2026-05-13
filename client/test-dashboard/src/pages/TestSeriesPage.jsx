@@ -1,55 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import CategoryTabs from '../components/CategoryTabs';
 import TestCard from '../components/TestCard';
 import StatsPanel from '../components/StatsPanel';
 
-export default function TestSeriesPage() {
-  const testData = [
-    {
-      badge: 'Advance',
-      subject: 'Physics • Chemistry • Maths',
-      title: 'JEE Full Mock 01',
-      duration: 180,
-      marks: 300,
-      status: 'Not Started',
-      statusIcon: 'radio_button_checked',
-      buttonText: 'Attempt Test',
-      state: 'default'
-    },
-    {
-      badge: 'Intermediate',
-      subject: 'Calculus Focus',
-      title: 'Mathematics Full Mock 04',
-      duration: 90,
-      marks: 120,
-      status: 'In Progress',
-      statusIcon: 'pending',
-      buttonText: 'Resume Test',
-      state: 'in-progress'
-    },
-    {
-      badge: 'Foundation',
-      subject: 'General Aptitude',
-      title: 'Logical Reasoning Mock 02',
-      duration: 60,
-      marks: 100,
-      status: 'Not Started',
-      statusIcon: 'radio_button_checked',
-      buttonText: 'Attempt Test',
-      state: 'locked'
-    },
-    {
-      badge: 'Advance',
-      subject: 'Modern Physics',
-      title: 'JEE Full Mock 02',
-      duration: 180,
-      marks: 300,
-      status: 'Not Started',
-      statusIcon: 'radio_button_checked',
-      buttonText: 'Attempt Test',
-      state: 'default'
-    },
-  ];
+export default function TestSeriesPage({ tests = [], results = [], onSelectTest = () => {}, onNavigate = () => {} }) {
+  const [activeCategory, setActiveCategory] = useState('full');
+
+  const matchesCategory = (test) => {
+    const categoryText = `${test.category || ''} ${test.title || ''}`.toLowerCase();
+    if (activeCategory === 'full') {
+      return categoryText.includes('full')
+        || (!categoryText.includes('part')
+          && !categoryText.includes('chapter')
+          && !categoryText.includes('pyq')
+          && !categoryText.includes('previous year'));
+    }
+    if (activeCategory === 'part') return categoryText.includes('part');
+    if (activeCategory === 'chapter') return categoryText.includes('chapter');
+    if (activeCategory === 'pyq') return categoryText.includes('pyq') || categoryText.includes('previous year');
+    return true;
+  };
+  const filteredTests = tests.filter(matchesCategory);
 
   return (
     <>
@@ -58,15 +29,32 @@ export default function TestSeriesPage() {
         <p className="text-on-surface-variant mt-2 text-lg font-medium opacity-70">Level up your exam readiness.</p>
       </header>
       
-      <CategoryTabs />
+      <CategoryTabs activeCategory={activeCategory} onChange={setActiveCategory} />
       
       <div className="grid grid-cols-12 gap-10">
         <div className="col-span-12 lg:col-span-8 space-y-4">
-          {testData.map((test, index) => (
-            <TestCard key={index} {...test} />
+          {filteredTests.map((test) => (
+            <TestCard
+              key={test._id}
+              badge={test.category || 'General'}
+              subject={test.sections?.map((section) => section.name).join(' • ') || 'Full Exam'}
+              title={test.title}
+              duration={test.durationMinutes}
+              marks={test.totalMarks}
+              status={test.status || 'Not Started'}
+              statusIcon={test.state === 'in-progress' ? 'pending' : test.state === 'completed' ? 'check_circle' : 'radio_button_checked'}
+              buttonText={test.state === 'in-progress' ? 'Resume Test' : test.state === 'completed' ? 'Attempt Again' : 'Attempt Test'}
+              state={test.state || 'default'}
+              onAction={() => onSelectTest(test)}
+            />
           ))}
+          {filteredTests.length === 0 && (
+            <div className="bg-surface-container rounded-xl p-8 text-center text-on-surface-variant">
+              No tests are available for this category.
+            </div>
+          )}
         </div>
-        <StatsPanel />
+        <StatsPanel tests={tests} results={results} onNavigate={onNavigate} />
       </div>
     </>
   );

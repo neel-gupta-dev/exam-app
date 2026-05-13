@@ -120,9 +120,7 @@ export default function TestEngineLogin({ user, test, onSignIn }) {
       </div>
 
       {/* Footer */}
-      <div style={{ backgroundColor: footerGray, color: '#fff', textAlign: 'center', padding: '5px', fontSize: '12px' }}>
-        Version 17.05.21
-      </div>
+      <div style={{ backgroundColor: footerGray, color: '#fff', textAlign: 'center', padding: '5px', fontSize: '12px' }} />
     </div>
   );
 }

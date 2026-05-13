@@ -11,16 +11,18 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   const [testMeta, setTestMeta] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState([]);
-  const [attemptId, setAttemptId] = useState(null);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [activeSection, setActiveSection] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
-  const [tabSwitchCount, setTabSwitchCount] = useState(0);
+  const [, setTabSwitchCount] = useState(0);
   const [showWarning, setShowWarning] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState(null);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [publicIp, setPublicIp] = useState('');
+  const [showInstructionsPanel, setShowInstructionsPanel] = useState(false);
+  const [showQuestionPaper, setShowQuestionPaper] = useState(false);
 
   const syncDirty = useRef(false);
   const timerRef = useRef(null);
@@ -88,6 +90,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
 
         // Calculate remaining time
         setTimeLeft(data.session ? data.session.timeLeft : data.test.durationMinutes * 60);
+        setPublicIp(data.session?.publicIp || '');
 
         // Set initial section with safety checks
         if (data.test.sections && data.test.sections.length > 0) {
@@ -371,13 +374,9 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   };
 
   const formatTime = (seconds) => {
-    if (seconds <= 0) return '00:00:00';
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
+    if (seconds <= 0) return '00:00';
+    const m = Math.floor(seconds / 60);
     const s = seconds % 60;
-    if (h > 0) {
-      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    }
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
@@ -446,6 +445,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
                 if (document.fullscreenElement) {
                    document.exitFullscreen().catch(e => console.log('Exit fullscreen failed', e));
                 }
+                localStorage.setItem('post_submit_view', 'analytics');
                 const btn = document.createElement('a'); 
                 btn.href = '/';
                 btn.click();
@@ -462,6 +462,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   const sections = testMeta?.sections?.length ? testMeta.sections : [{ name: 'General'}];
   const summary = getSummary();
   const fullName = user?.name || user?.username || user?.email || 'Student';
+  const watermarkText = `${fullName}${publicIp ? ` · ${publicIp}` : ''}`;
   const activeSectionQuestions = getFilteredQuestions();
   const currentLocalIdx = Math.max(0, activeSectionQuestions.findIndex((q) => q._id === currentQuestion?._id));
   const questionTypeLabels = {
@@ -471,6 +472,9 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     subjective: 'Subjective Question',
   };
   const questionTypeLabel = questionTypeLabels[currentQuestion?.type] || currentQuestion?.type || 'Question';
+  const liveInstructions = testMeta?.instructions?.general?.length
+    ? testMeta.instructions.general
+    : ['Read each question carefully before selecting an answer.', 'Use Save & Next to preserve your current response.'];
   const paperTabs = testMeta?.parts?.length
     ? testMeta.parts
     : [
@@ -546,11 +550,11 @@ export default function TestEngine({ testId, user, onSubmitted }) {
           {testMeta?.title || 'Mock Test'}
         </div>
         <div className="flex h-full items-center text-[16px] font-bold">
-          <button className="flex h-full items-center gap-2 px-4 text-white hover:bg-[#3f3f3f]">
+          <button onClick={() => setShowInstructionsPanel(true)} className="flex h-full items-center gap-2 px-4 text-white hover:bg-[#3f3f3f]">
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4aaee8] text-[18px] italic leading-none text-white shadow-inner">i</span>
             Instructions
           </button>
-          <button className="flex h-full items-center gap-2 px-4 text-white hover:bg-[#3f3f3f]">
+          <button onClick={() => setShowQuestionPaper(true)} className="flex h-full items-center gap-2 px-4 text-white hover:bg-[#3f3f3f]">
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#39b873] text-white shadow-inner">
               <List className="h-4 w-4" />
             </span>
@@ -623,7 +627,15 @@ export default function TestEngine({ testId, user, onSubmitted }) {
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto border-b border-[#cfcfcf] bg-white">
+          <div className="relative min-h-0 flex-1 overflow-y-auto border-b border-[#cfcfcf] bg-white">
+            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-[0.08]">
+              <div className="grid h-full w-full grid-cols-2 gap-20 -rotate-12 place-items-center text-[34px] font-bold uppercase tracking-wider text-[#111]">
+                {Array.from({ length: 12 }).map((_, idx) => (
+                  <span key={idx} className="whitespace-nowrap">{watermarkText}</span>
+                ))}
+              </div>
+            </div>
+            <div className="relative z-10">
             <div className="border-b border-[#ddd] px-[6px] py-[7px]">
               <h3 className="text-[21px] font-bold">Question No. {currentLocalIdx + 1}</h3>
             </div>
@@ -663,6 +675,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
                   />
                 </div>
               )}
+            </div>
             </div>
           </div>
 
@@ -774,10 +787,52 @@ export default function TestEngine({ testId, user, onSubmitted }) {
         </div>
       )}
 
-      {/* 3. Global Footer Banner */}
-      <div className="h-[22px] bg-[#425d76] shrink-0 w-full flex items-center justify-center text-white text-[11px] font-semibold tracking-wider">
-        Version : 17.07.00
-      </div>
+      {showInstructionsPanel && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-6">
+          <div className="max-h-[80vh] w-full max-w-2xl overflow-y-auto bg-white p-6 text-black shadow-xl">
+            <div className="mb-4 flex items-center justify-between border-b border-[#ddd] pb-3">
+              <h2 className="text-xl font-bold">Instructions</h2>
+              <button onClick={() => setShowInstructionsPanel(false)} className="border border-[#ccc] px-3 py-1">Close</button>
+            </div>
+            <ol className="list-decimal space-y-3 pl-5 text-[15px] leading-relaxed">
+              {liveInstructions.map((instruction, idx) => (
+                <li key={idx}>{instruction}</li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      )}
+
+      {showQuestionPaper && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-6">
+          <div className="max-h-[84vh] w-full max-w-4xl overflow-y-auto bg-white p-6 text-black shadow-xl">
+            <div className="mb-4 flex items-center justify-between border-b border-[#ddd] pb-3">
+              <h2 className="text-xl font-bold">Question Paper</h2>
+              <button onClick={() => setShowQuestionPaper(false)} className="border border-[#ccc] px-3 py-1">Close</button>
+            </div>
+            <div className="space-y-5">
+              {questions.map((question, idx) => (
+                <div key={question._id} className="border-b border-[#e5e5e5] pb-4">
+                  <div className="mb-2 flex items-center justify-between gap-4">
+                    <h3 className="font-bold">Question {idx + 1}</h3>
+                    <span className="text-sm text-[#555]">{question.section || 'General'} · {questionTypeLabels[question.type] || question.type}</span>
+                  </div>
+                  <div className="text-sm leading-relaxed">
+                    <LatexRenderer text={question.content} />
+                    {question.options?.map((option) => (
+                      <div key={option.label} className="mt-2 flex gap-2">
+                        <span className="font-bold">{option.label}.</span>
+                        <LatexRenderer text={option.content} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
