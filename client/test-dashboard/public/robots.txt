@@ -1,0 +1,10 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Allow: /login
+Disallow: /dashboard
+Disallow: /api/
+Disallow: /mock-test/*
+Disallow: /attempt/*
+
+Sitemap: https://tests.vayl.in/sitemap.xml

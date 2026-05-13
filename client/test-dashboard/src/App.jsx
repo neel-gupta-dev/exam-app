@@ -351,7 +351,7 @@ export default function App() {
               </div>
               <div className="ml-3 overflow-hidden pr-2">
                 <p className={`text-xs font-semibold truncate ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>{user.name}</p>
-                <p className="text-[10px] text-slate-500 truncate">{user.authMethod === 'b2b' ? 'Coaching Member' : 'Pro Member'}</p>
+                <p className="text-[10px] text-slate-500 truncate">{user.authMethod === 'b2b' ? (user.tenantId?.name || 'Coaching Member') : 'Regular User'}</p>
               </div>
             </div>
             <button

@@ -86,11 +86,11 @@ export const loginUser = async ({ email, username, password, ipAddress }) => {
   if (username) {
     // B2B login: find by username
     const cleanUsername = username.trim().toLowerCase();
-    user = await User.findOne({ username: cleanUsername }).select('+password');
+    user = await User.findOne({ username: cleanUsername }).select('+password').populate('tenantId', 'name');
   } else {
     // B2C login: find by email
     const cleanEmail = email.trim().toLowerCase();
-    user = await User.findOne({ email: cleanEmail }).select('+password');
+    user = await User.findOne({ email: cleanEmail }).select('+password').populate('tenantId', 'name');
   }
 
   if (!user) {

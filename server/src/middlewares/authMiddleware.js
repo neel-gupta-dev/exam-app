@@ -18,7 +18,9 @@ const protect = asyncHandler(async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = await User.findById(decoded.id).select('-password -googleAccessToken -googleRefreshToken');
+    req.user = await User.findById(decoded.id)
+      .select('-password -googleAccessToken -googleRefreshToken')
+      .populate('tenantId', 'name');
 
     if (!req.user) {
       res.status(401);
