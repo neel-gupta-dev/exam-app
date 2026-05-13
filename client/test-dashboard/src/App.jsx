@@ -342,8 +342,12 @@ export default function App() {
           </button>
           <div className="flex items-center justify-between mt-6 px-3">
             <div className="flex items-center overflow-hidden">
-              <div className="w-8 h-8 flex-shrink-0 rounded-full bg-indigo-500/20 text-indigo-500 flex items-center justify-center font-bold text-sm">
-                {user.name?.charAt(0).toUpperCase() || 'S'}
+              <div className="w-8 h-8 flex-shrink-0 rounded-full overflow-hidden bg-indigo-500/20 text-indigo-500 flex items-center justify-center font-bold text-sm">
+                {user.profilePic ? (
+                  <img src={user.profilePic} alt="" referrerPolicy="no-referrer" className="w-full h-full object-cover flex border-none" />
+                ) : (
+                  user.name?.charAt(0).toUpperCase() || 'S'
+                )}
               </div>
               <div className="ml-3 overflow-hidden pr-2">
                 <p className={`text-xs font-semibold truncate ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>{user.name}</p>

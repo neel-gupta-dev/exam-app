@@ -28,6 +28,10 @@ const userSchema = new mongoose.Schema(
       unique: true,
       sparse: true,
     },
+    profilePic: {
+      type: String,
+      default: null,
+    },
     authMethod: {
       type: String,
       enum: ['local', 'google', 'b2b'],

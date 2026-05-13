@@ -16,7 +16,8 @@ const configurePassport = () => {
               : 'http://localhost:5000/auth/google/callback'),
         },
         async (accessToken, refreshToken, params, profile, done) => {
-          const { id, displayName, emails } = profile;
+          const { id, displayName, emails, photos } = profile;
+          const profilePic = photos?.[0]?.value || null;
           const email = emails[0].value;
           const expires_in = params.expires_in;
           const tokenExpiresAt = new Date(Date.now() + expires_in * 1000);
@@ -32,6 +33,8 @@ const configurePassport = () => {
             if (user) {
               user.lastLoginDate = new Date().toISOString().split('T')[0];
               user.googleAccessToken = accessToken;
+              if (profilePic) user.profilePic = profilePic;
+              if (profilePic) user.profilePic = profilePic;
               if (refreshToken) user.googleRefreshToken = refreshToken;
               user.googleTokenExpiresAt = tokenExpiresAt;
               if (isClassroomAuth) user.googleClassroomLinked = true;
@@ -76,6 +79,7 @@ const configurePassport = () => {
               email: email,
               googleId: id,
               authMethod: 'google',
+              profilePic: profilePic,
               lastLoginDate: new Date().toISOString().split('T')[0],
               level: 1,
               isOnboarded: false,
