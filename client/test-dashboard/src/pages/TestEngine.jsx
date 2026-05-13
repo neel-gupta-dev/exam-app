@@ -245,11 +245,34 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     return () => clearTimeout(closeTimer);
   }, [submitted, result, closeAttemptWindow]);
 
-  // Disable right-click
+  // Disable right-click, clipboard, and physical keyboard input during CBT.
   useEffect(() => {
     const handleContextMenu = (e) => e.preventDefault();
+    const blockInput = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    };
     document.addEventListener("contextmenu", handleContextMenu);
-    return () => document.removeEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("auxclick", handleContextMenu);
+    document.addEventListener("keydown", blockInput, true);
+    document.addEventListener("keypress", blockInput, true);
+    document.addEventListener("keyup", blockInput, true);
+    document.addEventListener("beforeinput", blockInput, true);
+    document.addEventListener("copy", blockInput, true);
+    document.addEventListener("cut", blockInput, true);
+    document.addEventListener("paste", blockInput, true);
+    return () => {
+      document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("auxclick", handleContextMenu);
+      document.removeEventListener("keydown", blockInput, true);
+      document.removeEventListener("keypress", blockInput, true);
+      document.removeEventListener("keyup", blockInput, true);
+      document.removeEventListener("beforeinput", blockInput, true);
+      document.removeEventListener("copy", blockInput, true);
+      document.removeEventListener("cut", blockInput, true);
+      document.removeEventListener("paste", blockInput, true);
+    };
   }, []);
 
   // ─── Countdown timer ───
@@ -390,6 +413,26 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     const cleanVal = val.trim();
     const newSelected = cleanVal ? [cleanVal] : [];
     updateAnswer(currentQuestion._id, newSelected, newSelected.length > 0 ? 'answered' : 'unanswered');
+  };
+
+  const handleNumpadPress = (key) => {
+    if (!currentQuestion || currentQuestion.type !== 'integer') return;
+    const currentValue = currentAnswer?.selectedAnswer?.[0] || '';
+    let nextValue = currentValue;
+
+    if (key === 'backspace') {
+      nextValue = currentValue.slice(0, -1);
+    } else if (key === 'clear') {
+      nextValue = '';
+    } else if (key === '-') {
+      nextValue = currentValue.startsWith('-') ? currentValue.slice(1) : `-${currentValue}`;
+    } else if (key === '.') {
+      if (!currentValue.includes('.')) nextValue = `${currentValue}.`;
+    } else if (/^\d$/.test(key)) {
+      nextValue = `${currentValue}${key}`;
+    }
+
+    handleIntegerSelect(nextValue);
   };
 
   const handleSaveNext = () => {
@@ -597,7 +640,8 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   const sections = testMeta?.sections?.length ? testMeta.sections : [{ name: 'General'}];
   const summary = getSummary();
   const fullName = user?.name || user?.username || user?.email || 'Student';
-  const watermarkText = `${fullName}${publicIp ? `       ·       ${publicIp}` : ''}`;
+  const watermarkName = fullName;
+  const watermarkIp = publicIp || 'IP not captured';
   const activeSectionQuestions = getFilteredQuestions();
   const currentLocalIdx = Math.max(0, activeSectionQuestions.findIndex((q) => q._id === currentQuestion?._id));
   const questionTypeLabels = {
@@ -618,7 +662,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
       ];
 
   const TcsIcon = ({ status, text, large = false }) => {
-    const size = large ? 'w-[68px] h-[54px] text-[21px]' : 'w-[38px] h-[34px] text-[16px]';
+    const size = large ? 'w-[54px] h-[43px] text-[18px]' : 'w-[32px] h-[29px] text-[14px]';
     const base = `${size} flex items-center justify-center font-bold shrink-0 leading-none`;
     switch(status) {
       case 'not-visited':
@@ -680,11 +724,11 @@ export default function TestEngine({ testId, user, onSubmitted }) {
         </div>
       )}
 
-      <div className="flex h-[42px] shrink-0 items-center justify-between bg-[#333] pl-[14px] text-white">
-        <div className="min-w-0 truncate text-[16px] font-normal text-[#ffff00]">
+      <div className="flex h-[38px] shrink-0 items-center justify-between bg-[#333] pl-[14px] text-white">
+        <div className="min-w-0 truncate text-[15px] font-normal text-[#ffff00]">
           {testMeta?.title || 'Mock Test'}
         </div>
-        <div className="flex h-full items-center text-[16px] font-bold">
+        <div className="flex h-full items-center text-[15px] font-bold">
           <button onClick={() => setShowInstructionsPanel(true)} className="flex h-full items-center gap-2 px-4 text-white hover:bg-[#3f3f3f]">
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4aaee8] text-[18px] italic leading-none text-white shadow-inner">i</span>
             Instructions
@@ -700,12 +744,12 @@ export default function TestEngine({ testId, user, onSubmitted }) {
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <div className="relative flex min-w-0 flex-1 flex-col border-l border-[#c4c4c4]">
-          <div className="flex h-[60px] shrink-0 items-center gap-1 border-b border-[#ddd] bg-[#e9e9e9] px-6 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="flex h-[52px] shrink-0 items-center gap-1 border-b border-[#ddd] bg-[#e9e9e9] px-6 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <ChevronLeft className="absolute left-1 h-5 w-5 text-[#b8c0c8]" />
             {paperTabs.map((part, idx) => (
               <button
                 key={part.name || idx}
-                className={`relative h-[39px] min-w-[102px] border px-3 text-[16px] shadow-sm ${
+                className={`relative h-[36px] min-w-[96px] border px-3 text-[15px] shadow-sm ${
                   idx === 0
                     ? 'border-[#1988be] bg-[#1b86b9] text-white'
                     : 'border-[#c7c7c7] bg-white text-[#333]'
@@ -720,12 +764,12 @@ export default function TestEngine({ testId, user, onSubmitted }) {
             ))}
           </div>
 
-          <div className="flex h-[41px] shrink-0 items-center justify-between border-b border-[#c7c7c7] bg-white pl-4 pr-3">
-            <span className="text-[16px] font-bold text-[#2b4259]">Sections</span>
-            <span className="text-[21px] font-semibold text-[#111]">Time Left : {formatTime(timeLeft)}</span>
+          <div className="flex h-[38px] shrink-0 items-center justify-between border-b border-[#c7c7c7] bg-white pl-4 pr-3">
+            <span className="text-[15px] font-bold text-[#2b4259]">Sections</span>
+            <span className="text-[18px] font-semibold text-[#111]">Time Left : {formatTime(timeLeft)}</span>
           </div>
 
-          <div className="relative flex h-[55px] shrink-0 items-center gap-[6px] border-b border-[#c7c7c7] bg-white px-6 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="relative flex h-[50px] shrink-0 items-center gap-[6px] border-b border-[#c7c7c7] bg-white px-6 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <ChevronLeft className="absolute left-1 h-5 w-5 text-[#b8c0c8]" />
             {sections.map(s => {
               const isActive = activeSection === s.name;
@@ -737,7 +781,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
                     const firstQ = questions.find((q) => q.section === s.name);
                     if (firstQ) setCurrentIdx(questions.indexOf(firstQ));
                   }}
-                  className={`h-[43px] border px-3 text-[16px] font-bold ${
+                  className={`h-[38px] border px-3 text-[15px] font-bold ${
                     isActive
                       ? 'border-[#1682b5] bg-[#1b86b9] text-white'
                       : 'border-[#c9c9c9] bg-white text-[#0069a7]'
@@ -753,9 +797,9 @@ export default function TestEngine({ testId, user, onSubmitted }) {
             <ChevronRight className="absolute right-1 h-5 w-5 text-[#b8c0c8]" />
           </div>
 
-          <div className="flex h-[43px] shrink-0 items-center justify-between border-b border-[#cfcfcf] bg-white px-4 text-[16px]">
+          <div className="flex h-[38px] shrink-0 items-center justify-between border-b border-[#cfcfcf] bg-white px-4 text-[15px]">
             <span className="font-bold">Question Type: {questionTypeLabel}</span>
-            <div className="pr-2 text-[16px]">
+            <div className="pr-2 text-[15px]">
               <span>Marks for correct answer: <span className="text-[#0080a5]">{currentQuestion?.positiveMarks ?? testMeta?.defaultPositiveMarks}</span></span>
               <span className="mx-2 text-[#555]">|</span>
               <span>Negative Marks: <span className="text-[#b01818]">{currentQuestion?.negativeMarks ?? testMeta?.defaultNegativeMarks}</span></span>
@@ -763,18 +807,21 @@ export default function TestEngine({ testId, user, onSubmitted }) {
           </div>
 
           <div className="relative min-h-0 flex-1 overflow-y-auto border-b border-[#cfcfcf] bg-white">
-            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-[0.03]">
-              <div className="grid h-full w-full grid-cols-2 gap-20 -rotate-12 place-items-center text-[34px] font-bold uppercase tracking-wider text-[#111]">
+            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-[0.045]">
+              <div className="grid h-full w-full grid-cols-3 gap-x-24 gap-y-16 -rotate-12 place-items-center text-[18px] font-bold uppercase tracking-wide text-[#111]">
                 {Array.from({ length: 12 }).map((_, idx) => (
-                  <span key={idx} className="whitespace-nowrap">{watermarkText}</span>
+                  <span key={idx} className="flex max-w-[240px] flex-col items-center text-center leading-tight">
+                    <span className="max-w-full truncate">{watermarkName}</span>
+                    <span className="max-w-full truncate text-[14px]">{watermarkIp}</span>
+                  </span>
                 ))}
               </div>
             </div>
             <div className="relative z-10">
             <div className="border-b border-[#ddd] px-[6px] py-[7px]">
-              <h3 className="text-[21px] font-bold">Question No. {currentLocalIdx + 1}</h3>
+              <h3 className="text-[18px] font-bold">Question No. {currentLocalIdx + 1}</h3>
             </div>
-            <div className="px-[18px] py-[14px] text-[21px] leading-[1.45]">
+            <div className="px-[18px] py-[14px] text-[18px] leading-[1.42]">
               <div className="mb-7 min-h-[34px] whitespace-pre-wrap text-black">
                 <LatexRenderer text={currentQuestion?.content} />
                 {currentQuestion?.imageUrl && <img src={currentQuestion.imageUrl} alt="" className="mt-4 max-w-full" />}
@@ -782,7 +829,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
               {currentQuestion?.type !== 'integer' && currentQuestion?.options?.map((opt, i) => {
                 const isSelected = currentAnswer?.selectedAnswer?.includes(opt.label);
                 return (
-                  <label key={opt.label || i} className="mb-[16px] flex cursor-pointer items-start gap-[8px] text-[21px] leading-[1.35]">
+                  <label key={opt.label || i} className="mb-[14px] flex cursor-pointer items-start gap-[8px] text-[18px] leading-[1.32]">
                     <input
                       type={currentQuestion.type === 'multiple' ? 'checkbox' : 'radio'}
                       name={`q-${currentQuestion._id}`}
@@ -798,86 +845,105 @@ export default function TestEngine({ testId, user, onSubmitted }) {
                 );
               })}
               {currentQuestion?.type === 'integer' && (
-                <div className="mt-4 max-w-sm border border-[#c7c7c7] bg-[#f7f7f7] p-4">
-                  <label className="mb-2 block text-[16px] font-bold text-[#333]">Numerical Answer</label>
+                <div className="mt-4 flex max-w-[260px] flex-col items-center bg-[#f3f3f3] p-3">
                   <input
-                    type="number"
-                    step="any"
+                    type="text"
+                    readOnly
                     value={currentAnswer?.selectedAnswer?.[0] || ''}
-                    onChange={(e) => handleIntegerSelect(e.target.value)}
-                    placeholder="Enter value"
-                    className="w-full border border-[#aaa] bg-white px-3 py-2 text-[18px] focus:border-[#1b86b9] focus:outline-none"
+                    className="mb-3 h-[28px] w-[224px] border border-[#777] bg-white px-2 text-[18px] text-black outline-none"
+                    aria-label="Numerical answer"
                   />
+                  <div className="flex flex-col items-center gap-[6px]">
+                    <button onClick={() => handleNumpadPress('backspace')} className="rounded-[7px] border border-[#8d8d8d] bg-[#e8e6ee] px-4 py-2 text-[17px] font-bold shadow-sm">
+                      Backspace
+                    </button>
+                    <div className="grid grid-cols-3 gap-[6px]">
+                      {['7', '8', '9', '4', '5', '6', '1', '2', '3', '0', '.', '-'].map((key) => (
+                        <button
+                          key={key}
+                          onClick={() => handleNumpadPress(key)}
+                          className="h-[36px] w-[36px] rounded-[7px] border border-[#8d8d8d] bg-[#f3f3f3] text-[18px] font-bold shadow-sm hover:bg-white active:scale-95"
+                        >
+                          {key}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-2 gap-[6px]">
+                      <button className="h-[36px] w-[42px] rounded-[7px] border border-[#8d8d8d] bg-[#e8e6ee] text-[18px] shadow-sm" type="button">←</button>
+                      <button className="h-[36px] w-[42px] rounded-[7px] border border-[#8d8d8d] bg-[#e8e6ee] text-[18px] shadow-sm" type="button">→</button>
+                    </div>
+                    <button onClick={() => handleNumpadPress('clear')} className="rounded-[7px] border border-[#8d8d8d] bg-[#e8e6ee] px-4 py-2 text-[17px] font-bold shadow-sm">
+                      Clear All
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
             </div>
           </div>
 
-          <div className="flex h-auto sm:h-[70px] shrink-0 flex-col sm:flex-row items-stretch sm:items-center justify-between border-b border-[#c7c7c7] bg-white p-2 sm:px-[10px] gap-2 sm:gap-0">
-            <div className="flex flex-1 gap-2 sm:gap-[25px]">
-              <button onClick={handleMarkForReview} className="h-[44px] sm:h-[53px] flex-1 sm:min-w-[260px] border border-[#c7c7c7] bg-white px-2 sm:px-6 text-[14px] sm:text-[20px] text-[#333] hover:bg-[#f5f5f5] flex items-center justify-center text-center truncate">
+          <div className="flex h-auto sm:h-[58px] shrink-0 flex-col sm:flex-row items-stretch sm:items-center justify-between border-b border-[#c7c7c7] bg-white p-2 sm:px-[10px] gap-2 sm:gap-0">
+            <div className="flex flex-1 gap-2 sm:gap-[18px]">
+              <button onClick={handleMarkForReview} className="h-[42px] sm:h-[46px] flex-1 sm:min-w-[220px] border border-[#c7c7c7] bg-white px-2 sm:px-5 text-[14px] sm:text-[17px] text-[#333] hover:bg-[#f5f5f5] flex items-center justify-center text-center truncate">
                 Mark Review & Next
               </button>
-              <button onClick={handleClearResponse} className="h-[44px] sm:h-[53px] flex-1 sm:min-w-[195px] border border-[#c7c7c7] bg-white px-2 sm:px-6 text-[14px] sm:text-[20px] text-[#333] hover:bg-[#f5f5f5] flex items-center justify-center text-center">
+              <button onClick={handleClearResponse} className="h-[42px] sm:h-[46px] flex-1 sm:min-w-[165px] border border-[#c7c7c7] bg-white px-2 sm:px-5 text-[14px] sm:text-[17px] text-[#333] hover:bg-[#f5f5f5] flex items-center justify-center text-center">
                 Clear
               </button>
             </div>
-            <div className="flex flex-1 gap-2 sm:gap-[20px]">
-              <button onClick={goPrevious} className="h-[44px] sm:h-[53px] flex-1 sm:min-w-[132px] border border-[#c7c7c7] bg-white px-2 sm:px-6 text-[14px] sm:text-[20px] text-[#333] hover:bg-[#f5f5f5] flex items-center justify-center text-center">
+            <div className="flex flex-1 gap-2 sm:gap-[16px]">
+              <button onClick={goPrevious} className="h-[42px] sm:h-[46px] flex-1 sm:min-w-[112px] border border-[#c7c7c7] bg-white px-2 sm:px-5 text-[14px] sm:text-[17px] text-[#333] hover:bg-[#f5f5f5] flex items-center justify-center text-center">
                 Previous
               </button>
-              <button onClick={handleSaveNext} className="h-[44px] sm:h-[53px] flex-1 sm:min-w-[164px] border border-[#0e6d9b] bg-[#1b86b9] px-2 sm:px-7 text-[14px] sm:text-[20px] font-bold text-white hover:bg-[#126f99] flex items-center justify-center text-center">
+              <button onClick={handleSaveNext} className="h-[42px] sm:h-[46px] flex-1 sm:min-w-[140px] border border-[#0e6d9b] bg-[#1b86b9] px-2 sm:px-6 text-[14px] sm:text-[17px] font-bold text-white hover:bg-[#126f99] flex items-center justify-center text-center">
                 Save & Next
               </button>
             </div>
           </div>
         </div>
 
-        <div className="hidden w-[335px] shrink-0 flex-col border-l border-[#c7c7c7] bg-[#dff4fc] sm:flex">
-          <div className="flex h-[155px] shrink-0 items-start gap-[12px] border-b border-[#c7c7c7] bg-[#f3f7fb] px-[3px] pt-[2px]">
-            <div className="flex h-[135px] w-[120px] items-center justify-center border border-[#c7c7c7] bg-white">
-              <div className="flex h-[118px] w-[102px] items-center justify-center rounded-full border border-[#9ba9b4] bg-gradient-to-b from-[#d5ebf4] via-[#eef7fb] to-[#8ca2b2]">
-                <UserIcon className="h-[92px] w-[92px] text-[#233848]" strokeWidth={1.4} />
-              </div>
+        <div className="hidden w-[300px] shrink-0 flex-col border-l border-[#c7c7c7] bg-[#dff4fc] sm:flex">
+          <div className="flex h-[128px] shrink-0 items-start gap-[10px] border-b border-[#c7c7c7] bg-[#f3f7fb] px-[3px] pt-[2px]">
+            <div className="flex h-[112px] w-[98px] items-center justify-center border border-[#c7c7c7] bg-white overflow-hidden">
+              <img src="/NewCandidateImage.jpg" alt="Candidate" className="w-full h-full object-cover" />
             </div>
-            <div className="min-w-0 pt-[8px] text-[25px] font-normal leading-tight text-[#111]">
+            <div className="min-w-0 pt-[8px] text-[20px] font-normal leading-tight text-[#111]">
               <span className="block truncate">{fullName}</span>
             </div>
           </div>
 
-          <div className="shrink-0 border-b border-[#c7c7c7] bg-white px-[14px] py-[13px]">
-            <div className="grid grid-cols-2 gap-x-[16px] gap-y-[18px] text-[16px] leading-tight text-[#111]">
-              <div className="flex items-center gap-[12px]">
+          <div className="shrink-0 border-b border-[#c7c7c7] bg-white px-[12px] py-[10px]">
+            <div className="grid grid-cols-2 gap-x-[12px] gap-y-[13px] text-[14px] leading-tight text-[#111]">
+              <div className="flex items-center gap-[8px]">
                 <TcsIcon status="answered" text={summary.answered} />
                 <span>Answered</span>
               </div>
-              <div className="flex items-center gap-[12px]">
+              <div className="flex items-center gap-[8px]">
                 <TcsIcon status="unanswered" text={summary.unanswered} />
                 <span>Not<br/>Answered</span>
               </div>
-              <div className="flex items-center gap-[12px]">
+              <div className="flex items-center gap-[8px]">
                 <TcsIcon status="not-visited" text={summary.notVisited} />
                 <span>Not<br/>Visited</span>
               </div>
-              <div className="flex items-center gap-[12px]">
+              <div className="flex items-center gap-[8px]">
                 <TcsIcon status="marked-for-review" text={summary.markedForReview} />
                 <span>Marked<br/>for Review</span>
               </div>
             </div>
-            <div className="mt-[14px] flex items-start gap-[12px] text-[16px] leading-tight text-[#111]">
+            <div className="mt-[12px] flex items-start gap-[8px] text-[14px] leading-tight text-[#111]">
               <TcsIcon status="answered-and-marked" text={summary.answeredAndMarked} />
               <span>Answered & Marked for Review (will also be evaluated)</span>
             </div>
           </div>
 
-          <div className="flex h-[44px] shrink-0 items-center bg-[#1b86b9] px-[18px] text-[24px] font-bold text-white">
+          <div className="flex h-[38px] shrink-0 items-center bg-[#1b86b9] px-[16px] text-[20px] font-bold text-white">
             {activeSection || 'General'}
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto bg-[#dff4fc] px-[13px] py-[9px]">
-            <div className="mb-[20px] text-[16px] font-bold text-[#111]">Choose a Question</div>
-            <div className="flex flex-wrap gap-x-[4px] gap-y-[14px]">
+            <div className="mb-[14px] text-[15px] font-bold text-[#111]">Choose a Question</div>
+            <div className="flex flex-wrap gap-x-[5px] gap-y-[10px]">
               {activeSectionQuestions.map((q, idx) => {
                 const globalIdx = questions.indexOf(q);
                 const ans = answers.find(a => a.questionId === q._id);
@@ -895,8 +961,8 @@ export default function TestEngine({ testId, user, onSubmitted }) {
             </div>
           </div>
 
-          <div className="flex h-[70px] shrink-0 items-center justify-center border-t border-[#c7c7c7] bg-[#dff4fc]">
-            <button onClick={() => setShowSubmitConfirm(true)} className="h-[53px] min-w-[118px] rounded-[2px] bg-[#66afd0] px-7 text-[18px] font-bold text-white hover:bg-[#4d9bbd]">
+          <div className="flex h-[58px] shrink-0 items-center justify-center border-t border-[#c7c7c7] bg-[#dff4fc]">
+            <button onClick={() => setShowSubmitConfirm(true)} className="h-[44px] min-w-[108px] rounded-[2px] bg-[#66afd0] px-6 text-[16px] font-bold text-white hover:bg-[#4d9bbd]">
               Submit
             </button>
           </div>
