@@ -462,7 +462,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   const sections = testMeta?.sections?.length ? testMeta.sections : [{ name: 'General'}];
   const summary = getSummary();
   const fullName = user?.name || user?.username || user?.email || 'Student';
-  const watermarkText = `${fullName}${publicIp ? ` · ${publicIp}` : ''}`;
+  const watermarkText = `${fullName}${publicIp ? `       ·       ${publicIp}` : ''}`;
   const activeSectionQuestions = getFilteredQuestions();
   const currentLocalIdx = Math.max(0, activeSectionQuestions.findIndex((q) => q._id === currentQuestion?._id));
   const questionTypeLabels = {
@@ -628,7 +628,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
           </div>
 
           <div className="relative min-h-0 flex-1 overflow-y-auto border-b border-[#cfcfcf] bg-white">
-            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-[0.08]">
+            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-[0.03]">
               <div className="grid h-full w-full grid-cols-2 gap-20 -rotate-12 place-items-center text-[34px] font-bold uppercase tracking-wider text-[#111]">
                 {Array.from({ length: 12 }).map((_, idx) => (
                   <span key={idx} className="whitespace-nowrap">{watermarkText}</span>
