@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { User as UserIcon, List, ChevronLeft, ChevronRight } from 'lucide-react';
+import { User as UserIcon, List, ChevronLeft, ChevronRight, X, Grid } from 'lucide-react';
 import LatexRenderer from '../components/LatexRenderer';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -23,6 +23,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   const [publicIp, setPublicIp] = useState('');
   const [showInstructionsPanel, setShowInstructionsPanel] = useState(false);
   const [showQuestionPaper, setShowQuestionPaper] = useState(false);
+  const [showGridMobile, setShowGridMobile] = useState(false);
 
   const syncDirty = useRef(false);
   const timerRef = useRef(null);
@@ -565,7 +566,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <div className="relative flex min-w-0 flex-1 flex-col border-l border-[#c4c4c4]">
-          <div className="flex h-[60px] shrink-0 items-center gap-1 border-b border-[#ddd] bg-[#e9e9e9] px-8">
+          <div className="flex h-[60px] shrink-0 items-center gap-1 border-b border-[#ddd] bg-[#e9e9e9] px-6 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <ChevronLeft className="absolute left-1 h-5 w-5 text-[#b8c0c8]" />
             {paperTabs.map((part, idx) => (
               <button
@@ -590,7 +591,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
             <span className="text-[21px] font-semibold text-[#111]">Time Left : {formatTime(timeLeft)}</span>
           </div>
 
-          <div className="relative flex h-[55px] shrink-0 items-center gap-[6px] border-b border-[#c7c7c7] bg-white px-10">
+          <div className="relative flex h-[55px] shrink-0 items-center gap-[6px] border-b border-[#c7c7c7] bg-white px-6 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <ChevronLeft className="absolute left-1 h-5 w-5 text-[#b8c0c8]" />
             {sections.map(s => {
               const isActive = activeSection === s.name;
@@ -679,20 +680,20 @@ export default function TestEngine({ testId, user, onSubmitted }) {
             </div>
           </div>
 
-          <div className="flex h-[70px] shrink-0 items-center justify-between border-b border-[#c7c7c7] bg-white px-[10px]">
-            <div className="flex gap-[25px]">
-              <button onClick={handleMarkForReview} className="h-[53px] min-w-[260px] border border-[#c7c7c7] bg-white px-6 text-[20px] text-[#333] hover:bg-[#f5f5f5]">
-                Mark for Review & Next
+          <div className="flex h-auto sm:h-[70px] shrink-0 flex-col sm:flex-row items-stretch sm:items-center justify-between border-b border-[#c7c7c7] bg-white p-2 sm:px-[10px] gap-2 sm:gap-0">
+            <div className="flex flex-1 gap-2 sm:gap-[25px]">
+              <button onClick={handleMarkForReview} className="h-[44px] sm:h-[53px] flex-1 sm:min-w-[260px] border border-[#c7c7c7] bg-white px-2 sm:px-6 text-[14px] sm:text-[20px] text-[#333] hover:bg-[#f5f5f5] flex items-center justify-center text-center truncate">
+                Mark Review & Next
               </button>
-              <button onClick={handleClearResponse} className="h-[53px] min-w-[195px] border border-[#c7c7c7] bg-white px-6 text-[20px] text-[#333] hover:bg-[#f5f5f5]">
-                Clear Response
+              <button onClick={handleClearResponse} className="h-[44px] sm:h-[53px] flex-1 sm:min-w-[195px] border border-[#c7c7c7] bg-white px-2 sm:px-6 text-[14px] sm:text-[20px] text-[#333] hover:bg-[#f5f5f5] flex items-center justify-center text-center">
+                Clear
               </button>
             </div>
-            <div className="flex gap-[20px]">
-              <button onClick={goPrevious} className="h-[53px] min-w-[132px] border border-[#c7c7c7] bg-white px-6 text-[20px] text-[#333] hover:bg-[#f5f5f5]">
+            <div className="flex flex-1 gap-2 sm:gap-[20px]">
+              <button onClick={goPrevious} className="h-[44px] sm:h-[53px] flex-1 sm:min-w-[132px] border border-[#c7c7c7] bg-white px-2 sm:px-6 text-[14px] sm:text-[20px] text-[#333] hover:bg-[#f5f5f5] flex items-center justify-center text-center">
                 Previous
               </button>
-              <button onClick={handleSaveNext} className="h-[53px] min-w-[164px] border border-[#0e6d9b] bg-[#1b86b9] px-7 text-[20px] font-bold text-white hover:bg-[#126f99]">
+              <button onClick={handleSaveNext} className="h-[44px] sm:h-[53px] flex-1 sm:min-w-[164px] border border-[#0e6d9b] bg-[#1b86b9] px-2 sm:px-7 text-[14px] sm:text-[20px] font-bold text-white hover:bg-[#126f99] flex items-center justify-center text-center">
                 Save & Next
               </button>
             </div>
@@ -766,8 +767,95 @@ export default function TestEngine({ testId, user, onSubmitted }) {
             </button>
           </div>
         </div>
-      </div>
+      
+      {/* Mobile Floating Grid Button */}
+      <button 
+        onClick={() => setShowGridMobile(true)} 
+        className="fixed bottom-28 right-4 z-40 flex sm:hidden h-14 w-14 items-center justify-center rounded-full bg-[#1b86b9] text-white shadow-lg shadow-blue-500/30 border-2 border-white active:scale-95 transition-transform"
+        aria-label="Open Palette"
+      >
+        <Grid className="h-6 w-6" />
+      </button>
 
+      {/* Mobile Sliding Bottom Sheet (Sidebar Alternative) */}
+      {showGridMobile && (
+        <div className="fixed inset-0 z-50 flex sm:hidden flex-col justify-end bg-black/50 backdrop-blur-sm">
+          <div className="absolute inset-0" onClick={() => setShowGridMobile(false)} />
+          <div className="relative z-10 flex max-h-[85vh] w-full flex-col rounded-t-2xl bg-[#dff4fc] shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300">
+            {/* Header Area */}
+            <div className="flex items-center justify-between border-b border-slate-300/50 bg-[#f3f7fb] px-4 py-4">
+              <div className="flex items-center gap-2 font-bold text-[18px] text-[#111]">
+                <Grid className="h-5 w-5 text-[#1b86b9]" />
+                <span>Question Palette</span>
+              </div>
+              <button onClick={() => setShowGridMobile(false)} className="rounded-full bg-slate-200 p-2 hover:bg-slate-300 active:scale-90 transition-transform">
+                <X className="h-5 w-5 text-[#333]" />
+              </button>
+            </div>
+
+            {/* Stats Widget */}
+            <div className="shrink-0 border-b border-[#c7c7c7] bg-white px-4 py-4">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-4 text-[14px] leading-tight text-[#111]">
+                <div className="flex items-center gap-2">
+                  <TcsIcon status="answered" text={summary.answered} />
+                  <span>Answered</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <TcsIcon status="unanswered" text={summary.unanswered} />
+                  <span>Not Answered</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <TcsIcon status="not-visited" text={summary.notVisited} />
+                  <span>Not Visited</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <TcsIcon status="marked-for-review" text={summary.markedForReview} />
+                  <span>Marked for Review</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Scrollable Palette Grid */}
+            <div className="min-h-0 flex-1 overflow-y-auto bg-[#dff4fc] px-4 py-4">
+              <div className="mb-4 text-[16px] font-bold text-[#111]">{activeSection || 'General'} - Choose Question</div>
+              <div className="flex flex-wrap gap-3 pb-4 justify-start">
+                {activeSectionQuestions.map((q, idx) => {
+                  const globalIdx = questions.indexOf(q);
+                  const ans = answers.find(a => a.questionId === q._id);
+                  const status = ans ? ans.status : 'not-visited';
+                  return (
+                    <button
+                      key={q._id}
+                      onClick={() => {
+                        setCurrentIdx(globalIdx);
+                        setShowGridMobile(false);
+                      }}
+                      className="active:scale-95 transition-transform"
+                    >
+                      <TcsIcon status={status} text={idx + 1} large />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Bottom Action Area for Mobile Submit */}
+            <div className="flex h-[80px] shrink-0 items-center justify-center border-t border-[#c7c7c7] bg-white px-4">
+              <button 
+                onClick={() => {
+                  setShowGridMobile(false);
+                  setShowSubmitConfirm(true);
+                }} 
+                className="h-[50px] w-full rounded-lg bg-[#1b86b9] text-[18px] font-bold text-white shadow-md hover:bg-[#126f99] active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+              >
+                <span>Final Submit Test</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      </div>
       {showSubmitConfirm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] backdrop-blur-sm">
            <div className="bg-white max-w-sm w-full p-6 text-center text-black border-t-4 border-[#3b82f6] shadow-xl">
