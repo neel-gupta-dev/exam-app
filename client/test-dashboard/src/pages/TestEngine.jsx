@@ -112,7 +112,8 @@ export default function TestEngine({ testId, user, onSubmitted }) {
         if (data.test.sections && data.test.sections.length > 0) {
           setActiveSection(data.test.sections[0].name);
         } else if (data.questions && data.questions.length > 0) {
-          setActiveSection(data.questions[0].section || 'General');
+          const firstValidSection = data.questions.find(q => q.section)?.section;
+          setActiveSection(firstValidSection || data.questions[0].section || 'General');
         } else {
           setActiveSection('General');
         }
@@ -694,7 +695,9 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     );
   }
 
-  const sections = testMeta?.sections?.length ? testMeta.sections : [{ name: 'General'}];
+  const sections = testMeta?.sections?.length 
+    ? testMeta.sections 
+    : [...new Set(questions.map(q => q.section || 'General'))].map(name => ({ name }));
   const summary = getSummary();
   const fullName = user?.name || user?.username || user?.email || 'Student';
   const watermarkName = fullName;
@@ -995,7 +998,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
           </div>
 
           <div className="flex h-[38px] shrink-0 items-center bg-[#1b86b9] px-[16px] text-[20px] font-bold text-white">
-            {activeSection || 'General'}
+            {activeSection || 'Subject'}
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto bg-[#dff4fc] px-[13px] py-[9px]">
@@ -1160,7 +1163,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
                 <div key={question._id} className="border-b border-[#e5e5e5] pb-4">
                   <div className="mb-2 flex items-center justify-between gap-4">
                     <h3 className="font-bold">Question {idx + 1}</h3>
-                    <span className="text-sm text-[#555]">{question.section || 'General'} · {questionTypeLabels[question.type] || question.type}</span>
+                    <span className="text-sm text-[#555]">{question.section || 'Subject'} · {questionTypeLabels[question.type] || question.type}</span>
                   </div>
                   <div className="text-sm leading-relaxed">
                     <LatexRenderer text={question.content} />
