@@ -11,8 +11,16 @@ const noteSchema = new mongoose.Schema(
     resourceId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Resource',
-      required: true,
+      required: false,
       index: true,
+    },
+    sourceUrl: {
+      type: String,
+      default: null,
+    },
+    isWebClip: {
+      type: Boolean,
+      default: false,
     },
     content: {
       type: String,
