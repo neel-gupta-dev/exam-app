@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import LoginPage from './LoginPage';
 import ForcePasswordChange from './ForcePasswordChange';
 import TestEngineApp from './TestEngineApp';
@@ -23,6 +23,23 @@ export default function App() {
     }
     return 'dashboard';
   });
+  const searchInputRef = useRef(null);
+  const [osKey, setOsKey] = useState('⌘');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && navigator && navigator.platform) {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      setOsKey(isMac ? '⌘' : 'Ctrl');
+    }
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
   const [selectedTest, setSelectedTest] = useState(null);
 
   const [tests, setTests] = useState([]);
@@ -419,16 +436,27 @@ export default function App() {
           <div className="relative w-full max-w-md">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-lg">search</span>
             <input
-              className={`w-full border-none rounded-xl py-2 pl-10 pr-4 text-sm focus:ring-1 focus:ring-indigo-500/50 transition-all outline-none ${isDark ? 'bg-surface-bright text-on-surface placeholder:text-slate-600' : 'bg-slate-100 text-slate-900 placeholder:text-slate-400'}`}
+              ref={searchInputRef}
+              className={`w-full border-none rounded-xl py-2 pl-10 pr-10 text-sm focus:ring-1 focus:ring-indigo-500/50 transition-all outline-none ${isDark ? 'bg-surface-bright text-on-surface placeholder:text-slate-600' : 'bg-slate-100 text-slate-900 placeholder:text-slate-400'}`}
               placeholder="Search tests, topics, or results..."
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => {
-                if (view !== 'dashboard' && view !== 'instructions') showDashboard();
+                if (view !== 'test-series' && view !== 'pyp') {
+                  showTestSeries();
+                }
               }}
             />
-            <div className={`absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[10px] font-bold hidden md:block ${isDark ? 'bg-secondary-container text-on-surface-variant' : 'bg-slate-200 text-slate-500'}`}>⌘ K</div>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className={`absolute right-14 top-1/2 -translate-y-1/2 p-1 rounded-full flex items-center justify-center transition-colors border-none bg-transparent cursor-pointer ${isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
+              >
+                <span className="material-symbols-outlined text-[16px]">close</span>
+              </button>
+            )}
+            <div className={`absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[10px] font-bold hidden md:block ${isDark ? 'bg-secondary-container text-on-surface-variant' : 'bg-slate-200 text-slate-500'}`}>{osKey} K</div>
           </div>
         </div>
         <div className="flex items-center space-x-4">
