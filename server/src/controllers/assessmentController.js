@@ -455,10 +455,25 @@ export const getTestLeaderboard = asyncHandler(async (req, res) => {
     status: { $in: ['completed', 'auto-submitted'] }
   })
     .populate('userId', 'name username')
-    .sort({ totalScore: -1, submittedAt: 1 });
+    .sort({ submittedAt: 1 });
+
+  const seenUsers = new Set();
+  const uniqueAttempts = [];
+  for (const attempt of attempts) {
+    const uid = attempt.userId?._id?.toString();
+    if (uid && !seenUsers.has(uid)) {
+      seenUsers.add(uid);
+      uniqueAttempts.push(attempt);
+    }
+  }
+
+  uniqueAttempts.sort((a, b) => {
+    if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+    return new Date(a.submittedAt) - new Date(b.submittedAt);
+  });
 
   let myAttempt = null;
-  const mappedLeaderboard = attempts.map((attempt, index) => {
+  const mappedLeaderboard = uniqueAttempts.map((attempt, index) => {
     const isMe = attempt.userId?._id?.toString() === userId;
     
     const sectionScores = attempt.sectionScores instanceof Map

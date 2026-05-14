@@ -17,6 +17,11 @@ const testSchema = new mongoose.Schema(
       trim: true,
       default: 'General', // "JEE Advance", "NEET", "CUET", etc.
     },
+    testType: {
+      type: String,
+      enum: ['full', 'part', 'pyp'],
+      default: 'full',
+    },
     durationMinutes: {
       type: Number,
       required: [true, 'Duration is required'],

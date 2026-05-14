@@ -22,7 +22,7 @@ export default function TestManagement() {
 
   // Test form state
   const [form, setForm] = useState({
-    title: '', description: '', category: 'General', durationMinutes: 180,
+    title: '', description: '', category: 'General', testType: 'full', durationMinutes: 180,
     totalMarks: 300, visibility: 'b2c_public', targetTenants: [], targetGroups: [],
     defaultPositiveMarks: 4, defaultNegativeMarks: 1, syllabusText: '',
     instructionGeneralText: '',
@@ -102,7 +102,7 @@ export default function TestManagement() {
       }
       setShowForm(false);
       setEditingTest(null);
-      setForm({ title: '', description: '', category: 'General', durationMinutes: 180, totalMarks: 300, visibility: 'b2c_public', targetTenants: [], targetGroups: [], defaultPositiveMarks: 4, defaultNegativeMarks: 1, syllabusText: '', instructionGeneralText: '', instructionOtherText: '', instructionDeclaration: '' });
+      setForm({ title: '', description: '', category: 'General', testType: 'full', durationMinutes: 180, totalMarks: 300, visibility: 'b2c_public', targetTenants: [], targetGroups: [], defaultPositiveMarks: 4, defaultNegativeMarks: 1, syllabusText: '', instructionGeneralText: '', instructionOtherText: '', instructionDeclaration: '' });
       fetchTests();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to save test');
@@ -245,6 +245,14 @@ export default function TestManagement() {
                 <input value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} placeholder="JEE Advance, NEET..." />
               </div>
               <div className="form-group">
+                <label>Test Type</label>
+                <select value={form.testType} onChange={e => setForm({ ...form, testType: e.target.value })}>
+                  <option value="full">Full Test</option>
+                  <option value="part">Part Test</option>
+                  <option value="pyp">Previous Year Paper (PYP)</option>
+                </select>
+              </div>
+              <div className="form-group">
                 <label>Duration (minutes)</label>
                 <input type="number" value={form.durationMinutes} onChange={e => setForm({ ...form, durationMinutes: Number(e.target.value) })} min={1} required />
               </div>
@@ -325,6 +333,7 @@ export default function TestManagement() {
             <tr>
               <th>Title</th>
               <th>Category</th>
+              <th>Type</th>
               <th>Duration</th>
               <th>Marks</th>
               <th>Questions</th>
@@ -338,6 +347,7 @@ export default function TestManagement() {
               <tr key={test._id}>
                 <td><strong>{test.title}</strong></td>
                 <td>{test.category}</td>
+                <td>{test.testType === 'pyp' ? 'PYP' : test.testType === 'part' ? 'Part Test' : 'Full Test'}</td>
                 <td>{test.durationMinutes}m</td>
                 <td>{test.totalMarks}</td>
                 <td>{test.questionCount || 0}</td>
@@ -353,7 +363,7 @@ export default function TestManagement() {
                     <button className="btn btn-sm" onClick={() => handleTogglePublish(test._id)}>
                       {test.isPublished ? '⏸ Unpublish' : '🚀 Publish'}
                     </button>
-                    <button className="btn btn-sm" onClick={() => { setEditingTest(test); setForm({ title: test.title, description: test.description || '', category: test.category || 'General', durationMinutes: test.durationMinutes, totalMarks: test.totalMarks, visibility: test.visibility, targetTenants: test.targetTenants?.map(t => t._id || t) || [], targetGroups: test.targetGroups?.map(g => g._id || g) || [], defaultPositiveMarks: test.defaultPositiveMarks || 4, defaultNegativeMarks: test.defaultNegativeMarks || 1, syllabusText: test.syllabus?.join('\n') || '', instructionGeneralText: test.instructions?.general?.join('\n') || '', instructionOtherText: test.instructions?.other?.join('\n') || '', instructionDeclaration: test.instructions?.declaration || '' }); setShowForm(true); }}>✏️ Edit</button>
+                    <button className="btn btn-sm" onClick={() => { setEditingTest(test); setForm({ title: test.title, description: test.description || '', category: test.category || 'General', testType: test.testType || 'full', durationMinutes: test.durationMinutes, totalMarks: test.totalMarks, visibility: test.visibility, targetTenants: test.targetTenants?.map(t => t._id || t) || [], targetGroups: test.targetGroups?.map(g => g._id || g) || [], defaultPositiveMarks: test.defaultPositiveMarks || 4, defaultNegativeMarks: test.defaultNegativeMarks || 1, syllabusText: test.syllabus?.join('\n') || '', instructionGeneralText: test.instructions?.general?.join('\n') || '', instructionOtherText: test.instructions?.other?.join('\n') || '', instructionDeclaration: test.instructions?.declaration || '' }); setShowForm(true); }}>✏️ Edit</button>
                     <button className="btn btn-sm btn-danger" onClick={() => handleDeleteTest(test._id)}>🗑</button>
                   </div>
                 </td>

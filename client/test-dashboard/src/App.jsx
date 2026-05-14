@@ -271,17 +271,16 @@ export default function App() {
 
   const normalizedSearch = searchQuery.trim().toLowerCase();
   const matchesCategory = (test) => {
-    const categoryText = `${test.category || ''} ${test.title || ''}`.toLowerCase();
-    if (activeCategory === 'full') {
-      return categoryText.includes('full')
-        || (!categoryText.includes('part')
-          && !categoryText.includes('chapter')
-          && !categoryText.includes('pyq')
-          && !categoryText.includes('previous year'));
-    }
-    if (activeCategory === 'part') return categoryText.includes('part');
-    if (activeCategory === 'chapter') return categoryText.includes('chapter');
-    if (activeCategory === 'pyq') return categoryText.includes('pyq') || categoryText.includes('previous year');
+    if (view === 'pyp') return test.testType === 'pyp';
+    
+    // Hide PYP from Test Series view
+    if (test.testType === 'pyp') return false;
+    
+    const type = test.testType || 'full';
+    
+    if (activeCategory === 'full') return type === 'full';
+    if (activeCategory === 'part') return type === 'part';
+    
     return true;
   };
   const filteredTests = tests.filter((test) => {
@@ -352,6 +351,10 @@ export default function App() {
           <button onClick={showTestSeries} className={`flex-1 lg:flex-initial w-full border-none bg-transparent flex flex-col lg:flex-row items-center justify-center lg:justify-start px-1 lg:px-3 py-1 lg:py-3 transition-all duration-200 rounded-xl lg:rounded-lg group ${view === 'test-series' || view === 'instructions' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
             <span className="material-symbols-outlined mb-0.5 lg:mb-0 lg:mr-3 text-[22px] lg:text-2xl flex-shrink-0">layers</span>
             <span className="text-[9px] lg:text-sm font-extrabold lg:font-medium tracking-tight">Tests</span>
+          </button>
+          <button onClick={() => { setView('pyp'); setSelectedTest(null); }} className={`flex-1 lg:flex-initial w-full border-none bg-transparent flex flex-col lg:flex-row items-center justify-center lg:justify-start px-1 lg:px-3 py-1 lg:py-3 transition-all duration-200 rounded-xl lg:rounded-lg group ${view === 'pyp' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+            <span className="material-symbols-outlined mb-0.5 lg:mb-0 lg:mr-3 text-[22px] lg:text-2xl flex-shrink-0">history_edu</span>
+            <span className="text-[9px] lg:text-sm font-extrabold lg:font-medium tracking-tight">PYP</span>
           </button>
           <button onClick={() => { setView('leaderboard'); setSelectedLeaderboardTest(null); }} className={`flex-1 lg:flex-initial w-full border-none bg-transparent flex flex-col lg:flex-row items-center justify-center lg:justify-start px-1 lg:px-3 py-1 lg:py-3 transition-all duration-200 rounded-xl lg:rounded-lg group ${view === 'leaderboard' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
             <span className="material-symbols-outlined mb-0.5 lg:mb-0 lg:mr-3 text-[22px] lg:text-2xl flex-shrink-0">emoji_events</span>
@@ -551,34 +554,34 @@ export default function App() {
               </div>
             )}
           </div>
-        ) : view === 'test-series' ? (
+        ) : (view === 'test-series' || view === 'pyp') ? (
           <>
             {/* Header Section */}
             <header className="mb-12">
-              <h2 className={`text-4xl font-extrabold font-headline tracking-tight ${isDark ? 'text-on-background' : 'text-slate-900'}`}>Test Series</h2>
-              <p className={`mt-2 text-lg font-medium opacity-70 ${isDark ? 'text-on-surface-variant' : 'text-slate-600'}`}>Level up your exam readiness.</p>
+              <h2 className={`text-4xl font-extrabold font-headline tracking-tight ${isDark ? 'text-on-background' : 'text-slate-900'}`}>{view === 'pyp' ? 'Previous Year Papers' : 'Test Series'}</h2>
+              <p className={`mt-2 text-lg font-medium opacity-70 ${isDark ? 'text-on-surface-variant' : 'text-slate-600'}`}>{view === 'pyp' ? 'Practice with real past exam papers.' : 'Level up your exam readiness.'}</p>
             </header>
 
             {/* Category Tabs */}
-            <div className="flex items-center space-x-1 mb-10 overflow-x-auto pb-2 scrollbar-hide">
-              {[
-                { id: 'full', label: 'Full Tests' },
-                { id: 'part', label: 'Part Tests' },
-                { id: 'chapter', label: 'Chapter-wise Tests' },
-                { id: 'pyq', label: 'Previous Year Papers' },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveCategory(tab.id)}
-                  className={`cursor-pointer px-6 py-2.5 rounded-full text-sm whitespace-nowrap transition-colors ${activeCategory === tab.id
-                      ? 'font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/30'
-                      : `font-medium bg-transparent border-none ${isDark ? 'text-on-surface-variant hover:text-on-surface' : 'text-slate-500 hover:text-slate-900'}`
-                    }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+            {view === 'test-series' && (
+              <div className="flex items-center space-x-1 mb-10 overflow-x-auto pb-2 scrollbar-hide">
+                {[
+                  { id: 'full', label: 'Full Tests' },
+                  { id: 'part', label: 'Part Tests' },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveCategory(tab.id)}
+                    className={`cursor-pointer px-6 py-2.5 rounded-full text-sm whitespace-nowrap transition-colors ${activeCategory === tab.id
+                        ? 'font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/30'
+                        : `font-medium bg-transparent border-none ${isDark ? 'text-on-surface-variant hover:text-on-surface' : 'text-slate-500 hover:text-slate-900'}`
+                      }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Asymmetric Layout: Test Grid and Quick Stats */}
             <div className="grid grid-cols-12 gap-10">
@@ -974,7 +977,13 @@ export default function App() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {completedResults.map((result) => (
+                    {Array.from(
+                      completedResults.reduce((acc, result) => {
+                        const tId = result.test?._id;
+                        if (tId && !acc.has(tId)) acc.set(tId, result);
+                        return acc;
+                      }, new Map()).values()
+                    ).map((result) => (
                       <div 
                         key={result._id}
                         className={`p-6 rounded-2xl border flex flex-col justify-between transition-all duration-200 ${isDark ? 'bg-surface-container border-outline-variant/10 hover:bg-surface-container-high' : 'bg-white shadow-sm border-slate-100 hover:shadow-md'}`}
@@ -1482,8 +1491,22 @@ export default function App() {
                     }}
                     className="cursor-pointer border-none w-full py-4 bg-indigo-500 text-on-primary font-bold rounded-xl text-lg transition-all shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:scale-95"
                   >
-                    Start Test Now
+                    {selectedTest?.state === 'completed' ? 'Retake Test' : 'Start Test Now'}
                   </button>
+
+                  {selectedTest?.state !== 'completed' && (
+                    <div className={`mt-5 p-3.5 rounded-xl text-xs leading-relaxed border flex gap-2.5 items-start ${isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-800 border-amber-200'}`}>
+                      <span className="material-symbols-outlined text-[18px] shrink-0">warning</span>
+                      <span><strong>Leaderboard Note:</strong> Only your 1st attempt score will be counted for the global leaderboard ranking. Make it count!</span>
+                    </div>
+                  )}
+
+                  {selectedTest?.state === 'completed' && (
+                    <div className={`mt-5 p-3.5 rounded-xl text-xs leading-relaxed border flex gap-2.5 items-start ${isDark ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/20' : 'bg-indigo-50 text-indigo-700 border-indigo-200'}`}>
+                      <span className="material-symbols-outlined text-[18px] shrink-0">info</span>
+                      <span>You have already completed this test. New attempts will be saved for your personal analytics but will <strong>not</strong> affect the leaderboard.</span>
+                    </div>
+                  )}
                   {selectedTest?.state === 'completed' && selectedTest.latestAttemptId && (
                     <button
                       onClick={() => {
