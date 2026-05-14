@@ -39,6 +39,22 @@ const answerSchema = new mongoose.Schema(
         durationSeconds: { type: Number, default: 0 },
       },
     ],
+    /**
+     * Number of times the student changed their answer for this question.
+     * High values indicate hesitation / weak understanding.
+     */
+    answerChangeCount: {
+      type: Number,
+      default: 0,
+    },
+    /**
+     * Seconds the student was idle (no mouse/touch) while on this question.
+     * Effective time = timeSpentSeconds - idleSeconds
+     */
+    idleSeconds: {
+      type: Number,
+      default: 0,
+    },
   },
   { _id: false }
 );
@@ -127,6 +143,34 @@ const testAttemptSchema = new mongoose.Schema(
         timestamp: { type: Date, default: Date.now },
       },
     ],
+    /**
+     * Device & environment snapshot captured at test start.
+     */
+    deviceInfo: {
+      userAgent:        { type: String, default: '' },
+      screenResolution: { type: String, default: '' },
+      deviceMemory:     { type: Number, default: null },
+      connectionType:   { type: String, default: '' },
+      isMobile:         { type: Boolean, default: false },
+      timezone:         { type: String, default: '' },
+    },
+    /**
+     * Per-topic performance breakdown, computed on submission.
+     * Depends on Question.tags being populated.
+     * e.g., { "Kinematics": { correct: 2, wrong: 3, skipped: 1 } }
+     */
+    topicPerformance: {
+      type: Map,
+      of: new mongoose.Schema(
+        {
+          correct: { type: Number, default: 0 },
+          wrong: { type: Number, default: 0 },
+          skipped: { type: Number, default: 0 },
+        },
+        { _id: false }
+      ),
+      default: {},
+    },
   },
   { timestamps: true }
 );

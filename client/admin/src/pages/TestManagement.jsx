@@ -38,6 +38,7 @@ export default function TestManagement() {
       { label: 'C', content: '' }, { label: 'D', content: '' },
     ],
     correctAnswer: [], solution: '', positiveMarks: '', negativeMarks: '',
+    tags: '', difficulty: 'medium',
   });
 
   useEffect(() => { fetchAll(); }, []);
@@ -138,6 +139,7 @@ export default function TestManagement() {
         positiveMarks: qForm.positiveMarks ? Number(qForm.positiveMarks) : null,
         negativeMarks: qForm.negativeMarks ? Number(qForm.negativeMarks) : null,
         imageUrl: qForm.imageUrl || null,
+        tags: qForm.tags ? qForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
       };
       
       if (editingQuestion) {
@@ -155,6 +157,7 @@ export default function TestManagement() {
           { label: 'C', content: '' }, { label: 'D', content: '' },
         ],
         correctAnswer: [], solution: '', positiveMarks: '', negativeMarks: '',
+        tags: '', difficulty: 'medium',
       });
       fetchQuestions(selectedTest._id);
     } catch (err) {
@@ -470,6 +473,18 @@ export default function TestManagement() {
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                   <label>Solution / Explanation</label>
                   <textarea value={qForm.solution} onChange={e => setQForm({ ...qForm, solution: e.target.value })} rows={2} />
+                </div>
+                <div className="form-group">
+                  <label>Difficulty</label>
+                  <select value={qForm.difficulty} onChange={e => setQForm({ ...qForm, difficulty: e.target.value })}>
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Tags (comma-separated)</label>
+                  <input value={qForm.tags} onChange={e => setQForm({ ...qForm, tags: e.target.value })} placeholder="Kinematics, Projectile Motion" />
                 </div>
               </div>
               <button type="submit" className="btn btn-primary" style={{ marginTop: 12 }}>

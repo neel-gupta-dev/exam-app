@@ -87,6 +87,22 @@ const questionSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    /**
+     * Topic tags for granular analytics.
+     * e.g., ["Kinematics", "Projectile Motion"] or ["Electrochemistry"]
+     */
+    tags: {
+      type: [String],
+      default: [],
+    },
+    /**
+     * Difficulty level for performance breakdown.
+     */
+    difficulty: {
+      type: String,
+      enum: ['easy', 'medium', 'hard'],
+      default: 'medium',
+    },
   },
   { timestamps: true }
 );

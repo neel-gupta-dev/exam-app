@@ -67,7 +67,8 @@ export default function App() {
   });
 
   useEffect(() => {
-    if (user && (view === 'dashboard' || view === 'test-series')) { setLoadingTests(true);
+    if (user && (view === 'dashboard' || view === 'test-series')) {
+      setLoadingTests(true);
       fetch(`${API_BASE}/tests`, {
         headers: { 'Authorization': `Bearer ${user.token}` }
       })
@@ -95,7 +96,8 @@ export default function App() {
   }, [user, view]);
 
   useEffect(() => {
-    if (user && (view === 'analytics' || view === 'dashboard' || view === 'test-series' || view === 'leaderboard')) { setLoadingResults(true);
+    if (user && (view === 'analytics' || view === 'dashboard' || view === 'test-series' || view === 'leaderboard')) {
+      setLoadingResults(true);
       setResultsError('');
       fetch(`${API_BASE}/assessment/results`, {
         headers: { 'Authorization': `Bearer ${user.token}` }
@@ -289,15 +291,15 @@ export default function App() {
   const normalizedSearch = searchQuery.trim().toLowerCase();
   const matchesCategory = (test) => {
     if (view === 'pyp') return test.testType === 'pyp';
-    
+
     // Hide PYP from Test Series view
     if (test.testType === 'pyp') return false;
-    
+
     const type = test.testType || 'full';
-    
+
     if (activeCategory === 'full') return type === 'full';
     if (activeCategory === 'part') return type === 'part';
-    
+
     return true;
   };
   const filteredTests = tests.filter((test) => {
@@ -313,11 +315,11 @@ export default function App() {
     return haystack.includes(normalizedSearch);
   });
   const completedResults = results.filter((result) => result.status === 'completed' || result.status === 'auto-submitted');
-  
+
   const sortedResults = [...completedResults].sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
   const lastThreeResults = sortedResults.slice(0, 3);
   const hasThreeTests = lastThreeResults.length >= 3;
-  const lastThreeAvg = hasThreeTests 
+  const lastThreeAvg = hasThreeTests
     ? Math.round(lastThreeResults.reduce((sum, res) => sum + (res.percentage || 0), 0) / 3)
     : null;
 
@@ -381,7 +383,7 @@ export default function App() {
             <span className="material-symbols-outlined mb-0.5 lg:mb-0 lg:mr-3 text-[22px] lg:text-2xl flex-shrink-0">insights</span>
             <span className="text-[9px] lg:text-sm font-extrabold lg:font-medium tracking-tight">Stats</span>
           </button>
-          
+
           {/* Mobile-Only Settings button inserted into bottom nav */}
           <button onClick={() => setView('settings')} className={`flex lg:hidden flex-1 w-full border-none bg-transparent flex flex-col items-center justify-center px-1 py-1 transition-all duration-200 rounded-xl group ${view === 'settings' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600'}`}>
             <span className="material-symbols-outlined mb-0.5 text-[22px]">settings</span>
@@ -398,6 +400,32 @@ export default function App() {
             <span className="material-symbols-outlined mr-3">help_outline</span>
             <span className="text-sm font-medium">Support</span>
           </button>
+
+          {/* XP Level Widget */}
+          {user.levelData && (
+            <div className={`mt-4 mx-1 p-3 rounded-xl border ${isDark ? 'bg-indigo-500/5 border-indigo-500/10' : 'bg-indigo-50/50 border-indigo-100'}`}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🔥</span>
+                  <span className={`text-xs font-black ${isDark ? 'text-indigo-300' : 'text-indigo-700'}`}>
+                    Level {user.levelData.currentLevel}
+                  </span>
+                </div>
+                <span className={`text-[10px] font-bold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                  {user.levelData.totalXP} XP
+                </span>
+              </div>
+              <div className={`w-full h-1.5 rounded-full overflow-hidden ${isDark ? 'bg-slate-800' : 'bg-indigo-100'}`}>
+                <div
+                  className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, user.levelData.progressToNext || 0)}%` }}
+                />
+              </div>
+              <p className={`text-[9px] font-bold mt-1.5 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
+                {user.levelData.xpRemaining} XP to next level
+              </p>
+            </div>
+          )}
           <div className="flex items-center justify-between mt-6 px-3">
             <div className="flex items-center overflow-hidden">
               <div className="w-8 h-8 flex-shrink-0 rounded-full overflow-hidden bg-indigo-500/20 text-indigo-500 flex items-center justify-center font-bold text-sm">
@@ -569,9 +597,65 @@ export default function App() {
                   <div className={`absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 w-96 h-96 rounded-full blur-[120px] pointer-events-none ${isDark ? 'bg-indigo-500/15' : 'bg-indigo-200/40'}`}></div>
                 </div>
 
+                {/* Score Trend Chart */}
+                {trendResults.length >= 2 && (
+                  <div className={`relative rounded-3xl border p-8 transition-all duration-300 ${isDark ? 'bg-surface-container border-outline-variant/20' : 'bg-white border-slate-100 shadow-lg'}`}>
+                    <h3 className={`text-sm font-extrabold uppercase tracking-widest mb-2 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>Score Trend</h3>
+                    <p className={`text-xs mb-6 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Your last {trendResults.length} tests — track your trajectory.</p>
+                    <div className="relative w-full h-40">
+                      <svg viewBox="-5 -5 110 110" preserveAspectRatio="none" className="w-full h-full overflow-visible">
+                        {/* Grid lines */}
+                        {[0, 25, 50, 75, 100].map(v => (
+                          <line key={v} x1="0" y1={100 - v} x2="100" y2={100 - v} stroke={isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} strokeWidth="0.5" />
+                        ))}
+                        {/* Gradient fill under line */}
+                        <defs>
+                          <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="rgb(99,102,241)" stopOpacity="0.3" />
+                            <stop offset="100%" stopColor="rgb(99,102,241)" stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+                        <polygon
+                          points={`0,100 ${trendPoints} 100,100`}
+                          fill="url(#trendGradient)"
+                        />
+                        {/* Trend line */}
+                        <polyline
+                          points={trendPoints}
+                          fill="none"
+                          stroke="rgb(99,102,241)"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        {/* Dots */}
+                        {trendResults.map((result, idx) => {
+                          const x = trendResults.length <= 1 ? 50 : (idx / (trendResults.length - 1)) * 100;
+                          const y = 100 - Math.max(0, Math.min(100, Number(result.percentage) || 0));
+                          return (
+                            <circle key={idx} cx={x} cy={y} r="2.5" fill="rgb(99,102,241)" stroke={isDark ? '#1e293b' : '#ffffff'} strokeWidth="1.5" />
+                          );
+                        })}
+                      </svg>
+                      {/* Y-axis labels */}
+                      <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-[9px] font-bold -ml-1 pointer-events-none" style={{ color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)' }}>
+                        <span>100%</span><span>50%</span><span>0%</span>
+                      </div>
+                    </div>
+                    {/* X-axis test labels */}
+                    <div className="flex justify-between mt-3">
+                      {trendResults.map((result, idx) => (
+                        <span key={idx} className={`text-[9px] font-bold truncate max-w-[60px] text-center ${isDark ? 'text-slate-500' : 'text-slate-400'}`} title={result.test?.title}>
+                          {result.percentage}%
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* CTA: Launch Exam Engine */}
                 <div className="flex pt-2">
-                  <button 
+                  <button
                     onClick={showTestSeries}
                     className="cursor-pointer border-none py-4 px-10 bg-indigo-600 text-white font-bold rounded-2xl text-lg transition-all shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:scale-[0.98] flex items-center justify-center gap-3"
                   >
@@ -601,8 +685,8 @@ export default function App() {
                     key={tab.id}
                     onClick={() => setActiveCategory(tab.id)}
                     className={`cursor-pointer px-6 py-2.5 rounded-full text-sm whitespace-nowrap transition-colors ${activeCategory === tab.id
-                        ? 'font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/30'
-                        : `font-medium bg-transparent border-none ${isDark ? 'text-on-surface-variant hover:text-on-surface' : 'text-slate-500 hover:text-slate-900'}`
+                      ? 'font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/30'
+                      : `font-medium bg-transparent border-none ${isDark ? 'text-on-surface-variant hover:text-on-surface' : 'text-slate-500 hover:text-slate-900'}`
                       }`}
                   >
                     {tab.label}
@@ -742,7 +826,7 @@ export default function App() {
         ) : view === 'review' ? (
           <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
             <div className="flex items-center justify-between flex-wrap gap-4">
-              <button 
+              <button
                 onClick={() => {
                   setView('test-series');
                   setReviewData(null);
@@ -753,7 +837,7 @@ export default function App() {
                 <span className="material-symbols-outlined text-lg">arrow_back</span>
                 <span className="text-sm font-bold">Back to Series</span>
               </button>
-              
+
               {reviewData && (
                 <div className="flex gap-2 flex-wrap">
                   <div className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-black ${isDark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
@@ -807,6 +891,24 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* Integrity & Telemetry Summary Bar */}
+                {(reviewData.attemptSummary.tabSwitchCount > 0 || reviewData.attemptSummary.totalTimeSpentSeconds) && (
+                  <div className={`flex flex-wrap gap-4 p-4 rounded-2xl border ${isDark ? 'bg-surface-container border-outline-variant/10' : 'bg-white shadow-sm border-slate-100'}`}>
+                    {reviewData.attemptSummary.totalTimeSpentSeconds != null && (
+                      <div className="flex items-center gap-2 text-xs font-bold">
+                        <span className={`material-symbols-outlined text-sm ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>timer</span>
+                        <span className={isDark ? 'text-slate-300' : 'text-slate-600'}>Total Time: {Math.floor(reviewData.attemptSummary.totalTimeSpentSeconds / 60)}m {reviewData.attemptSummary.totalTimeSpentSeconds % 60}s</span>
+                      </div>
+                    )}
+                    {reviewData.attemptSummary.tabSwitchCount > 0 && (
+                      <div className="flex items-center gap-2 text-xs font-bold">
+                        <span className="material-symbols-outlined text-sm text-amber-500">warning</span>
+                        <span className={isDark ? 'text-amber-400' : 'text-amber-700'}>Tab Switches: {reviewData.attemptSummary.tabSwitchCount}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="space-y-6">
                   {reviewData.questions.map((q, idx) => {
                     const isCorrect = q.resultStatus === 'correct';
@@ -814,13 +916,12 @@ export default function App() {
                     const isSkipped = q.resultStatus === 'skipped';
 
                     return (
-                      <div 
-                        key={q._id} 
-                        className={`p-6 rounded-2xl border transition-all ${
-                          isCorrect ? (isDark ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-emerald-50/20 border-emerald-100') :
-                          isWrong ? (isDark ? 'bg-rose-500/5 border-rose-500/20' : 'bg-rose-50/20 border-rose-100') :
-                          (isDark ? 'bg-surface-container border-outline-variant/20' : 'bg-white shadow-sm border-slate-100')
-                        }`}
+                      <div
+                        key={q._id}
+                        className={`p-6 rounded-2xl border transition-all ${isCorrect ? (isDark ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-emerald-50/20 border-emerald-100') :
+                            isWrong ? (isDark ? 'bg-rose-500/5 border-rose-500/20' : 'bg-rose-50/20 border-rose-100') :
+                              (isDark ? 'bg-surface-container border-outline-variant/20' : 'bg-white shadow-sm border-slate-100')
+                          }`}
                       >
                         <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-4 mb-5 border-dashed border-slate-500/10">
                           <div className="flex items-center gap-3">
@@ -835,8 +936,20 @@ export default function App() {
                           <div className="flex items-center gap-3">
                             <span className="text-xs opacity-60 font-medium flex items-center gap-1">
                               <span className="material-symbols-outlined text-sm">schedule</span>
-                              {q.timeSpentSeconds || 0}s spent
+                              {q.timeSpentSeconds >= 60 ? `${Math.floor(q.timeSpentSeconds / 60)}m ${q.timeSpentSeconds % 60}s` : `${q.timeSpentSeconds || 0}s`}
                             </span>
+                            {q.visitCount > 1 && (
+                              <span className={`text-xs font-bold flex items-center gap-1 ${isDark ? 'text-amber-400/80' : 'text-amber-600'}`}>
+                                <span className="material-symbols-outlined text-sm">visibility</span>
+                                {q.visitCount}x visited
+                              </span>
+                            )}
+                            {q.answerChangeCount > 0 && (
+                              <span className={`text-xs font-bold flex items-center gap-1 ${isDark ? 'text-violet-400/80' : 'text-violet-600'}`}>
+                                <span className="material-symbols-outlined text-sm">swap_horiz</span>
+                                {q.answerChangeCount}x changed
+                              </span>
+                            )}
                             {isCorrect ? (
                               <span className="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-emerald-500 text-white flex items-center gap-1">
                                 <span className="material-symbols-outlined text-xs">check</span> Correct (+{q.positiveMarks})
@@ -872,8 +985,8 @@ export default function App() {
                               const isUserMarked = q.userAnswer?.includes(actualLabel);
                               const isCorrectAnswer = q.correctAnswer?.includes(actualLabel);
 
-                              let optionStyleClass = isDark 
-                                ? 'bg-surface-container border-outline-variant/20 text-slate-300' 
+                              let optionStyleClass = isDark
+                                ? 'bg-surface-container border-outline-variant/20 text-slate-300'
                                 : 'bg-white border-slate-200 text-slate-700';
 
                               if (isUserMarked && isCorrectAnswer) {
@@ -891,17 +1004,16 @@ export default function App() {
                               }
 
                               return (
-                                <div 
+                                <div
                                   key={oIdx}
                                   className={`p-4 rounded-xl border-2 transition-all flex items-center justify-between gap-4 ${optionStyleClass}`}
                                 >
                                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-1">
                                     <div className="flex items-center gap-3">
-                                      <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-black border-2 flex-shrink-0 ${
-                                        isCorrectAnswer ? 'bg-emerald-500 text-white border-emerald-500' :
-                                        isUserMarked ? 'bg-rose-500 text-white border-rose-500' :
-                                        (isDark ? 'border-slate-700 bg-slate-800 text-slate-400' : 'border-slate-300 bg-slate-100 text-slate-500')
-                                      }`}>
+                                      <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-black border-2 flex-shrink-0 ${isCorrectAnswer ? 'bg-emerald-500 text-white border-emerald-500' :
+                                          isUserMarked ? 'bg-rose-500 text-white border-rose-500' :
+                                            (isDark ? 'border-slate-700 bg-slate-800 text-slate-400' : 'border-slate-300 bg-slate-100 text-slate-500')
+                                        }`}>
                                         {actualLabel}
                                       </span>
                                       <span className="text-sm md:text-base">{opt.content}</span>
@@ -967,6 +1079,28 @@ export default function App() {
                             )}
                           </div>
                         )}
+
+                        {/* Raise a Doubt button */}
+                        <div className="mt-5 flex justify-end">
+                          <button
+                            onClick={async () => {
+                              try {
+                                await fetch(`${API_BASE}/assessment/doubts`, {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user.token}` },
+                                  body: JSON.stringify({ questionId: q._id, testId: reviewData.attemptSummary.testId, attemptId: selectedReviewAttemptId }),
+                                });
+                                alert('Doubt raised successfully! Your teacher will review this question.');
+                              } catch {
+                                alert('Failed to raise doubt. Please try again.');
+                              }
+                            }}
+                            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer border ${isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'}`}
+                          >
+                            <span className="material-symbols-outlined text-sm">help</span>
+                            Raise a Doubt
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
@@ -1012,7 +1146,7 @@ export default function App() {
                         return acc;
                       }, new Map()).values()
                     ).map((result) => (
-                      <div 
+                      <div
                         key={result._id}
                         className={`p-6 rounded-2xl border flex flex-col justify-between transition-all duration-200 ${isDark ? 'bg-surface-container border-outline-variant/10 hover:bg-surface-container-high' : 'bg-white shadow-sm border-slate-100 hover:shadow-md'}`}
                       >
@@ -1030,7 +1164,7 @@ export default function App() {
                             {result.submittedAt ? new Date(result.submittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Date Unknown'}
                           </p>
                         </div>
-                        <button 
+                        <button
                           onClick={() => setSelectedLeaderboardTest(result.test)}
                           className="mt-6 cursor-pointer border-none py-3 px-4 bg-indigo-600 text-white font-bold rounded-xl text-sm transition-all hover:bg-indigo-500 flex items-center justify-center gap-2"
                         >
@@ -1045,7 +1179,7 @@ export default function App() {
             ) : (
               <>
                 <div className="flex items-center gap-4 mb-6">
-                  <button 
+                  <button
                     onClick={() => {
                       setSelectedLeaderboardTest(null);
                       setLeaderboardData(null);
@@ -1099,18 +1233,17 @@ export default function App() {
                       {leaderboardData.leaderboard.map((student) => {
                         const sections = leaderboardData.test?.sections?.map(s => s.name) || Object.keys(student.sectionScores);
                         return (
-                          <div 
-                            key={student.username + student.rank} 
+                          <div
+                            key={student.username + student.rank}
                             className={`p-4 rounded-2xl border flex flex-col gap-4 transition-all ${student.isMe ? (isDark ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-indigo-50 border-indigo-200') : (isDark ? 'bg-surface-container border-outline-variant/10' : 'bg-white border-slate-100 shadow-sm')}`}
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-base ${
-                                  student.rank === 1 ? 'bg-amber-500/20 text-amber-500' :
-                                  student.rank === 2 ? 'bg-slate-400/20 text-slate-400' :
-                                  student.rank === 3 ? 'bg-amber-700/20 text-amber-700' :
-                                  (isDark ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500')
-                                }`}>
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-base ${student.rank === 1 ? 'bg-amber-500/20 text-amber-500' :
+                                    student.rank === 2 ? 'bg-slate-400/20 text-slate-400' :
+                                      student.rank === 3 ? 'bg-amber-700/20 text-amber-700' :
+                                        (isDark ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500')
+                                  }`}>
                                   {student.rank === 1 ? '🥇' : student.rank === 2 ? '🥈' : student.rank === 3 ? '🥉' : `#${student.rank}`}
                                 </div>
                                 <div>
@@ -1123,7 +1256,7 @@ export default function App() {
                                 <div className="text-[9px] font-extrabold uppercase opacity-60 tracking-wider mt-1">Total Marks</div>
                               </div>
                             </div>
-                            
+
                             <div className={`grid grid-cols-3 gap-2 p-3 rounded-xl text-center text-xs font-bold ${isDark ? 'bg-slate-900/30' : 'bg-slate-50'}`}>
                               <div>
                                 <div className="opacity-60 mb-0.5 text-[8px] uppercase tracking-wider">Percent</div>
@@ -1161,7 +1294,7 @@ export default function App() {
                             {leaderboardData.leaderboard.map((student) => {
                               const sections = leaderboardData.test?.sections?.map(s => s.name) || Object.keys(student.sectionScores);
                               return (
-                                <tr 
+                                <tr
                                   key={student.username + student.rank}
                                   className={`border-b last:border-none transition-colors duration-150 ${student.isMe ? (isDark ? 'bg-indigo-500/10 hover:bg-indigo-500/15' : 'bg-indigo-50/50 hover:bg-indigo-50') : (isDark ? 'border-outline-variant/5 hover:bg-surface-container-highest' : 'border-slate-50 hover:bg-slate-50/50')}`}
                                 >

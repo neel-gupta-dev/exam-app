@@ -33,6 +33,9 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   const latestTimeLeftRef = useRef(0);
   const telemetryRef = useRef({});
   const activeVisitRef = useRef(null);
+  const answerChangeCountRef = useRef({});
+  const idleSecondsRef = useRef({});
+  const idleTimerRef = useRef(null);
   const token = user?.token || localStorage.getItem('test_token');
 
   // ─── API helper ───
@@ -121,6 +124,25 @@ export default function TestEngine({ testId, user, onSubmitted }) {
       }
     };
     init();
+
+    // Capture device info once and send to server
+    const captureDeviceInfo = async () => {
+      try {
+        const info = {
+          userAgent: navigator.userAgent || '',
+          screenResolution: `${screen.width}x${screen.height}`,
+          deviceMemory: navigator.deviceMemory || null,
+          connectionType: navigator.connection?.effectiveType || '',
+          isMobile: /Mobi|Android/i.test(navigator.userAgent),
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+        };
+        await apiFetch(`/assessment/${testId}/sync`, {
+          method: 'POST',
+          body: JSON.stringify({ deviceInfo: info }),
+        });
+      } catch { /* non-critical */ }
+    };
+    if (testId) captureDeviceInfo();
   }, [testId, apiFetch]);
 
   const currentQuestion = questions[currentIdx];
@@ -352,11 +374,13 @@ export default function TestEngine({ testId, user, onSubmitted }) {
            firstVisitedAt: telemetry.firstVisitedAt || null,
            lastVisitedAt: telemetry.lastVisitedAt || null,
            visitLog: telemetry.visitLog || [],
+           answerChangeCount: answerChangeCountRef.current[a.questionId] || 0,
+           idleSeconds: idleSecondsRef.current[a.questionId] || 0,
         };
       });
       Object.entries(telemetrySnapshot).forEach(([questionId, telemetry]) => {
         if (outAnswers[questionId]) return;
-        outAnswers[questionId] = {
+         outAnswers[questionId] = {
           status: 'unanswered',
           selectedOption: [],
           timeSpentSeconds: telemetry.timeSpentSeconds || 0,
@@ -364,6 +388,8 @@ export default function TestEngine({ testId, user, onSubmitted }) {
           firstVisitedAt: telemetry.firstVisitedAt || null,
           lastVisitedAt: telemetry.lastVisitedAt || null,
           visitLog: telemetry.visitLog || [],
+          answerChangeCount: answerChangeCountRef.current[questionId] || 0,
+          idleSeconds: idleSecondsRef.current[questionId] || 0,
         };
       });
       await apiFetch(`/assessment/${testId}/sync`, {
@@ -378,6 +404,32 @@ export default function TestEngine({ testId, user, onSubmitted }) {
       return false;
     }
   };
+
+  // ─── Idle time detection ───
+  useEffect(() => {
+    if (submitted || loading) return;
+    const IDLE_THRESHOLD_MS = 30000; // 30 seconds
+    let lastActivity = Date.now();
+
+    const resetIdle = () => { lastActivity = Date.now(); };
+    const checkIdle = setInterval(() => {
+      const qId = activeVisitRef.current?.questionId;
+      if (qId && (Date.now() - lastActivity) >= IDLE_THRESHOLD_MS) {
+        idleSecondsRef.current[qId] = (idleSecondsRef.current[qId] || 0) + 30;
+        lastActivity = Date.now(); // reset so we count next 30s block
+      }
+    }, IDLE_THRESHOLD_MS);
+
+    window.addEventListener('mousemove', resetIdle);
+    window.addEventListener('touchstart', resetIdle);
+    window.addEventListener('click', resetIdle);
+    return () => {
+      clearInterval(checkIdle);
+      window.removeEventListener('mousemove', resetIdle);
+      window.removeEventListener('touchstart', resetIdle);
+      window.removeEventListener('click', resetIdle);
+    };
+  }, [submitted, loading]);
 
   const updateAnswer = (questionId, selectedAnswer, status) => {
     setAnswers((prev) => {
@@ -394,6 +446,11 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     if (!currentQuestion) return;
     const current = answers.find((a) => a.questionId === currentQuestion._id) || { selectedAnswer: [] };
     
+    // Track answer changes (hesitation metric)
+    if (current.selectedAnswer.length > 0) {
+      answerChangeCountRef.current[currentQuestion._id] = (answerChangeCountRef.current[currentQuestion._id] || 0) + 1;
+    }
+
     let newSelected;
     if (currentQuestion.type === 'multiple') {
       if (current.selectedAnswer.includes(optionLabel)) {
