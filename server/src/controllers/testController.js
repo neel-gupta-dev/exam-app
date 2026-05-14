@@ -292,7 +292,7 @@ export const addQuestion = asyncHandler(async (req, res) => {
     throw new Error('Test not found');
   }
 
-  const { section, type, content, imageUrl, options, correctAnswer, positiveMarks, negativeMarks, solution, solutionImageUrl } = req.body;
+  const { section, type, content, imageUrl, options, correctAnswer, positiveMarks, negativeMarks, solution, solutionImageUrl, tags, difficulty } = req.body;
 
   // Auto-assign order as next in sequence
   const lastQuestion = await Question.findOne({ testId: test._id }).sort({ order: -1 });
@@ -311,6 +311,8 @@ export const addQuestion = asyncHandler(async (req, res) => {
     negativeMarks: negativeMarks || null,
     solution: solution || '',
     solutionImageUrl: solutionImageUrl || null,
+    tags: tags || [],
+    difficulty: difficulty || 'medium',
   });
 
   // Update denormalized count
@@ -355,6 +357,8 @@ export const bulkAddQuestions = asyncHandler(async (req, res) => {
     negativeMarks: q.negativeMarks || null,
     solution: q.solution || '',
     solutionImageUrl: q.solutionImageUrl || null,
+    tags: q.tags || [],
+    difficulty: q.difficulty || 'medium',
   }));
 
   const inserted = await Question.insertMany(docs);
@@ -388,7 +392,7 @@ export const updateQuestion = asyncHandler(async (req, res) => {
     throw new Error('Question not found');
   }
 
-  const allowed = ['section', 'order', 'type', 'content', 'imageUrl', 'options', 'correctAnswer', 'positiveMarks', 'negativeMarks', 'solution', 'solutionImageUrl'];
+  const allowed = ['section', 'order', 'type', 'content', 'imageUrl', 'options', 'correctAnswer', 'positiveMarks', 'negativeMarks', 'solution', 'solutionImageUrl', 'tags', 'difficulty'];
   for (const key of allowed) {
     if (req.body[key] !== undefined) question[key] = req.body[key];
   }

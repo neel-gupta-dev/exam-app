@@ -19,6 +19,12 @@ export default function TestManagement() {
   const [pdfStats, setPdfStats] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState(null);
+  // JSON Import state
+  const [showJsonImport, setShowJsonImport] = useState(false);
+  const [jsonFile, setJsonFile] = useState(null);
+  const [jsonPreview, setJsonPreview] = useState(null);
+  const [jsonLoading, setJsonLoading] = useState(false);
+  const [jsonError, setJsonError] = useState(null);
 
   // Test form state
   const [form, setForm] = useState({
@@ -40,6 +46,44 @@ export default function TestManagement() {
     correctAnswer: [], solution: '', positiveMarks: '', negativeMarks: '',
     tags: '', difficulty: 'medium',
   });
+
+  const handleJsonPreview = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setJsonFile(file);
+    setJsonError(null);
+    setJsonPreview(null);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        const questions = Array.isArray(data) ? data : data.questions;
+        if (!Array.isArray(questions)) throw new Error('Invalid JSON format: Expected an array of questions.');
+        setJsonPreview(questions);
+      } catch (err) {
+        setJsonError(err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleJsonConfirmImport = async () => {
+    if (!selectedTest || !jsonPreview) return;
+    try {
+      setJsonLoading(true);
+      await api.post(`/tests/${selectedTest._id}/questions/bulk`, { questions: jsonPreview });
+      alert('Questions imported successfully!');
+      setShowJsonImport(false);
+      setJsonPreview(null);
+      setJsonFile(null);
+      fetchQuestions(selectedTest._id);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to import JSON');
+    } finally {
+      setJsonLoading(false);
+    }
+  };
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -382,27 +426,31 @@ export default function TestManagement() {
         <div className="card" style={{ marginTop: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3>📋 Questions: {selectedTest.title} ({questions.length})</h3>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn btn-primary" onClick={() => {
-                setEditingQuestion(null);
-                setQForm({
-                  section: 'General', type: 'single', content: '', imageUrl: '',
-                  options: [
-                    { label: 'A', content: '' }, { label: 'B', content: '' },
-                    { label: 'C', content: '' }, { label: 'D', content: '' },
-                  ],
-                  correctAnswer: [], solution: '', positiveMarks: '', negativeMarks: '',
-                });
-                setShowQuestionForm(!showQuestionForm);
-              }}>
-                {showQuestionForm ? 'Cancel' : '+ Add Question'}
-              </button>
-              <button className="btn btn-sm" style={{ background: '#7c3aed', color: '#fff' }} onClick={() => { setShowPdfImport(!showPdfImport); setPdfPreview(null); setPdfStats(null); setPdfFile(null); }}>
-                {showPdfImport ? 'Cancel Import' : '📄 Import PDF'}
-              </button>
-              <button className="btn btn-sm" onClick={() => { setSelectedTest(null); setQuestions([]); setShowQuestionForm(false); setShowPdfImport(false); }}>✕ Close</button>
+            <div style={{ display: 'flex', gap: 10 }}>
+                <button className="btn btn-primary" onClick={() => {
+                  setEditingQuestion(null);
+                  setQForm({
+                    section: 'General', type: 'single', content: '', imageUrl: '',
+                    options: [
+                      { label: 'A', content: '' }, { label: 'B', content: '' },
+                      { label: 'C', content: '' }, { label: 'D', content: '' },
+                    ],
+                    correctAnswer: [], solution: '', positiveMarks: '', negativeMarks: '',
+                    tags: '', difficulty: 'medium',
+                  });
+                  setShowQuestionForm(!showQuestionForm);
+                }}>
+                  {showQuestionForm ? 'Cancel' : '➕ Add Question'}
+                </button>
+                <button className="btn" onClick={() => { setShowPdfImport(!showPdfImport); setShowJsonImport(false); }} style={{ background: 'rgba(124,58,237,0.2)', color: '#a78bfa' }}>
+                  {showPdfImport ? 'Cancel PDF' : '📄 Import PDF'}
+                </button>
+                <button className="btn" onClick={() => { setShowJsonImport(!showJsonImport); setShowPdfImport(false); }} style={{ background: 'rgba(5,150,105,0.2)', color: '#34d399' }}>
+                  {showJsonImport ? 'Cancel JSON' : 'JSON Import'}
+                </button>
+                <button className="btn btn-sm" onClick={() => { setSelectedTest(null); setQuestions([]); setShowQuestionForm(false); setShowPdfImport(false); setShowJsonImport(false); }}>✕ Close</button>
+              </div>
             </div>
-          </div>
 
           {/* Add Question Form */}
           {showQuestionForm && (
@@ -576,6 +624,34 @@ export default function TestManagement() {
             </div>
           )}
 
+          {/* JSON Import Panel */}
+          {showJsonImport && (
+            <div style={{ marginTop: 16, padding: 20, background: 'rgba(5,150,105,0.08)', borderRadius: 8, border: '1px solid rgba(5,150,105,0.2)' }}>
+              <h4 style={{ margin: '0 0 12px', color: '#059669' }}>JSON Import Questions</h4>
+              <p style={{ fontSize: 13, opacity: 0.7, margin: '0 0 16px' }}>Upload a JSON file containing an array of question objects. Images can be provided as URLs or Base64 strings.</p>
+              
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input type="file" accept=".json" onChange={handleJsonPreview} style={{ flex: 1 }} />
+              </div>
+
+              {jsonError && <div style={{ marginTop: 12, color: '#ef4444', fontSize: 13 }}>❌ {jsonError}</div>}
+
+              {jsonPreview && (
+                <div style={{ marginTop: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <strong>Detected {jsonPreview.length} questions:</strong>
+                    <button className="btn btn-primary" onClick={handleJsonConfirmImport} disabled={jsonLoading} style={{ background: '#059669' }}>
+                      {jsonLoading ? '⏳ Importing...' : `✅ Confirm Bulk Import`}
+                    </button>
+                  </div>
+                  <div style={{ maxHeight: 300, overflowY: 'auto', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, background: 'rgba(0,0,0,0.2)' }}>
+                    <pre style={{ padding: 12, fontSize: 11, margin: 0 }}>{JSON.stringify(jsonPreview.slice(0, 2), null, 2)}...</pre>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Question List */}
           <div style={{ marginTop: 16 }}>
             {questions.map((q, idx) => (
@@ -614,6 +690,8 @@ export default function TestManagement() {
                       solution: q.solution || '',
                       positiveMarks: q.positiveMarks || '',
                       negativeMarks: q.negativeMarks || '',
+                      tags: q.tags?.join(', ') || '',
+                      difficulty: q.difficulty || 'medium',
                     });
                     setShowQuestionForm(true);
                   }} title="Edit Question">✏️</button>
