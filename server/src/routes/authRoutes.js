@@ -33,10 +33,20 @@ router.get('/google', (req, res, next) => {
   const origin = req.query.origin || 'main';
   res.cookie('oauth_origin', origin, {
     httpOnly: true,
-    maxAge: 5 * 60 * 1000, // 5 minutes — more than enough for the OAuth round trip
+    maxAge: 5 * 60 * 1000, 
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
   });
+
+  const sharedTestId = req.query.shared_test_id;
+  if (sharedTestId) {
+    res.cookie('oauth_shared_test_id', sharedTestId, {
+      httpOnly: true,
+      maxAge: 5 * 60 * 1000,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    });
+  }
 
   passport.authenticate('google', { 
     scope,
@@ -72,7 +82,14 @@ router.get('/google/callback',
     }
 
     if (origin === 'test') {
-      return res.redirect(`${TESTS_FRONTEND_URL}/#token=${token}`);
+      const sharedTestId = req.cookies?.oauth_shared_test_id;
+      res.clearCookie('oauth_shared_test_id');
+      
+      let url = `${TESTS_FRONTEND_URL}/`;
+      if (sharedTestId) {
+        url += `?shared_test_id=${sharedTestId}`;
+      }
+      return res.redirect(`${url}#token=${token}`);
     }
 
     // Default: redirect to main frontend
