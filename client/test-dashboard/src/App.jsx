@@ -24,8 +24,6 @@ export default function App() {
       return postSubmitView;
     }
     if (localStorage.getItem('shared_test_id')) return 'loading-shared';
-<<<<<<< HEAD
-=======
     
     // URL-based initial view
     const path = window.location.pathname;
@@ -36,7 +34,6 @@ export default function App() {
     if (path === '/settings') return 'settings';
     if (path === '/support') return 'support';
     
->>>>>>> feature/adding-neet-section
     return 'dashboard';
   });
 
