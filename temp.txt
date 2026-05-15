@@ -3,3 +3,9 @@ https://img.youtube.com/vi/[VIDEO%20ID]/maxresdefault.jpg
 https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=ldxFjLJ3rVY
 
 to add anki decks flashcards.
+
+1. an fps slider, option to toggle collision/ change the collision shape of the sprite would be some nice features too[lab.vayl.in]
+
+2. but once the blocks settle. they are not reacting to the grav change, they only react when any force is applied by other blocks
+also it would be nice if you could drag and drop the objects
+and configure which shape to spawn in to experiment with the different shapes[lab.valy.in]
