@@ -58,7 +58,7 @@ export default function NotesArchive({ initialPdfs }: { initialPdfs: PdfDocument
                 </span>
 
                 <Link
-                  href={`/doc/${pdf.slug}`}
+                  href={`/notes/doc/${pdf.slug}`}
                   className="text-sm font-interface font-medium text-primary hover:text-primary-dim transition-colors flex items-center gap-1"
                 >
                   Open <span aria-hidden="true">&rarr;</span>

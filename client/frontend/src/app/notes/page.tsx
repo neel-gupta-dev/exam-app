@@ -11,16 +11,16 @@ export default async function NotesPage() {
       {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10 h-14 flex items-center px-6">
         <div className="max-w-5xl mx-auto w-full flex items-center justify-between">
-          <Link href="https://vayl.in" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <Image src="/vayl-logo.png" alt="Vayl" width={28} height={28} className="object-contain" />
             <span className="text-base font-heading font-black tracking-widest text-on-surface uppercase italic">Vayl Notes</span>
           </Link>
           <div className="flex items-center gap-6 text-xs font-interface font-black uppercase tracking-widest text-on-surface-variant">
-            <Link href="https://vayl.in" className="hover:text-primary transition-colors hidden sm:block">Home</Link>
-            <Link href="https://predictor.vayl.in" className="hover:text-primary transition-colors">
+            <Link href="/" className="hover:text-primary transition-colors hidden sm:block">Home</Link>
+            <a href="https://predictor.vayl.in" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
               🎓 College Predictor
-            </Link>
-            <Link href="https://vayl.in/signup" className="px-4 py-1.5 rounded-lg bg-primary text-on-primary hover:opacity-90 transition-opacity">
+            </a>
+            <Link href="/signup" className="px-4 py-1.5 rounded-lg bg-primary text-on-primary hover:opacity-90 transition-opacity">
               Join Vayl
             </Link>
           </div>
