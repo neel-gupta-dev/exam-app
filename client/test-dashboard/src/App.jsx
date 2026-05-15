@@ -23,6 +23,7 @@ export default function App() {
       localStorage.removeItem('post_submit_view');
       return postSubmitView;
     }
+    if (localStorage.getItem('shared_test_id')) return 'loading-shared';
     return 'dashboard';
   });
   const searchInputRef = useRef(null);
@@ -49,6 +50,9 @@ export default function App() {
     const path = window.location.pathname;
     const match = path.match(/^\/t\/([a-f\d]{24})$/i);
     if (match) return match[1];
+    const searchParams = new URLSearchParams(window.location.search);
+    const qId = searchParams.get('shared_test_id');
+    if (qId) return qId;
     return localStorage.getItem('shared_test_id');
   });
 
@@ -337,7 +341,10 @@ export default function App() {
       return (
         <PublicTestLanding 
           testId={sharedTestId} 
-          onLogin={() => window.location.href = `${API_BASE}/auth/google?origin=test`} 
+          onLogin={() => {
+            if (sharedTestId) localStorage.setItem('shared_test_id', sharedTestId);
+            window.location.href = `${API_BASE}/auth/google?origin=test${sharedTestId ? `&shared_test_id=${sharedTestId}` : ''}`;
+          }} 
         />
       );
     }
@@ -427,6 +434,25 @@ export default function App() {
   const totalTelemetryMinutes = latestResult?.telemetry?.totalTimeSpentSeconds
     ? Math.round(latestResult.telemetry.totalTimeSpentSeconds / 60)
     : 0;
+  if (view === 'loading-shared') {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#0f172a]' : 'bg-slate-50'}`}>
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative w-20 h-20">
+            <div className="absolute inset-0 border-4 border-indigo-500/20 rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="absolute inset-4 bg-indigo-500/10 rounded-full flex items-center justify-center">
+              <span className="material-symbols-outlined text-indigo-500 animate-pulse">history_edu</span>
+            </div>
+          </div>
+          <div className="text-center space-y-2">
+            <h2 className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Preparing Assessment</h2>
+            <p className={`text-sm font-bold animate-pulse ${isDark ? 'text-indigo-400' : 'text-indigo-600'} uppercase tracking-widest`}>Setting up your test environment...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-background text-on-surface' : 'bg-slate-50 text-slate-900'}`}>
