@@ -4,9 +4,18 @@ export async function generateMetadata(
   props: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
   const params = await props.params;
+  const formattedTitle = params.slug
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
   return {
-    title: `${params.slug.replace(/-/g, " ")} | Vayl Notes`,
-    description: `View ${params.slug} on Vayl Notes`,
+    metadataBase: new URL("https://vayl.in"),
+    alternates: {
+      canonical: `/notes/doc/${params.slug}`,
+    },
+    title: `${formattedTitle} | Vayl Notes`,
+    description: `Free downloadable PDF notes for ${formattedTitle}. Enhance your JEE/NEET preparation with Vayl study material.`,
   };
 }
 

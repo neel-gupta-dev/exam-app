@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next'
+import { getPdfs } from './notes/lib/getPdfs'
 
 /**
  * Dynamic Sitemap Generator for Vayl
@@ -18,6 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/login', priority: 0.7 },
     { path: '/signup', priority: 0.7 },
     { path: '/blogs', priority: 0.9 },
+    { path: '/notes', priority: 1.0 }, // Prioritize notes root
   ];
 
   const routes: MetadataRoute.Sitemap = staticRoutes.map((route) => ({
@@ -45,6 +47,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   } catch (error) {
     console.error('[Sitemap] Failed to fetch dynamic blogs:', error);
+  }
+
+  // Fetch dynamic PDF notes
+  try {
+    const pdfs = await getPdfs();
+    pdfs.forEach((pdf) => {
+      routes.push({
+        url: `${baseUrl}/notes/doc/${pdf.slug}`,
+        lastModified: new Date(pdf.timestamp).toISOString(),
+        changeFrequency: 'weekly',
+        priority: 0.9,
+      });
+    });
+  } catch (error) {
+    console.error('[Sitemap] Failed to fetch dynamic PDFs:', error);
   }
 
   return routes;

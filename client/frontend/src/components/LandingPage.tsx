@@ -156,7 +156,7 @@ export default function LandingPage() {
           </Link>
           <div className="flex items-center gap-4 md:gap-8">
             <div className="hidden lg:flex items-center gap-8 text-xs font-interface font-black uppercase tracking-widest text-on-surface-variant">
-              <MagneticButton href="https://notes.vayl.in" className="hover:text-primary transition-colors">Free Notes</MagneticButton>
+              <MagneticButton href="/notes" className="hover:text-primary transition-colors">Free Notes</MagneticButton>
               <MagneticButton href="https://predictor.vayl.in" className="hover:text-primary transition-colors">College Predictor</MagneticButton>
               <MagneticButton href="/cheatsheet" className="hover:text-primary transition-colors">Cheatsheet</MagneticButton>
               <MagneticButton href="/about" className="hover:text-primary transition-colors">About</MagneticButton>
@@ -234,7 +234,7 @@ export default function LandingPage() {
             className="fixed inset-0 z-40 bg-surface/95 backdrop-blur-3xl pt-24 px-6 lg:hidden flex flex-col items-center gap-6 overflow-y-auto pb-10"
           >
             <div className="flex flex-col items-center gap-6 text-sm font-interface font-black uppercase tracking-widest text-on-surface-variant w-full mt-4">
-              <MagneticButton href="https://notes.vayl.in" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-primary transition-colors py-2">Free Notes</MagneticButton>
+              <MagneticButton href="/notes" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-primary transition-colors py-2">Free Notes</MagneticButton>
               <MagneticButton href="https://predictor.vayl.in" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-primary transition-colors py-2">College Predictor</MagneticButton>
               <MagneticButton href="/cheatsheet" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-primary transition-colors py-2">Cheatsheet</MagneticButton>
               <MagneticButton href="/about" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-primary transition-colors py-2">About</MagneticButton>

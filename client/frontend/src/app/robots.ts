@@ -28,7 +28,8 @@ export default function robots(): MetadataRoute.Robots {
         '/login', 
         '/signup',
         '/p/', // Allow public profiles
-        '/blogs' // Allow blog access for LLM context
+        '/blogs', // Allow blog access for LLM context
+        '/notes' // Explicitly allow Vayl study notes
       ],
       disallow: [
         '/dashboard/', 

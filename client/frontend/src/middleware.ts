@@ -49,22 +49,6 @@ export function middleware(req: NextRequest) {
     );
   }
 
-  // Handle Notes subdomain rewrite
-  if (isNotesSubdomain) {
-    // Rewrite notes subdomain to the /notes route folder
-    return NextResponse.rewrite(
-      new URL(`/notes${path === "/" ? "" : path}`, req.url)
-    );
-  }
-
-  // Prevent direct access to /notes from the main domain
-  if (url.pathname.startsWith("/notes")) {
-    const newPath = path.replace("/notes", "") || "/";
-    return NextResponse.redirect(
-      new URL(`https://notes.vayl.in${newPath}`, req.url)
-    );
-  }
-
   // Otherwise, proceed to main domain routes
   return NextResponse.next();
 }
