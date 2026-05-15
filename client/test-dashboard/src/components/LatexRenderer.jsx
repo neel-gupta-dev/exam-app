@@ -1,5 +1,4 @@
 import React from 'react';
-import 'katex/dist/katex.min.css';
 import Latex from 'react-latex-next';
 
 export default function LatexRenderer({ text }) {
@@ -9,14 +8,15 @@ export default function LatexRenderer({ text }) {
   const formatLatex = (str) => {
     if (!str) return '';
 
-    // Step 1: Fix literal double-backslashes or quadruple-backslashes caused by JSON escaping.
-    // This ensures that strings like "\\sqrt" or "\\\\sqrt" both become "\sqrt".
-    let cleaned = str.replace(/\\\\/g, '\\');
+    // Step 1: Aggressive backslash recovery. 
+    // In production, strings might be double, triple, or quadruple escaped.
+    // We convert any sequence of 2+ backslashes into a single one for LaTeX commands.
+    let cleaned = str.replace(/\\{2,}/g, '\\');
     
     // Step 2: Auto-delimit "naked" LaTeX.
-    // If the string contains common LaTeX markers (\, ^, _, {, }) but NO delimiters ($ or $$),
-    // we wrap the whole thing in $ to ensure react-latex-next/KaTeX processes it.
-    if (!cleaned.includes('$') && /[\\][a-zA-Z]+|[\^{}_]/.test(cleaned)) {
+    // We look for ANY backslash, power symbol, underscore, or LaTeX braces.
+    // If no $ delimiters are present, we wrap the whole string.
+    if (!cleaned.includes('$') && (cleaned.includes('\\') || /[\^{}_]/.test(cleaned))) {
       cleaned = `$${cleaned}$`;
     }
 

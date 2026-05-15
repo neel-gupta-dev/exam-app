@@ -7,20 +7,27 @@
   <link rel="apple-touch-icon" href="/vayl-logo.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#6366f1" />
-  
+
   <!-- SEO Metadata -->
   <title>Vayl - Advanced CBT Practice Platform & JEE Mock Test Series</title>
-  <meta name="description" content="Access premium computer-based test (CBT) series, analyze section performance, view rankings on the live student leaderboard, and master competitive exams with Vayl's advanced dashboard." />
-  <meta name="keywords" content="CBT platform, online test series, JEE Mock Tests, IIT prep, student ranking dashboard, test engine, exam analytics, Vayl Tests" />
+  <meta name="description"
+    content="Access premium computer-based test (CBT) series, analyze section performance, view rankings on the live student leaderboard, and master competitive exams with Vayl's advanced dashboard." />
+  <meta name="keywords"
+    content="CBT platform, online test series, JEE Mock Tests, IIT prep, student ranking dashboard, test engine, exam analytics, Vayl Tests" />
   <meta name="author" content="Vayl Education" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
   <link rel="canonical" href="https://tests.vayl.in" />
+
+  <!-- KaTeX for production math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
 
   <!-- Open Graph / Facebook / WhatsApp -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://tests.vayl.in" />
   <meta property="og:title" content="Vayl - Advanced CBT Practice Platform & JEE Mock Test Series" />
-  <meta property="og:description" content="Master your competitive prep. Participate in JEE-level computer-based mock tests, view live leaderboards, and track detailed analytics." />
+  <meta property="og:description"
+    content="Master your competitive prep. Participate in JEE-level computer-based mock tests, view live leaderboards, and track detailed analytics." />
   <meta property="og:image" content="https://tests.vayl.in/vayl-logo.png" />
   <meta property="og:site_name" content="Vayl Mock Tests" />
 
@@ -28,7 +35,8 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:url" content="https://tests.vayl.in" />
   <meta name="twitter:title" content="Vayl - Advanced CBT Practice Platform & JEE Mock Test Series" />
-  <meta name="twitter:description" content="Practice JEE-level online exams, compare your scores on the leaderboard, and study actionable test analytics with Vayl." />
+  <meta name="twitter:description"
+    content="Practice JEE-level online exams, compare your scores on the leaderboard, and study actionable test analytics with Vayl." />
   <meta name="twitter:image" content="https://tests.vayl.in/vayl-logo.png" />
 
   <!-- JSON-LD Structured Data (Schema.org) for Sitelinks Searchbox -->
@@ -163,8 +171,27 @@
 </head>
 
 <body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [
+          ["$", "$"],
+          ["\\(", "\\)"],
+        ],
+        processEscapes: true,
+      },
+      options: {
+        renderActions: {
+          addMenu: [],
+        },
+        skipHtmlTags: ["script", "noscript", "style", "textarea", "pre"],
+      },
+    };
+  </script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js"></script>
 </body>
 
 </html>
