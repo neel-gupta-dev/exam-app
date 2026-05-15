@@ -181,7 +181,7 @@ export default function TestEngineInstructions({ user, test, onReady }) {
         <div className="w-64 bg-white hidden md:flex flex-col items-center pt-8 px-4 font-sans border-l border-slate-300">
           {/* Mock NTA User Icon */}
           <div className="w-24 h-28 mb-4 relative drop-shadow-md overflow-hidden border border-slate-300">
-            <img src="/NewCandidateImage.jpg" alt="Candidate" className="w-full h-full object-cover" />
+            <img src="/images/NewCandidateImage.jpg" alt="Candidate" className="w-full h-full object-cover" />
           </div>
           <h3 className="text-[#3A5C8E] font-bold text-center">{fullName}</h3>
         </div>

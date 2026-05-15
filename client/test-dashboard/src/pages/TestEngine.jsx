@@ -777,29 +777,34 @@ export default function TestEngine({ testId, user, onSubmitted }) {
 
     const icon = config[status] || config['not-visited'];
     
-    // Real exams use native 36x34px sprite resolutions for total clarity.
-    // Enlarge slightly for 'large' instances to maintain spatial weight.
+    // Real exams use native resolutions. We preserve original container dimensions to protect 
+    // the surrounding layout grid, while cropping the interior sprite element tightly.
     const containerStyle = large 
       ? { width: '42px', height: '39px', transform: 'scale(1.15)', transformOrigin: 'center' }
       : { width: '36px', height: '34px' };
 
     return (
       <div className="flex shrink-0 items-center justify-center font-bold select-none overflow-hidden" style={containerStyle}>
+        {/* 
+          CRITICAL INNER CROP (w-[30px] h-[28px]): 
+          Locks the viewport tightly around the icon glyph, masking out all neighboring sprite assets
+          and completely preventing subpixel bleeding on all screen resolutions.
+        */}
         <div 
-          className={`flex h-[34px] w-[36px] items-center justify-center bg-no-repeat text-[13px] font-bold leading-none ${icon.color}`}
+          className={`flex h-[28px] w-[30px] items-center justify-center bg-no-repeat text-[12px] font-bold leading-none ${icon.color}`}
           style={{
             backgroundImage: "url('/images/questions-sprite.png')",
             backgroundPosition: icon.pos,
           }}
         >
-          <span className="pt-[1.5px]">{text}</span>
+          <span className="pt-[1px] pl-[0.5px]">{text}</span>
         </div>
       </div>
     );
   };
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-white font-sans text-black select-none">
+    <div className="flex h-screen w-screen flex-col overflow-hidden bg-white font-opensans text-black select-none">
       {showWarning && (
         <div className="fixed inset-0 z-50 bg-red-600 flex items-center justify-center text-white text-3xl font-bold p-10 text-center animate-pulse">
            Warning! Navigating away is not permitted. Final warning will submit test.
@@ -1073,7 +1078,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
         <div className="hidden w-[300px] shrink-0 flex-col border-l border-[#c7c7c7] bg-[#dff4fc] sm:flex">
           <div className="flex h-[128px] shrink-0 items-start gap-[10px] border-b border-[#c7c7c7] bg-[#f3f7fb] px-[3px] pt-[2px]">
             <div className="flex h-[112px] w-[98px] items-center justify-center border border-[#c7c7c7] bg-white overflow-hidden">
-              <img src="/NewCandidateImage.jpg" alt="Candidate" className="w-full h-full object-cover" />
+              <img src="/images/NewCandidateImage.jpg" alt="Candidate" className="w-full h-full object-cover" />
             </div>
             <div className="min-w-0 pt-[8px] text-[20px] font-normal leading-tight text-[#111]">
               <span className="block truncate">{fullName}</span>
