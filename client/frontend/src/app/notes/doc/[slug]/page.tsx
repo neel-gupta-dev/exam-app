@@ -25,9 +25,34 @@ export default async function PdfViewerPage(
   const params = await props.params;
   const { slug } = params;
 
-  // The PDF file is expected to be in public/notes/pdfs/[slug].pdf
-  // Append toolbar relative params for better built-in viewer experience
-  const pdfUrl = `/notes/pdfs/${slug}.pdf`;
+  // Resolve API URL for server-side fetching
+  const isProd = process.env.NODE_ENV === 'production';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || (isProd ? '' : 'http://localhost:5000');
+
+  let pdfUrl = `/notes/pdfs/${slug}.pdf`; // Default to local filesystem
+  let documentTitle = slug.replace(/-/g, " ");
+
+  // Attempt to fetch Cloudinary link from dynamic database API
+  if (apiUrl) {
+    try {
+      const res = await fetch(`${apiUrl}/api/study-materials/slug/${slug}`, {
+        next: { revalidate: 60 }, // Cache result for 1 minute
+        headers: { 'Accept': 'application/json' }
+      });
+      
+      if (res.ok) {
+        const material = await res.json();
+        if (material && material.cloudinaryUrl) {
+          pdfUrl = material.cloudinaryUrl;
+          documentTitle = material.title;
+        }
+      }
+    } catch (err) {
+      // Silently swallow error, fall back directly to local file resolution
+      console.warn(`[PdfViewer] Backend unreachable for slug "${slug}". Falling back to local file.`);
+    }
+  }
+
   const embedUrl = `${pdfUrl}#toolbar=1&navpanes=0&scrollbar=1&view=FitH`;
 
   return (
@@ -35,7 +60,7 @@ export default async function PdfViewerPage(
       {/* Header bar */}
       <div className="flex items-center justify-between p-3 md:p-4 bg-surface-bright border-b border-surface-variant z-10 shadow-sm shrink-0">
         <h1 className="text-lg md:text-xl font-montserrat font-semibold text-primary capitalize truncate mr-4">
-          {slug.replace(/-/g, " ")}
+          {documentTitle}
         </h1>
         <div className="flex gap-2 md:gap-3 shrink-0">
           <a

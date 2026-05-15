@@ -1,6 +1,8 @@
 import { MetadataRoute } from 'next'
 import { getPdfs } from './notes/lib/getPdfs'
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Dynamic Sitemap Generator for Vayl
  * Automatically generates sitemap.xml for SEO and Adsense crawlers.

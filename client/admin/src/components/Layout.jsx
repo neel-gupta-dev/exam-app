@@ -16,6 +16,7 @@ const NAV = [
   { to: '/cutoffs',   label: '📈 Predictor Cutoffs' },
   { to: '/exams',     label: '📅 Track Exams' },
   { to: '/cheatsheets',label: '📋 Cheatsheets' },
+  { to: '/study-materials', label: '📚 Study Materials' },
   { to: '/sessions',  label: '🔐 Sessions' },
   { to: '/resources', label: '📁 Resources' },
   { to: '/feedback',  label: '💬 Feedback' },

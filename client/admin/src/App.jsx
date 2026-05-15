@@ -16,6 +16,7 @@ import B2BManagement from './pages/B2BManagement';
 import Cheatsheets from './pages/Cheatsheets';
 import CutoffsManagement from './pages/CutoffsManagement';
 import ExamManagement from './pages/ExamManagement';
+import StudyMaterials from './pages/StudyMaterials';
 import Layout from './components/Layout';
 
 import BattleQuestions from './pages/BattleQuestions';
@@ -64,6 +65,7 @@ export default function App() {
             <Route path="/test-telemetry" element={<TestTelemetry />} />
             <Route path="/b2b" element={<B2BManagement />} />
             <Route path="/cheatsheets" element={<Cheatsheets />} />
+            <Route path="/study-materials" element={<StudyMaterials />} />
             <Route path="/cutoffs" element={<CutoffsManagement />} />
             <Route path="/exams" element={<ExamManagement />} />
             <Route path="/battle-questions" element={<BattleQuestions />} />
