@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { User as UserIcon, List, ChevronLeft, ChevronRight, X, Grid } from 'lucide-react';
+import { List, ChevronLeft, ChevronRight, X, Grid } from 'lucide-react';
 import LatexRenderer from '../components/LatexRenderer';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -31,13 +31,14 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   const timerRef = useRef(null);
   const syncRef = useRef(null);
   const submitLock = useRef(false);
+  const doSyncRef = useRef(null);
+  const handleSubmitRef = useRef(null);
   const latestAnswersRef = useRef([]);
   const latestTimeLeftRef = useRef(0);
   const telemetryRef = useRef({});
   const activeVisitRef = useRef(null);
   const answerChangeCountRef = useRef({});
   const idleSecondsRef = useRef({});
-  const idleTimerRef = useRef(null);
   const paletteScrollRef = useRef(null);
   const questionScrollRef = useRef(null);
   const token = user?.token || localStorage.getItem('test_token');
@@ -151,6 +152,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   }, [testId, apiFetch]);
 
   const currentQuestion = questions[currentIdx];
+  const currentQuestionId = currentQuestion?._id;
   const currentAnswer = answers.find((a) => a.questionId === currentQuestion?._id);
 
   const closeActiveVisit = useCallback((leftAtMs = Date.now()) => {
@@ -258,9 +260,9 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   }, [timeLeft]);
 
   useEffect(() => {
-    if (!currentQuestion || submitted) return;
-    openQuestionVisit(currentQuestion._id);
-  }, [currentQuestion?._id, openQuestionVisit, submitted]);
+    if (!currentQuestionId || submitted) return;
+    openQuestionVisit(currentQuestionId);
+  }, [currentQuestionId, openQuestionVisit, submitted]);
 
   useEffect(() => {
     if (questionScrollRef.current) {
@@ -312,38 +314,38 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   useEffect(() => {
     if (loading || submitted) return;
     if (timeLeft <= 0) {
-      handleSubmit(true);
+      handleSubmitRef.current?.(true);
       return;
     }
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timerRef.current);
-          handleSubmit(true);
+          handleSubmitRef.current?.(true);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(timerRef.current);
-  }, [loading, submitted]);
+  }, [loading, submitted, timeLeft]);
 
   // ─── Mark viewed questions as unanswered ───
   useEffect(() => {
-    if (!currentQuestion || submitted) return;
+    if (!currentQuestionId || submitted) return;
     setAnswers(prev => {
-      if (prev.some(a => a.questionId === currentQuestion._id)) return prev;
+      if (prev.some(a => a.questionId === currentQuestionId)) return prev;
       syncDirty.current = true;
-      return [...prev, { questionId: currentQuestion._id, selectedAnswer: [], status: 'unanswered' }];
+      return [...prev, { questionId: currentQuestionId, selectedAnswer: [], status: 'unanswered' }];
     });
-  }, [currentQuestion, submitted]);
+  }, [currentQuestionId, submitted]);
 
   // ─── Auto-sync API ───
   useEffect(() => {
     if (submitted) return;
     syncRef.current = setInterval(() => {
       if (syncDirty.current) {
-        doSync();
+        doSyncRef.current?.();
       }
     }, 10000); // 10 seconds sync for Redis is safe
     return () => clearInterval(syncRef.current);
@@ -357,7 +359,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
         setTabSwitchCount((prev) => {
           const newCount = prev + 1;
           if (newCount >= 4) {
-            handleSubmit();
+            handleSubmitRef.current?.();
           } else {
             setShowWarning(true);
             setTimeout(() => setShowWarning(false), 5000);
@@ -415,6 +417,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
       return false;
     }
   };
+  doSyncRef.current = doSync;
 
   // ─── Idle time detection ───
   useEffect(() => {
@@ -598,6 +601,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     setIsSubmitting(false);
     submitLock.current = false;
   };
+  handleSubmitRef.current = handleSubmit;
 
   const getFilteredQuestions = () => {
     if (!activeSection) return questions;
@@ -626,24 +630,6 @@ export default function TestEngine({ testId, user, onSubmitted }) {
           break;
         }
       }
-    }
-  };
-
-  const scrollPalette = (direction) => {
-    if (paletteScrollRef.current) {
-      paletteScrollRef.current.scrollBy({
-        top: direction === 'up' ? -120 : 120,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  const scrollToTop = () => {
-    if (questionScrollRef.current) {
-      questionScrollRef.current.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
     }
   };
 
@@ -1081,7 +1067,13 @@ export default function TestEngine({ testId, user, onSubmitted }) {
                 Clear Response
               </button>
             </div>
-            <div>
+            <div className="flex items-center">
+              <button
+                onClick={goPrevious}
+                className="mr-3 h-[38px] min-w-[105px] border border-[#bcbcbc] bg-white px-5 text-[14px] sm:text-[15px] text-[#111] font-normal shadow-sm hover:bg-[#fcfcfc] transition-all rounded-[1px]"
+              >
+                Previous
+              </button>
               <button 
                 onClick={handleSaveNext} 
                 className="h-[40px] border border-[#0c5d85] bg-[#1678a9] px-6 text-[15px] sm:text-[16px] font-bold text-white shadow-sm hover:bg-[#126894] active:scale-[0.98] transition-all flex items-center justify-center rounded-[1px] min-w-[120px] sm:min-w-[130px]"

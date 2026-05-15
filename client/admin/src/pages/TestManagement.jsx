@@ -1,14 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../api';
 import LatexRenderer from '../components/LatexRenderer';
-
-/**
- * Loads the MathJax 3 CDN script once globally.
- * Returns a promise that resolves when MathJax is ready.
- */
-
-
-
 
 export default function TestManagement() {
   const [tests, setTests] = useState([]);
@@ -94,8 +86,6 @@ export default function TestManagement() {
       setJsonLoading(false);
     }
   };
-
-  useEffect(() => { fetchAll(); }, []);
 
   useEffect(() => { fetchAll(); }, []);
 

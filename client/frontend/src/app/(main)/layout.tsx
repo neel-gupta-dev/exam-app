@@ -9,7 +9,6 @@ import { AudioProvider } from "@/context/AudioContext";
 import { WebVitals } from "@/components/WebVitals";
 import CookieConsent from "@/components/CookieConsent";
 import GoogleSchema from "@/components/GoogleSchema";
-import Clarity from "@microsoft/clarity";
 import Script from "next/script";
 import "../globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/next";

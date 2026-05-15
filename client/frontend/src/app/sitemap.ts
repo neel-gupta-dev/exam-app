@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://vayl.in';
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in').replace(/\/$/, '');
 
   // Base static routes
   const staticRoutes = [

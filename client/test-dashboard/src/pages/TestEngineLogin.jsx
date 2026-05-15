@@ -1,5 +1,26 @@
 import React from 'react';
 
+// Helper SVG for the exact grid keyboard icon seen in official TCS login.
+const KeyboardGridIcon = () => (
+  <svg width="22" height="13" viewBox="0 0 22 13" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.85 }}>
+    <rect width="22" height="13" rx="1" fill="#666" />
+    <rect x="1.5" y="1.5" width="2.5" height="2" fill="#fff" />
+    <rect x="4.5" y="1.5" width="2.5" height="2" fill="#fff" />
+    <rect x="7.5" y="1.5" width="2.5" height="2" fill="#fff" />
+    <rect x="10.5" y="1.5" width="2.5" height="2" fill="#fff" />
+    <rect x="13.5" y="1.5" width="2.5" height="2" fill="#fff" />
+    <rect x="16.5" y="1.5" width="4" height="2" fill="#fff" />
+    <rect x="1.5" y="4.5" width="3.5" height="2" fill="#fff" />
+    <rect x="5.5" y="4.5" width="2.5" height="2" fill="#fff" />
+    <rect x="8.5" y="4.5" width="2.5" height="2" fill="#fff" />
+    <rect x="11.5" y="4.5" width="2.5" height="2" fill="#fff" />
+    <rect x="14.5" y="4.5" width="6" height="2" fill="#fff" />
+    <rect x="1.5" y="7.5" width="2.5" height="2" fill="#fff" />
+    <rect x="4.5" y="7.5" width="13" height="2" fill="#fff" />
+    <rect x="18" y="7.5" width="2.5" height="2" fill="#fff" />
+  </svg>
+);
+
 export default function TestEngineLogin({ user, test, onSignIn }) {
   // Use name if available, else username
   const candidateName = user?.name || user?.username || user?.email || 'John Smith';
@@ -8,30 +29,6 @@ export default function TestEngineLogin({ user, test, onSignIn }) {
   const primaryBlue = '#337ab7';
   const headerGray = '#666666';
   const highlightYellow = '#ffff00'; // Deeper industrial yellow
-
-  // Helper SVG for the exact grid keyboard icon seen in official TCS login
-  const KeyboardGridIcon = () => (
-    <svg width="22" height="13" viewBox="0 0 22 13" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.85 }}>
-      <rect width="22" height="13" rx="1" fill="#666" />
-      {/* Keys grid row 1 */}
-      <rect x="1.5" y="1.5" width="2.5" height="2" fill="#fff" />
-      <rect x="4.5" y="1.5" width="2.5" height="2" fill="#fff" />
-      <rect x="7.5" y="1.5" width="2.5" height="2" fill="#fff" />
-      <rect x="10.5" y="1.5" width="2.5" height="2" fill="#fff" />
-      <rect x="13.5" y="1.5" width="2.5" height="2" fill="#fff" />
-      <rect x="16.5" y="1.5" width="4" height="2" fill="#fff" />
-      {/* Keys grid row 2 */}
-      <rect x="1.5" y="4.5" width="3.5" height="2" fill="#fff" />
-      <rect x="5.5" y="4.5" width="2.5" height="2" fill="#fff" />
-      <rect x="8.5" y="4.5" width="2.5" height="2" fill="#fff" />
-      <rect x="11.5" y="4.5" width="2.5" height="2" fill="#fff" />
-      <rect x="14.5" y="4.5" width="6" height="2" fill="#fff" />
-      {/* Keys grid row 3 */}
-      <rect x="1.5" y="7.5" width="2.5" height="2" fill="#fff" />
-      <rect x="4.5" y="7.5" width="13" height="2" fill="#fff" /> {/* Spacebar */}
-      <rect x="18" y="7.5" width="2.5" height="2" fill="#fff" />
-    </svg>
-  );
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif', userSelect: 'none' }}>

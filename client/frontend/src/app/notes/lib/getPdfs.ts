@@ -61,7 +61,7 @@ export async function getPdfs(): Promise<PdfDocument[]> {
 
   // ─── 2. LOAD DYNAMIC CLOUDINARY PDFS FROM BACKEND ───────────────────
   const isProd = process.env.NODE_ENV === 'production';
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || (isProd ? '' : 'http://localhost:5000');
+  const apiUrl = (process.env.NEXT_PUBLIC_API_URL || (isProd ? 'https://api.vayl.in' : 'http://localhost:5000')).replace(/\/$/, '');
 
   if (apiUrl) {
     try {

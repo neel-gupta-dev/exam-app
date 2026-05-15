@@ -1,12 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../api';
 import LatexRenderer from '../components/LatexRenderer';
-
-/**
- * Loads the MathJax 3 CDN script once globally.
- * Returns a promise that resolves when MathJax is ready.
- */
-
 
 export default function BattleQuestions() {
   const [questions, setQuestions] = useState([]);
@@ -14,8 +8,6 @@ export default function BattleQuestions() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Form State
-  // Form State
   const [subject, setSubject] = useState('Physics');
   const [questionCode, setQuestionCode] = useState('');
   const [questionText, setQuestionText] = useState('');

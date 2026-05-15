@@ -37,9 +37,11 @@ export default function TestEngineInstructions({ user, test, onReady }) {
   const handleReady = () => {
     try {
       if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(e => console.log('Fullscreen failed:', e));
+        document.documentElement.requestFullscreen().catch(() => {});
       }
-    } catch (err) {}
+    } catch {
+      // Fullscreen is best-effort; browsers can reject it depending on permissions.
+    }
     onReady();
   };
 

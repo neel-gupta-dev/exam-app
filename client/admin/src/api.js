@@ -1,6 +1,12 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || '/';
+const DEFAULT_API_BASE = import.meta.env.DEV ? '/api' : '/';
+const API_BASE = import.meta.env.VITE_API_URL || DEFAULT_API_BASE;
+
+const adminBasePath = () => {
+  const base = import.meta.env.VITE_ADMIN_BASE || import.meta.env.BASE_URL || '/sys-9f3k-ctrl/';
+  return base.endsWith('/') ? base : `${base}/`;
+};
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -10,6 +16,12 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('admin_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
+
+  const baseURL = String(config.baseURL || '').replace(/\/$/, '');
+  if (baseURL.endsWith('/api') && typeof config.url === 'string' && config.url.startsWith('/api/')) {
+    config.url = config.url.slice(4);
+  }
+
   return config;
 });
 
@@ -20,14 +32,13 @@ api.interceptors.response.use(
       localStorage.removeItem('admin_token');
       localStorage.removeItem('admin_user');
       
-      // Determine if we are already on the login page to avoid redirect loops
       const currentPath = window.location.pathname;
-      const isOnLoginPage = currentPath.endsWith('/login') || currentPath.endsWith('/sys-9f3k-ctrl/') || currentPath === '/';
+      const basePath = adminBasePath();
+      const normalizedBasePath = basePath.replace(/\/$/, '');
+      const isOnLoginPage = currentPath.endsWith('/login') || currentPath === basePath || currentPath === normalizedBasePath || currentPath === '/';
       
       if (!isOnLoginPage) {
-        // Redirect to the Admin Panel root relative to the current domain
-        // This ensures we stay within the admin panel context.
-        window.location.href = './'; 
+        window.location.href = basePath;
       }
     }
     return Promise.reject(err);

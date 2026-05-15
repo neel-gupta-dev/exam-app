@@ -9,6 +9,7 @@ import { useAudio } from "@/context/AudioContext";
 import { useHaptics } from "@/hooks/useHaptics";
 import { trackFocusStart, trackFocusComplete } from "@/lib/analytics";
 import { useAuth } from "@/context/AuthContext";
+import { API_BASE_URL } from "@/config/env";
 
 // Motivational messages shown when goal is achieved
 const GOAL_MESSAGES = [
@@ -244,7 +245,8 @@ export default function FocusRoomPage() {
   useEffect(() => {
     const handleUnload = () => {
       if (sessionIdRef.current) {
-        const url = `${process.env.NEXT_PUBLIC_API_URL}/focus/end/${sessionIdRef.current}?token=${localStorage.getItem('kv_token')}`;
+        const token = localStorage.getItem('kv_token') || sessionStorage.getItem('kv_token') || '';
+        const url = `${API_BASE_URL}/focus/end/${sessionIdRef.current}?token=${encodeURIComponent(token)}`;
         const actualDuration = initialTime - timeLeft;
         const data = JSON.stringify({
           status: 'abandoned',

@@ -14,6 +14,28 @@ interface TipTapEditorProps {
   onChange: (html: string) => void;
 }
 
+interface ToolbarButtonProps {
+  onClick: () => void;
+  isActive: boolean;
+  children: React.ReactNode;
+}
+
+function ToolbarButton({ onClick, isActive, children }: ToolbarButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`p-2 rounded-lg transition-colors flex items-center justify-center ${
+        isActive 
+          ? 'bg-primary text-on-primary shadow-sm' 
+          : 'text-on-surface-variant hover:bg-surface-variant/30 hover:text-on-surface'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
 export default function TipTapEditor({ content, onChange }: TipTapEditorProps) {
   const editor = useEditor({
     extensions: [
@@ -60,20 +82,6 @@ export default function TipTapEditor({ content, onChange }: TipTapEditorProps) {
     }
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
   };
-
-  const ToolbarButton = ({ onClick, isActive, children }: any) => (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`p-2 rounded-lg transition-colors flex items-center justify-center ${
-        isActive 
-          ? 'bg-primary text-on-primary shadow-sm' 
-          : 'text-on-surface-variant hover:bg-surface-variant/30 hover:text-on-surface'
-      }`}
-    >
-      {children}
-    </button>
-  );
 
   return (
     <div className="bg-surface-container border border-outline-variant/20 rounded-xl overflow-hidden flex flex-col transition-all focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/30">

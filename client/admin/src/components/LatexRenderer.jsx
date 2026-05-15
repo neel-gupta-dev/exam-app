@@ -1,57 +1,55 @@
-import React from 'react';
-import katex from 'katex';
+import { useEffect, useMemo, useRef } from 'react';
+import renderMathInElement from 'katex/contrib/auto-render';
 import 'katex/dist/katex.min.css';
 
+const formatLatex = (value) => {
+  if (!value) return '';
+
+  let cleaned = String(value).replace(/\\\\(?=[A-Za-z()[\]{}])/g, '\\');
+  const hasMathDelimiters = /\$|\\\(|\\\[/.test(cleaned);
+
+  if (hasMathDelimiters) {
+    return cleaned.replace(/\$\$\$/g, '$$');
+  }
+
+  cleaned = cleaned.replace(/\b(rightarrow|leftarrow|leftrightarrow|implies)\b/g, ' $\\$1$ ');
+  cleaned = cleaned.replace(/\b(le|ge|ne|pm|times|div|approx|propto|infty)\b/g, ' $\\$1$ ');
+  cleaned = cleaned.replace(/\b(alpha|beta|gamma|theta|pi|phi|omega|lambda|mu|sigma|delta|Delta|Omega|Gamma)\b/g, ' $\\$1$ ');
+
+  const envRegex = /(\\begin\{[a-zA-Z*]+\}[\s\S]*?\\end\{[a-zA-Z*]+\})/g;
+  cleaned = cleaned.replace(envRegex, (match) => `$$${match}$$`);
+
+  if (!cleaned.includes('$') && (cleaned.includes('\\') || /[\^{}_]/.test(cleaned))) {
+    cleaned = `$${cleaned}$`;
+  }
+
+  return cleaned.replace(/\$\$\$/g, '$$');
+};
+
 export default function LatexRenderer({ text }) {
-  if (!text) return null;
+  const containerRef = useRef(null);
+  const processedText = useMemo(() => formatLatex(text), [text]);
 
-  // Standard double backslash healing to resolve JSON double-escaping
-  const cleaned = text.replace(/\\\\/g, '\\');
+  useEffect(() => {
+    if (!containerRef.current) return;
 
-  // Split the string into alternating tokens of plain text and mathematical blocks.
-  // Delimiter precedence: $$ (display math) then $ (inline math)
-  const tokens = cleaned.split(/(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g);
+    renderMathInElement(containerRef.current, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '$', right: '$', display: false },
+        { left: '\\(', right: '\\)', display: false },
+        { left: '\\[', right: '\\]', display: true },
+      ],
+      throwOnError: false,
+      trust: false,
+    });
+  }, [processedText]);
 
-  const elements = tokens.map((token, index) => {
-    if (!token) return null;
-
-    // Handle Display Math ($$...$$)
-    if (token.startsWith('$$') && token.endsWith('$$')) {
-      const math = token.slice(2, -2);
-      try {
-        const html = katex.renderToString(math, {
-          displayMode: true,
-          throwOnError: false,
-          trust: true,
-        });
-        return <span key={index} dangerouslySetInnerHTML={{ __html: html }} style={{ display: 'block', margin: '1em 0' }} />;
-      } catch (err) {
-        return <span key={index} style={{ color: '#e74c3c' }}>{token}</span>;
-      }
-    }
-    
-    // Handle Inline Math ($...$)
-    if (token.startsWith('$') && token.endsWith('$')) {
-      const math = token.slice(1, -1);
-      try {
-        const html = katex.renderToString(math, {
-          displayMode: false,
-          throwOnError: false,
-          trust: true,
-        });
-        return <span key={index} dangerouslySetInnerHTML={{ __html: html }} style={{ display: 'inline-block', verticalAlign: 'middle' }} />;
-      } catch (err) {
-        return <span key={index} style={{ color: '#e74c3c' }}>{token}</span>;
-      }
-    }
-
-    // Regular text block
-    return <span key={index}>{token}</span>;
-  });
+  if (!processedText) return null;
 
   return (
-    <span className="latex-rendered-wrapper" style={{ whiteSpace: 'pre-wrap', display: 'inline-block', maxWidth: '100%' }}>
-      {elements}
+    <span ref={containerRef} className="latex-rendered-wrapper">
+      {processedText}
     </span>
   );
 }

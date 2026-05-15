@@ -2,7 +2,6 @@
 
 import React from "react";
 import Link from "next/link";
-import { Montserrat, Poppins, Hanken_Grotesk } from "next/font/google";
 
 /**
  * Privacy Policy Page

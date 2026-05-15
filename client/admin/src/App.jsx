@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, createContext, useContext } from 'react';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
@@ -27,6 +27,12 @@ import UserSegmentation from './pages/UserSegmentation';
 
 export const AuthCtx = createContext(null);
 
+const getAdminBasename = () => {
+  const base = import.meta.env.VITE_ADMIN_BASE || import.meta.env.BASE_URL || '/sys-9f3k-ctrl/';
+  if (base === '/') return '/';
+  return base.replace(/\/$/, '');
+};
+
 function PrivateRoute({ children }) {
   const { user } = useContext(AuthCtx);
   return user ? children : <Navigate to="/" replace />;
@@ -50,7 +56,7 @@ export default function App() {
 
   return (
     <AuthCtx.Provider value={{ user, login, logout }}>
-      <BrowserRouter basename={import.meta.env.VITE_ADMIN_BASE || '/sys-9f3k-ctrl'}>
+      <BrowserRouter basename={getAdminBasename()}>
         <Routes>
           <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
           <Route element={<PrivateRoute><Layout /></PrivateRoute>}>

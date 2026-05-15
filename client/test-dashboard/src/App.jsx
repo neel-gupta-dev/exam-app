@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import LoginPage from './LoginPage';
 import ForcePasswordChange from './ForcePasswordChange';
 import TestEngineApp from './TestEngineApp';
+import LatexRenderer from './components/LatexRenderer';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -24,13 +25,14 @@ export default function App() {
     return 'dashboard';
   });
   const searchInputRef = useRef(null);
-  const [osKey, setOsKey] = useState('⌘');
+  const [osKey] = useState(() => {
+    if (typeof window !== 'undefined' && navigator?.platform) {
+      return navigator.platform.toUpperCase().includes('MAC') ? '⌘' : 'Ctrl';
+    }
+    return 'Ctrl';
+  });
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && navigator && navigator.platform) {
-      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-      setOsKey(isMac ? '⌘' : 'Ctrl');
-    }
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
@@ -68,7 +70,7 @@ export default function App() {
 
   useEffect(() => {
     if (user && (view === 'dashboard' || view === 'test-series')) {
-      setLoadingTests(true);
+      queueMicrotask(() => setLoadingTests(true));
       fetch(`${API_BASE}/tests`, {
         headers: { 'Authorization': `Bearer ${user.token}` }
       })
@@ -97,8 +99,10 @@ export default function App() {
 
   useEffect(() => {
     if (user && (view === 'analytics' || view === 'dashboard' || view === 'test-series' || view === 'leaderboard')) {
-      setLoadingResults(true);
-      setResultsError('');
+      queueMicrotask(() => {
+        setLoadingResults(true);
+        setResultsError('');
+      });
       fetch(`${API_BASE}/assessment/results`, {
         headers: { 'Authorization': `Bearer ${user.token}` }
       })
@@ -125,9 +129,11 @@ export default function App() {
   }, [user, view, resultsRefreshKey]);
   useEffect(() => {
     if (user && view === 'leaderboard' && selectedLeaderboardTest) {
-      setLoadingLeaderboard(true);
-      setLeaderboardError('');
-      fetch(`${API_BASE}/assessment/results/${selectedLeaderboardTest._id}/leaderboard`, {
+      queueMicrotask(() => {
+        setLoadingLeaderboard(true);
+        setLeaderboardError('');
+      });
+      fetch(`${API_BASE}/assessment/${selectedLeaderboardTest._id}/leaderboard`, {
         headers: { 'Authorization': `Bearer ${user.token}` }
       })
         .then(async res => {
@@ -149,8 +155,10 @@ export default function App() {
   }, [user, view, selectedLeaderboardTest]);
   useEffect(() => {
     if (user && view === 'review' && selectedReviewAttemptId) {
-      setLoadingReview(true);
-      setReviewError('');
+      queueMicrotask(() => {
+        setLoadingReview(true);
+        setReviewError('');
+      });
       fetch(`${API_BASE}/assessment/attempts/${selectedReviewAttemptId}/review`, {
         headers: { 'Authorization': `Bearer ${user.token}` }
       })
@@ -260,7 +268,9 @@ export default function App() {
     let currentTest = null;
     try {
       currentTest = JSON.parse(localStorage.getItem('current_test'));
-    } catch { }
+    } catch {
+      currentTest = null;
+    }
 
     return (
       <TestEngineApp
@@ -967,9 +977,9 @@ export default function App() {
                         </div>
 
                         <div className="space-y-4">
-                          <p className={`text-base md:text-lg font-medium leading-relaxed whitespace-pre-wrap ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
-                            {q.content}
-                          </p>
+                          <div className={`text-base md:text-lg font-medium leading-relaxed whitespace-pre-wrap ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                            <LatexRenderer text={q.content} />
+                          </div>
                           {q.imageUrl && (
                             <div className="my-4 p-2 rounded-xl border border-slate-500/10 max-w-xl inline-block bg-white">
                               <img src={q.imageUrl} alt={`Question ${idx + 1}`} className="max-h-64 object-contain rounded-lg" />
@@ -1016,7 +1026,9 @@ export default function App() {
                                         }`}>
                                         {actualLabel}
                                       </span>
-                                      <span className="text-sm md:text-base">{opt.content}</span>
+                                      <span className="text-sm md:text-base">
+                                        <LatexRenderer text={opt.content} />
+                                      </span>
                                     </div>
                                     {opt.imageUrl && (
                                       <div className="sm:ml-2 p-1 bg-white rounded border max-w-xs mt-2 sm:mt-0">
@@ -1068,9 +1080,9 @@ export default function App() {
                               Step-by-Step Solution
                             </h5>
                             {q.solution && (
-                              <p className={`text-sm leading-relaxed whitespace-pre-wrap ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                                {q.solution}
-                              </p>
+                              <div className={`text-sm leading-relaxed whitespace-pre-wrap ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                                <LatexRenderer text={q.solution} />
+                              </div>
                             )}
                             {q.solutionImageUrl && (
                               <div className="mt-3 p-2 rounded-lg bg-white inline-block border border-slate-200 max-w-full">

@@ -1,36 +1,12 @@
 import type { Metadata } from "next";
 import type React from "react";
 import Script from "next/script";
-import { Montserrat, Poppins, Hanken_Grotesk } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Toaster } from "sonner";
-import Clarity from "@microsoft/clarity";
 import ConsoleEasterEgg from "@/components/ConsoleEasterEgg";
 import "./globals.css";
-const projectId = "wawvue9wgw";
-Clarity.init(projectId);
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["700", "800"],
-  variable: "--font-montserrat",
-  display: "swap",
-});
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-poppins",
-  display: "swap",
-});
-
-const hanken = Hanken_Grotesk({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-hanken",
-  display: "swap",
-});
 
 export default function RootLayout({
   children,
@@ -41,15 +17,9 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`h-full antialiased ${montserrat.variable} ${poppins.variable} ${hanken.variable}`}
+      className="h-full antialiased"
     >
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
         <link rel="dns-prefetch" href="https://va.vercel-scripts.com" />
         <link rel="dns-prefetch" href="https://www.clarity.ms" />
