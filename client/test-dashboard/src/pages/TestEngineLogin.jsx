@@ -54,7 +54,7 @@ export default function TestEngineLogin({ user, test, onSignIn }) {
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', minWidth: '0', flex: 1 }}>
           <div>
             <div style={{ fontSize: '13px', fontWeight: 'normal', color: '#ffffff', opacity: 0.95, marginBottom: '2px' }}>System Name :</div>
-            <div style={{ fontSize: '32px', color: highlightYellow, fontWeight: 'bold', lineHeight: '1.1' }}>C001</div>
+            <div style={{ fontSize: '32px', color: highlightYellow, fontWeight: '400', lineHeight: '1.1', fontFamily: 'Arial, sans-serif' }}>C001</div>
           </div>
           <div style={{ fontSize: '12px', color: '#ffffff', opacity: 0.95, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '4px' }}>
             Kindly contact the invigilator if there are any discrepancies in the Name and Photograph displayed on the screen or if the photograph is not yours
@@ -65,7 +65,7 @@ export default function TestEngineLogin({ user, test, onSignIn }) {
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginLeft: '20px', flexShrink: 0 }}>
           <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
             <div style={{ fontSize: '13px', color: '#ffffff', opacity: 0.95, marginBottom: '2px' }}>Candidate Name :</div>
-            <div style={{ fontSize: '28px', color: highlightYellow, fontWeight: 'bold', lineHeight: '1.1', marginBottom: '5px' }}>
+            <div style={{ fontSize: '28px', color: highlightYellow, fontWeight: '400', lineHeight: '1.1', marginBottom: '5px', fontFamily: 'Arial, sans-serif' }}>
               {candidateName}
             </div>
             <div style={{ fontSize: '13px', color: highlightYellow, fontWeight: 'normal' }}>

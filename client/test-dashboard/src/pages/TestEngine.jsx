@@ -25,6 +25,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   const [showQuestionPaper, setShowQuestionPaper] = useState(false);
   const [showGridMobile, setShowGridMobile] = useState(false);
   const [tooltipData, setTooltipData] = useState(null);
+  const [showProfilePopup, setShowProfilePopup] = useState(false);
 
   const syncDirty = useRef(false);
   const timerRef = useRef(null);
@@ -668,7 +669,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   };
 
   const getSectionSummary = (sectionName) => {
-    const sectionQuestions = questions.filter(q => q.section === sectionName);
+    const sectionQuestions = questions.filter(q => (q.section || 'General') === (sectionName || 'General'));
     const summary = { answered: 0, unanswered: 0, markedForReview: 0, answeredAndMarked: 0, notVisited: sectionQuestions.length };
     for (const q of sectionQuestions) {
       const ans = answers.find(a => a.questionId === q._id);
@@ -743,6 +744,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     ? testMeta.sections 
     : [...new Set(questions.map(q => q.section || 'General'))].map(name => ({ name }));
   const summary = getSummary();
+  const sectionSummary = getSectionSummary(activeSection || sections[0]?.name);
   const fullName = user?.name || user?.username || user?.email || 'Student';
   const watermarkName = fullName;
   const watermarkIp = publicIp || 'IP not captured';
@@ -780,7 +782,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     // Real exams use native resolutions. We preserve original container dimensions to protect 
     // the surrounding layout grid, while cropping the interior sprite element tightly.
     const containerStyle = large 
-      ? { width: '42px', height: '39px', transform: 'scale(1.15)', transformOrigin: 'center' }
+      ? { width: '50px', height: '46px', transform: 'scale(1.42)', transformOrigin: 'center' }
       : { width: '36px', height: '34px' };
 
     return (
@@ -815,12 +817,12 @@ export default function TestEngine({ testId, user, onSubmitted }) {
         <div className="min-w-0 truncate text-[15px] font-normal text-[#ffff00]">
           {testMeta?.title || 'Mock Test'}
         </div>
-        <div className="flex h-full items-center text-[15px] font-bold">
-          <button onClick={() => setShowInstructionsPanel(true)} className="flex h-full items-center gap-2 px-4 text-white hover:bg-[#3f3f3f]">
+        <div className="flex h-full items-center text-[14px] font-bold">
+          <button onClick={() => setShowInstructionsPanel(true)} className="flex h-full items-center gap-2 px-4 text-white hover:bg-[#3f3f3f] transition-all">
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4aaee8] text-[18px] italic leading-none text-white shadow-inner">i</span>
             Instructions
           </button>
-          <button onClick={() => setShowQuestionPaper(true)} className="flex h-full items-center gap-2 px-4 text-white hover:bg-[#3f3f3f]">
+          <button onClick={() => setShowQuestionPaper(true)} className="flex h-full items-center gap-2 px-4 text-white hover:bg-[#3f3f3f] transition-all">
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#39b873] text-white shadow-inner">
               <List className="h-4 w-4" />
             </span>
@@ -872,32 +874,33 @@ export default function TestEngine({ testId, user, onSubmitted }) {
               </div>
             </div>
           )}
-          <div className="flex h-[52px] shrink-0 items-center gap-1 border-b border-[#ddd] bg-[#e9e9e9] px-6 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <ChevronLeft className="absolute left-1 h-5 w-5 text-[#b8c0c8]" />
+          <div className="relative flex h-[52px] shrink-0 items-center gap-1 border-b border-[#ddd] bg-[#e9e9e9] px-6 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <ChevronLeft className="absolute left-1 h-5 w-5 text-[#b8c0c8] cursor-pointer" />
             {paperTabs.map((part, idx) => (
               <button
                 key={part.name || idx}
-                className={`relative h-[36px] min-w-[96px] border px-3 text-[15px] shadow-sm ${
+                className={`relative h-[36px] min-w-[96px] border px-3 text-[15px] font-bold shadow-sm transition-all ${
                   idx === 0
                     ? 'border-[#1988be] bg-[#1b86b9] text-white'
-                    : 'border-[#c7c7c7] bg-white text-[#333]'
+                    : 'border-[#c7c7c7] bg-white text-[#0069a7]'
                 }`}
               >
                 <span className="flex items-center justify-center gap-2">
-                  <span className="truncate">{part.name}</span>
-                  <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[16px] italic text-white ${idx === 0 ? 'bg-[#67c8fa]' : 'bg-[#79cafa]'}`}>i</span>
+                  <span className="truncate uppercase font-bold">{part.name}</span>
+                  <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[16px] italic text-white shadow-inner select-none ${idx === 0 ? 'bg-[#67c8fa]' : 'bg-[#79cafa]'}`}>i</span>
                 </span>
-                {idx === 0 && <span className="absolute left-1/2 top-full -translate-x-1/2 border-x-[8px] border-t-[8px] border-x-transparent border-t-[#1b86b9]" />}
+                {idx === 0 && <span className="absolute left-1/2 top-full -translate-x-1/2 border-x-[8px] border-t-[8px] border-x-transparent border-t-[#1b86b9] z-10" />}
               </button>
             ))}
+            <ChevronRight className="absolute right-1 h-5 w-5 text-[#b8c0c8] cursor-pointer" />
           </div>
 
-          <div className="flex h-[38px] shrink-0 items-center justify-between border-b border-[#c7c7c7] bg-white pl-4 pr-3">
-            <span className="text-[15px] font-bold text-[#2b4259]">Sections</span>
-            <span className="text-[18px] font-semibold text-[#111]">Time Left : {formatTime(timeLeft)}</span>
+          <div className="flex h-[34px] shrink-0 items-center justify-between border-b border-[#c7c7c7] bg-white pl-4 pr-[15px]">
+            <span className="text-[14px] font-normal text-[#222]">Sections</span>
+            <span className="text-[16px] font-bold text-[#111]">Time Left : {formatTime(timeLeft)}</span>
           </div>
 
-          <div className="relative flex h-[50px] shrink-0 items-center gap-[6px] border-b border-[#c7c7c7] bg-white px-6 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="relative flex h-[46px] shrink-0 items-center gap-[6px] border-b border-[#c7c7c7] bg-white px-6 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <ChevronLeft className="absolute left-1 h-5 w-5 text-[#b8c0c8]" />
             {sections.map(s => {
               const isActive = activeSection === s.name;
@@ -909,7 +912,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
                     const firstQ = questions.find((q) => q.section === s.name);
                     if (firstQ) setCurrentIdx(questions.indexOf(firstQ));
                   }}
-                  className={`h-[38px] border px-3 text-[15px] font-bold ${
+                  className={`h-[34px] border px-3 text-[14px] font-bold transition-all flex items-center justify-center ${
                     isActive
                       ? 'border-[#1682b5] bg-[#1b86b9] text-white'
                       : 'border-[#c9c9c9] bg-white text-[#0069a7]'
@@ -941,31 +944,39 @@ export default function TestEngine({ testId, user, onSubmitted }) {
             <ChevronRight className="absolute right-1 h-5 w-5 text-[#b8c0c8]" />
           </div>
 
-          <div className="flex h-[38px] shrink-0 items-center justify-between border-b border-[#cfcfcf] bg-white px-4 text-[15px]">
-            <span className="font-bold">Question Type: {questionTypeLabel}</span>
-            <div className="pr-2 text-[15px]">
-              <span>Marks for correct answer: <span className="text-[#0080a5]">{currentQuestion?.positiveMarks ?? testMeta?.defaultPositiveMarks}</span></span>
-              <span className="mx-2 text-[#555]">|</span>
-              <span>Negative Marks: <span className="text-[#b01818]">{currentQuestion?.negativeMarks ?? testMeta?.defaultNegativeMarks}</span></span>
+          <div className="flex h-[36px] shrink-0 items-center justify-between border-b border-[#cfcfcf] bg-white px-4 text-[14px]">
+            <span className="font-bold text-[#111]">Question Type: {questionTypeLabel}</span>
+            <div className="pr-1 font-normal text-[#444]">
+              <span>Marks for correct answer: <span className="font-bold text-[#0080a5]">{currentQuestion?.positiveMarks ?? testMeta?.defaultPositiveMarks}</span></span>
+              <span className="mx-2 text-[#888]">|</span>
+              <span>Negative Marks: <span className="font-bold text-[#b01818]">{currentQuestion?.negativeMarks ?? testMeta?.defaultNegativeMarks}</span></span>
+            </div>
+          </div>
+
+          <div className="flex h-[38px] shrink-0 items-center justify-between border-b border-[#cfcfcf] bg-white px-4">
+            <h3 className="text-[17px] font-bold text-[#111]">Question No. {currentLocalIdx + 1}</h3>
+            <div className="flex items-center justify-center h-[26px] w-[26px] rounded-full bg-[#1b86b9] text-white cursor-pointer shadow-inner hover:bg-[#156c95] active:scale-95 transition-all select-none">
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
             </div>
           </div>
 
           <div className="relative min-h-0 flex-1 border-b border-[#cfcfcf] bg-white">
             <div ref={questionScrollRef} className="w-full h-full overflow-y-auto relative">
-              <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-[0.045]">
-                <div className="grid h-full w-full grid-cols-3 gap-x-24 gap-y-16 -rotate-12 place-items-center text-[18px] font-bold uppercase tracking-wide text-[#111]">
-                  {Array.from({ length: 12 }).map((_, idx) => (
-                    <span key={idx} className="flex max-w-[240px] flex-col items-center text-center leading-tight">
-                      <span className="max-w-full truncate">{watermarkName}</span>
-                      <span className="max-w-full truncate text-[14px]">{watermarkIp}</span>
-                    </span>
-                  ))}
+              <div className="relative min-h-full w-full">
+                <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-[0.045]">
+                  <div className="grid w-full grid-cols-4 gap-x-12 gap-y-20 pt-12 -rotate-12 place-items-center text-[17px] font-bold uppercase tracking-wide text-[#111]">
+                    {Array.from({ length: 200 }).map((_, idx) => (
+                      <span key={idx} className="flex max-w-[200px] flex-col items-center text-center leading-tight">
+                        <span className="max-w-full truncate">{watermarkName}</span>
+                        <span className="max-w-full truncate text-[13px]">{watermarkIp}</span>
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div className="relative z-10">
-              <div className="border-b border-[#ddd] px-[6px] py-[7px]">
-                <h3 className="text-[18px] font-bold">Question No. {currentLocalIdx + 1}</h3>
-              </div>
+                <div className="relative z-10">
+              {/* Fixed Header Extract */}
               <div className="px-[18px] py-[14px] text-[18px] leading-[1.42]">
                 <div className="mb-7 min-h-[34px] whitespace-pre-wrap text-black">
                   <LatexRenderer text={currentQuestion?.content} />
@@ -988,15 +999,23 @@ export default function TestEngine({ testId, user, onSubmitted }) {
                         
                         {isMultiple ? (
                           // Custom Square Button for Multi-Correct (Matches Image 2)
-                          <div className="h-[16px] w-[16px] rounded-[3px] border border-[#767676] bg-white flex items-center justify-center peer-checked:bg-[#0075ff] peer-checked:border-[#0075ff] transition-all shadow-sm">
-                            <svg className="w-[11px] h-[11px] text-white hidden peer-checked:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round">
-                              <polyline points="20 6 9 17 4 12" />
-                            </svg>
+                          <div className={`h-[16px] w-[16px] rounded-[3px] border flex items-center justify-center transition-all shadow-sm ${
+                            isSelected ? 'bg-[#0075ff] border-[#0075ff]' : 'border-[#767676] bg-white'
+                          }`}>
+                            {isSelected && (
+                              <svg className="w-[11px] h-[11px] text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            )}
                           </div>
                         ) : (
                           // Custom Round Button for Single Correct (Matches Image 1)
-                          <div className="h-[16px] w-[16px] rounded-full border border-[#767676] bg-white flex items-center justify-center peer-checked:border-[#0075ff] transition-all shadow-sm">
-                            <div className="h-[8px] w-[8px] rounded-full bg-[#0075ff] hidden peer-checked:block" />
+                          <div className={`h-[16px] w-[16px] rounded-full border flex items-center justify-center transition-all shadow-sm ${
+                            isSelected ? 'border-[#0075ff] bg-white' : 'border-[#767676] bg-white'
+                          }`}>
+                            {isSelected && (
+                              <div className="h-[8px] w-[8px] rounded-full bg-[#0075ff]" />
+                            )}
                           </div>
                         )}
                       </div>
@@ -1043,32 +1062,30 @@ export default function TestEngine({ testId, user, onSubmitted }) {
                 )}
               </div>
               </div>
+              </div>
             </div>
-
-            {/* Floating Up Icon Anchor (Stationary bottom-right scroll engine) */}
-            <button 
-              onClick={scrollToTop}
-              className="absolute bottom-[15px] right-[22px] z-30 hover:brightness-95 active:scale-[0.93] transition-all select-none cursor-pointer shadow-sm bg-white rounded-full"
-              title="Back to top"
-            >
-              <img src="/images/Up.png" alt="Up" className="w-[28px] h-[28px] object-contain opacity-95 hover:opacity-100 block" />
-            </button>
           </div>
 
-          <div className="flex h-auto sm:h-[58px] shrink-0 flex-col sm:flex-row items-stretch sm:items-center justify-between border-b border-[#c7c7c7] bg-white p-2 sm:px-[10px] gap-2 sm:gap-0">
-            <div className="flex flex-1 gap-2 sm:gap-[18px]">
-              <button onClick={handleMarkForReview} className="h-[42px] sm:h-[46px] flex-1 sm:min-w-[220px] border border-[#c7c7c7] bg-white px-2 sm:px-5 text-[14px] sm:text-[17px] text-[#333] hover:bg-[#f5f5f5] flex items-center justify-center text-center truncate">
-                Mark Review & Next
+          <div className="flex h-auto min-h-[56px] shrink-0 items-center justify-between border-t border-[#c7c7c7] bg-white px-3 py-2 sm:py-0 gap-3 flex-wrap sm:flex-nowrap">
+            <div className="flex items-center gap-2 sm:gap-[12px]">
+              <button 
+                onClick={handleMarkForReview} 
+                className="h-[38px] border border-[#bcbcbc] bg-white px-4 text-[14px] sm:text-[15px] text-[#111] font-normal shadow-sm hover:bg-[#fcfcfc] transition-all flex items-center justify-center rounded-[1px] min-w-[150px] sm:min-w-[180px]"
+              >
+                Mark for Review & Next
               </button>
-              <button onClick={handleClearResponse} className="h-[42px] sm:h-[46px] flex-1 sm:min-w-[165px] border border-[#c7c7c7] bg-white px-2 sm:px-5 text-[14px] sm:text-[17px] text-[#333] hover:bg-[#f5f5f5] flex items-center justify-center text-center">
-                Clear
+              <button 
+                onClick={handleClearResponse} 
+                className="h-[38px] border border-[#bcbcbc] bg-white px-4 text-[14px] sm:text-[15px] text-[#111] font-normal shadow-sm hover:bg-[#fcfcfc] transition-all flex items-center justify-center rounded-[1px] min-w-[120px] sm:min-w-[140px]"
+              >
+                Clear Response
               </button>
             </div>
-            <div className="flex flex-1 gap-2 sm:gap-[16px]">
-              <button onClick={goPrevious} className="h-[42px] sm:h-[46px] flex-1 sm:min-w-[112px] border border-[#c7c7c7] bg-white px-2 sm:px-5 text-[14px] sm:text-[17px] text-[#333] hover:bg-[#f5f5f5] flex items-center justify-center text-center">
-                Previous
-              </button>
-              <button onClick={handleSaveNext} className="h-[42px] sm:h-[46px] flex-1 sm:min-w-[140px] border border-[#0e6d9b] bg-[#1b86b9] px-2 sm:px-6 text-[14px] sm:text-[17px] font-bold text-white hover:bg-[#126f99] flex items-center justify-center text-center">
+            <div>
+              <button 
+                onClick={handleSaveNext} 
+                className="h-[40px] border border-[#0c5d85] bg-[#1678a9] px-6 text-[15px] sm:text-[16px] font-bold text-white shadow-sm hover:bg-[#126894] active:scale-[0.98] transition-all flex items-center justify-center rounded-[1px] min-w-[120px] sm:min-w-[130px]"
+              >
                 Save & Next
               </button>
             </div>
@@ -1076,8 +1093,38 @@ export default function TestEngine({ testId, user, onSubmitted }) {
         </div>
 
         <div className="hidden w-[300px] shrink-0 flex-col border-l border-[#c7c7c7] bg-[#dff4fc] sm:flex">
-          <div className="flex h-[128px] shrink-0 items-start gap-[10px] border-b border-[#c7c7c7] bg-[#f3f7fb] px-[3px] pt-[2px]">
-            <div className="flex h-[112px] w-[98px] items-center justify-center border border-[#c7c7c7] bg-white overflow-hidden">
+          <div className="relative flex h-[128px] shrink-0 items-start gap-[10px] border-b border-[#c7c7c7] bg-[#f3f7fb] px-[3px] pt-[2px]">
+            {showProfilePopup && (
+              <div className="absolute right-[110px] top-[10px] z-[100] w-[265px] border border-black bg-white p-5 shadow-2xl animate-in fade-in slide-in-from-right-2 duration-200">
+                <button 
+                  onClick={() => setShowProfilePopup(false)}
+                  className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center text-[#555] hover:bg-slate-100 hover:text-black transition-all"
+                >
+                  <X className="h-5 w-5" strokeWidth={1.5} />
+                </button>
+                
+                <div className="flex flex-col gap-5 pt-3">
+                  <div className="text-[18px] leading-none text-black">
+                    <span className="font-normal">{user?.authMethod === 'b2b' ? 'Roll Number' : 'Vault ID'} : </span>
+                    <span className="font-bold">{user?.authMethod === 'b2b' ? (user?.username || 'N/A') : (user?.vaultId || 'N/A')}</span>
+                  </div>
+                  <div className="text-[18px] leading-none text-black">
+                    <span className="font-normal">Name : </span>
+                    <span className="font-bold uppercase">{fullName}</span>
+                  </div>
+                </div>
+                
+                {/* Arrow Pointer Triangle */}
+                <div className="absolute -right-[11px] top-[40px] h-0 w-0 border-y-[10px] border-y-transparent border-l-[11px] border-l-black">
+                  <div className="absolute -left-[10.5px] -top-[10px] h-0 w-0 border-y-[10px] border-y-transparent border-l-[11px] border-l-white"></div>
+                </div>
+              </div>
+            )}
+
+            <div 
+              onClick={() => setShowProfilePopup(!showProfilePopup)}
+              className="flex h-[112px] w-[98px] shrink-0 cursor-pointer items-center justify-center border border-[#c7c7c7] bg-white overflow-hidden hover:opacity-95 active:scale-[0.98] transition-all"
+            >
               <img src="/images/NewCandidateImage.jpg" alt="Candidate" className="w-full h-full object-cover" />
             </div>
             <div className="min-w-0 pt-[8px] text-[20px] font-normal leading-tight text-[#111]">
@@ -1088,24 +1135,24 @@ export default function TestEngine({ testId, user, onSubmitted }) {
           <div className="shrink-0 border-b border-[#c7c7c7] bg-white px-[12px] py-[10px]">
             <div className="grid grid-cols-2 gap-x-[12px] gap-y-[13px] text-[14px] leading-tight text-[#111]">
               <div className="flex items-center gap-[8px]">
-                <TcsIcon status="answered" text={summary.answered} />
+                <TcsIcon status="answered" text={sectionSummary.answered} />
                 <span>Answered</span>
               </div>
               <div className="flex items-center gap-[8px]">
-                <TcsIcon status="unanswered" text={summary.unanswered} />
+                <TcsIcon status="unanswered" text={sectionSummary.unanswered} />
                 <span>Not<br/>Answered</span>
               </div>
               <div className="flex items-center gap-[8px]">
-                <TcsIcon status="not-visited" text={summary.notVisited} />
+                <TcsIcon status="not-visited" text={sectionSummary.notVisited} />
                 <span>Not<br/>Visited</span>
               </div>
               <div className="flex items-center gap-[8px]">
-                <TcsIcon status="marked-for-review" text={summary.markedForReview} />
+                <TcsIcon status="marked-for-review" text={sectionSummary.markedForReview} />
                 <span>Marked<br/>for Review</span>
               </div>
             </div>
             <div className="mt-[12px] flex items-start gap-[8px] text-[14px] leading-tight text-[#111]">
-              <TcsIcon status="answered-and-marked" text={summary.answeredAndMarked} />
+              <TcsIcon status="answered-and-marked" text={sectionSummary.answeredAndMarked} />
               <span>Answered & Marked for Review (will also be evaluated)</span>
             </div>
           </div>
@@ -1114,12 +1161,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
             {activeSection || 'Subject'}
           </div>
 
-          {/* Top Scroll Engine Button */}
-          <div className="flex justify-center bg-[#dff4fc] py-[2px] z-10">
-            <button onClick={() => scrollPalette('up')} className="hover:brightness-95 transition-all flex items-center justify-center h-[24px] w-full cursor-pointer select-none">
-              <img src="/images/Up.png" alt="Scroll Up" className="h-[20px] w-[20px] object-contain" />
-            </button>
-          </div>
+
 
           {/* Palette Scrollable Area (Hiding scrollbar for real TCS look) */}
           <div 
@@ -1137,7 +1179,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
                   <button
                     key={q._id}
                     onClick={() => setCurrentIdx(globalIdx)}
-                    className={`${globalIdx === currentIdx ? 'ring-2 ring-[#1b86b9] ring-offset-1' : ''} focus:outline-none transition-all`}
+                    className="focus:outline-none transition-all select-none cursor-pointer"
                   >
                     <TcsIcon status={status} text={idx + 1} large />
                   </button>
@@ -1146,15 +1188,13 @@ export default function TestEngine({ testId, user, onSubmitted }) {
             </div>
           </div>
 
-          {/* Bottom Scroll Engine Button */}
-          <div className="flex justify-center bg-[#dff4fc] py-[2px] border-b border-[#c7c7c7] z-10">
-            <button onClick={() => scrollPalette('down')} className="hover:brightness-95 transition-all flex items-center justify-center h-[24px] w-full cursor-pointer select-none">
-              <img src="/images/Down.png" alt="Scroll Down" className="h-[20px] w-[20px] object-contain" />
-            </button>
-          </div>
 
-          <div className="flex h-[58px] shrink-0 items-center justify-center border-t border-[#c7c7c7] bg-[#dff4fc]">
-            <button onClick={() => setShowSubmitConfirm(true)} className="h-[44px] min-w-[108px] rounded-[2px] bg-[#66afd0] px-6 text-[16px] font-bold text-white hover:bg-[#4d9bbd]">
+
+          <div className="flex h-[58px] shrink-0 items-center justify-end border-t border-[#c7c7c7] bg-[#dff4fc] pr-3">
+            <button 
+              onClick={() => setShowSubmitConfirm(true)} 
+              className="h-[38px] min-w-[105px] rounded-[2px] border border-[#539ec4] bg-[#66afd0] px-6 text-[16px] font-bold text-white hover:bg-[#55a1c8] active:scale-[0.97] transition-all flex items-center justify-center"
+            >
               Submit
             </button>
           </div>
@@ -1189,19 +1229,19 @@ export default function TestEngine({ testId, user, onSubmitted }) {
             <div className="shrink-0 border-b border-[#c7c7c7] bg-white px-4 py-4">
               <div className="grid grid-cols-2 gap-x-4 gap-y-4 text-[14px] leading-tight text-[#111]">
                 <div className="flex items-center gap-2">
-                  <TcsIcon status="answered" text={summary.answered} />
+                  <TcsIcon status="answered" text={sectionSummary.answered} />
                   <span>Answered</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <TcsIcon status="unanswered" text={summary.unanswered} />
+                  <TcsIcon status="unanswered" text={sectionSummary.unanswered} />
                   <span>Not Answered</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <TcsIcon status="not-visited" text={summary.notVisited} />
+                  <TcsIcon status="not-visited" text={sectionSummary.notVisited} />
                   <span>Not Visited</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <TcsIcon status="marked-for-review" text={summary.markedForReview} />
+                  <TcsIcon status="marked-for-review" text={sectionSummary.markedForReview} />
                   <span>Marked for Review</span>
                 </div>
               </div>
