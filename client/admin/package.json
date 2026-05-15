@@ -15,7 +15,10 @@
   "dependencies": {
     "@vitejs/plugin-react": "^6.0.1",
     "axios": "^1.14.0",
+    "katex": "^0.16.46",
     "lucide-react": "^1.14.0",
+    "mathjax-full": "^3.2.1",
+    "react-latex-next": "^3.0.0",
     "react-router-dom": "^7.14.0"
   }
 }

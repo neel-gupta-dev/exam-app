@@ -1,45 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../api';
+import LatexRenderer from '../components/LatexRenderer';
 
 /**
  * Loads the MathJax 3 CDN script once globally.
  * Returns a promise that resolves when MathJax is ready.
  */
-let mathjaxPromise = null;
-function ensureMathJax() {
-  if (mathjaxPromise) return mathjaxPromise;
-  mathjaxPromise = new Promise((resolve) => {
-    if (window.MathJax && window.MathJax.typesetPromise) {
-      resolve();
-      return;
-    }
-    window.MathJax = {
-      tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']],
-      },
-      startup: { ready: () => { window.MathJax.startup.defaultReady(); resolve(); } },
-    };
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js';
-    script.async = true;
-    document.head.appendChild(script);
-  });
-  return mathjaxPromise;
-}
 
-/** Hook: typeset a container element whenever deps change */
-function useTypeset(ref, deps) {
-  useEffect(() => {
-    if (!ref.current) return;
-    ensureMathJax().then(() => {
-      if (window.MathJax?.typesetPromise) {
-        window.MathJax.typesetClear?.([ref.current]);
-        window.MathJax.typesetPromise([ref.current]).catch(() => {});
-      }
-    });
-  }, deps);
-}
 
 export default function BattleQuestions() {
   const [questions, setQuestions] = useState([]);
@@ -65,11 +32,7 @@ export default function BattleQuestions() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  const previewRef = useRef(null);
-  const listRef = useRef(null);
 
-  useTypeset(previewRef, [questionText, options, subject, difficulty]);
-  useTypeset(listRef, [questions]);
 
   useEffect(() => { fetchQuestions(); }, []);
 
@@ -320,7 +283,7 @@ export default function BattleQuestions() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
           {/* Live preview */}
-          <div className="card" style={{ border: '2px dashed var(--accent)' }} ref={previewRef}>
+          <div className="card" style={{ border: '2px dashed var(--accent)' }}>
             <div className="card-header" style={{ background: '#fff', color: 'var(--accent)' }}>Live Preview</div>
             <div className="card-body">
               <div style={{ marginBottom: 16 }}>
@@ -332,7 +295,7 @@ export default function BattleQuestions() {
                 </span>
               </div>
               <div style={{ fontSize: 15, marginBottom: 16 }}>
-                {questionText || 'Your question will appear here...'}
+                <LatexRenderer text={questionText || 'Your question will appear here...'} />
               </div>
               {type === 'integer' ? (
                 <div style={{ padding: 10, border: '1px solid var(--success)', borderRadius: 3, background: '#f0fdf4' }}>
@@ -349,7 +312,9 @@ export default function BattleQuestions() {
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         <span style={{ fontWeight: 'bold', color: 'var(--text-muted)' }}>{String.fromCharCode(65 + i)}</span>
-                        <span>{opt.text || `Option ${String.fromCharCode(65 + i)}`}</span>
+                        <span>
+                          <LatexRenderer text={opt.text || `Option ${String.fromCharCode(65 + i)}`} />
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -386,7 +351,7 @@ export default function BattleQuestions() {
                           <span className="badge badge-gray">{subjQuestions.length}</span>
                         </div>
                         
-                        <div ref={listRef} style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingLeft: 8 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingLeft: 8 }}>
                           {subjQuestions.map((q) => (
                             <div key={q._id} style={{ border: '1px solid var(--border)', borderRadius: 3, padding: 12, position: 'relative', background: '#fff' }}>
                               <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 8 }}>
@@ -409,8 +374,8 @@ export default function BattleQuestions() {
                                 <span className="badge badge-gray" style={{ marginRight: 4 }}>{q.difficulty}</span>
                                 <span className="badge badge-purple">{q.type === 'integer' ? 'Integer' : (q.type === 'multi' ? 'Multi' : 'Single')}</span>
                               </div>
-                              <div style={{ fontWeight: 500, marginBottom: 12, paddingRight: 60 }}>
-                                {q.questionText}
+                              <div style={{ fontWeight: 500, marginBottom: 12, paddingRight: 60, display: 'block' }}>
+                                <LatexRenderer text={q.questionText} />
                               </div>
                               {q.type === 'integer' ? (
                                 <div style={{ fontSize: '12px', color: 'var(--success)', fontWeight: 'bold' }}>

@@ -1,5 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../api';
+import LatexRenderer from '../components/LatexRenderer';
+
+/**
+ * Loads the MathJax 3 CDN script once globally.
+ * Returns a promise that resolves when MathJax is ready.
+ */
+
+
+
 
 export default function TestManagement() {
   const [tests, setTests] = useState([]);
@@ -12,6 +21,7 @@ export default function TestManagement() {
   const [questions, setQuestions] = useState([]);
   const [showQuestionForm, setShowQuestionForm] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(null);
+  
   // PDF Import state
   const [showPdfImport, setShowPdfImport] = useState(false);
   const [pdfFile, setPdfFile] = useState(null);
@@ -84,6 +94,8 @@ export default function TestManagement() {
       setJsonLoading(false);
     }
   };
+
+  useEffect(() => { fetchAll(); }, []);
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -602,12 +614,15 @@ export default function TestManagement() {
                           {q._meta?.needsAnswer && <span className="badge badge-warning">❓ No Ans</span>}
                           {q.solution && <span className="badge" style={{ background: 'rgba(46,204,113,0.2)', color: '#2ecc71' }}>💡 Sol</span>}
                         </div>
-                        <p style={{ margin: '4px 0', whiteSpace: 'pre-wrap', opacity: 0.9 }}>{q.content?.substring(0, 200)}{q.content?.length > 200 ? '...' : ''}</p>
+                        <p style={{ margin: '4px 0', whiteSpace: 'pre-wrap', opacity: 0.9 }}>
+                          <LatexRenderer text={q.content?.substring(0, 200)} />
+                          {q.content?.length > 200 ? '...' : ''}
+                        </p>
                         {q.options?.length > 0 && (
                           <div style={{ marginTop: 4, opacity: 0.7 }}>
                             {q.options.map(o => (
-                              <span key={o.label} style={{ marginRight: 12, color: q.correctAnswer?.includes(o.label) ? '#2ecc71' : 'inherit' }}>
-                                {q.correctAnswer?.includes(o.label) ? '✅' : '○'} {o.label}. {o.content?.substring(0, 60)}
+                              <span key={o.label} style={{ marginRight: 12, color: q.correctAnswer?.includes(o.label) ? '#2ecc71' : 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                {q.correctAnswer?.includes(o.label) ? '✅' : '○'} {o.label}. <LatexRenderer text={o.content?.substring(0, 60)} />
                               </span>
                             ))}
                           </div>
@@ -662,12 +677,14 @@ export default function TestManagement() {
                     <span className="badge">{q.section}</span>
                     <span className="badge">{q.type}</span>
                   </div>
-                  <p style={{ margin: '4px 0', whiteSpace: 'pre-wrap' }}>{q.content}</p>
+                  <div style={{ margin: '4px 0', display: 'block' }}>
+                    <LatexRenderer text={q.content} />
+                  </div>
                   {q.options?.length > 0 && (
                     <div style={{ marginTop: 4, fontSize: 13, opacity: 0.8 }}>
                       {q.options.map(o => (
-                        <span key={o.label} style={{ marginRight: 12, color: q.correctAnswer?.includes(o.label) ? '#2ecc71' : 'inherit' }}>
-                          {q.correctAnswer?.includes(o.label) ? '✅' : '○'} {o.label}. {o.content}
+                        <span key={o.label} style={{ marginRight: 12, color: q.correctAnswer?.includes(o.label) ? '#2ecc71' : 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          {q.correctAnswer?.includes(o.label) ? '✅' : '○'} {o.label}. <LatexRenderer text={o.content} />
                         </span>
                       ))}
                     </div>

@@ -1,5 +1,32 @@
 import React, { useState } from 'react';
 
+const TcsIcon = ({ status, text }) => {
+  // Standard TCS palette icon coordinate configuration from questions-sprite.png
+  const config = {
+    'answered': { pos: '-7px -56px', color: 'text-white' },
+    'unanswered': { pos: '-42px -56px', color: 'text-white' },
+    'marked-for-review': { pos: '-75px -56px', color: 'text-white' },
+    'not-visited': { pos: '-107px -56px', color: 'text-[#333]' },
+    'answered-and-marked': { pos: '-172px -56px', color: 'text-white' },
+  };
+
+  const icon = config[status] || config['not-visited'];
+
+  return (
+    <div className="flex shrink-0 items-center justify-center font-bold select-none overflow-hidden mr-4" style={{ width: '36px', height: '34px' }}>
+      <div 
+        className={`flex h-[28px] w-[30px] items-center justify-center bg-no-repeat text-[12px] font-bold leading-none ${icon.color}`}
+        style={{
+          backgroundImage: "url('/images/questions-sprite.png')",
+          backgroundPosition: icon.pos,
+        }}
+      >
+        <span className="pt-[1px] pl-[0.5px]">{text}</span>
+      </div>
+    </div>
+  );
+};
+
 export default function TestEngineInstructions({ user, test, onReady }) {
   const [page, setPage] = useState(1);
   const [isChecked, setIsChecked] = useState(false);
@@ -65,35 +92,23 @@ export default function TestEngineInstructions({ user, test, onReady }) {
                     
                     <ul className="list-none pl-2 mt-6 space-y-5 font-sans">
                       <li className="flex items-center">
-                        <div className="w-8 h-8 flex items-center justify-center bg-white border-2 border-slate-400 bg-gradient-to-b from-white to-slate-200 rounded-sm font-bold shadow-sm mr-4 flex-shrink-0">1</div>
+                        <TcsIcon status="not-visited" text="1" />
                         <span>You have not visited the question yet.</span>
                       </li>
                       <li className="flex items-center">
-                        <div className="relative w-8 h-8 rounded-full rounded-b-none rounded-t-full bg-gradient-to-b from-[#EA4335] to-[#C1272D] text-white flex items-center justify-center font-bold shadow-sm mr-4 flex-shrink-0" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 100%, 0% 100%, 0% 25%)', borderRadius: '4px' }}>
-                           <span className="relative z-10 text-[14px]">2</span>
-                           {/* NTA Red shield shape approximation */}
-                           <div className="absolute inset-0 bg-[#E33B31]" style={{ clipPath: 'polygon(0% 0%, 100% 0%, 100% 75%, 50% 100%, 0% 75%)' }}></div>
-                           <span className="absolute z-20 top-1 text-white text-[13px]">2</span>
-                        </div>
+                        <TcsIcon status="unanswered" text="2" />
                         <span>You have not answered the question.</span>
                       </li>
                       <li className="flex items-center">
-                        <div className="relative w-8 h-8 rounded-full rounded-b-none rounded-t-full bg-gradient-to-b from-[#34A853] to-[#257A3E] text-white flex items-center justify-center font-bold shadow-sm mr-4 flex-shrink-0" style={{ clipPath: 'polygon(0% 0%, 100% 0%, 100% 75%, 50% 100%, 0% 75%)' }}>
-                          <span className="relative z-10 text-[14px]">3</span>
-                        </div>
+                        <TcsIcon status="answered" text="3" />
                         <span>You have answered the question.</span>
                       </li>
                       <li className="flex items-center">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-b from-[#9A62DB] to-[#7116C7] text-white flex items-center justify-center font-bold shadow-sm mr-4 flex-shrink-0">4</div>
+                        <TcsIcon status="marked-for-review" text="4" />
                         <span>You have NOT answered the question, but have marked the question for review.</span>
                       </li>
                       <li className="flex items-center">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-b from-[#9A62DB] to-[#7116C7] text-white flex items-center justify-center font-bold shadow-sm mr-4 flex-shrink-0 relative">
-                          5
-                          <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-[#34A853] rounded-full border border-white flex items-center justify-center">
-                            <span className="text-white text-[8px] font-bold">✓</span>
-                          </div>
-                        </div>
+                        <TcsIcon status="answered-and-marked" text="5" />
                         <span>The question(s) "Answered and Marked for Review" will be considered for evaluation.</span>
                       </li>
                     </ul>
