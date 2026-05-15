@@ -8,10 +8,11 @@ export default function LatexRenderer({ text }) {
   const formatLatex = (str) => {
     if (!str) return '';
 
-    // Step 1: Aggressive backslash recovery. 
+    // Step 1: Aggressive backslash and newline recovery. 
     // In production, strings might be double, triple, or quadruple escaped.
     // We convert any sequence of 2+ backslashes into a single one for LaTeX commands.
     let cleaned = str.replace(/\\{2,}/g, '\\');
+    cleaned = cleaned.replace(/\\n/g, '\n'); // Fixes visible '\n' in text
 
     // Step 2: Auto-delimit "naked" LaTeX or Chemistry commands.
     // We look for ANY backslash (including \ce), power symbol, underscore, or LaTeX braces.
