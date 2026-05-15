@@ -667,16 +667,16 @@ export default function App() {
             )}
           </div>
         ) : (view === 'test-series' || view === 'pyp') ? (
-          <>
+          <div className="max-w-5xl mx-auto space-y-8 lg:space-y-10 animate-in fade-in duration-500">
             {/* Header Section */}
-            <header className="mb-12">
-              <h2 className={`text-4xl font-extrabold font-headline tracking-tight ${isDark ? 'text-on-background' : 'text-slate-900'}`}>{view === 'pyp' ? 'Previous Year Papers' : 'Test Series'}</h2>
-              <p className={`mt-2 text-lg font-medium opacity-70 ${isDark ? 'text-on-surface-variant' : 'text-slate-600'}`}>{view === 'pyp' ? 'Practice with real past exam papers.' : 'Level up your exam readiness.'}</p>
+            <header className="mb-6 lg:mb-10">
+              <h2 className={`text-3xl md:text-4xl font-extrabold font-headline tracking-tight ${isDark ? 'text-on-background' : 'text-slate-900'}`}>{view === 'pyp' ? 'Previous Year Papers' : 'Test Series'}</h2>
+              <p className={`mt-2 text-base md:text-lg font-medium opacity-70 ${isDark ? 'text-on-surface-variant' : 'text-slate-600'}`}>{view === 'pyp' ? 'Practice with real past exam papers.' : 'Level up your exam readiness.'}</p>
             </header>
 
             {/* Category Tabs */}
             {view === 'test-series' && (
-              <div className="flex items-center space-x-1 mb-10 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="flex items-center space-x-1 mb-6 lg:mb-8 overflow-x-auto pb-2 scrollbar-hide">
                 {[
                   { id: 'full', label: 'Full Tests' },
                   { id: 'part', label: 'Part Tests' },
@@ -684,7 +684,7 @@ export default function App() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveCategory(tab.id)}
-                    className={`cursor-pointer px-6 py-2.5 rounded-full text-sm whitespace-nowrap transition-colors ${activeCategory === tab.id
+                    className={`cursor-pointer px-5 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${activeCategory === tab.id
                       ? 'font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/30'
                       : `font-medium bg-transparent border-none ${isDark ? 'text-on-surface-variant hover:text-on-surface' : 'text-slate-500 hover:text-slate-900'}`
                       }`}
@@ -696,7 +696,7 @@ export default function App() {
             )}
 
             {/* Asymmetric Layout: Test Grid and Quick Stats */}
-            <div className="grid grid-cols-12 gap-10">
+            <div className="grid grid-cols-12 gap-6 lg:gap-8">
               {/* Test List (The Core) */}
               <div className="col-span-12 lg:col-span-8 space-y-4">
                 {loadingTests ? (
@@ -711,38 +711,38 @@ export default function App() {
                     <p className={`text-sm ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>{searchQuery || activeCategory !== 'full' ? 'Try a different test, subject, or category.' : 'Check back later or contact your coach.'}</p>
                   </div>
                 ) : filteredTests.map((test) => (
-                  <div key={test._id} className={`transition-all duration-300 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between group ${isDark ? 'bg-surface-container hover:bg-surface-container-high' : 'bg-white shadow-sm hover:shadow-md border border-slate-100'}`}>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
+                  <div key={test._id} className={`transition-all duration-300 rounded-xl p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between group ${isDark ? 'bg-surface-container hover:bg-surface-container-high' : 'bg-white shadow-sm hover:shadow-md border border-slate-100'}`}>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
                         <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider bg-indigo-500/20 text-indigo-400`}>
                           {test.category || 'General'}
                         </span>
-                        <span className={`text-xs font-medium ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>
+                        <span className={`text-xs font-medium truncate ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>
                           {test.sections?.map(s => s.name).join(' • ') || 'Full Exam'}
                         </span>
                       </div>
-                      <h3 className={`text-xl font-bold font-headline mb-4 ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>{test.title}</h3>
-                      <div className={`flex items-center space-x-6 text-sm ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>
-                        <div className="flex items-center">
-                          <span className="material-symbols-outlined text-sm mr-2 opacity-60">schedule</span>
+                      <h3 className={`text-xl font-bold font-headline mb-4 break-words ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>{test.title}</h3>
+                      <div className={`flex flex-wrap items-center gap-x-4 sm:gap-x-6 gap-y-2 text-sm ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>
+                        <div className="flex items-center whitespace-nowrap">
+                          <span className="material-symbols-outlined text-sm mr-1.5 opacity-60">schedule</span>
                           {test.durationMinutes} mins
                         </div>
-                        <div className="flex items-center">
-                          <span className="material-symbols-outlined text-sm mr-2 opacity-60">grade</span>
+                        <div className="flex items-center whitespace-nowrap">
+                          <span className="material-symbols-outlined text-sm mr-1.5 opacity-60">grade</span>
                           {test.totalMarks} Marks
                         </div>
-                        <div className="flex items-center">
-                          {test.state === 'in-progress' && <span className={`material-symbols-outlined text-sm mr-2 opacity-60 text-yellow-500`}>pending</span>}
-                          {test.state === 'completed' && <span className={`material-symbols-outlined text-sm mr-2 opacity-60 text-green-500`}>check_circle</span>}
-                          {test.state === 'evaluating' && <span className={`material-symbols-outlined text-sm mr-2 opacity-60 text-yellow-500`}>sync</span>}
-                          {test.state === 'upcoming' && <span className={`material-symbols-outlined text-sm mr-2 opacity-60 text-blue-500`}>event</span>}
-                          {test.state === 'missed' && <span className={`material-symbols-outlined text-sm mr-2 opacity-60 text-red-500`}>cancel</span>}
-                          {(!test.state || test.state === 'default') && <span className={`material-symbols-outlined text-sm mr-2 opacity-60 text-slate-500`}>radio_button_checked</span>}
+                        <div className="flex items-center whitespace-nowrap">
+                          {test.state === 'in-progress' && <span className={`material-symbols-outlined text-sm mr-1.5 opacity-60 text-yellow-500`}>pending</span>}
+                          {test.state === 'completed' && <span className={`material-symbols-outlined text-sm mr-1.5 opacity-60 text-green-500`}>check_circle</span>}
+                          {test.state === 'evaluating' && <span className={`material-symbols-outlined text-sm mr-1.5 opacity-60 text-yellow-500`}>sync</span>}
+                          {test.state === 'upcoming' && <span className={`material-symbols-outlined text-sm mr-1.5 opacity-60 text-blue-500`}>event</span>}
+                          {test.state === 'missed' && <span className={`material-symbols-outlined text-sm mr-1.5 opacity-60 text-red-500`}>cancel</span>}
+                          {(!test.state || test.state === 'default') && <span className={`material-symbols-outlined text-sm mr-1.5 opacity-60 text-slate-500`}>radio_button_checked</span>}
                           {test.status || 'Not Started'}
                         </div>
                       </div>
                     </div>
-                    <div className="mt-6 md:mt-0 md:ml-8 flex flex-col sm:flex-row md:flex-col lg:flex-row gap-3">
+                    <div className="mt-6 md:mt-0 md:ml-6 flex flex-col sm:flex-row md:flex-col lg:flex-row gap-3">
                       <button
                         onClick={() => {
                           if (test.state === 'evaluating') {
@@ -762,7 +762,7 @@ export default function App() {
                             setView('instructions');
                           }
                         }}
-                        className={`cursor-pointer w-full md:w-auto px-8 py-3 font-bold rounded-lg transition-all ${test.state === 'in-progress' ? 'bg-indigo-500 text-on-primary shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20' : (test.state === 'locked' || test.state === 'upcoming' || test.state === 'missed') ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : test.state === 'evaluating' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : test.state === 'completed' ? 'bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-green-500/20' : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 hover:border-indigo-500/40'}`}
+                        className={`cursor-pointer w-full md:w-auto px-6 py-2.5 font-bold rounded-lg text-sm transition-all ${test.state === 'in-progress' ? 'bg-indigo-500 text-on-primary shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20' : (test.state === 'locked' || test.state === 'upcoming' || test.state === 'missed') ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : test.state === 'evaluating' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : test.state === 'completed' ? 'bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-green-500/20' : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 hover:border-indigo-500/40'}`}
                       >
                         {test.state === 'in-progress' ? 'Resume Test' : test.state === 'evaluating' ? 'Evaluating' : test.state === 'completed' ? 'Attempt Again' : test.state === 'upcoming' ? 'Locked' : test.state === 'missed' ? 'Ended' : 'Attempt Test'}
                       </button>
@@ -772,10 +772,10 @@ export default function App() {
               </div>
 
               {/* Sidebar Widgets (Quick Stats) */}
-              <div className="col-span-12 lg:col-span-4 space-y-8">
+              <div className="col-span-12 lg:col-span-4 space-y-6 lg:space-y-8">
                 {/* Performance Card */}
-                <div className={`p-8 rounded-xl transition-colors duration-300 ${isDark ? 'bg-surface-container' : 'bg-white shadow-sm border border-slate-100'}`}>
-                  <h4 className="text-sm font-bold uppercase tracking-widest text-indigo-400 mb-6">Series Overview</h4>
+                <div className={`p-6 sm:p-8 rounded-xl transition-colors duration-300 ${isDark ? 'bg-surface-container' : 'bg-white shadow-sm border border-slate-100'}`}>
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-6">Series Overview</h4>
                   <div className="space-y-6">
                     <div>
                       <div className="flex justify-between text-sm mb-2">
@@ -786,28 +786,28 @@ export default function App() {
                         <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${tests.length ? Math.round((completedResults.length / tests.length) * 100) : 0}%` }}></div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
                       <div className={`p-4 rounded-lg transition-colors ${isDark ? 'bg-surface-container-low' : 'bg-slate-50'}`}>
                         <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Avg Score</p>
-                        <p className={`text-xl font-headline font-bold ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>{averagePercentage}%</p>
+                        <p className={`text-lg sm:text-xl font-headline font-bold ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>{averagePercentage}%</p>
                       </div>
                       <div className={`p-4 rounded-lg transition-colors ${isDark ? 'bg-surface-container-low' : 'bg-slate-50'}`}>
                         <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Best</p>
-                        <p className={`text-xl font-headline font-bold ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>{bestResult?.percentage ?? 0}%</p>
+                        <p className={`text-lg sm:text-xl font-headline font-bold ${isDark ? 'text-on-surface' : 'text-slate-900'}`}>{bestResult?.percentage ?? 0}%</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Learning Path */}
-                <div className={`p-8 rounded-xl relative overflow-hidden transition-colors duration-300 ${isDark ? 'bg-surface-container-low' : 'bg-slate-50 border border-slate-200/50'}`}>
+                <div className={`p-6 sm:p-8 rounded-xl relative overflow-hidden transition-colors duration-300 ${isDark ? 'bg-surface-container-low' : 'bg-slate-50 border border-slate-200/50'}`}>
                   <div className="absolute top-0 right-0 p-4 opacity-10">
                     <span className={`material-symbols-outlined text-6xl ${isDark ? '' : 'text-slate-400'}`}>school</span>
                   </div>
-                  <h4 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-6">Recommended Next</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Recommended Next</h4>
                   <div className="space-y-4">
                     <div className="flex items-start">
-                      <div className="w-8 h-8 rounded bg-indigo-500/20 flex items-center justify-center mr-4 mt-1">
+                      <div className="w-8 h-8 rounded bg-indigo-500/20 flex items-center justify-center mr-4 mt-1 shrink-0">
                         <span className="material-symbols-outlined text-sm text-indigo-400">lightbulb</span>
                       </div>
                       <div>
@@ -815,14 +815,14 @@ export default function App() {
                         <p className={`text-xs mt-1 ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>{recommendedBody}</p>
                       </div>
                     </div>
-                    <button onClick={() => setView(bestResult ? 'analytics' : 'dashboard')} className={`cursor-pointer border-none w-full py-2.5 mt-4 text-xs font-bold rounded uppercase tracking-widest transition-all ${isDark ? 'bg-surface-variant text-on-surface-variant hover:bg-indigo-500 hover:text-on-primary' : 'bg-slate-200 text-slate-600 hover:bg-slate-900 hover:text-white'}`}>
+                    <button onClick={() => setView(bestResult ? 'analytics' : 'dashboard')} className={`cursor-pointer border-none w-full py-2.5 mt-4 text-[10px] sm:text-xs font-bold rounded uppercase tracking-widest transition-all ${isDark ? 'bg-surface-variant text-on-surface-variant hover:bg-indigo-500 hover:text-on-primary' : 'bg-slate-200 text-slate-600 hover:bg-slate-900 hover:text-white'}`}>
                       {bestResult ? 'View Analytics' : 'View Tests'}
                     </button>
                   </div>
                 </div>
               </div>
             </div>
-          </>
+          </div>
         ) : view === 'review' ? (
           <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
             <div className="flex items-center justify-between flex-wrap gap-4">
