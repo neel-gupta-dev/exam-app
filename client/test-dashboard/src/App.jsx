@@ -24,8 +24,43 @@ export default function App() {
       return postSubmitView;
     }
     if (localStorage.getItem('shared_test_id')) return 'loading-shared';
+    
+    // URL-based initial view
+    const path = window.location.pathname;
+    if (path === '/tests') return 'test-series';
+    if (path === '/pyp') return 'pyp';
+    if (path === '/analytics') return 'analytics';
+    if (path === '/leaderboard') return 'leaderboard';
+    if (path === '/settings') return 'settings';
+    if (path === '/support') return 'support';
+    
     return 'dashboard';
   });
+
+  const navigateTo = (newView) => {
+    if (newView === view) return;
+    
+    let path = '/';
+    if (newView === 'test-series') path = '/tests';
+    else if (newView === 'pyp') path = '/pyp';
+    else if (newView === 'analytics') path = '/analytics';
+    else if (newView === 'leaderboard') path = '/leaderboard';
+    else if (newView === 'settings') path = '/settings';
+    else if (newView === 'support') path = '/support';
+    else if (newView === 'instructions' && selectedTest) path = `/tests/${selectedTest._id}`;
+    
+    // Preserve current query parameters (especially ?exam=)
+    const currentSearch = window.location.search;
+    const finalPath = `${path}${currentSearch}`;
+    
+    window.history.pushState(null, '', finalPath);
+    setView(newView);
+    // Don't reset selectedTest if we're going to instructions
+    if (newView !== 'instructions') {
+      setSelectedTest(null);
+    }
+    setSearchQuery('');
+  };
   const searchInputRef = useRef(null);
   const [osKey] = useState(() => {
     if (typeof window !== 'undefined' && navigator?.platform) {
@@ -44,6 +79,29 @@ export default function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      const params = new URLSearchParams(window.location.search);
+      const exam = params.get('exam') || 'jee-mains';
+      
+      let newView = 'dashboard';
+      if (path === '/tests') newView = 'test-series';
+      else if (path === '/pyp') newView = 'pyp';
+      else if (path === '/analytics') newView = 'analytics';
+      else if (path === '/leaderboard') newView = 'leaderboard';
+      else if (path === '/settings') newView = 'settings';
+      else if (path === '/support') newView = 'support';
+      
+      setView(newView);
+      setExamFilter(exam);
+      setSelectedTest(null);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
   const [selectedTest, setSelectedTest] = useState(null);
   const [sharedTestId, setSharedTestId] = useState(() => {
     if (typeof window === 'undefined') return null;
@@ -60,6 +118,26 @@ export default function App() {
   const [loadingTests, setLoadingTests] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('full');
+  const [examFilter, setExamFilter] = useState(() => {
+    if (typeof window === 'undefined') return 'jee-mains';
+    const params = new URLSearchParams(window.location.search);
+    return params.get('exam') || 'jee-mains';
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (examFilter !== 'jee-mains') {
+      params.set('exam', examFilter);
+    } else {
+      params.delete('exam');
+    }
+    const newSearch = params.toString();
+    const newUrl = `${window.location.pathname}${newSearch ? '?' + newSearch : ''}`;
+    window.history.replaceState(null, '', newUrl);
+  }, [examFilter]);
+  const [showExamHint, setShowExamHint] = useState(() => {
+    return !localStorage.getItem('seen_exam_filter_hint');
+  });
   const [results, setResults] = useState([]);
   const [loadingResults, setLoadingResults] = useState(false);
   const [resultsError, setResultsError] = useState('');
@@ -177,11 +255,10 @@ export default function App() {
         const target = tests.find(t => t._id === sharedTestId);
         if (target) {
           setSelectedTest(target);
-          setView('instructions');
+          navigateTo('instructions');
           localStorage.removeItem('shared_test_id');
           setSharedTestId(null);
-          // Clear URL
-          window.history.replaceState(null, '', '/');
+          // URL handled by navigateTo
         }
       })
       .catch(err => console.error('Shared test auto-select error:', err));
@@ -231,11 +308,10 @@ export default function App() {
         const target = tests.find(t => t._id === tId);
         if (target) {
           setSelectedTest(target);
-          setView('instructions');
+          navigateTo('instructions');
           localStorage.removeItem('shared_test_id');
           setSharedTestId(null);
-          // Clear URL
-          window.history.replaceState(null, '', '/');
+          // URL handled by navigateTo
         }
       })
       .catch(err => console.error('Shared test auto-select error:', err));
@@ -253,7 +329,7 @@ export default function App() {
     const openAnalytics = () => {
       setSelectedTest(null);
       setResultsRefreshKey((key) => key + 1);
-      setView('analytics');
+      navigateTo('analytics');
     };
     const handleAttemptMessage = (event) => {
       if (event.origin !== window.location.origin) return;
@@ -307,14 +383,8 @@ export default function App() {
   }, []);
 
   const toggleTheme = () => setIsDark(!isDark);
-  const showDashboard = () => {
-    setView('dashboard');
-    setSelectedTest(null);
-  };
-  const showTestSeries = () => {
-    setView('test-series');
-    setSelectedTest(null);
-  };
+  const showDashboard = () => navigateTo('dashboard');
+  const showTestSeries = () => navigateTo('test-series');
 
   // Router override for the popup test engine
   const searchParams = new URL(window.location.href).searchParams;
@@ -367,15 +437,33 @@ export default function App() {
 
   const normalizedSearch = searchQuery.trim().toLowerCase();
   const matchesCategory = (test) => {
-    if (view === 'pyp') return test.testType === 'pyp';
+    // 1. View Filter
+    if (view === 'pyp') {
+      if (test.testType !== 'pyp') return false;
+    } else {
+      if (test.testType === 'pyp') return false;
+    }
 
-    // Hide PYP from Test Series view
-    if (test.testType === 'pyp') return false;
+    // 2. Exam Type Filter (New Dropdown)
+    if (examFilter !== 'all') {
+      const cat = (test.category || '').toLowerCase();
+      const title = (test.title || '').toLowerCase();
+      
+      if (examFilter === 'jee-mains') {
+        if (!cat.includes('mains') && !title.includes('mains')) return false;
+      } else if (examFilter === 'jee-adv') {
+        if (!cat.includes('adv') && !title.includes('adv')) return false;
+      } else if (examFilter === 'neet') {
+        if (!cat.includes('neet') && !title.includes('neet')) return false;
+      }
+    }
 
-    const type = test.testType || 'full';
-
-    if (activeCategory === 'full') return type === 'full';
-    if (activeCategory === 'part') return type === 'part';
+    // 3. Category Filter
+    if (view !== 'pyp') {
+      const type = test.testType || 'full';
+      if (activeCategory === 'full') return type === 'full';
+      if (activeCategory === 'part') return type === 'part';
+    }
 
     return true;
   };
@@ -467,32 +555,32 @@ export default function App() {
             <span className="material-symbols-outlined mb-0.5 lg:mb-0 lg:mr-3 text-[22px] lg:text-2xl flex-shrink-0">layers</span>
             <span className="text-[9px] lg:text-sm font-extrabold lg:font-medium tracking-tight">Tests</span>
           </button>
-          <button onClick={() => { setView('pyp'); setSelectedTest(null); }} className={`flex-1 lg:flex-initial w-full border-none bg-transparent flex flex-col lg:flex-row items-center justify-center lg:justify-start px-1 lg:px-3 py-1 lg:py-3 transition-all duration-200 rounded-xl lg:rounded-lg group ${view === 'pyp' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+          <button onClick={() => navigateTo('pyp')} className={`flex-1 lg:flex-initial w-full border-none bg-transparent flex flex-col lg:flex-row items-center justify-center lg:justify-start px-1 lg:px-3 py-1 lg:py-3 transition-all duration-200 rounded-xl lg:rounded-lg group ${view === 'pyp' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
             <span className="material-symbols-outlined mb-0.5 lg:mb-0 lg:mr-3 text-[22px] lg:text-2xl flex-shrink-0">history_edu</span>
             <span className="text-[9px] lg:text-sm font-extrabold lg:font-medium tracking-tight">PYP</span>
           </button>
-          <button onClick={() => { setView('leaderboard'); setSelectedLeaderboardTest(null); }} className={`flex-1 lg:flex-initial w-full border-none bg-transparent flex flex-col lg:flex-row items-center justify-center lg:justify-start px-1 lg:px-3 py-1 lg:py-3 transition-all duration-200 rounded-xl lg:rounded-lg group ${view === 'leaderboard' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+          <button onClick={() => navigateTo('leaderboard')} className={`flex-1 lg:flex-initial w-full border-none bg-transparent flex flex-col lg:flex-row items-center justify-center lg:justify-start px-1 lg:px-3 py-1 lg:py-3 transition-all duration-200 rounded-xl lg:rounded-lg group ${view === 'leaderboard' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
             <span className="material-symbols-outlined mb-0.5 lg:mb-0 lg:mr-3 text-[22px] lg:text-2xl flex-shrink-0">emoji_events</span>
             <span className="text-[9px] lg:text-sm font-extrabold lg:font-medium tracking-tight">Ranks</span>
           </button>
-          <button onClick={() => setView('analytics')} className={`flex-1 lg:flex-initial w-full border-none bg-transparent flex flex-col lg:flex-row items-center justify-center lg:justify-start px-1 lg:px-3 py-1 lg:py-3 transition-all duration-200 rounded-xl lg:rounded-lg group ${view === 'analytics' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+          <button onClick={() => navigateTo('analytics')} className={`flex-1 lg:flex-initial w-full border-none bg-transparent flex flex-col lg:flex-row items-center justify-center lg:justify-start px-1 lg:px-3 py-1 lg:py-3 transition-all duration-200 rounded-xl lg:rounded-lg group ${view === 'analytics' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
             <span className="material-symbols-outlined mb-0.5 lg:mb-0 lg:mr-3 text-[22px] lg:text-2xl flex-shrink-0">insights</span>
             <span className="text-[9px] lg:text-sm font-extrabold lg:font-medium tracking-tight">Stats</span>
           </button>
 
           {/* Mobile-Only Settings button inserted into bottom nav */}
-          <button onClick={() => setView('settings')} className={`flex lg:hidden flex-1 w-full border-none bg-transparent flex flex-col items-center justify-center px-1 py-1 transition-all duration-200 rounded-xl group ${view === 'settings' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600'}`}>
+          <button onClick={() => navigateTo('settings')} className={`flex lg:hidden flex-1 w-full border-none bg-transparent flex flex-col items-center justify-center px-1 py-1 transition-all duration-200 rounded-xl group ${view === 'settings' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600'}`}>
             <span className="material-symbols-outlined mb-0.5 text-[22px]">settings</span>
             <span className="text-[9px] font-extrabold tracking-tight">Settings</span>
           </button>
         </nav>
 
         <div className={`hidden lg:flex flex-col mt-auto pt-6 border-t space-y-1 ${isDark ? 'border-slate-800/50' : 'border-slate-200'}`}>
-          <button onClick={() => setView('settings')} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'settings' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+          <button onClick={() => navigateTo('settings')} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'settings' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
             <span className="material-symbols-outlined mr-3">settings</span>
             <span className="text-sm font-medium">Settings</span>
           </button>
-          <button onClick={() => setView('support')} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'support' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
+          <button onClick={() => navigateTo('support')} className={`w-full border-none bg-transparent flex items-center px-3 py-3 transition-colors duration-200 rounded-lg group ${view === 'support' ? isDark ? 'bg-slate-800/50 text-indigo-400' : 'bg-indigo-50 text-indigo-600' : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
             <span className="material-symbols-outlined mr-3">help_outline</span>
             <span className="text-sm font-medium">Support</span>
           </button>
@@ -557,11 +645,11 @@ export default function App() {
           <span className={`font-black font-headline text-xs tracking-wider uppercase hidden xs:block ${isDark ? 'text-white' : 'text-slate-800'}`}>Vayl</span>
         </div>
         <div className="flex items-center flex-1 max-w-xs lg:max-w-md mr-2">
-          <div className="relative w-full max-w-md">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-lg">search</span>
+          <div className={`flex items-center w-full max-w-md rounded-xl transition-all focus-within:ring-1 focus-within:ring-indigo-500/50 px-3 ${isDark ? 'bg-surface-bright' : 'bg-slate-100'}`}>
+            <span className="material-symbols-outlined text-slate-500 text-xl flex-shrink-0">search</span>
             <input
               ref={searchInputRef}
-              className={`w-full border-none rounded-xl py-2 pl-10 pr-10 text-sm focus:ring-1 focus:ring-indigo-500/50 transition-all outline-none ${isDark ? 'bg-surface-bright text-on-surface placeholder:text-slate-600' : 'bg-slate-100 text-slate-900 placeholder:text-slate-400'}`}
+              className={`flex-1 border-none py-2 px-2 text-sm transition-all outline-none bg-transparent ${isDark ? 'text-on-surface placeholder:text-slate-600' : 'text-slate-900 placeholder:text-slate-400'}`}
               placeholder="Search tests, topics, or results..."
               type="text"
               value={searchQuery}
@@ -575,12 +663,14 @@ export default function App() {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className={`absolute right-14 top-1/2 -translate-y-1/2 p-1 rounded-full flex items-center justify-center transition-colors border-none bg-transparent cursor-pointer ${isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
+                className={`p-1 rounded-full flex items-center justify-center transition-colors border-none bg-transparent cursor-pointer mr-2 ${isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
               >
                 <span className="material-symbols-outlined text-[16px]">close</span>
               </button>
             )}
-            <div className={`absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded text-[10px] font-bold hidden md:block ${isDark ? 'bg-secondary-container text-on-surface-variant' : 'bg-slate-200 text-slate-500'}`}>{osKey} K</div>
+            <div className={`px-1.5 py-0.5 rounded text-[10px] font-bold hidden md:block flex-shrink-0 ${isDark ? 'bg-secondary-container text-on-surface-variant' : 'bg-slate-200 text-slate-500'}`}>
+              {osKey} K
+            </div>
           </div>
         </div>
         <div className="flex items-center space-x-4">
@@ -770,10 +860,10 @@ export default function App() {
               <p className={`mt-2 text-base md:text-lg font-medium opacity-70 ${isDark ? 'text-on-surface-variant' : 'text-slate-600'}`}>{view === 'pyp' ? 'Practice with real past exam papers.' : 'Level up your exam readiness.'}</p>
             </header>
 
-            {/* Category Tabs */}
-            {view === 'test-series' && (
-              <div className="flex items-center space-x-1 mb-6 lg:mb-8 overflow-x-auto pb-2 scrollbar-hide">
-                {[
+            {/* Category Tabs & Exam Filter */}
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 lg:mb-8">
+              <div className="flex items-center space-x-1 overflow-x-auto pb-1 scrollbar-hide">
+                {view === 'test-series' && [
                   { id: 'full', label: 'Full Tests' },
                   { id: 'part', label: 'Part Tests' },
                 ].map((tab) => (
@@ -789,7 +879,42 @@ export default function App() {
                   </button>
                 ))}
               </div>
-            )}
+
+              <div className="relative">
+                {showExamHint && (
+                  <div className={`absolute bottom-full right-0 mb-3 w-48 p-3 rounded-xl shadow-xl z-50 animate-bounce transition-all ${isDark ? 'bg-indigo-600 text-white' : 'bg-indigo-600 text-white'}`}>
+                    <div className="text-[11px] font-black uppercase tracking-widest mb-1 flex justify-between items-center">
+                      <span>Pro Tip</span>
+                      <button onClick={() => { setShowExamHint(false); localStorage.setItem('seen_exam_filter_hint', 'true'); }} className="bg-white/20 hover:bg-white/40 rounded-full w-4 h-4 flex items-center justify-center border-none cursor-pointer">
+                        <span className="material-symbols-outlined text-[10px]">close</span>
+                      </button>
+                    </div>
+                    <p className="text-xs font-bold leading-snug">Change your exam type here!</p>
+                    <div className="absolute top-full right-6 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-indigo-600" />
+                  </div>
+                )}
+                <select 
+                  value={examFilter} 
+                  onChange={(e) => {
+                    setExamFilter(e.target.value);
+                    if (showExamHint) {
+                      setShowExamHint(false);
+                      localStorage.setItem('seen_exam_filter_hint', 'true');
+                    }
+                  }}
+                  className={`appearance-none cursor-pointer pl-4 pr-10 py-2.5 rounded-xl border-2 font-bold text-sm transition-all focus:ring-2 focus:ring-indigo-500/20 outline-none ${
+                    isDark 
+                      ? 'bg-slate-900 border-slate-800 text-slate-200' 
+                      : 'bg-white border-slate-100 text-slate-700 shadow-sm'
+                  }`}
+                >
+                  <option value="jee-mains">JEE Mains</option>
+                  <option value="jee-adv">JEE Advanced</option>
+                  <option value="neet">NEET-UG</option>
+                </select>
+                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-50 text-xl">unfold_more</span>
+              </div>
+            </div>
 
             {/* Asymmetric Layout: Test Grid and Quick Stats */}
             <div className="grid grid-cols-12 gap-6 lg:gap-8">
@@ -855,7 +980,7 @@ export default function App() {
                           }
                           if (test.state !== 'locked') {
                             setSelectedTest(test);
-                            setView('instructions');
+                            navigateTo('instructions');
                           }
                         }}
                         className={`cursor-pointer w-full md:w-auto px-6 py-2.5 font-bold rounded-lg text-sm transition-all ${test.state === 'in-progress' ? 'bg-indigo-500 text-on-primary shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20' : (test.state === 'locked' || test.state === 'upcoming' || test.state === 'missed') ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : test.state === 'evaluating' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : test.state === 'completed' ? 'bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-green-500/20' : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 hover:border-indigo-500/40'}`}
@@ -1667,7 +1792,7 @@ export default function App() {
           <div className="max-w-4xl mx-auto">
             {/* Breadcrumb / Back */}
             <button
-              onClick={() => setView('test-series')} className={`flex items-center mb-8 text-sm font-medium transition-colors cursor-pointer border-none bg-transparent ${isDark ? 'text-slate-400 hover:text-indigo-400' : 'text-slate-500 hover:text-indigo-600'}`}
+              onClick={() => navigateTo('test-series')} className={`flex items-center mb-8 text-sm font-medium transition-colors cursor-pointer border-none bg-transparent ${isDark ? 'text-slate-400 hover:text-indigo-400' : 'text-slate-500 hover:text-indigo-600'}`}
             >
               <span className="material-symbols-outlined mr-2 text-lg">arrow_back</span>
               Back to Test Series

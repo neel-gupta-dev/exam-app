@@ -284,6 +284,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   useEffect(() => {
     const handleContextMenu = (e) => e.preventDefault();
     const blockInput = (e) => {
+      if (e.key === 'F11') return; // Allow F11 for fullscreen
       e.preventDefault();
       e.stopPropagation();
       return false;
@@ -771,12 +772,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   const liveInstructions = testMeta?.instructions?.general?.length
     ? testMeta.instructions.general
     : ['Read each question carefully before selecting an answer.', 'Use Save & Next to preserve your current response.'];
-  const paperTabs = testMeta?.parts?.length
-    ? testMeta.parts
-    : [
-        { name: `${testMeta?.category || 'Paper'} A` },
-        { name: `${testMeta?.category || 'Paper'} B` },
-      ];
+  const paperTabs = testMeta?.parts?.length ? testMeta.parts : [];
 
   const TcsIcon = ({ status, text, large = false }) => {
     // Standard TCS palette icon coordinate configuration from questions-sprite.png (Row 2)
@@ -885,33 +881,35 @@ export default function TestEngine({ testId, user, onSubmitted }) {
               </div>
             </div>
           )}
-          <div className="relative flex h-[52px] shrink-0 items-center gap-1 border-b border-[#ddd] bg-[#e9e9e9] px-6 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <ChevronLeft className="absolute left-1 h-5 w-5 text-[#b8c0c8] cursor-pointer" />
-            {paperTabs.map((part, idx) => (
-              <button
-                key={part.name || idx}
-                className={`relative h-[36px] min-w-[96px] border px-3 text-[15px] font-bold shadow-sm transition-all ${
-                  idx === 0
-                    ? 'border-[#1988be] bg-[#1b86b9] text-white'
-                    : 'border-[#c7c7c7] bg-white text-[#0069a7]'
-                }`}
-              >
-                <span className="flex items-center justify-center gap-2">
-                  <span className="truncate uppercase font-bold">{part.name}</span>
-                  <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[16px] italic text-white shadow-inner select-none ${idx === 0 ? 'bg-[#67c8fa]' : 'bg-[#79cafa]'}`}>i</span>
-                </span>
-                {idx === 0 && <span className="absolute left-1/2 top-full -translate-x-1/2 border-x-[8px] border-t-[8px] border-x-transparent border-t-[#1b86b9] z-10" />}
-              </button>
-            ))}
-            <ChevronRight className="absolute right-1 h-5 w-5 text-[#b8c0c8] cursor-pointer" />
-          </div>
+          {paperTabs.length > 0 && (
+            <div className="relative flex h-[52px] shrink-0 items-center gap-1 border-b border-[#ddd] bg-[#e9e9e9] px-6 overflow-x-auto scrollbar-thin" style={{ scrollbarWidth: 'thin' }}>
+              <ChevronLeft className="absolute left-1 h-5 w-5 text-[#b8c0c8] cursor-pointer" />
+              {paperTabs.map((part, idx) => (
+                <button
+                  key={part.name || idx}
+                  className={`relative h-[36px] min-w-[96px] border px-3 text-[15px] font-bold shadow-sm transition-all ${
+                    idx === 0
+                      ? 'border-[#1988be] bg-[#1b86b9] text-white'
+                      : 'border-[#c7c7c7] bg-white text-[#0069a7]'
+                  }`}
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="truncate uppercase font-bold">{part.name}</span>
+                    <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[16px] italic text-white shadow-inner select-none ${idx === 0 ? 'bg-[#67c8fa]' : 'bg-[#79cafa]'}`}>i</span>
+                  </span>
+                  {idx === 0 && <span className="absolute left-1/2 top-full -translate-x-1/2 border-x-[8px] border-t-[8px] border-x-transparent border-t-[#1b86b9] z-10" />}
+                </button>
+              ))}
+              <ChevronRight className="absolute right-1 h-5 w-5 text-[#b8c0c8] cursor-pointer" />
+            </div>
+          )}
 
           <div className="flex h-[34px] shrink-0 items-center justify-between border-b border-[#c7c7c7] bg-white pl-4 pr-[15px]">
             <span className="text-[14px] font-normal text-[#222]">Sections</span>
             <span className="text-[16px] font-bold text-[#111]">Time Left : {formatTime(timeLeft)}</span>
           </div>
 
-          <div className="relative flex h-[46px] shrink-0 items-center gap-[6px] border-b border-[#c7c7c7] bg-white px-6 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="relative flex h-[46px] shrink-0 items-center gap-[6px] border-b border-[#c7c7c7] bg-white px-6 overflow-x-auto scrollbar-thin" style={{ scrollbarWidth: 'thin' }}>
             <ChevronLeft className="absolute left-1 h-5 w-5 text-[#b8c0c8]" />
             {sections.map(s => {
               const isActive = activeSection === s.name;
