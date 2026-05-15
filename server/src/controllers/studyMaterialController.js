@@ -1,6 +1,9 @@
 import asyncHandler from 'express-async-handler';
 import StudyMaterial from '../models/StudyMaterial.js';
 import { uploadBufferToCloudinary, deleteFromCloudinary } from '../utils/cloudinaryUpload.js';
+import { notifyGoogleOfUrl } from '../utils/googleIndexing.js';
+
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://vayl.in';
 
 /**
  * @desc    Upload new study material PDF (Admin Only)
@@ -52,6 +55,14 @@ export const createStudyMaterial = asyncHandler(async (req, res) => {
       fileSize: req.file.size,
       isPublished: isPublished !== undefined ? isPublished === 'true' : true,
     });
+
+    // 3. Notify Google API of new URL for instant indexing in the background
+    if (studyMaterial.isPublished) {
+      const docUrl = `${FRONTEND_URL}/notes/doc/${studyMaterial.slug}`;
+      notifyGoogleOfUrl(docUrl).catch((err) => 
+        console.error('[Google Indexing] Silent background error:', err.message)
+      );
+    }
 
     res.status(201).json(studyMaterial);
   } catch (error) {
@@ -154,6 +165,12 @@ export const deleteStudyMaterial = asyncHandler(async (req, res) => {
 
     // 2. Remove model instance from MongoDB
     await StudyMaterial.findByIdAndDelete(req.params.id);
+
+    // 3. Notify Google API that URL was removed from index
+    const docUrl = `${FRONTEND_URL}/notes/doc/${material.slug}`;
+    notifyGoogleOfUrl(docUrl, 'URL_DELETED').catch((err) => 
+      console.error('[Google Indexing] Silent delete background error:', err.message)
+    );
 
     res.json({ message: 'Study material deleted successfully' });
   } catch (error) {
