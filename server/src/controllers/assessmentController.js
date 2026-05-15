@@ -78,6 +78,23 @@ const normalizeTelemetry = (answer = {}) => {
     firstVisitedAt: toValidDate(answer.firstVisitedAt) || visitLog[0]?.enteredAt || null,
     lastVisitedAt: toValidDate(answer.lastVisitedAt) || visitLog[visitLog.length - 1]?.enteredAt || null,
     visitLog,
+    answerChangeCount: Math.max(0, Math.round(Number(answer.answerChangeCount) || 0)),
+    idleSeconds: Math.max(0, Math.round(Number(answer.idleSeconds) || 0)),
+  };
+};
+
+const normalizeDeviceInfo = (deviceInfo = {}) => {
+  if (!deviceInfo || typeof deviceInfo !== 'object' || Array.isArray(deviceInfo)) {
+    return {};
+  }
+
+  return {
+    userAgent: String(deviceInfo.userAgent || '').slice(0, 500),
+    screenResolution: String(deviceInfo.screenResolution || '').slice(0, 50),
+    deviceMemory: Number.isFinite(Number(deviceInfo.deviceMemory)) ? Number(deviceInfo.deviceMemory) : null,
+    connectionType: String(deviceInfo.connectionType || '').slice(0, 50),
+    isMobile: Boolean(deviceInfo.isMobile),
+    timezone: String(deviceInfo.timezone || '').slice(0, 100),
   };
 };
 
@@ -101,6 +118,8 @@ const answerRowsToSessionMap = (rows = []) => rows.reduce((acc, row) => {
     firstVisitedAt: row.firstVisitedAt || null,
     lastVisitedAt: row.lastVisitedAt || null,
     visitLog: row.visitLog || [],
+    answerChangeCount: row.answerChangeCount || 0,
+    idleSeconds: row.idleSeconds || 0,
   };
   return acc;
 }, {});
@@ -261,7 +280,7 @@ export const syncAssessment = asyncHandler(async (req, res) => {
   const userId = req.user._id.toString();
   const redis = getRedis();
 
-  const { answers, timeLeft } = req.body;
+  const { answers, timeLeft, deviceInfo } = req.body;
   const sessionKey = `cbt_session:${userId}:${testId}`;
   const parsedTimeLeft = timeLeft === undefined ? null : Number(timeLeft);
 
@@ -271,6 +290,10 @@ export const syncAssessment = asyncHandler(async (req, res) => {
 
   if (answers !== undefined && (typeof answers !== 'object' || Array.isArray(answers) || answers === null)) {
     return res.status(400).json({ message: 'answers must be an object keyed by question ID' });
+  }
+
+  if (deviceInfo !== undefined && (typeof deviceInfo !== 'object' || Array.isArray(deviceInfo) || deviceInfo === null)) {
+    return res.status(400).json({ message: 'deviceInfo must be an object' });
   }
 
   const test = await Test.findById(testId);
@@ -293,6 +316,12 @@ export const syncAssessment = asyncHandler(async (req, res) => {
     if (answers !== undefined) {
       attempt.answers = sessionAnswersToRows(answers);
     }
+    if (deviceInfo !== undefined) {
+      attempt.deviceInfo = {
+        ...(attempt.deviceInfo?.toObject?.() || attempt.deviceInfo || {}),
+        ...normalizeDeviceInfo(deviceInfo),
+      };
+    }
     await attempt.save();
     return res.status(200).json({
       message: 'Synced',
@@ -310,6 +339,12 @@ export const syncAssessment = asyncHandler(async (req, res) => {
   // Merge answers
   activeSession.timeLeft = computeTimeLeft(test, activeSession.startTime);
   activeSession.answers = { ...activeSession.answers, ...(answers || {}) };
+  if (deviceInfo !== undefined) {
+    activeSession.deviceInfo = {
+      ...(activeSession.deviceInfo || {}),
+      ...normalizeDeviceInfo(deviceInfo),
+    };
+  }
 
   // Update Redis
   await redis.hSet(sessionKey, 'data', JSON.stringify(activeSession));
@@ -361,7 +396,7 @@ export const submitAssessment = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'Session expired or not found. Cannot evaluate.' });
   }
 
-  const { answers, startTime, publicIp } = JSON.parse(activeSessionRaw);
+  const { answers, startTime, publicIp, deviceInfo } = JSON.parse(activeSessionRaw);
 
   const endTime = new Date();
   const durationUsedMinutes = Math.round((endTime.getTime() - new Date(startTime).getTime()) / 60000);
@@ -372,8 +407,10 @@ export const submitAssessment = asyncHandler(async (req, res) => {
     userId,
     testId,
     status: 'completed',
+    startedAt: startTime ? new Date(startTime) : undefined,
     durationUsedMinutes,
     ipAddress: publicIp || getClientIp(req),
+    deviceInfo: normalizeDeviceInfo(deviceInfo),
     answers: answerRows,
   });
   gradeAttempt(attempt, test, questions);
@@ -406,6 +443,12 @@ export const getMyAssessmentResults = asyncHandler(async (req, res) => {
       firstVisitedAt: answer.firstVisitedAt || null,
       lastVisitedAt: answer.lastVisitedAt || null,
       visitLog: answer.visitLog || [],
+      answerChangeCount: Math.max(0, Math.round(Number(answer.answerChangeCount) || 0)),
+      idleSeconds: Math.max(0, Math.round(Number(answer.idleSeconds) || 0)),
+      effectiveTimeSeconds: Math.max(
+        0,
+        Math.round(Number(answer.timeSpentSeconds) || 0) - Math.round(Number(answer.idleSeconds) || 0)
+      ),
       status: answer.status,
       answered: Boolean(answer.selectedAnswer?.length),
     }));
@@ -428,12 +471,16 @@ export const getMyAssessmentResults = asyncHandler(async (req, res) => {
       answered: attempt.answers?.filter((answer) => answer.selectedAnswer?.length > 0).length || 0,
       totalQuestions: attempt.answers?.length || 0,
       ipAddress: attempt.ipAddress || '',
+      deviceInfo: attempt.deviceInfo || {},
       telemetry: {
         totalTimeSpentSeconds,
+        totalEffectiveTimeSeconds: questionTelemetry.reduce((sum, item) => sum + item.effectiveTimeSeconds, 0),
         averageQuestionTimeSeconds: questionTelemetry.length
           ? Math.round(totalTimeSpentSeconds / questionTelemetry.length)
           : 0,
         totalVisits: questionTelemetry.reduce((sum, item) => sum + item.visitCount, 0),
+        totalAnswerChanges: questionTelemetry.reduce((sum, item) => sum + item.answerChangeCount, 0),
+        totalIdleSeconds: questionTelemetry.reduce((sum, item) => sum + item.idleSeconds, 0),
         mostTimeSpentQuestion,
         questions: questionTelemetry,
       },
@@ -555,12 +602,16 @@ export const getAssessmentReview = asyncHandler(async (req, res) => {
       firstVisitedAt: userAns.firstVisitedAt || null,
       lastVisitedAt: userAns.lastVisitedAt || null,
       visitLog: userAns.visitLog || [],
+      answerChangeCount: userAns.answerChangeCount || 0,
+      idleSeconds: userAns.idleSeconds || 0,
+      effectiveTimeSeconds: Math.max(0, (userAns.timeSpentSeconds || 0) - (userAns.idleSeconds || 0)),
       resultStatus: isUnanswered ? 'skipped' : (isCorrect ? 'correct' : 'wrong'),
     };
   });
 
   res.json({
     attemptSummary: {
+      testId: attempt.testId._id,
       testTitle: attempt.testId.title,
       totalScore: attempt.totalScore,
       maxPossibleScore: attempt.maxPossibleScore,

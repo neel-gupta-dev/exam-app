@@ -166,9 +166,18 @@ export const getTestTelemetry = asyncHandler(async (req, res) => {
       firstVisitedAt: answer.firstVisitedAt || null,
       lastVisitedAt: answer.lastVisitedAt || null,
       visitLog: answer.visitLog || [],
+      answerChangeCount: Math.max(0, Math.round(Number(answer.answerChangeCount) || 0)),
+      idleSeconds: Math.max(0, Math.round(Number(answer.idleSeconds) || 0)),
+      effectiveTimeSeconds: Math.max(
+        0,
+        Math.round(Number(answer.timeSpentSeconds) || 0) - Math.round(Number(answer.idleSeconds) || 0)
+      ),
     }));
     const totalTimeSpentSeconds = questionTelemetry.reduce((sum, item) => sum + item.timeSpentSeconds, 0);
+    const totalEffectiveTimeSeconds = questionTelemetry.reduce((sum, item) => sum + item.effectiveTimeSeconds, 0);
     const totalVisits = questionTelemetry.reduce((sum, item) => sum + item.visitCount, 0);
+    const totalAnswerChanges = questionTelemetry.reduce((sum, item) => sum + item.answerChangeCount, 0);
+    const totalIdleSeconds = questionTelemetry.reduce((sum, item) => sum + item.idleSeconds, 0);
     const slowestQuestion = questionTelemetry.reduce((max, item) => (
       item.timeSpentSeconds > (max?.timeSpentSeconds || 0) ? item : max
     ), null);
@@ -185,6 +194,7 @@ export const getTestTelemetry = asyncHandler(async (req, res) => {
       submittedAt: attempt.submittedAt,
       durationUsedMinutes: attempt.durationUsedMinutes,
       ipAddress: attempt.ipAddress || '',
+      deviceInfo: attempt.deviceInfo || {},
       score: {
         totalScore: attempt.totalScore,
         maxPossibleScore: attempt.maxPossibleScore,
@@ -197,8 +207,11 @@ export const getTestTelemetry = asyncHandler(async (req, res) => {
       },
       telemetry: {
         totalTimeSpentSeconds,
+        totalEffectiveTimeSeconds,
         averageQuestionTimeSeconds: questionTelemetry.length ? Math.round(totalTimeSpentSeconds / questionTelemetry.length) : 0,
         totalVisits,
+        totalAnswerChanges,
+        totalIdleSeconds,
         answeredQuestions: questionTelemetry.filter((item) => item.answered).length,
         totalQuestions: questionTelemetry.length,
         slowestQuestion,
