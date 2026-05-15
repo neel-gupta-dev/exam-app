@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { Info, User as UserIcon, List } from "lucide-react";
+import { Info, User as UserIcon, List, Globe } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 
 // --- Mock Data ---
@@ -20,6 +20,11 @@ export default function AssessmentTestPage() {
   const [activePart, setActivePart] = useState("A");
   const [activeSection, setActiveSection] = useState("Section 1 - NAT");
   const [activeQuestionId, setActiveQuestionId] = useState(1);
+  
+  // Interruption / Cheat Tracking State
+  const [interruptions, setInterruptions] = useState(0);
+  const [isBlocked, setIsBlocked] = useState(false);
+  
   const router = useRouter();
 
   // Disable right-click & Context Menu (Anti-cheat)
@@ -27,6 +32,28 @@ export default function AssessmentTestPage() {
     const handleContextMenu = (e: MouseEvent) => e.preventDefault();
     document.addEventListener("contextmenu", handleContextMenu);
     return () => document.removeEventListener("contextmenu", handleContextMenu);
+  }, []);
+
+  // Detect window switching, minimizing, or tabbing out
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        setInterruptions((prev) => {
+          const nextCount = prev + 1;
+          if (nextCount >= 3) {
+            // Lock exam and auto-submit
+            setIsBlocked(true);
+          } else {
+            // Issue strict system alert warning
+            alert(`WARNING: System records every single interruption during the Assessment.\n\nAttempt ${nextCount} of 3 detected.\nNavigating away, minimizing, or toggling windows is NOT allowed.\nYour exam will be AUTO-SUBMITTED on the 3rd interruption!`);
+          }
+          return nextCount;
+        });
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, []);
 
   // Timer simulation
@@ -42,6 +69,66 @@ export default function AssessmentTestPage() {
     const s = seconds % 60;
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
+
+  // Auto-Submit / Block Screen Replica Render Gate
+  if (isBlocked) {
+    const computerImgBase64 = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAxNi4wLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xIFRpbnkvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEtdGlueS5kdGQiPg0KPHN2ZyB2ZXJzaW9uPSIxLjEiIGJhc2VQcm9maWxlPSJ0aW55IiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayINCgkgeD0iMHB4IiB5PSIwcHgiIHdpZHRoPSIyNTBweCIgaGVpZ2h0PSIxNjFweCIgdmlld0JveD0iMCAwIDI1MCAxNjEiIHhtbDpzcGFjZT0icHJlc2VydmUiPg0KPGc+DQoJPGc+DQoJCTxwYXRoIGZpbGw9IiNGMEY5RkMiIGQ9Ik03MS4xNDYsMTU4LjI2N2MtNS4xMDQtMC44MTktNjYuNDMxLTguMjAxLTYxLjkxNy02Mi42NDJjNC41MTUtNTQuNDQsMTAuMTgxLTcwLjgxMiwzNC4wMjQtNzYuODAyDQoJCQljMjMuODQzLTUuOTksODEuODAxLTM0LjMzMywxMjcuMjgxLTcuMzgzYzQ1LjQ4LDI2Ljk1LDk0LjU1Nyw1MS4xMjIsNzUuMDgyLDk0LjE1MmMtMTkuNDc2LDQzLjAzMS0yMi42NjQsNTcuMzg2LTczLjQ3Nyw1NS4xODkNCgkJCUMxMjEuMzI4LDE1OC41ODUsOTUuNDE3LDE2Mi4xNjMsNzEuMTQ2LDE1OC4yNjd6Ii8+DQoJPC9nPg0KCTxnIGlkPSJYTUxJRF8xOV8iPg0KCQk8ZyBpZD0iWE1MSURfMjRfIj4NCgkJCTxwYXRoIGZpbGw9IiNGRkZGRkYiIGQ9Ik0yMzMuNTc1LDY1LjU0NGgtNjguNTY0Yy0zLjA2NCwwLTUuNTcyLTIuNTA4LTUuNTcyLTUuNTcybDAsMGMwLTMuMDY0LDIuNTA4LTUuNTcyLDUuNTcyLTUuNTcyaDY4LjU2NA0KCQkJCWMzLjA2NCwwLDUuNTcyLDIuNTA4LDUuNTcyLDUuNTcybDAsMEMyMzkuMTQ3LDYzLjAzNywyMzYuNjQsNjUuNTQ0LDIzMy41NzUsNjUuNTQ0eiIvPg0KCQk8L2c+DQoJCTxnIGlkPSJYTUxJRF8yM18iPg0KCQkJPHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTI0MC4yNzEsNTAuNTUyaC0yOC4yMzVjLTIuNDQ0LDAtNC40NDQtMi00LjQ0NC00LjQ0NWwwLDBjMC0yLjQ0NCwyLTQuNDQ0LDQuNDQ0LTQuNDQ0aDI4LjIzNQ0KCQkJCWMyLjQ0NCwwLDQuNDQ1LDIsNC40NDUsNC40NDRsMCwwQzI0NC43MTcsNDguNTUyLDI0Mi43MTYsNTAuNTUyLDI0MC4yNzEsNTAuNTUyeiIvPg0KCQk8L2c+DQoJCTxnIGlkPSJYTUxJRF8yMl8iPg0KCQkJPHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTI0NS41NTUsNzcuODgzaC0yOC4yMzVjLTIuNDQ0LDAtNC40NDQtMi00LjQ0NC00LjQ0NGwwLDBjMC0yLjQ0NCwyLTQuNDQ0LDQuNDQ0LTQuNDQ0aDI4LjIzNQ0KCQkJCWMyLjQ0NCwwLDQuNDQ1LDIsNC40NDUsNC40NDRsMCwwQzI1MCw3NS44ODMsMjQ3Ljk5OSw3Ny44ODMsMjQ1LjU1NSw3Ny44ODN6Ii8+DQoJCTwvZz4NCgkJPGcgaWQ9IlhNTElEXzIxXyI+DQoJCQk8cGF0aCBmaWxsPSIjRkZGRkZGIiBkPSJNMjMwLjcyMyw2OS4zNDhjLTEuMzc2LDAtMi40OTItMC44NTItMi40OTItMS45MDJjMC0xLjA1LDEuMTE2LTEuOTAxLDIuNDkyLTEuOTAxaC0xMC44NzUNCgkJCQljMS4zNzcsMCwyLjQ5MiwwLjg1MiwyLjQ5MiwxLjkwMWMwLDEuMDUxLTEuMTE1LDEuOTAyLTIuNDkyLDEuOTAySDIzMC43MjN6Ii8+DQoJCTwvZz4NCgkJPGcgaWQ9IlhNTElEXzIwXyI+DQoJCQk8cGF0aCBmaWxsPSIjRkZGRkZGIiBkPSJNMjM0LjI0Niw1NC41MjJjLTEuNDM4LDAtMi42MDItMC44ODktMi42MDItMS45ODRjMC0xLjA5NywxLjE2NC0xLjk4NSwyLjYwMi0xLjk4NWgtMTEuMzUzDQoJCQkJYzEuNDM4LDAsMi42MDMsMC44ODksMi42MDMsMS45ODVjMCwxLjA5Ni0xLjE2NSwxLjk4NC0yLjYwMywxLjk4NEgyMzQuMjQ2eiIvPg0KCQk8L2c+DQoJPC9nPg0KCTxnIGlkPSJYTUxJRF8xMV8iPg0KCQk8ZyBpZD0iWE1MSURfMThfIj4NCgkJCTxwYXRoIGZpbGw9IiNGRkZGRkYiIGQ9Ik0xNi40MjQsMTAwLjIxOWg2OC41NjRjMy4wNjUsMCw1LjU3MywyLjUwOCw1LjU3Myw1LjU3MmwwLDBjMCwzLjA2NS0yLjUwOCw1LjU3My01LjU3Myw1LjU3M0gxNi40MjQNCgkJCQljLTMuMDY0LDAtNS41NzItMi41MDgtNS41NzItNS41NzNsMCwwQzEwLjg1MiwxMDIuNzI3LDEzLjM1OSwxMDAuMjE5LDE2LjQyNCwxMDAuMjE5eiIvPg0KCQk8L2c+DQoJCTxnIGlkPSJYTUxJRF8xN18iPg0KCQkJPHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTkuNzI4LDExNS4yMTFoMjguMjM1YzIuNDQ1LDAsNC40NDUsMi4wMDEsNC40NDUsNC40NDVsMCwwYzAsMi40NDQtMiw0LjQ0NC00LjQ0NSw0LjQ0NEg5LjcyOA0KCQkJCWMtMi40NDQsMC00LjQ0NC0yLTQuNDQ0LTQuNDQ0bDAsMEM1LjI4MywxMTcuMjEyLDcuMjgzLDExNS4yMTEsOS43MjgsMTE1LjIxMXoiLz4NCgkJPC9nPg0KCQk8ZyBpZD0iWE1MSURfMTZfIj4NCgkJCTxwYXRoIGZpbGw9IiNGRkZGRkYiIGQ9Ik00LjQ0NCw4Ny44OEgzMi42OGMyLjQ0NSwwLDQuNDQ1LDIsNC40NDUsNC40NDVsMCwwYzAsMi40NDQtMiw0LjQ0NC00LjQ0NSw0LjQ0NEg0LjQ0NA0KCQkJCUMyLDk2Ljc3LDAsOTQuNzcsMCw5Mi4zMjVsMCwwQzAsODkuODgsMiw4Ny44OCw0LjQ0NCw4Ny44OHoiLz4NCgkJPC9nPg0KCQk8ZyBpZD0iWE1MSURfMTVfIj4NCgkJCTxwYXRoIGZpbGw9IiNGRkZGRkYiIGQ9Ik0xOS4yNzYsOTYuNDE2YzEuMzc2LDAsMi40OTIsMC44NTEsMi40OTIsMS45MDFjMCwxLjA1LTEuMTE2LDEuOTAxLTIuNDkyLDEuOTAxaDEwLjg3NQ0KCQkJCWMtMS4zNzcsMC0yLjQ5Mi0wLjg1Mi0yLjQ5Mi0xLjkwMWMwLTEuMDUxLDEuMTE1LTEuOTAxLDIuNDkyLTEuOTAxSDE5LjI3NnoiLz4NCgkJPC9nPg0KCQk8ZyBpZD0iWE1MSURfMTJfIj4NCgkJCTxwYXRoIGZpbGw9IiNGRkZGRkYiIGQ9Ik0xNS43NTMsMTExLjI0MWMxLjQzOCwwLDIuNjAzLDAuODg5LDIuNjAzLDEuOTg1YzAsMS4wOTYtMS4xNjUsMS45ODQtMi42MDMsMS45ODRoMTEuMzUzDQoJCQkJYy0xLjQzOCwwLTIuNjAyLTAuODg5LTIuNjAyLTEuOTg0YzAtMS4wOTcsMS4xNjQtMS45ODUsMi42MDItMS45ODVIMTUuNzUzeiIvPg0KCQk8L2c+DQoJPC9nPg0KPC9nPg0KPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBmaWxsPSIjRkZGRkZGIiBkPSJNODguNzUsNDIuMjVoNzIuNWMxLjY1NywwLDMsMS4zNDQsMywzdjU0LjVjMCwxLjY1Ni0xLjM0MywzLTMsM2gtNzIuNQ0KCWMtMS42NTYsMC0zLTEuMzQ0LTMtM3YtNTQuNUM4NS43NSw0My41OTQsODcuMDk0LDQyLjI1LDg4Ljc1LDQyLjI1eiIvPg0KPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBmaWxsPSIjNzNDM0REIiBkPSJNMTMwLjg3OSw3OC44NTJjLTEyLjc4OSwxMC4wMjgtNDIuNDQ2LDI0LjQ2OC00My40MDEsMjQuOTFsNzYuMzEyLDAuMzMybC0wLjA1My02MS41NjQNCglsLTguNDQ3LDAuOTNDMTU1LjI5LDQzLjQ1OSwxNDMuNzU3LDY4Ljc1MiwxMzAuODc5LDc4Ljg1MiIvPg0KPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBmaWxsPSIjNzk4N0IxIiBkPSJNMTYxLjc5MiwxMDYuMDRoLTE5LjgzOWwwLjAwNywwLjIwMmw0LjQsOC43NWwtNDIuNjgsMC4wMmw0LjQyMS04Ljk2Nmw3LjI1NC0wLjAwNg0KCUg4OC4xNTNjLTEuODI1LDAtMy4wNTUtMS40NzktMy4wNTUtMy4zMDZWNDUuNDE1YzAtMS44MjUsMS4yMy0zLjMwNiwzLjA1NS0zLjMwNmg3My42MzljMS44MjUsMCwzLjMwNiwxLjQ4LDMuMzA2LDMuMzA2djU3LjMxOQ0KCUMxNjUuMDk4LDEwNC41NjEsMTYzLjYxNywxMDYuMDQsMTYxLjc5MiwxMDYuMDR6IE0xNjMuMDMzLDQzLjkyNEg4Ny4xNjF2NTguMTM1aDc1Ljg3MlY0My45MjR6IE04Ni4yNTIsMTE2LjA4MWg3Ny40OTYNCgljMC43NzUsMCwxLjQwNCwwLjYyOSwxLjQwNCwxLjQwNWMwLDAuNzc1LTAuNjI5LDEuNDA0LTEuNDA0LDEuNDA0SDg2LjI1MmMtMC43NzYsMC0xLjQwNS0wLjYyOS0xLjQwNS0xLjQwNA0KCUM4NC44NDgsMTE2LjcxLDg1LjQ3NywxMTYuMDgxLDg2LjI1MiwxMTYuMDgxeiIvPg0KPGc+DQoJPHBhdGggZmlsbD0iI0ZGNTg1OCIgZD0iTTEzNS4zOTUsODcuMjQ5Yy0xLjU4LDAuMDAxLTE4LjI0MiwwLjAwMi0yMC45NDUsMC4wMDNjLTQuNTg4LDAtNS4wOTYtNC40ODktNC4yMjctNi4wMzINCgkJYzAuOTY5LTEuNzIsMTEuNDAxLTIxLjg3LDEyLjQ0Ni0yMy45MTljMS4yNjgtMi40ODcsMy41ODctMS42MDYsNC41MDIsMGMwLjkzMSwxLjYzLDExLjg1OCwyMi42MSwxMi41LDIzLjczNQ0KCQlDMTQwLjUwMyw4Mi40OTIsMTQwLjc2Miw4Ny4yNDksMTM1LjM5NSw4Ny4yNDl6IE0xMjQuODUyLDgzLjEzMWMtMS4zNTEsMC0yLjQ0My0xLjA5NC0yLjQ0My0yLjQ0NGMwLTEuMzUsMS4wOTQtMi40NDQsMi40NDMtMi40NDQNCgkJYzEuMzUsMCwyLjQ0NSwxLjA5NSwyLjQ0NSwyLjQ0NEMxMjcuMjk3LDgyLjAzNywxMjYuMjAyLDgzLjEzMSwxMjQuODUyLDgzLjEzMXogTTEyMy4zMDcsNjkuMDY2YzAsMCwwLjIzLTEuODM4LDEuNTAyLTEuODM4DQoJCWMxLjEyMSwwLDEuNTM5LDEuODM4LDEuNTM5LDEuODM4bC0wLjE2Miw2LjkxOWwtMi45MjEsMC4xMjVMMTIzLjMwNyw2OS4wNjZ6Ii8+DQoJPGNpcmNsZSBmaWxsPSIjRkZGRkZGIiBjeD0iMTI1IiBjeT0iODAuNjg2IiByPSIyLjQ0NSIvPg0KCTxwYXRoIGZpbGw9IiNGRkZGRkYiIGQ9Ik0xMjMuNSw2OS4wNjZjMCwwLTAuMTUtMS44MzgsMS41MDItMS44MzhjMS42OTEsMCwxLjUzOSwxLjgzOCwxLjUzOSwxLjgzOGwwLjAwMiw3LjA4M2wtMy4wODUtMC4wMzkNCgkJTDEyMy41LDY5LjA2NnoiLz4NCjwvZz4NCjwvc3ZnPg0K";
+
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen w-screen bg-white select-none relative font-sans text-[#555] leading-relaxed z-[9999]">
+        {/* Top Right Language Indicator */}
+        <div className="absolute top-4 right-6 flex items-center gap-1.5 text-[12.5px] text-[#597d96] font-medium">
+          <Globe className="w-3.5 h-3.5 text-[#597d96]" />
+          <span>Change Language</span>
+          <select className="border border-gray-300 rounded px-1.5 py-0.5 text-[12.5px] text-black bg-white font-normal focus:outline-none ml-1">
+            <option>English</option>
+          </select>
+        </div>
+
+        <div className="max-w-4xl w-full px-6 flex flex-col items-center -mt-10">
+          {/* Centered Alert Illustration */}
+          <div className="relative mb-12 mt-4 flex justify-center">
+            <img src={computerImgBase64} alt="Assessment Interruption Alert" className="w-[250px] h-[161px] object-contain" />
+          </div>
+
+          {/* Main Note in RED */}
+          <div className="text-center mb-8 px-4">
+            <h2 className="text-[15px] font-bold text-[#d93025] mb-5">
+              Note : System records every single interruption during the Assessment.
+            </h2>
+            
+            {/* Reason Descriptions */}
+            <p className="text-[13.5px] text-[#666] mb-1 text-center leading-[1.7]">
+              Interruption is recorded in the system due one of the following possible reasons:
+            </p>
+            <div className="text-[13.5px] text-[#666] space-y-0.5 mb-5 text-center leading-[1.7]">
+              <p>1) You were trying to minimize OR toggle Assessment Console.</p>
+              <p>2) You have pressed special keys from your keyboard which are not allowed during Assessment.</p>
+              <p>3) You have tried to move out of Assessment Console which is not allowed.</p>
+              <p>4) You have tried to refresh the page.</p>
+            </div>
+            
+            {/* Detailed instruction paragraph */}
+            <p className="text-[13.5px] text-[#666] max-w-[95%] mx-auto leading-[1.8] text-center">
+              This window will close down and you have to re-launch the Assessment only after it is unlocked. Please be advised not to move out of console during the assessment and not to navigate to other applications during the assessment.
+            </p>
+          </div>
+
+          {/* Light horizontal divider */}
+          <div className="w-[75%] border-t border-[#eeeeee] my-4" />
+
+          {/* Bottom guidance */}
+          <div className="text-center px-4">
+            <h3 className="text-[15.5px] font-bold text-[#333333] mb-3">How to proceed</h3>
+            <p className="text-[13.5px] text-[#666] mb-1 leading-[1.7]">This window will close down now.</p>
+            <p className="text-[13.5px] text-[#666] leading-[1.7]">
+              Please ensure that you do not move out of Assessment window during the assessment. Use only mouse to navigate.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen w-screen bg-white text-black font-sans overflow-hidden select-none">
@@ -141,19 +228,27 @@ export default function AssessmentTestPage() {
             </div>
           </div>
 
-          {/* Operator Footer Controls */}
-          <div className="border-t border-[#ccc] bg-white flex justify-between items-center py-2 px-4 shadow-[0_-2px_5px_rgba(0,0,0,0.02)] z-10 shrink-0">
-            <div className="flex gap-2">
-              <button className="border border-[#ccc] hover:bg-[#f5f5f5] text-[#333] px-4 py-1.5 text-[13px] font-bold rounded shadow-sm">
+          {/* Operator Footer Controls (Pixel-perfect Real Exam Scale) */}
+          <div className="h-[52px] border-t border-[#dddddd] bg-white flex justify-between items-center px-3 z-10 shrink-0 select-none">
+            {/* Left Control Group */}
+            <div className="flex gap-[12px]">
+              <button className="h-[34px] flex items-center justify-center bg-white border border-[#b5b5b5] hover:border-[#999] text-[#333333] px-4 text-[13px] font-normal rounded-none transition-colors active:bg-[#f9f9f9]">
                 Mark for Review & Next
               </button>
-              <button className="border border-[#ccc] hover:bg-[#f5f5f5] text-[#333] px-4 py-1.5 text-[13px] font-bold rounded shadow-sm">
+              <button className="h-[34px] flex items-center justify-center bg-white border border-[#b5b5b5] hover:border-[#999] text-[#333333] px-4 text-[13px] font-normal rounded-none transition-colors active:bg-[#f9f9f9]">
                 Clear Response
               </button>
             </div>
-            <button className="bg-[#2481c4] hover:bg-[#1a5f91] text-white px-6 py-1.5 text-[13px] font-bold rounded shadow-sm">
-              Save & Next
-            </button>
+            
+            {/* Right Control Group */}
+            <div className="flex gap-[12px]">
+              <button className="h-[34px] flex items-center justify-center bg-white border border-[#b5b5b5] hover:border-[#999] text-[#333333] px-[20px] text-[13px] font-normal rounded-none transition-colors active:bg-[#f9f9f9]">
+                Previous
+              </button>
+              <button className="h-[34px] flex items-center justify-center bg-[#1f75b3] border border-[#186194] text-white px-[18px] text-[13px] font-bold rounded-none hover:bg-[#1a6399] transition-colors">
+                Save & Next
+              </button>
+            </div>
           </div>
         </div>
 
@@ -202,9 +297,9 @@ export default function AssessmentTestPage() {
             </div>
           </div>
 
-          {/* Submit Footer */}
-          <div className="h-[46px] border-t border-[#ccc] bg-[#f2f2f2] flex items-center justify-center border-l shrink-0">
-            <button className="bg-[#6db5d1] text-white font-bold text-sm px-8 py-1.5 rounded" disabled>
+          {/* Submit Footer (Aligned Real Exam Scale) */}
+          <div className="h-[52px] border-t border-[#dddddd] bg-[#edf5f9] flex items-center justify-center border-l shrink-0">
+            <button className="h-[34px] w-[96px] flex items-center justify-center bg-[#63a6cb] border border-[#548faf] text-white text-[13px] font-bold rounded-none select-none transition-opacity hover:bg-[#5997ba]">
               Submit
             </button>
           </div>

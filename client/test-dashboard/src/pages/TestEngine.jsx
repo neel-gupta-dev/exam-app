@@ -24,6 +24,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   const [showInstructionsPanel, setShowInstructionsPanel] = useState(false);
   const [showQuestionPaper, setShowQuestionPaper] = useState(false);
   const [showGridMobile, setShowGridMobile] = useState(false);
+  const [tooltipData, setTooltipData] = useState(null);
 
   const syncDirty = useRef(false);
   const timerRef = useRef(null);
@@ -36,6 +37,8 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   const answerChangeCountRef = useRef({});
   const idleSecondsRef = useRef({});
   const idleTimerRef = useRef(null);
+  const paletteScrollRef = useRef(null);
+  const questionScrollRef = useRef(null);
   const token = user?.token || localStorage.getItem('test_token');
 
   // ─── API helper ───
@@ -257,6 +260,12 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     if (!currentQuestion || submitted) return;
     openQuestionVisit(currentQuestion._id);
   }, [currentQuestion?._id, openQuestionVisit, submitted]);
+
+  useEffect(() => {
+    if (questionScrollRef.current) {
+      questionScrollRef.current.scrollTop = 0;
+    }
+  }, [currentIdx]);
 
   useEffect(() => {
     return () => closeActiveVisit(Date.now());
@@ -619,6 +628,24 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     }
   };
 
+  const scrollPalette = (direction) => {
+    if (paletteScrollRef.current) {
+      paletteScrollRef.current.scrollBy({
+        top: direction === 'up' ? -120 : 120,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const scrollToTop = () => {
+    if (questionScrollRef.current) {
+      questionScrollRef.current.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   const formatTime = (seconds) => {
     if (seconds <= 0) return '00:00';
     const m = Math.floor(seconds / 60);
@@ -631,6 +658,23 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     for (const a of answers) {
       if (a.status !== 'not-visited') summary.notVisited--;
       switch (a.status) {
+        case 'answered': summary.answered++; break;
+        case 'unanswered': summary.unanswered++; break;
+        case 'marked-for-review': summary.markedForReview++; break;
+        case 'answered-and-marked': summary.answeredAndMarked++; break;
+      }
+    }
+    return summary;
+  };
+
+  const getSectionSummary = (sectionName) => {
+    const sectionQuestions = questions.filter(q => q.section === sectionName);
+    const summary = { answered: 0, unanswered: 0, markedForReview: 0, answeredAndMarked: 0, notVisited: sectionQuestions.length };
+    for (const q of sectionQuestions) {
+      const ans = answers.find(a => a.questionId === q._id);
+      const status = ans ? ans.status : 'not-visited';
+      if (status !== 'not-visited') summary.notVisited--;
+      switch (status) {
         case 'answered': summary.answered++; break;
         case 'unanswered': summary.unanswered++; break;
         case 'marked-for-review': summary.markedForReview++; break;
@@ -722,58 +766,36 @@ export default function TestEngine({ testId, user, onSubmitted }) {
       ];
 
   const TcsIcon = ({ status, text, large = false }) => {
-    const size = large ? 'w-[54px] h-[43px] text-[18px]' : 'w-[32px] h-[29px] text-[14px]';
-    const base = `${size} flex items-center justify-center font-bold shrink-0 leading-none`;
-    switch(status) {
-      case 'not-visited':
-        return (
-          <div
-            className={`${base} text-[#111] rounded-[3px] border border-[#9d9d9d] bg-gradient-to-b from-white to-[#dfdfdf]`}
-            style={{ boxShadow: 'inset 0 -7px 8px -5px rgba(0,0,0,0.25), 0 1px 1px rgba(0,0,0,0.2)' }}
-          >
-            {text}
-          </div>
-        );
-      case 'answered':
-        return (
-          <div
-            className={`${base} text-white bg-gradient-to-b from-[#8ad734] to-[#3f8f0d]`}
-            style={{ clipPath: 'polygon(15% 0%, 85% 0%, 100% 28%, 100% 100%, 0% 100%, 0% 28%)', textShadow: '0 1px 1px rgba(0,0,0,0.55)' }}
-          >
-            {text}
-          </div>
-        );
-      case 'unanswered':
-        return (
-          <div
-            className={`${base} text-white bg-gradient-to-b from-[#ff6b17] to-[#c62902]`}
-            style={{ clipPath: 'polygon(0% 0%, 100% 0%, 100% 68%, 70% 100%, 30% 100%, 0% 68%)', textShadow: '0 1px 1px rgba(0,0,0,0.55)' }}
-          >
-            {text}
-          </div>
-        );
-      case 'marked-for-review':
-        return (
-          <div className={`${base} rounded-full text-white bg-gradient-to-b from-[#8e62b5] to-[#56317d]`} style={{ textShadow: '0 1px 1px rgba(0,0,0,0.55)' }}>
-            {text}
-          </div>
-        );
-      case 'answered-and-marked':
-        return (
-          <div className={`${base} relative rounded-full text-white bg-gradient-to-b from-[#8e62b5] to-[#56317d]`} style={{ textShadow: '0 1px 1px rgba(0,0,0,0.55)' }}>
-            {text}
-            <div className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-[3px] border border-white bg-[#70b72b]">
-              <div className="h-2 w-2 rounded-[1px] bg-white" />
-            </div>
-          </div>
-        );
-      default:
-        return (
-          <div className={`${base} text-[#111] rounded-[3px] border border-[#9d9d9d] bg-gradient-to-b from-white to-[#dfdfdf]`}>
-            {text}
-          </div>
-        );
-    }
+    // Standard TCS palette icon coordinate configuration from questions-sprite.png (Row 2)
+    const config = {
+      'answered': { pos: '-7px -56px', color: 'text-white' },
+      'unanswered': { pos: '-42px -56px', color: 'text-white' },
+      'marked-for-review': { pos: '-75px -56px', color: 'text-white' },
+      'not-visited': { pos: '-107px -56px', color: 'text-[#333]' },
+      'answered-and-marked': { pos: '-172px -56px', color: 'text-white' },
+    };
+
+    const icon = config[status] || config['not-visited'];
+    
+    // Real exams use native 36x34px sprite resolutions for total clarity.
+    // Enlarge slightly for 'large' instances to maintain spatial weight.
+    const containerStyle = large 
+      ? { width: '42px', height: '39px', transform: 'scale(1.15)', transformOrigin: 'center' }
+      : { width: '36px', height: '34px' };
+
+    return (
+      <div className="flex shrink-0 items-center justify-center font-bold select-none overflow-hidden" style={containerStyle}>
+        <div 
+          className={`flex h-[34px] w-[36px] items-center justify-center bg-no-repeat text-[13px] font-bold leading-none ${icon.color}`}
+          style={{
+            backgroundImage: "url('/images/questions-sprite.png')",
+            backgroundPosition: icon.pos,
+          }}
+        >
+          <span className="pt-[1.5px]">{text}</span>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -804,6 +826,47 @@ export default function TestEngine({ testId, user, onSubmitted }) {
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <div className="relative flex min-w-0 flex-1 flex-col border-l border-[#c4c4c4]">
+          {tooltipData && (
+            <div 
+              className="absolute z-50 w-[275px] border border-[#abc8d8] bg-[#f1fafe] text-black shadow-lg select-none pointer-events-none animate-in fade-in duration-150"
+              style={{ left: `${tooltipData.left}px`, top: `${tooltipData.top}px` }}
+            >
+              {/* Tooltip Title Header */}
+              <div className="px-3 py-2 bg-[#e4f4fc] border-b border-[#bce1f7] text-[15px] font-bold text-black leading-tight">
+                {tooltipData.name}
+              </div>
+              {/* Tooltip Dynamic Stats */}
+              <div className="py-2 px-1 flex flex-col gap-[2px]">
+                {(() => {
+                  const stats = getSectionSummary(tooltipData.name);
+                  return (
+                    <>
+                      <div className="flex items-center px-4 py-1 gap-[16px]">
+                        <TcsIcon status="answered" text={stats.answered} />
+                        <span className="text-[14px] font-medium text-[#111] pt-[1px]">Answered</span>
+                      </div>
+                      <div className="flex items-center px-4 py-1 gap-[16px]">
+                        <TcsIcon status="unanswered" text={stats.unanswered} />
+                        <span className="text-[14px] font-medium text-[#111] pt-[1px]">Not Answered</span>
+                      </div>
+                      <div className="flex items-center px-4 py-1 gap-[16px]">
+                        <TcsIcon status="not-visited" text={stats.notVisited} />
+                        <span className="text-[14px] font-medium text-[#111] pt-[1px]">Not Visited</span>
+                      </div>
+                      <div className="flex items-center px-4 py-1 gap-[16px]">
+                        <TcsIcon status="marked-for-review" text={stats.markedForReview} />
+                        <span className="text-[14px] font-medium text-[#111] pt-[1px]">Marked for Review</span>
+                      </div>
+                      <div className="flex items-center px-4 py-1 gap-[16px]">
+                        <TcsIcon status="answered-and-marked" text={stats.answeredAndMarked} />
+                        <span className="text-[14px] font-medium text-[#111] pt-[1px] truncate">Answered & Marked for ...</span>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
           <div className="flex h-[52px] shrink-0 items-center gap-1 border-b border-[#ddd] bg-[#e9e9e9] px-6 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <ChevronLeft className="absolute left-1 h-5 w-5 text-[#b8c0c8]" />
             {paperTabs.map((part, idx) => (
@@ -849,7 +912,23 @@ export default function TestEngine({ testId, user, onSubmitted }) {
                 >
                   <span className="flex items-center gap-2">
                     <span className="max-w-[190px] truncate">{s.name}</span>
-                    <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[16px] italic text-white ${isActive ? 'bg-[#67c8fa]' : 'bg-[#80cfff]'}`}>i</span>
+                    <span 
+                      className={`flex h-6 w-6 items-center justify-center rounded-full text-[16px] italic text-white cursor-pointer hover:opacity-90 shadow-inner select-none ${isActive ? 'bg-[#67c8fa]' : 'bg-[#80cfff]'}`}
+                      onMouseEnter={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const parentContainer = e.currentTarget.closest('.relative.flex.min-w-0.flex-1.flex-col');
+                        const parentRect = parentContainer ? parentContainer.getBoundingClientRect() : { left: 0, top: 0 };
+                        
+                        setTooltipData({
+                          name: s.name,
+                          left: Math.max(10, (rect.left - parentRect.left) - 40), // Adjust shift for central alignment
+                          top: (rect.top - parentRect.top) + rect.height + 6
+                        });
+                      }}
+                      onMouseLeave={() => setTooltipData(null)}
+                    >
+                      i
+                    </span>
                   </span>
                 </button>
               );
@@ -866,80 +945,109 @@ export default function TestEngine({ testId, user, onSubmitted }) {
             </div>
           </div>
 
-          <div className="relative min-h-0 flex-1 overflow-y-auto border-b border-[#cfcfcf] bg-white">
-            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-[0.045]">
-              <div className="grid h-full w-full grid-cols-3 gap-x-24 gap-y-16 -rotate-12 place-items-center text-[18px] font-bold uppercase tracking-wide text-[#111]">
-                {Array.from({ length: 12 }).map((_, idx) => (
-                  <span key={idx} className="flex max-w-[240px] flex-col items-center text-center leading-tight">
-                    <span className="max-w-full truncate">{watermarkName}</span>
-                    <span className="max-w-full truncate text-[14px]">{watermarkIp}</span>
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="relative z-10">
-            <div className="border-b border-[#ddd] px-[6px] py-[7px]">
-              <h3 className="text-[18px] font-bold">Question No. {currentLocalIdx + 1}</h3>
-            </div>
-            <div className="px-[18px] py-[14px] text-[18px] leading-[1.42]">
-              <div className="mb-7 min-h-[34px] whitespace-pre-wrap text-black">
-                <LatexRenderer text={currentQuestion?.content} />
-                {currentQuestion?.imageUrl && <img src={currentQuestion.imageUrl} alt="" className="mt-4 max-w-full" />}
-              </div>
-              {currentQuestion?.type !== 'integer' && currentQuestion?.options?.map((opt, i) => {
-                const isSelected = currentAnswer?.selectedAnswer?.includes(opt.label);
-                return (
-                  <label key={opt.label || i} className="mb-[14px] flex cursor-pointer items-start gap-[8px] text-[18px] leading-[1.32]">
-                    <input
-                      type={currentQuestion.type === 'multiple' ? 'checkbox' : 'radio'}
-                      name={`q-${currentQuestion._id}`}
-                      checked={isSelected || false}
-                      onChange={() => handleOptionSelect(opt.label)}
-                      className="mt-[6px] h-[18px] w-[18px] shrink-0 accent-[#1b86b9]"
-                    />
-                    <span className="flex-1">
-                      <LatexRenderer text={opt.content} />
+          <div className="relative min-h-0 flex-1 border-b border-[#cfcfcf] bg-white">
+            <div ref={questionScrollRef} className="w-full h-full overflow-y-auto relative">
+              <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-[0.045]">
+                <div className="grid h-full w-full grid-cols-3 gap-x-24 gap-y-16 -rotate-12 place-items-center text-[18px] font-bold uppercase tracking-wide text-[#111]">
+                  {Array.from({ length: 12 }).map((_, idx) => (
+                    <span key={idx} className="flex max-w-[240px] flex-col items-center text-center leading-tight">
+                      <span className="max-w-full truncate">{watermarkName}</span>
+                      <span className="max-w-full truncate text-[14px]">{watermarkIp}</span>
                     </span>
-                    {opt.imageUrl && <img src={opt.imageUrl} alt="" className="max-h-28 ml-2" />}
-                  </label>
-                );
-              })}
-              {currentQuestion?.type === 'integer' && (
-                <div className="mt-4 flex max-w-[260px] flex-col items-center bg-[#f3f3f3] p-3">
-                  <input
-                    type="text"
-                    readOnly
-                    value={currentAnswer?.selectedAnswer?.[0] || ''}
-                    className="mb-3 h-[28px] w-[224px] border border-[#777] bg-white px-2 text-[18px] text-black outline-none"
-                    aria-label="Numerical answer"
-                  />
-                  <div className="flex flex-col items-center gap-[6px]">
-                    <button onClick={() => handleNumpadPress('backspace')} className="rounded-[7px] border border-[#8d8d8d] bg-[#e8e6ee] px-4 py-2 text-[17px] font-bold shadow-sm">
-                      Backspace
-                    </button>
-                    <div className="grid grid-cols-3 gap-[6px]">
-                      {['7', '8', '9', '4', '5', '6', '1', '2', '3', '0', '.', '-'].map((key) => (
-                        <button
-                          key={key}
-                          onClick={() => handleNumpadPress(key)}
-                          className="h-[36px] w-[36px] rounded-[7px] border border-[#8d8d8d] bg-[#f3f3f3] text-[18px] font-bold shadow-sm hover:bg-white active:scale-95"
-                        >
-                          {key}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="grid grid-cols-2 gap-[6px]">
-                      <button className="h-[36px] w-[42px] rounded-[7px] border border-[#8d8d8d] bg-[#e8e6ee] text-[18px] shadow-sm" type="button">←</button>
-                      <button className="h-[36px] w-[42px] rounded-[7px] border border-[#8d8d8d] bg-[#e8e6ee] text-[18px] shadow-sm" type="button">→</button>
-                    </div>
-                    <button onClick={() => handleNumpadPress('clear')} className="rounded-[7px] border border-[#8d8d8d] bg-[#e8e6ee] px-4 py-2 text-[17px] font-bold shadow-sm">
-                      Clear All
-                    </button>
-                  </div>
+                  ))}
                 </div>
-              )}
+              </div>
+              <div className="relative z-10">
+              <div className="border-b border-[#ddd] px-[6px] py-[7px]">
+                <h3 className="text-[18px] font-bold">Question No. {currentLocalIdx + 1}</h3>
+              </div>
+              <div className="px-[18px] py-[14px] text-[18px] leading-[1.42]">
+                <div className="mb-7 min-h-[34px] whitespace-pre-wrap text-black">
+                  <LatexRenderer text={currentQuestion?.content} />
+                  {currentQuestion?.imageUrl && <img src={currentQuestion.imageUrl} alt="" className="mt-4 max-w-full" />}
+                </div>
+                {currentQuestion?.type !== 'integer' && currentQuestion?.options?.map((opt, i) => {
+                  const isSelected = currentAnswer?.selectedAnswer?.includes(opt.label);
+                  const isMultiple = currentQuestion.type === 'multiple';
+                  
+                  return (
+                    <label key={opt.label || i} className="group mb-[15px] flex cursor-pointer items-start gap-[12px] text-[18px] leading-[1.32] select-none">
+                      <div className="relative flex items-center justify-center mt-[4.5px] shrink-0">
+                        <input
+                          type={isMultiple ? 'checkbox' : 'radio'}
+                          name={`q-${currentQuestion._id}`}
+                          checked={isSelected || false}
+                          onChange={() => handleOptionSelect(opt.label)}
+                          className="peer sr-only"
+                        />
+                        
+                        {isMultiple ? (
+                          // Custom Square Button for Multi-Correct (Matches Image 2)
+                          <div className="h-[16px] w-[16px] rounded-[3px] border border-[#767676] bg-white flex items-center justify-center peer-checked:bg-[#0075ff] peer-checked:border-[#0075ff] transition-all shadow-sm">
+                            <svg className="w-[11px] h-[11px] text-white hidden peer-checked:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          </div>
+                        ) : (
+                          // Custom Round Button for Single Correct (Matches Image 1)
+                          <div className="h-[16px] w-[16px] rounded-full border border-[#767676] bg-white flex items-center justify-center peer-checked:border-[#0075ff] transition-all shadow-sm">
+                            <div className="h-[8px] w-[8px] rounded-full bg-[#0075ff] hidden peer-checked:block" />
+                          </div>
+                        )}
+                      </div>
+                      <span className="flex-1 font-sans text-[#222]">
+                        <LatexRenderer text={opt.content} />
+                      </span>
+                      {opt.imageUrl && <img src={opt.imageUrl} alt="" className="max-h-28 ml-2" />}
+                    </label>
+                  );
+                })}
+                {currentQuestion?.type === 'integer' && (
+                  <div className="mt-4 flex max-w-[260px] flex-col items-center bg-[#f3f3f3] p-3">
+                    <input
+                      type="text"
+                      readOnly
+                      value={currentAnswer?.selectedAnswer?.[0] || ''}
+                      className="mb-3 h-[28px] w-[224px] border border-[#777] bg-white px-2 text-[18px] text-black outline-none"
+                      aria-label="Numerical answer"
+                    />
+                    <div className="flex flex-col items-center gap-[6px]">
+                      <button onClick={() => handleNumpadPress('backspace')} className="rounded-[7px] border border-[#8d8d8d] bg-[#e8e6ee] px-4 py-2 text-[17px] font-bold shadow-sm">
+                        Backspace
+                      </button>
+                      <div className="grid grid-cols-3 gap-[6px]">
+                        {['7', '8', '9', '4', '5', '6', '1', '2', '3', '0', '.', '-'].map((key) => (
+                          <button
+                            key={key}
+                            onClick={() => handleNumpadPress(key)}
+                            className="h-[36px] w-[36px] rounded-[7px] border border-[#8d8d8d] bg-[#f3f3f3] text-[18px] font-bold shadow-sm hover:bg-white active:scale-95"
+                          >
+                            {key}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-2 gap-[6px]">
+                        <button className="h-[36px] w-[42px] rounded-[7px] border border-[#8d8d8d] bg-[#e8e6ee] text-[18px] shadow-sm" type="button">←</button>
+                        <button className="h-[36px] w-[42px] rounded-[7px] border border-[#8d8d8d] bg-[#e8e6ee] text-[18px] shadow-sm" type="button">→</button>
+                      </div>
+                      <button onClick={() => handleNumpadPress('clear')} className="rounded-[7px] border border-[#8d8d8d] bg-[#e8e6ee] px-4 py-2 text-[17px] font-bold shadow-sm">
+                        Clear All
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              </div>
             </div>
-            </div>
+
+            {/* Floating Up Icon Anchor (Stationary bottom-right scroll engine) */}
+            <button 
+              onClick={scrollToTop}
+              className="absolute bottom-[15px] right-[22px] z-30 hover:brightness-95 active:scale-[0.93] transition-all select-none cursor-pointer shadow-sm bg-white rounded-full"
+              title="Back to top"
+            >
+              <img src="/images/Up.png" alt="Up" className="w-[28px] h-[28px] object-contain opacity-95 hover:opacity-100 block" />
+            </button>
           </div>
 
           <div className="flex h-auto sm:h-[58px] shrink-0 flex-col sm:flex-row items-stretch sm:items-center justify-between border-b border-[#c7c7c7] bg-white p-2 sm:px-[10px] gap-2 sm:gap-0">
@@ -1001,9 +1109,21 @@ export default function TestEngine({ testId, user, onSubmitted }) {
             {activeSection || 'Subject'}
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto bg-[#dff4fc] px-[13px] py-[9px]">
-            <div className="mb-[14px] text-[15px] font-bold text-[#111]">Choose a Question</div>
-            <div className="flex flex-wrap gap-x-[5px] gap-y-[10px]">
+          {/* Top Scroll Engine Button */}
+          <div className="flex justify-center bg-[#dff4fc] py-[2px] z-10">
+            <button onClick={() => scrollPalette('up')} className="hover:brightness-95 transition-all flex items-center justify-center h-[24px] w-full cursor-pointer select-none">
+              <img src="/images/Up.png" alt="Scroll Up" className="h-[20px] w-[20px] object-contain" />
+            </button>
+          </div>
+
+          {/* Palette Scrollable Area (Hiding scrollbar for real TCS look) */}
+          <div 
+            ref={paletteScrollRef}
+            className="min-h-0 flex-1 overflow-y-scroll bg-[#dff4fc] px-[13px] py-[4px] scrollbar-none"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            <div className="mb-[12px] mt-[4px] text-[15px] font-bold text-[#111]">Choose a Question</div>
+            <div className="flex flex-wrap gap-x-[5px] gap-y-[9px]">
               {activeSectionQuestions.map((q, idx) => {
                 const globalIdx = questions.indexOf(q);
                 const ans = answers.find(a => a.questionId === q._id);
@@ -1012,13 +1132,20 @@ export default function TestEngine({ testId, user, onSubmitted }) {
                   <button
                     key={q._id}
                     onClick={() => setCurrentIdx(globalIdx)}
-                    className={`${globalIdx === currentIdx ? 'scale-[1.04]' : ''} focus:outline-none`}
+                    className={`${globalIdx === currentIdx ? 'ring-2 ring-[#1b86b9] ring-offset-1' : ''} focus:outline-none transition-all`}
                   >
                     <TcsIcon status={status} text={idx + 1} large />
                   </button>
                 );
               })}
             </div>
+          </div>
+
+          {/* Bottom Scroll Engine Button */}
+          <div className="flex justify-center bg-[#dff4fc] py-[2px] border-b border-[#c7c7c7] z-10">
+            <button onClick={() => scrollPalette('down')} className="hover:brightness-95 transition-all flex items-center justify-center h-[24px] w-full cursor-pointer select-none">
+              <img src="/images/Down.png" alt="Scroll Down" className="h-[20px] w-[20px] object-contain" />
+            </button>
           </div>
 
           <div className="flex h-[58px] shrink-0 items-center justify-center border-t border-[#c7c7c7] bg-[#dff4fc]">
