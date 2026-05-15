@@ -3,6 +3,7 @@ import LoginPage from './LoginPage';
 import ForcePasswordChange from './ForcePasswordChange';
 import TestEngineApp from './TestEngineApp';
 import LatexRenderer from './components/LatexRenderer';
+import PublicTestLanding from './pages/PublicTestLanding';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -43,6 +44,13 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
   const [selectedTest, setSelectedTest] = useState(null);
+  const [sharedTestId, setSharedTestId] = useState(() => {
+    if (typeof window === 'undefined') return null;
+    const path = window.location.pathname;
+    const match = path.match(/^\/t\/([a-f\d]{24})$/i);
+    if (match) return match[1];
+    return localStorage.getItem('shared_test_id');
+  });
 
   const [tests, setTests] = useState([]);
   const [loadingTests, setLoadingTests] = useState(true);
@@ -154,6 +162,29 @@ export default function App() {
     }
   }, [user, view, selectedLeaderboardTest]);
   useEffect(() => {
+    if (user && sharedTestId) {
+      // Auto-select shared test for already logged-in users
+      fetch(`${API_BASE}/tests`, {
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      })
+      .then(res => res.json())
+      .then(tests => {
+        if (!Array.isArray(tests)) return;
+        const target = tests.find(t => t._id === sharedTestId);
+        if (target) {
+          setSelectedTest(target);
+          setView('instructions');
+          localStorage.removeItem('shared_test_id');
+          setSharedTestId(null);
+          // Clear URL
+          window.history.replaceState(null, '', '/');
+        }
+      })
+      .catch(err => console.error('Shared test auto-select error:', err));
+    }
+  }, [user, sharedTestId]);
+
+  useEffect(() => {
     if (user && view === 'review' && selectedReviewAttemptId) {
       queueMicrotask(() => {
         setLoadingReview(true);
@@ -184,6 +215,27 @@ export default function App() {
     localStorage.setItem('test_user', JSON.stringify(userData));
     localStorage.setItem('test_token', userData.token);
     setUser(userData);
+    
+    // Auto-select shared test if applicable
+    const tId = sharedTestId || localStorage.getItem('shared_test_id');
+    if (tId) {
+      fetch(`${API_BASE}/tests`, {
+        headers: { 'Authorization': `Bearer ${userData.token}` }
+      })
+      .then(res => res.json())
+      .then(tests => {
+        const target = tests.find(t => t._id === tId);
+        if (target) {
+          setSelectedTest(target);
+          setView('instructions');
+          localStorage.removeItem('shared_test_id');
+          setSharedTestId(null);
+          // Clear URL
+          window.history.replaceState(null, '', '/');
+        }
+      })
+      .catch(err => console.error('Shared test auto-select error:', err));
+    }
   };
 
   const handleLogout = () => {
@@ -281,6 +333,14 @@ export default function App() {
   }
 
   if (!user) {
+    if (sharedTestId) {
+      return (
+        <PublicTestLanding 
+          testId={sharedTestId} 
+          onLogin={() => window.location.href = `${API_BASE}/auth/google?origin=test`} 
+        />
+      );
+    }
     return <LoginPage isDark={isDark} onLogin={handleLogin} />;
   }
 

@@ -28,6 +28,15 @@ export default function TestManagement() {
   const [jsonLoading, setJsonLoading] = useState(false);
   const [jsonError, setJsonError] = useState(null);
 
+  const handleCopyShareLink = (testId) => {
+    // Determine student URL based on environment
+    const isProd = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1');
+    const studentBase = isProd ? 'https://tests.vayl.in' : 'http://localhost:5173';
+    const shareUrl = `${studentBase}/t/${testId}`;
+    navigator.clipboard.writeText(shareUrl);
+    alert(`🔗 Share link copied to clipboard:\n${shareUrl}`);
+  };
+
   // Test form state
   const [form, setForm] = useState({
     title: '', description: '', category: 'General', testType: 'full', durationMinutes: 180,
@@ -413,6 +422,7 @@ export default function TestManagement() {
                       {test.isPublished ? '⏸ Unpublish' : '🚀 Publish'}
                     </button>
                     <button className="btn btn-sm" onClick={() => { setEditingTest(test); setForm({ title: test.title, description: test.description || '', category: test.category || 'General', testType: test.testType || 'full', durationMinutes: test.durationMinutes, totalMarks: test.totalMarks, visibility: test.visibility, targetTenants: test.targetTenants?.map(t => t._id || t) || [], targetGroups: test.targetGroups?.map(g => g._id || g) || [], defaultPositiveMarks: test.defaultPositiveMarks || 4, defaultNegativeMarks: test.defaultNegativeMarks || 1, syllabusText: test.syllabus?.join('\n') || '', instructionGeneralText: test.instructions?.general?.join('\n') || '', instructionOtherText: test.instructions?.other?.join('\n') || '', instructionDeclaration: test.instructions?.declaration || '' }); setShowForm(true); }}>✏️ Edit</button>
+                    <button className="btn btn-sm" onClick={() => handleCopyShareLink(test._id)} title="Copy Share Link">🔗 Share</button>
                     <button className="btn btn-sm btn-danger" onClick={() => handleDeleteTest(test._id)}>🗑</button>
                   </div>
                 </td>

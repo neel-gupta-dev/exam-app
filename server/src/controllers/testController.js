@@ -486,3 +486,26 @@ export const importPdfQuestions = asyncHandler(async (req, res) => {
     stats,
   });
 });
+
+/**
+ * @desc    Get public test details for shareable links
+ * @route   GET /api/tests/:testId/share-details
+ * @access  Public
+ */
+export const getShareDetails = asyncHandler(async (req, res) => {
+  const test = await Test.findById(req.params.testId).select(
+    'title description totalMarks durationMinutes category isPublished scheduledStartAt scheduledEndAt sections'
+  );
+
+  if (!test) {
+    res.status(404);
+    throw new Error('Test not found');
+  }
+
+  if (!test.isPublished) {
+    res.status(403);
+    throw new Error('This test is not yet public');
+  }
+
+  res.json(test);
+});
