@@ -7,17 +7,28 @@ export default function TestSeriesPage({ tests = [], results = [], onSelectTest 
   const [activeCategory, setActiveCategory] = useState('full');
 
   const matchesCategory = (test) => {
-    const categoryText = `${test.category || ''} ${test.title || ''}`.toLowerCase();
-    if (activeCategory === 'full') {
-      return categoryText.includes('full')
-        || (!categoryText.includes('part')
-          && !categoryText.includes('chapter')
-          && !categoryText.includes('pyq')
-          && !categoryText.includes('previous year'));
+    const categoryField = (test.category || '').toLowerCase();
+    const titleText = (test.title || '').toLowerCase();
+    const combined = `${categoryField} ${titleText}`;
+
+    if (activeCategory === 'neet') {
+      return categoryField.includes('neet') || titleText.includes('neet');
     }
-    if (activeCategory === 'part') return categoryText.includes('part');
-    if (activeCategory === 'chapter') return categoryText.includes('chapter');
-    if (activeCategory === 'pyq') return categoryText.includes('pyq') || categoryText.includes('previous year');
+
+    if (activeCategory === 'full') {
+      // Show everything that is NOT NEET, NOT part, NOT chapter, NOT pyq
+      // OR explicitly marked as JEE Advance/Main
+      if (categoryField.includes('neet')) return false;
+      return combined.includes('full')
+        || (!combined.includes('part')
+          && !combined.includes('chapter')
+          && !combined.includes('pyq')
+          && !combined.includes('previous year'));
+    }
+
+    if (activeCategory === 'part') return combined.includes('part');
+    if (activeCategory === 'chapter') return combined.includes('chapter');
+    if (activeCategory === 'pyq') return combined.includes('pyq') || combined.includes('previous year');
     return true;
   };
   const filteredTests = tests.filter(matchesCategory);

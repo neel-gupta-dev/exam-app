@@ -284,6 +284,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   useEffect(() => {
     const handleContextMenu = (e) => e.preventDefault();
     const blockInput = (e) => {
+      if (e.key === 'F11') return; // Allow F11 for fullscreen
       e.preventDefault();
       e.stopPropagation();
       return false;
@@ -446,6 +447,31 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   }, [submitted, loading]);
 
   const updateAnswer = (questionId, selectedAnswer, status) => {
+    // ─── NEET / Capped Section Logic ───
+    const q = questions.find(qu => qu._id === questionId);
+    const sectionName = q?.section || 'General';
+    const sectionConfig = testMeta?.sections?.find(s => s.name === sectionName);
+    
+    // If the section is capped and the user is trying to answer (selectedAnswer.length > 0)
+    if (sectionConfig?.maxAttemptable && selectedAnswer.length > 0) {
+      const existingAnswer = answers.find(a => a.questionId === questionId);
+      const isWasAlreadyAnswered = existingAnswer && existingAnswer.selectedAnswer.length > 0;
+      
+      // If this is a new answer (not just changing an existing one)
+      if (!isWasAlreadyAnswered) {
+        // Count how many questions are already answered in THIS section
+        const answeredInSection = answers.filter(a => {
+          const qu = questions.find(qObj => qObj._id === a.questionId);
+          return qu?.section === sectionName && a.selectedAnswer.length > 0;
+        }).length;
+
+        if (answeredInSection >= sectionConfig.maxAttemptable) {
+          alert(`You have already answered the maximum allowed questions (${sectionConfig.maxAttemptable}) for ${sectionName}. Please clear a response to answer this question.`);
+          return;
+        }
+      }
+    }
+
     setAnswers((prev) => {
       const exists = prev.find(p => p.questionId === questionId);
       if (exists) {
@@ -746,12 +772,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   const liveInstructions = testMeta?.instructions?.general?.length
     ? testMeta.instructions.general
     : ['Read each question carefully before selecting an answer.', 'Use Save & Next to preserve your current response.'];
-  const paperTabs = testMeta?.parts?.length
-    ? testMeta.parts
-    : [
-        { name: `${testMeta?.category || 'Paper'} A` },
-        { name: `${testMeta?.category || 'Paper'} B` },
-      ];
+  const paperTabs = testMeta?.parts?.length ? testMeta.parts : [];
 
   const TcsIcon = ({ status, text, large = false }) => {
     // Standard TCS palette icon coordinate configuration from questions-sprite.png (Row 2)
@@ -860,33 +881,35 @@ export default function TestEngine({ testId, user, onSubmitted }) {
               </div>
             </div>
           )}
-          <div className="relative flex h-[52px] shrink-0 items-center gap-1 border-b border-[#ddd] bg-[#e9e9e9] px-6 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <ChevronLeft className="absolute left-1 h-5 w-5 text-[#b8c0c8] cursor-pointer" />
-            {paperTabs.map((part, idx) => (
-              <button
-                key={part.name || idx}
-                className={`relative h-[36px] min-w-[96px] border px-3 text-[15px] font-bold shadow-sm transition-all ${
-                  idx === 0
-                    ? 'border-[#1988be] bg-[#1b86b9] text-white'
-                    : 'border-[#c7c7c7] bg-white text-[#0069a7]'
-                }`}
-              >
-                <span className="flex items-center justify-center gap-2">
-                  <span className="truncate uppercase font-bold">{part.name}</span>
-                  <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[16px] italic text-white shadow-inner select-none ${idx === 0 ? 'bg-[#67c8fa]' : 'bg-[#79cafa]'}`}>i</span>
-                </span>
-                {idx === 0 && <span className="absolute left-1/2 top-full -translate-x-1/2 border-x-[8px] border-t-[8px] border-x-transparent border-t-[#1b86b9] z-10" />}
-              </button>
-            ))}
-            <ChevronRight className="absolute right-1 h-5 w-5 text-[#b8c0c8] cursor-pointer" />
-          </div>
+          {paperTabs.length > 0 && (
+            <div className="relative flex h-[52px] shrink-0 items-center gap-1 border-b border-[#ddd] bg-[#e9e9e9] px-6 overflow-x-auto scrollbar-thin" style={{ scrollbarWidth: 'thin' }}>
+              <ChevronLeft className="absolute left-1 h-5 w-5 text-[#b8c0c8] cursor-pointer" />
+              {paperTabs.map((part, idx) => (
+                <button
+                  key={part.name || idx}
+                  className={`relative h-[36px] min-w-[96px] border px-3 text-[15px] font-bold shadow-sm transition-all ${
+                    idx === 0
+                      ? 'border-[#1988be] bg-[#1b86b9] text-white'
+                      : 'border-[#c7c7c7] bg-white text-[#0069a7]'
+                  }`}
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="truncate uppercase font-bold">{part.name}</span>
+                    <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[16px] italic text-white shadow-inner select-none ${idx === 0 ? 'bg-[#67c8fa]' : 'bg-[#79cafa]'}`}>i</span>
+                  </span>
+                  {idx === 0 && <span className="absolute left-1/2 top-full -translate-x-1/2 border-x-[8px] border-t-[8px] border-x-transparent border-t-[#1b86b9] z-10" />}
+                </button>
+              ))}
+              <ChevronRight className="absolute right-1 h-5 w-5 text-[#b8c0c8] cursor-pointer" />
+            </div>
+          )}
 
           <div className="flex h-[34px] shrink-0 items-center justify-between border-b border-[#c7c7c7] bg-white pl-4 pr-[15px]">
             <span className="text-[14px] font-normal text-[#222]">Sections</span>
             <span className="text-[16px] font-bold text-[#111]">Time Left : {formatTime(timeLeft)}</span>
           </div>
 
-          <div className="relative flex h-[46px] shrink-0 items-center gap-[6px] border-b border-[#c7c7c7] bg-white px-6 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="relative flex h-[46px] shrink-0 items-center gap-[6px] border-b border-[#c7c7c7] bg-white px-6 overflow-x-auto scrollbar-thin" style={{ scrollbarWidth: 'thin' }}>
             <ChevronLeft className="absolute left-1 h-5 w-5 text-[#b8c0c8]" />
             {sections.map(s => {
               const isActive = activeSection === s.name;
@@ -1161,6 +1184,22 @@ export default function TestEngine({ testId, user, onSubmitted }) {
             className="min-h-0 flex-1 overflow-y-scroll bg-[#dff4fc] px-[13px] py-[4px] scrollbar-none"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
+            {/* NEET Capped Counter */}
+            {testMeta?.sections?.find(s => s.name === activeSection)?.maxAttemptable && (
+              <div className="mb-3 mt-1.5 p-2.5 rounded-lg border border-[#1b86b9]/20 bg-white/80 shadow-sm flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black uppercase text-[#1b86b9] tracking-widest leading-none mb-1">Attempt Limit</span>
+                  <span className="text-[12px] font-bold text-slate-600">Capped Section</span>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className={`text-[15px] font-black leading-none ${sectionSummary.answered >= (testMeta.sections.find(s => s.name === activeSection).maxAttemptable) ? 'text-amber-600' : 'text-indigo-600'}`}>
+                    {sectionSummary.answered} / {testMeta.sections.find(s => s.name === activeSection).maxAttemptable}
+                  </span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Answered</span>
+                </div>
+              </div>
+            )}
+
             <div className="mb-[12px] mt-[4px] text-[15px] font-bold text-[#111]">Choose a Question</div>
             <div className="flex flex-wrap gap-x-[5px] gap-y-[9px]">
               {activeSectionQuestions.map((q, idx) => {

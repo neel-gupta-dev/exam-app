@@ -45,6 +45,7 @@ export default function TestManagement() {
     instructionGeneralText: '',
     instructionOtherText: '',
     instructionDeclaration: '',
+    sectionsText: '', // Format: Name, QuestionCount, MaxAttemptable
   });
 
   // Question form state
@@ -150,6 +151,15 @@ export default function TestManagement() {
           other: instructionOtherText?.split('\n').map(s => s.trim()).filter(Boolean) || [],
           declaration: instructionDeclaration?.trim() || undefined,
         },
+        sections: form.sectionsText?.split('\n').map(line => {
+          const [name, count, max] = line.split(',').map(s => s.trim());
+          if (!name) return null;
+          return {
+            name,
+            questionCount: parseInt(count) || 0,
+            maxAttemptable: max && max !== 'null' ? parseInt(max) : null
+          };
+        }).filter(Boolean) || [],
       };
       if (editingTest) {
         await api.patch(`/tests/${editingTest._id}`, payload);
@@ -158,7 +168,7 @@ export default function TestManagement() {
       }
       setShowForm(false);
       setEditingTest(null);
-      setForm({ title: '', description: '', category: 'General', testType: 'full', durationMinutes: 180, totalMarks: 300, visibility: 'b2c_public', targetTenants: [], targetGroups: [], defaultPositiveMarks: 4, defaultNegativeMarks: 1, syllabusText: '', instructionGeneralText: '', instructionOtherText: '', instructionDeclaration: '' });
+      setForm({ title: '', description: '', category: 'General', testType: 'full', durationMinutes: 180, totalMarks: 300, visibility: 'b2c_public', targetTenants: [], targetGroups: [], defaultPositiveMarks: 4, defaultNegativeMarks: 1, syllabusText: '', instructionGeneralText: '', instructionOtherText: '', instructionDeclaration: '', sectionsText: '' });
       fetchTests();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to save test');
@@ -283,9 +293,33 @@ export default function TestManagement() {
     <div className="page">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <h1>📝 Test Management</h1>
-        <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingTest(null); }}>
-          {showForm ? 'Cancel' : '+ Create Test'}
-        </button>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button className="btn" onClick={() => {
+            setForm({
+              ...form,
+              title: 'NEET Mock Test', category: 'NEET', totalMarks: 720, durationMinutes: 200,
+              sectionsText: 'Physics Sec A, 35, null\nPhysics Sec B, 15, 10\nChemistry Sec A, 35, null\nChemistry Sec B, 15, 10\nBotany Sec A, 35, null\nBotany Sec B, 15, 10\nZoology Sec A, 35, null\nZoology Sec B, 15, 10'
+            });
+            setShowForm(true);
+            setEditingTest(null);
+          }}>
+            🍀 NEET Preset
+          </button>
+          <button className="btn" onClick={() => {
+            setForm({
+              ...form,
+              title: 'JEE Mains Mock Test', category: 'JEE Mains', totalMarks: 300, durationMinutes: 180,
+              sectionsText: 'Physics Sec A, 20, null\nPhysics Sec B, 5, null\nChemistry Sec A, 20, null\nChemistry Sec B, 5, null\nMaths Sec A, 20, null\nMaths Sec B, 5, null'
+            });
+            setShowForm(true);
+            setEditingTest(null);
+          }}>
+            ⚡ JEE Mains Preset
+          </button>
+          <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingTest(null); }}>
+            {showForm ? 'Cancel' : '+ Create Test'}
+          </button>
+        </div>
       </div>
 
       {/* Create/Edit Test Form */}
@@ -299,8 +333,13 @@ export default function TestManagement() {
                 <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
               </div>
               <div className="form-group">
-                <label>Category</label>
-                <input value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} placeholder="JEE Advance, NEET..." />
+                <label>Exam Type (Category)</label>
+                <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+                  <option value="JEE Mains">JEE Mains</option>
+                  <option value="JEE Advance">JEE Advanced</option>
+                  <option value="NEET">NEET</option>
+                  <option value="General">General / Other</option>
+                </select>
               </div>
               <div className="form-group">
                 <label>Test Type</label>
@@ -342,6 +381,17 @@ export default function TestManagement() {
                 <label>CBT Other Instructions (One instruction per line)</label>
                 <textarea value={form.instructionOtherText || ''} onChange={e => setForm({ ...form, instructionOtherText: e.target.value })} rows={4} placeholder="Do not refresh or close the test window..." />
               </div>
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <label>Test Sections (Format: Name, QuestionCount, MaxAttemptable)</label>
+                <textarea 
+                  value={form.sectionsText || ''} 
+                  onChange={e => setForm({ ...form, sectionsText: e.target.value })} 
+                  rows={4} 
+                  placeholder="Physics Sec A, 35, null&#10;Physics Sec B, 15, 10" 
+                />
+                <small>One section per line. Use 'null' for MaxAttemptable if there is no attempt limit.</small>
+              </div>
+
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                 <label>CBT Declaration Text</label>
                 <textarea value={form.instructionDeclaration || ''} onChange={e => setForm({ ...form, instructionDeclaration: e.target.value })} rows={3} placeholder="I have read and understood the instructions..." />
@@ -421,7 +471,28 @@ export default function TestManagement() {
                     <button className="btn btn-sm" onClick={() => handleTogglePublish(test._id)}>
                       {test.isPublished ? '⏸ Unpublish' : '🚀 Publish'}
                     </button>
-                    <button className="btn btn-sm" onClick={() => { setEditingTest(test); setForm({ title: test.title, description: test.description || '', category: test.category || 'General', testType: test.testType || 'full', durationMinutes: test.durationMinutes, totalMarks: test.totalMarks, visibility: test.visibility, targetTenants: test.targetTenants?.map(t => t._id || t) || [], targetGroups: test.targetGroups?.map(g => g._id || g) || [], defaultPositiveMarks: test.defaultPositiveMarks || 4, defaultNegativeMarks: test.defaultNegativeMarks || 1, syllabusText: test.syllabus?.join('\n') || '', instructionGeneralText: test.instructions?.general?.join('\n') || '', instructionOtherText: test.instructions?.other?.join('\n') || '', instructionDeclaration: test.instructions?.declaration || '' }); setShowForm(true); }}>✏️ Edit</button>
+                    <button className="btn btn-sm" onClick={() => { 
+                      setEditingTest(test); 
+                      setForm({ 
+                        title: test.title, 
+                        description: test.description || '', 
+                        category: test.category || 'General', 
+                        testType: test.testType || 'full', 
+                        durationMinutes: test.durationMinutes, 
+                        totalMarks: test.totalMarks, 
+                        visibility: test.visibility, 
+                        targetTenants: test.targetTenants?.map(t => t._id || t) || [], 
+                        targetGroups: test.targetGroups?.map(g => g._id || g) || [], 
+                        defaultPositiveMarks: test.defaultPositiveMarks || 4, 
+                        defaultNegativeMarks: test.defaultNegativeMarks || 1, 
+                        syllabusText: test.syllabus?.join('\n') || '', 
+                        instructionGeneralText: test.instructions?.general?.join('\n') || '', 
+                        instructionOtherText: test.instructions?.other?.join('\n') || '', 
+                        instructionDeclaration: test.instructions?.declaration || '',
+                        sectionsText: test.sections?.map(s => `${s.name}, ${s.questionCount}, ${s.maxAttemptable || 'null'}`).join('\n') || ''
+                      }); 
+                      setShowForm(true); 
+                    }}>✏️ Edit</button>
                     <button className="btn btn-sm" onClick={() => handleCopyShareLink(test._id)} title="Copy Share Link">🔗 Share</button>
                     <button className="btn btn-sm btn-danger" onClick={() => handleDeleteTest(test._id)}>🗑</button>
                   </div>
@@ -442,7 +513,8 @@ export default function TestManagement() {
                 <button className="btn btn-primary" onClick={() => {
                   setEditingQuestion(null);
                   setQForm({
-                    section: 'General', type: 'single', content: '', imageUrl: '',
+                    section: selectedTest.sections?.[0]?.name || 'General', 
+                    type: 'single', content: '', imageUrl: '',
                     options: [
                       { label: 'A', content: '' }, { label: 'B', content: '' },
                       { label: 'C', content: '' }, { label: 'D', content: '' },
@@ -470,7 +542,14 @@ export default function TestManagement() {
               <div className="form-grid">
                 <div className="form-group">
                   <label>Section</label>
-                  <input value={qForm.section} onChange={e => setQForm({ ...qForm, section: e.target.value })} placeholder="Physics, Chemistry..." />
+                  {selectedTest?.sections?.length > 0 ? (
+                    <select value={qForm.section} onChange={e => setQForm({ ...qForm, section: e.target.value })}>
+                      <option value="">Select Section</option>
+                      {selectedTest.sections.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
+                    </select>
+                  ) : (
+                    <input value={qForm.section} onChange={e => setQForm({ ...qForm, section: e.target.value })} placeholder="Physics, Chemistry..." />
+                  )}
                 </div>
                 <div className="form-group">
                   <label>Type</label>

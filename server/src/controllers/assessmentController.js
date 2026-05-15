@@ -142,21 +142,61 @@ const gradeAttempt = (attempt, test, questions) => {
   let maxPossibleScore = 0;
   const sectionScores = {};
 
-  for (const answer of attempt.answers || []) {
+  // Map section definitions for easy lookup
+  const sectionConfigs = {};
+  test.sections?.forEach(s => {
+    sectionConfigs[s.name] = s;
+  });
+
+  // Track attempts for capped sections
+  const sectionAttempts = {};
+
+  // Sort answers by original question order to ensure "first N" rule is consistent
+  const sortedAnswers = (attempt.answers || []).sort((a, b) => {
+    const qA = questionMap.get(a.questionId.toString());
+    const qB = questionMap.get(b.questionId.toString());
+    return (qA?.order || 0) - (qB?.order || 0);
+  });
+
+  for (const answer of sortedAnswers) {
     const question = questionMap.get(answer.questionId.toString());
     if (!question) continue;
 
+    const section = question.section || 'General';
+    const config = sectionConfigs[section];
     const pos = question.positiveMarks ?? test.defaultPositiveMarks;
     const neg = question.negativeMarks ?? test.defaultNegativeMarks;
-    const section = question.section || 'General';
-    maxPossibleScore += pos;
 
     if (!sectionScores[section]) {
-      sectionScores[section] = { correct: 0, wrong: 0, unattempted: 0, score: 0 };
+      sectionScores[section] = { correct: 0, wrong: 0, unattempted: 0, score: 0, ignored: 0 };
     }
 
     const selected = [...(answer.selectedAnswer || [])].sort();
-    if (selected.length === 0) {
+    const isAttempted = selected.length > 0;
+
+    // NEET/Capped Logic: Check if we've exceeded the maxAttemptable for this section
+    if (config?.maxAttemptable && isAttempted) {
+      if (!sectionAttempts[section]) sectionAttempts[section] = 0;
+      
+      if (sectionAttempts[section] >= config.maxAttemptable) {
+        // This question is beyond the limit. Ignore it for scoring.
+        sectionScores[section].ignored += 1;
+        continue;
+      }
+      sectionAttempts[section] += 1;
+    }
+
+    // Update maxPossibleScore: 
+    // If section is capped, maxPossibleScore for that section should ideally be cap * pos.
+    // However, questions might have different pos marks. 
+    // Simplified: we add 'pos' to maxPossibleScore only if we haven't reached the count of questions that SHOULD be scored.
+    // In NEET, it's usually 35 (Sec A) + 10 (Sec B) = 45 questions * 4 = 180 marks per subject.
+    
+    // For now, we sum 'pos' for every question, but we need to adjust for capped sections.
+    // A better way: calculate maxPossibleScore separately based on test structure.
+    maxPossibleScore += pos; 
+
+    if (!isAttempted) {
       sectionScores[section].unattempted += 1;
       continue;
     }
@@ -177,10 +217,36 @@ const gradeAttempt = (attempt, test, questions) => {
     }
   }
 
+  // Final adjustment for maxPossibleScore if there were capped sections
+  // This is a complex area because if a section has 15 Qs and cap is 10, 
+  // maxPossibleScore should subtract the positive marks of the 5 questions that WEREN'T scored.
+  // We'll calculate the 'real' maxPossibleScore by iterating through sections.
+  let adjustedMaxPossibleScore = 0;
+  const questionsBySection = {};
+  questions.forEach(q => {
+    const s = q.section || 'General';
+    if (!questionsBySection[s]) questionsBySection[s] = [];
+    questionsBySection[s].push(q);
+  });
+
+  Object.keys(questionsBySection).forEach(sName => {
+    const sQs = questionsBySection[sName];
+    const config = sectionConfigs[sName];
+    const sortedQs = [...sQs].sort((a, b) => a.order - b.order);
+    
+    if (config?.maxAttemptable) {
+      // Sum the top N positive marks
+      const topN = sortedQs.slice(0, config.maxAttemptable);
+      topN.forEach(q => { adjustedMaxPossibleScore += (q.positiveMarks ?? test.defaultPositiveMarks); });
+    } else {
+      sQs.forEach(q => { adjustedMaxPossibleScore += (q.positiveMarks ?? test.defaultPositiveMarks); });
+    }
+  });
+
   attempt.totalScore = totalScore;
-  attempt.maxPossibleScore = maxPossibleScore;
-  attempt.percentage = maxPossibleScore > 0
-    ? Math.round((totalScore / maxPossibleScore) * 10000) / 100
+  attempt.maxPossibleScore = adjustedMaxPossibleScore;
+  attempt.percentage = adjustedMaxPossibleScore > 0
+    ? Math.round((totalScore / adjustedMaxPossibleScore) * 10000) / 100
     : 0;
   attempt.sectionScores = sectionScores;
   attempt.submittedAt = new Date();
