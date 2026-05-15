@@ -1,9 +1,33 @@
 import cloudinary from '../config/cloudinary.js';
 
 /**
- * Helper to upload a raw file buffer (e.g., from multer) into Cloudinary via streaming.
- * Bypasses global state by injecting credentials directly into the execution context,
- * providing 100% stability across Vercel Serverless cold-starts.
+ * Dynamic Configurator
+ * Dynamically binds process.env keys to the Cloudinary runtime right before execution.
+ * Ensures serverless cold-starts never lose reference to configuration data.
+ */
+const ensureConfigured = () => {
+  const config = {
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+  };
+
+  if (!config.cloud_name || !config.api_key || !config.api_secret) {
+    console.error('[Cloudinary Runtime] CRITICAL: Env vars are missing!', {
+      hasCloudName: !!config.cloud_name,
+      hasApiKey: !!config.api_key,
+      hasSecret: !!config.api_secret
+    });
+    throw new Error('Cloudinary credentials not provisioned in active environment.');
+  }
+
+  // Officially configure the SDK at execution time
+  cloudinary.config(config);
+};
+
+/**
+ * Helper to upload a raw file buffer into Cloudinary via streaming.
+ * Invokes dynamic runtime binding to eliminate serverless cold-start singleton issues.
  * 
  * @param {Buffer} fileBuffer - Buffer from req.file.buffer
  * @param {string} folder - Target Cloudinary folder
@@ -12,58 +36,43 @@ import cloudinary from '../config/cloudinary.js';
  */
 export const uploadBufferToCloudinary = (fileBuffer, folder = 'study-materials', publicId = null) => {
   return new Promise((resolve, reject) => {
-    // Build self-contained credentials configuration object
-    const directConfig = {
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY,
-      api_secret: process.env.CLOUDINARY_API_SECRET
-    };
+    try {
+      // 1. Bind live environment keys to the SDK right before execution
+      ensureConfigured();
 
-    // Print explicit sanity check for server logs (without revealing the secret itself)
-    if (!directConfig.cloud_name || !directConfig.api_key || !directConfig.api_secret) {
-      console.error('[Cloudinary Stream] CRITICAL: Cloudinary environment variables are missing on process.env!', {
-        hasCloudName: !!directConfig.cloud_name,
-        hasApiKey: !!directConfig.api_key,
-        hasSecret: !!directConfig.api_secret
-      });
-      return reject(new Error('Cloudinary credentials missing on production environment.'));
-    }
-
-    const options = {
-      ...directConfig, // Inject credentials directly to bypass global singleton issues
-      folder,
-      resource_type: 'auto', // Automatically handle pdfs
-    };
-    
-    if (publicId) {
-      options.public_id = publicId;
-    }
-
-    // Trigger stream uploading using explicit, self-contained runtime options
-    const uploadStream = cloudinary.uploader.upload_stream(options, (error, result) => {
-      if (error) {
-        console.error('[Cloudinary Stream] Upload invocation failed:', error);
-        return reject(error);
+      const options = {
+        folder,
+        resource_type: 'auto', // Automatically handles pdfs
+      };
+      
+      if (publicId) {
+        options.public_id = publicId;
       }
-      resolve(result);
-    });
 
-    uploadStream.end(fileBuffer);
+      // 2. Execute upload stream using the now-configured SDK
+      const uploadStream = cloudinary.uploader.upload_stream(options, (error, result) => {
+        if (error) {
+          console.error('[Cloudinary Stream] API invocation failed:', error);
+          return reject(error);
+        }
+        resolve(result);
+      });
+
+      uploadStream.end(fileBuffer);
+    } catch (err) {
+      reject(err);
+    }
   });
 };
 
 /**
- * Delete an asset from Cloudinary by public ID with direct credential injection
+ * Delete an asset from Cloudinary by public ID using dynamic binding
  * 
  * @param {string} publicId - Asset identification key
  * @returns {Promise<Object>}
  */
 export const deleteFromCloudinary = async (publicId) => {
-  const directConfig = {
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-  };
-
-  return cloudinary.uploader.destroy(publicId, directConfig);
+  // Bind live environment keys right before deleting
+  ensureConfigured();
+  return cloudinary.uploader.destroy(publicId);
 };
