@@ -446,6 +446,31 @@ export default function TestEngine({ testId, user, onSubmitted }) {
   }, [submitted, loading]);
 
   const updateAnswer = (questionId, selectedAnswer, status) => {
+    // ─── NEET / Capped Section Logic ───
+    const q = questions.find(qu => qu._id === questionId);
+    const sectionName = q?.section || 'General';
+    const sectionConfig = testMeta?.sections?.find(s => s.name === sectionName);
+    
+    // If the section is capped and the user is trying to answer (selectedAnswer.length > 0)
+    if (sectionConfig?.maxAttemptable && selectedAnswer.length > 0) {
+      const existingAnswer = answers.find(a => a.questionId === questionId);
+      const isWasAlreadyAnswered = existingAnswer && existingAnswer.selectedAnswer.length > 0;
+      
+      // If this is a new answer (not just changing an existing one)
+      if (!isWasAlreadyAnswered) {
+        // Count how many questions are already answered in THIS section
+        const answeredInSection = answers.filter(a => {
+          const qu = questions.find(qObj => qObj._id === a.questionId);
+          return qu?.section === sectionName && a.selectedAnswer.length > 0;
+        }).length;
+
+        if (answeredInSection >= sectionConfig.maxAttemptable) {
+          alert(`You have already answered the maximum allowed questions (${sectionConfig.maxAttemptable}) for ${sectionName}. Please clear a response to answer this question.`);
+          return;
+        }
+      }
+    }
+
     setAnswers((prev) => {
       const exists = prev.find(p => p.questionId === questionId);
       if (exists) {
@@ -1161,6 +1186,22 @@ export default function TestEngine({ testId, user, onSubmitted }) {
             className="min-h-0 flex-1 overflow-y-scroll bg-[#dff4fc] px-[13px] py-[4px] scrollbar-none"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
+            {/* NEET Capped Counter */}
+            {testMeta?.sections?.find(s => s.name === activeSection)?.maxAttemptable && (
+              <div className="mb-3 mt-1.5 p-2.5 rounded-lg border border-[#1b86b9]/20 bg-white/80 shadow-sm flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black uppercase text-[#1b86b9] tracking-widest leading-none mb-1">Attempt Limit</span>
+                  <span className="text-[12px] font-bold text-slate-600">Capped Section</span>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className={`text-[15px] font-black leading-none ${sectionSummary.answered >= (testMeta.sections.find(s => s.name === activeSection).maxAttemptable) ? 'text-amber-600' : 'text-indigo-600'}`}>
+                    {sectionSummary.answered} / {testMeta.sections.find(s => s.name === activeSection).maxAttemptable}
+                  </span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Answered</span>
+                </div>
+              </div>
+            )}
+
             <div className="mb-[12px] mt-[4px] text-[15px] font-bold text-[#111]">Choose a Question</div>
             <div className="flex flex-wrap gap-x-[5px] gap-y-[9px]">
               {activeSectionQuestions.map((q, idx) => {

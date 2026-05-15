@@ -45,6 +45,7 @@ export default function TestManagement() {
     instructionGeneralText: '',
     instructionOtherText: '',
     instructionDeclaration: '',
+    sectionsText: '', // Format: Name, QuestionCount, MaxAttemptable
   });
 
   // Question form state
@@ -150,6 +151,15 @@ export default function TestManagement() {
           other: instructionOtherText?.split('\n').map(s => s.trim()).filter(Boolean) || [],
           declaration: instructionDeclaration?.trim() || undefined,
         },
+        sections: form.sectionsText?.split('\n').map(line => {
+          const [name, count, max] = line.split(',').map(s => s.trim());
+          if (!name) return null;
+          return {
+            name,
+            questionCount: parseInt(count) || 0,
+            maxAttemptable: max && max !== 'null' ? parseInt(max) : null
+          };
+        }).filter(Boolean) || [],
       };
       if (editingTest) {
         await api.patch(`/tests/${editingTest._id}`, payload);
@@ -158,7 +168,7 @@ export default function TestManagement() {
       }
       setShowForm(false);
       setEditingTest(null);
-      setForm({ title: '', description: '', category: 'General', testType: 'full', durationMinutes: 180, totalMarks: 300, visibility: 'b2c_public', targetTenants: [], targetGroups: [], defaultPositiveMarks: 4, defaultNegativeMarks: 1, syllabusText: '', instructionGeneralText: '', instructionOtherText: '', instructionDeclaration: '' });
+      setForm({ title: '', description: '', category: 'General', testType: 'full', durationMinutes: 180, totalMarks: 300, visibility: 'b2c_public', targetTenants: [], targetGroups: [], defaultPositiveMarks: 4, defaultNegativeMarks: 1, syllabusText: '', instructionGeneralText: '', instructionOtherText: '', instructionDeclaration: '', sectionsText: '' });
       fetchTests();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to save test');
@@ -283,9 +293,22 @@ export default function TestManagement() {
     <div className="page">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <h1>📝 Test Management</h1>
-        <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingTest(null); }}>
-          {showForm ? 'Cancel' : '+ Create Test'}
-        </button>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button className="btn" onClick={() => {
+            setForm({
+              ...form,
+              title: 'NEET Mock Test', category: 'NEET', totalMarks: 720, durationMinutes: 200,
+              sectionsText: 'Physics Sec A, 35, null\nPhysics Sec B, 15, 10\nChemistry Sec A, 35, null\nChemistry Sec B, 15, 10\nBotany Sec A, 35, null\nBotany Sec B, 15, 10\nZoology Sec A, 35, null\nZoology Sec B, 15, 10'
+            });
+            setShowForm(true);
+            setEditingTest(null);
+          }}>
+            🍀 Apply NEET Preset
+          </button>
+          <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingTest(null); }}>
+            {showForm ? 'Cancel' : '+ Create Test'}
+          </button>
+        </div>
       </div>
 
       {/* Create/Edit Test Form */}
@@ -342,6 +365,17 @@ export default function TestManagement() {
                 <label>CBT Other Instructions (One instruction per line)</label>
                 <textarea value={form.instructionOtherText || ''} onChange={e => setForm({ ...form, instructionOtherText: e.target.value })} rows={4} placeholder="Do not refresh or close the test window..." />
               </div>
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <label>Test Sections (Format: Name, QuestionCount, MaxAttemptable)</label>
+                <textarea 
+                  value={form.sectionsText || ''} 
+                  onChange={e => setForm({ ...form, sectionsText: e.target.value })} 
+                  rows={4} 
+                  placeholder="Physics Sec A, 35, null&#10;Physics Sec B, 15, 10" 
+                />
+                <small>One section per line. Use 'null' for MaxAttemptable if there is no attempt limit.</small>
+              </div>
+
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                 <label>CBT Declaration Text</label>
                 <textarea value={form.instructionDeclaration || ''} onChange={e => setForm({ ...form, instructionDeclaration: e.target.value })} rows={3} placeholder="I have read and understood the instructions..." />

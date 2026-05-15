@@ -34,8 +34,10 @@ const testSchema = new mongoose.Schema(
     },
     sections: [
       {
-        name: { type: String, trim: true },         // "Physics", "Chemistry"
-        questionCount: { type: Number, default: 0 }, // Denormalized for display
+        sectionId: { type: String, trim: true },      // e.g., "physics_b"
+        name: { type: String, trim: true },           // "Physics Section B"
+        questionCount: { type: Number, default: 0 },
+        maxAttemptable: { type: Number, default: null }, // e.g., 10 for NEET Sec B
       },
     ],
     syllabus: {
