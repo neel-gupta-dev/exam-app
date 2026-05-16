@@ -1,3 +1,4 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const doubtSchema = new mongoose.Schema(
@@ -46,5 +47,5 @@ const doubtSchema = new mongoose.Schema(
 // Prevent duplicate doubts from the same user on the same question in the same attempt
 doubtSchema.index({ userId: 1, questionId: 1, attemptId: 1 }, { unique: true });
 
-const Doubt = mongoose.model('Doubt', doubtSchema);
+const Doubt = coreConnection.model('Doubt', doubtSchema);
 export default Doubt;

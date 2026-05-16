@@ -1,3 +1,4 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const shortlistSchema = new mongoose.Schema({
@@ -27,4 +28,4 @@ const shortlistSchema = new mongoose.Schema({
 // Prevent duplicate shortlisting of same program
 shortlistSchema.index({ sessionId: 1, institute_code: 1, program_code: 1 }, { unique: true });
 
-export default mongoose.models.Shortlist || mongoose.model('Shortlist', shortlistSchema);
+export default coreConnection.model('Shortlist', shortlistSchema);

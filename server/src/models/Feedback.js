@@ -1,4 +1,5 @@
-import mongoose from 'mongoose'; // <-- This was the line causing the crash!
+import { analyticsConnection } from '../config/db.js';
+import mongoose from 'mongoose';
 
 const feedbackSchema = new mongoose.Schema({
   email: { type: String, required: true },
@@ -7,6 +8,9 @@ const feedbackSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-const Feedback = mongoose.model('Feedback', feedbackSchema);
+// TTL Index: Auto-expire after 365 days
+feedbackSchema.index({ createdAt: 1 }, { expireAfterSeconds: 31536000 });
+
+const Feedback = analyticsConnection.model('Feedback', feedbackSchema);
 
 export default Feedback;

@@ -1,3 +1,4 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const userCardProgressSchema = new mongoose.Schema(
@@ -40,5 +41,5 @@ const userCardProgressSchema = new mongoose.Schema(
 // Compound unique index for fast lookups and to prevent duplicate progress docs
 userCardProgressSchema.index({ userId: 1, cardId: 1 }, { unique: true });
 
-const UserCardProgress = mongoose.model('UserCardProgress', userCardProgressSchema);
+const UserCardProgress = coreConnection.model('UserCardProgress', userCardProgressSchema);
 export default UserCardProgress;

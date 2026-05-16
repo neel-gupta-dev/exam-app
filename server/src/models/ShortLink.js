@@ -1,3 +1,4 @@
+import { analyticsConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const shortLinkSchema = new mongoose.Schema({
@@ -21,17 +22,16 @@ const shortLinkSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
   lastClickedAt: {
     type: Date
   }
-});
+}, { timestamps: true });
 
 // Index for fast lookups
 shortLinkSchema.index({ slug: 1 });
 
-const ShortLink = mongoose.models.ShortLink || mongoose.model('ShortLink', shortLinkSchema);
+// TTL Index: Auto-expire after 365 days
+shortLinkSchema.index({ createdAt: 1 }, { expireAfterSeconds: 31536000 });
+
+const ShortLink = analyticsConnection.model('ShortLink', shortLinkSchema);
 export default ShortLink;

@@ -1,11 +1,12 @@
+import { coreConnection } from '../config/db.js';
 import TestAttempt from '../models/TestAttempt.js';
 import Test from '../models/Test.js';
 import Question from '../models/Question.js';
 
 /**
  * Background Evaluation Worker
- * Periodically polls the DB for TestAttempts with status: 'evaluating'.
- * Grades them asynchronously to prevent HTTP/Redis bottlenecks during D-Day.
+ * Periodically polls the DB for TestAttempts with status: 'SUBMITTED'.
+ * Grades them asynchronously and updates status to 'EVALUATED' to prevent HTTP bottlenecks.
  */
 
 let isRunning = false;
@@ -15,8 +16,8 @@ const processQueue = async () => {
   isRunning = true;
 
   try {
-    // Fetch a batch of un-evaluated attempts (protects from massive RAM spikes)
-    const pendingAttempts = await TestAttempt.find({ status: 'evaluating' }).limit(10);
+    // Fetch a batch of un-evaluated attempts
+    const pendingAttempts = await TestAttempt.find({ status: 'SUBMITTED', isManual: false }).limit(10);
 
     if (pendingAttempts.length === 0) {
       isRunning = false;
@@ -79,19 +80,20 @@ const processQueue = async () => {
           ? Math.round((totalScore / maxPossibleScore) * 10000) / 100
           : 0;
 
-        // Commit grade
-        attempt.totalScore = totalScore;
+        // Commit grade directly to TestAttempt
+        attempt.score = totalScore;
+        attempt.totalScore = totalScore; // Legacy compat
         attempt.maxPossibleScore = maxPossibleScore;
         attempt.percentage = percentage;
         attempt.sectionScores = sectionScores;
-        attempt.submittedAt = attempt.submittedAt || new Date();
-        attempt.status = 'completed';
+        attempt.evaluatedAt = new Date();
+        attempt.status = 'EVALUATED';
 
         await attempt.save();
         console.log(`[EvaluationWorker] Successfully graded Attempt ${attempt._id}. Score: ${totalScore}/${maxPossibleScore}`);
       } catch (err) {
         console.error(`[EvaluationWorker] Error processing attempt ${attempt._id}:`, err);
-        // It remains 'evaluating', will try again next batch
+        // Remains 'SUBMITTED', will retry
       }
     }
   } catch (err) {
@@ -106,3 +108,4 @@ export const startEvaluationWorker = () => {
   console.log('[EvaluationWorker] Background grading queue started.');
   setInterval(processQueue, 5000); // 5 sec interval polling
 };
+

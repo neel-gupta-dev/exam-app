@@ -1,7 +1,14 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const notificationSchema = new mongoose.Schema(
   {
+    tenantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Tenant',
+      required: true,
+      index: true,
+    },
     recipient: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
@@ -27,5 +34,5 @@ const notificationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Notification = mongoose.model('Notification', notificationSchema);
+const Notification = coreConnection.model('Notification', notificationSchema);
 export default Notification;

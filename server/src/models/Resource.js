@@ -1,3 +1,4 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const resourceSchema = new mongoose.Schema(
@@ -31,5 +32,5 @@ const resourceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Resource = mongoose.model('Resource', resourceSchema);
+const Resource = coreConnection.model('Resource', resourceSchema);
 export default Resource;

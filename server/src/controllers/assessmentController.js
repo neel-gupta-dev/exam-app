@@ -491,14 +491,20 @@ export const submitAssessment = asyncHandler(async (req, res) => {
 export const getMyAssessmentResults = asyncHandler(async (req, res) => {
   const attempts = await TestAttempt.find({
     userId: req.user._id,
-    status: { $in: ['completed', 'auto-submitted', 'evaluating'] },
+    status: { $in: ['SUBMITTED', 'EVALUATED'] },
   })
-    .populate('testId', 'title category totalMarks durationMinutes sections')
     .sort({ submittedAt: -1, createdAt: -1 })
     .limit(50)
     .lean();
 
+  const testIds = [...new Set(attempts.map(a => a.testId))];
+  const tests = await Test.find({ _id: { $in: testIds } })
+    .select('title category totalMarks durationMinutes sections')
+    .lean();
+  const testMap = Object.fromEntries(tests.map(t => [t._id.toString(), t]));
+
   res.json(attempts.map((attempt) => {
+    const test = testMap[attempt.testId?.toString()] || attempt.testId;
     const sectionScores = attempt.sectionScores instanceof Map
       ? Object.fromEntries(attempt.sectionScores)
       : attempt.sectionScores || {};
@@ -526,7 +532,7 @@ export const getMyAssessmentResults = asyncHandler(async (req, res) => {
     return {
       _id: attempt._id,
       status: attempt.status,
-      test: attempt.testId,
+      test: test,
       startedAt: attempt.startedAt,
       submittedAt: attempt.submittedAt,
       durationUsedMinutes: attempt.durationUsedMinutes,
@@ -565,29 +571,42 @@ export const getTestLeaderboard = asyncHandler(async (req, res) => {
 
   const attempts = await TestAttempt.find({
     testId,
-    status: { $in: ['completed', 'auto-submitted'] }
+    status: { $in: ['SUBMITTED', 'EVALUATED'] }
   })
-    .populate('userId', 'name username')
-    .sort({ submittedAt: 1 });
+    .sort({ submittedAt: 1 })
+    .lean();
+
+  import User from '../models/User.js'; // Needed for batch-fetch
+  const userIds = [...new Set(attempts.map(a => a.userId))];
+  // Batch fetch users in chunks of 500
+  import chunk from 'lodash/chunk.js';
+  const userChunks = chunk(userIds, 500);
+  const users = [];
+  for (const c of userChunks) {
+    const fetched = await User.find({ _id: { $in: c } }).select('name username').lean();
+    users.push(...fetched);
+  }
+  const userMap = Object.fromEntries(users.map(u => [u._id.toString(), u]));
 
   const seenUsers = new Set();
   const uniqueAttempts = [];
   for (const attempt of attempts) {
-    const uid = attempt.userId?._id?.toString();
+    const uid = attempt.userId?.toString();
     if (uid && !seenUsers.has(uid)) {
       seenUsers.add(uid);
+      attempt.user = userMap[uid] || { name: 'Anonymous Student', username: 'anonymous' };
       uniqueAttempts.push(attempt);
     }
   }
 
   uniqueAttempts.sort((a, b) => {
-    if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+    if (b.score !== a.score) return (b.score || 0) - (a.score || 0);
     return new Date(a.submittedAt) - new Date(b.submittedAt);
   });
 
   let myAttempt = null;
   const mappedLeaderboard = uniqueAttempts.map((attempt, index) => {
-    const isMe = attempt.userId?._id?.toString() === userId;
+    const isMe = attempt.userId?.toString() === userId;
     
     const sectionScores = attempt.sectionScores instanceof Map
       ? Object.fromEntries(attempt.sectionScores)
@@ -595,9 +614,9 @@ export const getTestLeaderboard = asyncHandler(async (req, res) => {
 
     const entry = {
       rank: index + 1,
-      name: isMe ? 'You' : (attempt.userId?.name || 'Anonymous Student'),
-      username: attempt.userId?.username || 'anonymous',
-      totalScore: attempt.totalScore,
+      name: isMe ? 'You' : attempt.user.name,
+      username: attempt.user.username,
+      totalScore: attempt.score || attempt.totalScore,
       maxPossibleScore: attempt.maxPossibleScore,
       percentage: attempt.percentage,
       sectionScores,
@@ -622,12 +641,14 @@ export const getAssessmentReview = asyncHandler(async (req, res) => {
   const { attemptId } = req.params;
   const userId = req.user._id.toString();
 
-  const attempt = await TestAttempt.findById(attemptId)
-    .populate('testId', 'title category durationMinutes totalMarks');
+  const attempt = await TestAttempt.findById(attemptId).lean();
 
   if (!attempt) {
     return res.status(404).json({ message: 'Attempt not found.' });
   }
+
+  const test = await Test.findById(attempt.testId).select('title category durationMinutes totalMarks').lean();
+  attempt.test = test;
 
   if (attempt.userId.toString() !== userId) {
     return res.status(403).json({ message: 'Access denied.' });
@@ -677,9 +698,9 @@ export const getAssessmentReview = asyncHandler(async (req, res) => {
 
   res.json({
     attemptSummary: {
-      testId: attempt.testId._id,
-      testTitle: attempt.testId.title,
-      totalScore: attempt.totalScore,
+      testId: test?._id,
+      testTitle: test?.title,
+      totalScore: attempt.score || attempt.totalScore,
       maxPossibleScore: attempt.maxPossibleScore,
       percentage: attempt.percentage,
       submittedAt: attempt.submittedAt,

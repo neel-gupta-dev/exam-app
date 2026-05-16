@@ -1,3 +1,4 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const groupSchema = new mongoose.Schema(
@@ -16,7 +17,7 @@ const groupSchema = new mongoose.Schema(
     tenantId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Tenant',
-      default: null, // null = B2C global group
+      required: true,
       index: true,
     },
     members: [
@@ -48,5 +49,5 @@ groupSchema.index({ tenantId: 1, name: 1 });
 // Index for fast "which groups is this user in?" queries
 groupSchema.index({ members: 1 });
 
-const Group = mongoose.model('Group', groupSchema);
+const Group = coreConnection.model('Group', groupSchema);
 export default Group;

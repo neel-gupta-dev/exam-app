@@ -10,7 +10,7 @@ import cookieParser from 'cookie-parser';
 import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import path from 'path';
-import connectDB from '../src/config/db.js';
+import { coreConnection, analyticsConnection, waitForConnections, closeConnections } from '../src/config/db.js';
 import { notFound, errorHandler } from '../src/middlewares/errorMiddleware.js';
 import authRoutes from '../src/routes/authRoutes.js';
 import feedbackRoutes from '../src/routes/feedback.js';
@@ -143,17 +143,15 @@ app.use((req, res, next) => {
 });
 app.use(compression());
 
-// Block requests strictly until Serverless DB resolves (Fixes Vercel Container Freezing Mongoose TCP)
-// This MUST come AFTER CORS so preflight OPTIONS get proper headers even during cold starts.
+// Safety middleware to ensure DBs are connected (primarily for Vercel cold starts)
 app.use(async (req, res, next) => {
   try {
-    await connectDB();
+    if (coreConnection.readyState !== 1 || analyticsConnection.readyState !== 1) {
+      await waitForConnections();
+    }
     next();
   } catch (error) {
     const errorMsg = process.env.NODE_ENV === 'development' ? error.message : 'Database Connection Failed';
-    if (req.path === '/health' || req.path === '/api/health') {
-       return res.json({ database: { status: 'failed', error: errorMsg } });
-    }
     res.status(503).json({ message: 'Database Connection Failed', error: errorMsg });
   }
 });
@@ -250,15 +248,56 @@ app.use(errorHandler);
 // --- Start Server ---
 if (!process.env.VERCEL) {
   const port = process.env.PORT || 5000;
-  app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+  
+  const startApp = async () => {
+    try {
+      // 1. Connect to Databases FIRST
+      console.log('[Server] Initializing databases...');
+      await waitForConnections();
 
-    // Run Janitor every 30 minutes
-    setInterval(closeExpiredSessions, 30 * 60 * 1000);
-    
-    // Start background grading engine
-    startEvaluationWorker();
-  });
+      // 2. Start Listening
+      const server = app.listen(port, () => {
+        console.log(`Server running on port ${port}`);
+
+        // 3. Start Background Workers ONLY after DB is ready
+        setInterval(closeExpiredSessions, 30 * 60 * 1000);
+        startEvaluationWorker();
+      });
+
+      // Graceful Shutdown
+      const shutdown = async (signal) => {
+        console.log(`[Server] ${signal} received. Closing connections...`);
+        
+        // Force-kill timeout to prevent hanging
+        const forceKill = setTimeout(() => {
+          console.error('[Server] Graceful shutdown timed out (10s), forcing exit.');
+          process.exit(1);
+        }, 10000);
+
+        try {
+          await closeConnections();
+          server.close(() => {
+            console.log('[Server] Process terminated cleanly');
+            clearTimeout(forceKill);
+            process.exit(0);
+          });
+        } catch (err) {
+          console.error('[Server] Error during shutdown:', err);
+          clearTimeout(forceKill);
+          process.exit(1);
+        }
+      };
+
+      process.on('SIGINT', () => shutdown('SIGINT'));
+      process.on('SIGTERM', () => shutdown('SIGTERM'));
+      
+    } catch (error) {
+      console.error('[Server] Critical startup error:', error);
+      process.exit(1);
+    }
+  };
+
+  startApp();
 }
 
 export default app;

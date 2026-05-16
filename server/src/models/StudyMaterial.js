@@ -1,3 +1,4 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const studyMaterialSchema = new mongoose.Schema(
@@ -58,5 +59,5 @@ studyMaterialSchema.pre('validate', function () {
 // Ensure compound index for faster searching
 studyMaterialSchema.index({ title: 'text', subject: 1 });
 
-const StudyMaterial = mongoose.model('StudyMaterial', studyMaterialSchema);
+const StudyMaterial = coreConnection.model('StudyMaterial', studyMaterialSchema);
 export default StudyMaterial;

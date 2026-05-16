@@ -1,3 +1,4 @@
+import { analyticsConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 /**
@@ -68,19 +69,6 @@ const activityLogSchema = new mongoose.Schema(
 
     /**
      * Flexible context payload — the "why" behind the "what".
-     * Examples per actionType:
-     *
-     * CHAPTER_CHECKED:
-     *   { columnId: 'col-2', chapterId: 'ch-01', previousState: false, newState: true }
-     *
-     * SESSION_ENDED:
-     *   { timeSpentMs: 3600000, sessionType: 'focus', targetSubject: 'Physics' }
-     *
-     * FLASHCARD_RATED:
-     *   { deckId: '...', difficulty: 'again', timeToAnswerMs: 4500 }
-     *
-     * CONFIDENCE_RATED:
-     *   { subject: 'Chemistry', score: 7, previousScore: 5 }
      */
     metadata: {
       type: mongoose.Schema.Types.Mixed,
@@ -89,19 +77,17 @@ const activityLogSchema = new mongoose.Schema(
   },
   {
     // createdAt is the primary time-series dimension — must be indexed
-    // updatedAt is intentionally omitted (events are immutable)
     timestamps: { createdAt: true, updatedAt: false },
   }
 );
 
-// Compound index for the most common analytics query pattern:
-// "Give me all CHAPTER_CHECKED events for user X in the last 30 days"
+// Compound index for the most common analytics query pattern
 activityLogSchema.index({ user: 1, actionType: 1, createdAt: -1 });
 
-// TTL Index (Optional, commented out): Auto-delete raw events after 2 years
-// to manage storage. Uncomment if needed.
-// activityLogSchema.index({ createdAt: 1 }, { expireAfterSeconds: 63072000 });
+// TTL Index: Auto-expire after 180 days (15552000 seconds)
+activityLogSchema.index({ createdAt: 1 }, { expireAfterSeconds: 15552000 });
 
-const ActivityLog = mongoose.model('ActivityLog', activityLogSchema);
+// Register on analyticsConnection
+const ActivityLog = analyticsConnection.model('ActivityLog', activityLogSchema);
 
 export default ActivityLog;

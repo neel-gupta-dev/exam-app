@@ -1,3 +1,4 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const cutoffSchema = new mongoose.Schema({
@@ -20,4 +21,4 @@ const cutoffSchema = new mongoose.Schema({
 // Compound index to quickly find and prevent overlaps based on year, counseling, and round
 cutoffSchema.index({ year: 1, counseling: 1, round: 1 });
 
-export default mongoose.model('Cutoff', cutoffSchema);
+export default coreConnection.model('Cutoff', cutoffSchema);

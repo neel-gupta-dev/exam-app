@@ -1,3 +1,4 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const flashcardSchema = new mongoose.Schema(
@@ -28,5 +29,5 @@ const flashcardSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Flashcard = mongoose.model('Flashcard', flashcardSchema);
+const Flashcard = coreConnection.model('Flashcard', flashcardSchema);
 export default Flashcard;

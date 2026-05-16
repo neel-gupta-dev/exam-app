@@ -1,3 +1,4 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const commentSchema = new mongoose.Schema(
@@ -28,6 +29,6 @@ const commentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Comment = mongoose.model('Comment', commentSchema);
+const Comment = coreConnection.model('Comment', commentSchema);
 
 export default Comment;

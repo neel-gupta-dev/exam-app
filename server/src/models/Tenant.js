@@ -1,3 +1,4 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const tenantSchema = new mongoose.Schema(
@@ -48,5 +49,5 @@ const tenantSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Tenant = mongoose.model('Tenant', tenantSchema);
+const Tenant = coreConnection.model('Tenant', tenantSchema);
 export default Tenant;

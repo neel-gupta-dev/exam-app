@@ -1,3 +1,4 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const upcomingExamSchema = new mongoose.Schema({
@@ -31,6 +32,6 @@ const upcomingExamSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-const UpcomingExam = mongoose.model('UpcomingExam', upcomingExamSchema);
+const UpcomingExam = coreConnection.model('UpcomingExam', upcomingExamSchema);
 
 export default UpcomingExam;

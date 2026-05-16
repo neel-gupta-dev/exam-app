@@ -1,3 +1,4 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const noteSchema = new mongoose.Schema(
@@ -34,5 +35,5 @@ const noteSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Note = mongoose.model('Note', noteSchema);
+const Note = coreConnection.model('Note', noteSchema);
 export default Note;

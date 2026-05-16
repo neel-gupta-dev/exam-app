@@ -11,26 +11,22 @@ import User from '../models/User.js';
 export const getCoachingResults = asyncHandler(async (req, res) => {
   const { tenantId, role } = req.user;
 
-  if (role === 'admin') {
-    // Superadmin can see everything — no tenant filter
-  } else if (!tenantId) {
+  if (role !== 'admin' && !tenantId) {
     res.status(403);
     throw new Error('No coaching assigned to this account.');
   }
 
-  // Find all students in this coaching
-  const studentFilter = role === 'admin' ? {} : { tenantId, role: 'student' };
-  const students = await User.find(studentFilter).select('_id name username');
-  const studentIds = students.map((s) => s._id);
-
-  // Optionally filter by test
-  const attemptFilter = { userId: { $in: studentIds }, status: 'completed' };
+  // Filter directly by tenantId thanks to the new schema
+  const attemptFilter = role === 'admin' ? {} : { tenantId };
+  attemptFilter.status = { $in: ['SUBMITTED', 'EVALUATED'] };
+  
   if (req.query.testId) attemptFilter.testId = req.query.testId;
 
   const attempts = await TestAttempt.find(attemptFilter)
     .populate('testId', 'title category totalMarks durationMinutes')
     .populate('userId', 'name username')
-    .sort({ submittedAt: -1 });
+    .sort({ submittedAt: -1 })
+    .lean();
 
   res.json(attempts);
 });
@@ -43,36 +39,32 @@ export const getCoachingResults = asyncHandler(async (req, res) => {
 export const getTestSummary = asyncHandler(async (req, res) => {
   const { tenantId, role } = req.user;
 
-  const studentFilter = role === 'admin' ? {} : { tenantId, role: 'student' };
-  const students = await User.find(studentFilter).select('_id');
-  const studentIds = students.map((s) => s._id);
+  const attemptFilter = role === 'admin' ? { testId: req.params.testId } : { testId: req.params.testId, tenantId };
+  attemptFilter.status = { $in: ['SUBMITTED', 'EVALUATED'] };
 
-  const attempts = await TestAttempt.find({
-    testId: req.params.testId,
-    userId: { $in: studentIds },
-    status: 'completed',
-  })
+  const attempts = await TestAttempt.find(attemptFilter)
     .populate('userId', 'name username')
-    .sort({ totalScore: -1 }); // Sorted by rank
+    .sort({ score: -1, totalScore: -1 }) // Sorted by rank
+    .lean();
 
-  const test = await Test.findById(req.params.testId).select('title totalMarks');
+  const test = await Test.findById(req.params.testId).select('title totalMarks').lean();
 
   const totalAttempts = attempts.length;
   const avgScore = totalAttempts > 0
-    ? Math.round(attempts.reduce((sum, a) => sum + (a.totalScore || 0), 0) / totalAttempts)
+    ? Math.round(attempts.reduce((sum, a) => sum + (a.score || a.totalScore || 0), 0) / totalAttempts)
     : 0;
-  const highestScore = totalAttempts > 0 ? attempts[0]?.totalScore || 0 : 0;
+  const highestScore = totalAttempts > 0 ? (attempts[0]?.score || attempts[0]?.totalScore || 0) : 0;
 
   // Build leaderboard
   const leaderboard = attempts.map((a, idx) => ({
     rank: idx + 1,
-    name: a.userId?.name,
+    name: a.userId?.name || 'Anonymous',
     username: a.userId?.username,
-    score: a.totalScore,
+    score: a.score || a.totalScore,
     percentage: a.percentage,
-    timeTaken: a.submittedAt && a.startedAt
+    timeTaken: a.durationUsedMinutes || (a.submittedAt && a.startedAt
       ? Math.round((new Date(a.submittedAt) - new Date(a.startedAt)) / 60000)
-      : null,
+      : null),
   }));
 
   res.json({

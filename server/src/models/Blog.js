@@ -1,3 +1,4 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const blogSchema = new mongoose.Schema(
@@ -63,6 +64,6 @@ blogSchema.pre('validate', function () {
   }
 });
 
-const Blog = mongoose.model('Blog', blogSchema);
+const Blog = coreConnection.model('Blog', blogSchema);
 
 export default Blog;

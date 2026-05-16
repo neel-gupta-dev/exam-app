@@ -1,3 +1,4 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const columnSchema = new mongoose.Schema({
@@ -53,6 +54,6 @@ const chapterListSchema = new mongoose.Schema(
 // Ensure a user only has one tracker per subject
 chapterListSchema.index({ user: 1, subject: 1 }, { unique: true });
 
-const ChapterList = mongoose.model('ChapterList', chapterListSchema);
+const ChapterList = coreConnection.model('ChapterList', chapterListSchema);
 
 export default ChapterList;

@@ -1,3 +1,4 @@
+import { analyticsConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const sessionSchema = new mongoose.Schema(
@@ -41,5 +42,15 @@ const sessionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Session = mongoose.model('Session', sessionSchema);
+// TTL Index: Auto-expire after 365 days
+sessionSchema.index({ createdAt: 1 }, { expireAfterSeconds: 31536000 });
+
+/**
+ * Note on Architecture: 
+ * Currently, heartbeat tracking updates the lastActiveAt field directly in MongoDB. 
+ * This creates high write-throughput on the analytics DB during peak traffic.
+ * FUTURE: Heartbeat tracking should be migrated to Redis with a flush-to-DB cron job.
+ */
+
+const Session = analyticsConnection.model('Session', sessionSchema);
 export default Session;

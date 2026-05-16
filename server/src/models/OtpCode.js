@@ -1,3 +1,4 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const otpCodeSchema = new mongoose.Schema({
@@ -14,7 +15,6 @@ const otpCodeSchema = new mongoose.Schema({
   expiresAt: {
     type: Date,
     required: true,
-    index: { expires: 0 }, // TTL index — document auto-deletes when expiresAt is reached
   },
   type: {
     type: String,
@@ -27,5 +27,8 @@ const otpCodeSchema = new mongoose.Schema({
   },
 });
 
-const OtpCode = mongoose.model('OtpCode', otpCodeSchema);
+// TTL index — MongoDB uses the date value in expiresAt directly when expireAfterSeconds is 0
+otpCodeSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+
+const OtpCode = coreConnection.model('OtpCode', otpCodeSchema);
 export default OtpCode;

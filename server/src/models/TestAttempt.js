@@ -1,3 +1,4 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const answerSchema = new mongoose.Schema(
@@ -61,6 +62,12 @@ const answerSchema = new mongoose.Schema(
 
 const testAttemptSchema = new mongoose.Schema(
   {
+    tenantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Tenant',
+      required: true,
+      index: true,
+    },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
@@ -70,19 +77,28 @@ const testAttemptSchema = new mongoose.Schema(
     testId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Test',
-      required: true,
+      required: function() { return !this.isManual; },
       index: true,
     },
     status: {
       type: String,
-      enum: ['in-progress', 'completed', 'auto-submitted', 'evaluating'],
-      default: 'in-progress',
+      enum: ['IN_PROGRESS', 'SUBMITTED', 'EVALUATED'],
+      default: 'IN_PROGRESS',
+      index: true,
+    },
+    isManual: {
+      type: Boolean,
+      default: false,
     },
     startedAt: {
       type: Date,
       default: Date.now,
     },
     submittedAt: {
+      type: Date,
+      default: null,
+    },
+    evaluatedAt: {
       type: Date,
       default: null,
     },
@@ -100,19 +116,37 @@ const testAttemptSchema = new mongoose.Schema(
      * On submission, final state is written here permanently.
      */
     answers: [answerSchema],
-    // --- Computed on submission ---
-    totalScore: {
+    
+    // --- Scoring & Results (Merged from TestResult) ---
+    score: {
       type: Number,
-      default: null,
+      default: 0,
+    },
+    totalScore: { // Legacy field, keeping for worker compatibility during migration
+      type: Number,
+      default: 0,
     },
     maxPossibleScore: {
       type: Number,
-      default: null,
+      default: 0,
     },
     percentage: {
       type: Number,
-      default: null,
+      default: 0,
     },
+    subject: {
+      type: String,
+      trim: true,
+    },
+    testName: {
+      type: String,
+      trim: true,
+    },
+    comments: {
+      type: String,
+      trim: true,
+    },
+
     /**
      * Per-section score breakdown.
      * e.g., { "Physics": { correct: 10, wrong: 2, score: 38 }, ... }
@@ -175,10 +209,10 @@ const testAttemptSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Compound index for fast lookup (no longer unique as retakes are allowed)
-testAttemptSchema.index({ userId: 1, testId: 1 });
-// For coaching admin: list all attempts for a test
-testAttemptSchema.index({ testId: 1, status: 1 });
+// Compound indexes for high-performance dashboarding
+testAttemptSchema.index({ tenantId: 1, testId: 1 });
+testAttemptSchema.index({ userId: 1, status: 1 });
 
-const TestAttempt = mongoose.model('TestAttempt', testAttemptSchema);
+const TestAttempt = coreConnection.model('TestAttempt', testAttemptSchema);
+
 export default TestAttempt;

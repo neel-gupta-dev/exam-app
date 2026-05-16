@@ -1,3 +1,4 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
@@ -294,5 +295,5 @@ userSchema.virtual('levelData').get(function() {
   };
 });
 
-const User = mongoose.model('User', userSchema);
+const User = coreConnection.model('User', userSchema);
 export default User;

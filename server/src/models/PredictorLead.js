@@ -1,3 +1,4 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const PredictorLeadSchema = new mongoose.Schema({
@@ -68,4 +69,6 @@ const PredictorLeadSchema = new mongoose.Schema({
   timestamps: { createdAt: 'submitted_at', updatedAt: false }
 });
 
-export default mongoose.models.PredictorLead || mongoose.model('PredictorLead', PredictorLeadSchema);
+const PredictorLead = coreConnection.model('PredictorLead', PredictorLeadSchema);
+
+export default PredictorLead;

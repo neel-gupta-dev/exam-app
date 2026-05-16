@@ -1,3 +1,4 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const deckSchema = new mongoose.Schema(
@@ -25,5 +26,5 @@ const deckSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Deck = mongoose.model('Deck', deckSchema);
+const Deck = coreConnection.model('Deck', deckSchema);
 export default Deck;

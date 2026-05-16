@@ -1,3 +1,4 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const blockSchema = new mongoose.Schema(
@@ -51,5 +52,5 @@ const cheatsheetSectionSchema = new mongoose.Schema(
 
 cheatsheetSectionSchema.index({ subject: 1, order: 1 });
 
-const CheatsheetSection = mongoose.model('CheatsheetSection', cheatsheetSectionSchema);
+const CheatsheetSection = coreConnection.model('CheatsheetSection', cheatsheetSectionSchema);
 export default CheatsheetSection;

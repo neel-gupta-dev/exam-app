@@ -17,7 +17,6 @@ import Follow from '../models/Follow.js';
 import Group from '../models/Group.js';
 import Notification from '../models/Notification.js';
 import TestAttempt from '../models/TestAttempt.js';
-import TestResult from '../models/TestResult.js';
 import UserCardProgress from '../models/UserCardProgress.js';
 import asyncHandler from 'express-async-handler';
 import mongoose from 'mongoose';
@@ -221,7 +220,6 @@ router.delete('/users/:id', asyncHandler(async (req, res) => {
     Resource.deleteMany({ userId: user._id }),
     Note.deleteMany({ userId: user._id }),
     FocusSession.deleteMany({ userId: user._id }),
-    TestResult.deleteMany({ userId: user._id }),
     TestAttempt.deleteMany({ userId: user._id }),
     ChapterList.deleteMany({ user: user._id }),
     ActivityLog.deleteMany({ user: user._id }),

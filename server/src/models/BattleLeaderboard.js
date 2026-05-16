@@ -1,15 +1,16 @@
+import { analyticsConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 /**
- * BattleLeaderboard — Daily per-user score aggregation.
- *
- * Each document represents ONE user's performance for ONE day (IST).
- * Scoring: correct answer → +4, wrong answer → −1, skipped → 0.
- *
- * The `date` field stores the IST calendar date as a string ("YYYY-MM-DD")
- * so the leaderboard naturally resets at midnight IST without any cron job.
- */
+  * BattleLeaderboard — Daily per-user score aggregation.
+  */
 const BattleLeaderboardSchema = new mongoose.Schema({
+  tenantId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Tenant',
+    required: true,
+    index: true,
+  },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -37,14 +38,12 @@ const BattleLeaderboardSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
-// Fast daily top-N query
-BattleLeaderboardSchema.index({ date: 1, points: -1 });
+// Fast daily top-N query within a tenant
+BattleLeaderboardSchema.index({ tenantId: 1, date: 1, points: -1 });
 
-// One entry per user per day
-BattleLeaderboardSchema.index({ userId: 1, date: 1 }, { unique: true });
+// One entry per user per day per tenant
+BattleLeaderboardSchema.index({ tenantId: 1, userId: 1, date: 1 }, { unique: true });
 
-const BattleLeaderboard =
-  mongoose.models.BattleLeaderboard ||
-  mongoose.model('BattleLeaderboard', BattleLeaderboardSchema);
+const BattleLeaderboard = analyticsConnection.model('BattleLeaderboard', BattleLeaderboardSchema);
 
 export default BattleLeaderboard;

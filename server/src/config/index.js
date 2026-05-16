@@ -17,6 +17,9 @@ const isProd = process.env.NODE_ENV === 'production';
 export const MONGO_URI = process.env.MONGO_URI || 
     (isProd ? undefined : 'mongodb://localhost:27017/vayl');
 
+export const ANALYTICS_MONGO_URI = process.env.ANALYTICS_MONGO_URI || 
+    (isProd ? undefined : 'mongodb://localhost:27017/vayl_analytics');
+
 export const PORT = process.env.PORT || 5000;
 
 export const FRONTEND_URL = process.env.FRONTEND_URL || 

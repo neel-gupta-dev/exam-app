@@ -1,112 +1,37 @@
+import { coreConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const testSchema = new mongoose.Schema(
   {
+    tenantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Tenant',
+      required: true,
+      index: true,
+    },
     title: {
       type: String,
-      required: [true, 'Test title is required'],
+      required: true,
       trim: true,
     },
     description: {
       type: String,
       trim: true,
-      default: '',
     },
     category: {
       type: String,
-      trim: true,
-      default: 'General', // "JEE Advance", "NEET", "CUET", etc.
-    },
-    testType: {
-      type: String,
-      enum: ['full', 'part', 'pyp'],
-      default: 'full',
-    },
-    durationMinutes: {
-      type: Number,
-      required: [true, 'Duration is required'],
-      min: 1,
+      enum: ['JEE Mains', 'JEE Advanced', 'NEET', 'BITSAT', 'CUET', 'Other'],
+      required: true,
+      index: true,
     },
     totalMarks: {
       type: Number,
-      required: [true, 'Total marks is required'],
-      min: 1,
-    },
-    sections: [
-      {
-        sectionId: { type: String, trim: true },      // e.g., "physics_b"
-        name: { type: String, trim: true },           // "Physics Section B"
-        questionCount: { type: Number, default: 0 },
-        maxAttemptable: { type: Number, default: null }, // e.g., 10 for NEET Sec B
-      },
-    ],
-    syllabus: {
-      type: [String],
-      default: [],
-    },
-    instructions: {
-      general: {
-        type: [String],
-        default: [
-          'The countdown timer shows the remaining time available to complete the test.',
-          'The test will be submitted automatically when the timer reaches zero.',
-          'Use the question palette to navigate between questions and review answer status.',
-        ],
-      },
-      other: {
-        type: [String],
-        default: [
-          'Do not refresh, close, or switch away from the test window unless instructed.',
-          'Ensure your internet connection remains stable for the duration of the test.',
-        ],
-      },
-      declaration: {
-        type: String,
-        default: 'I have read and understood the instructions. I agree to follow the test rules and understand that violations may lead to submission or disqualification.',
-      },
-    },
-    // --- Audience Targeting ---
-    visibility: {
-      type: String,
-      enum: ['b2c_public', 'b2c_group', 'b2b_coaching', 'b2b_group'],
-      default: 'b2c_public',
-    },
-    targetGroups: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Group',
-      },
-    ],
-    targetTenants: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Tenant',
-      },
-    ],
-    // --- Publishing ---
-    isPublished: {
-      type: Boolean,
-      default: false,
-    },
-    scheduledStartAt: {
-      type: Date,
-      default: null, // null = available immediately on publish
-    },
-    scheduledEndAt: {
-      type: Date,
-      default: null, // null = no expiry
-    },
-    // --- Metadata ---
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
       required: true,
     },
-    questionCount: {
+    durationMinutes: {
       type: Number,
-      default: 0, // Denormalized for fast listing (avoid counting questions)
+      required: true,
     },
-    // --- Marking Scheme (global defaults, overridable per question) ---
     defaultPositiveMarks: {
       type: Number,
       default: 4,
@@ -115,37 +40,52 @@ const testSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
+    sections: [
+      {
+        name: { type: String, required: true },
+        questionCount: { type: Number, required: true },
+        maxAttemptable: { type: Number },
+      }
+    ],
+    isPublished: {
+      type: Boolean,
+      default: false,
+    },
+    startDate: {
+      type: Date,
+      default: null,
+    },
+    endDate: {
+      type: Date,
+      default: null,
+    },
+    allowedAttemptCount: {
+      type: Number,
+      default: 1,
+    },
+    tags: [String],
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
   },
   { timestamps: true }
 );
 
-// Index for the core student-facing query
-testSchema.index({ isPublished: 1, visibility: 1 });
-testSchema.index({ targetTenants: 1 });
-testSchema.index({ targetGroups: 1 });
-
-/**
- * Serializes the test metadata into a Redis-cacheable JSON payload.
- * Call this when publishing to build the cached version.
- * Questions are fetched separately and attached before caching.
- */
-testSchema.methods.toRedisPayload = function () {
+// Method to strip sensitive info before sending to Redis/Client
+testSchema.methods.toRedisPayload = function() {
+  const obj = this.toObject();
   return {
-    _id: this._id.toString(),
-    title: this.title,
-    description: this.description,
-    category: this.category,
-    durationMinutes: this.durationMinutes,
-    totalMarks: this.totalMarks,
-    sections: this.sections,
-    syllabus: this.syllabus,
-    instructions: this.instructions,
-    questionCount: this.questionCount,
-    defaultPositiveMarks: this.defaultPositiveMarks,
-    defaultNegativeMarks: this.defaultNegativeMarks,
-    // Questions will be attached by the controller before SET
+    _id: obj._id,
+    title: obj.title,
+    category: obj.category,
+    durationMinutes: obj.durationMinutes,
+    totalMarks: obj.totalMarks,
+    sections: obj.sections,
   };
 };
 
-const Test = mongoose.model('Test', testSchema);
+const Test = coreConnection.model('Test', testSchema);
+
 export default Test;

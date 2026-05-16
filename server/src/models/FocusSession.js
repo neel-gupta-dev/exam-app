@@ -1,3 +1,4 @@
+import { analyticsConnection } from '../config/db.js';
 import mongoose from 'mongoose';
 
 const focusSessionSchema = new mongoose.Schema(
@@ -50,5 +51,8 @@ const focusSessionSchema = new mongoose.Schema(
 // Index for aggregation performance
 focusSessionSchema.index({ userId: 1, createdAt: -1 });
 
-const FocusSession = mongoose.model('FocusSession', focusSessionSchema);
+// TTL Index: Auto-expire after 180 days
+focusSessionSchema.index({ createdAt: 1 }, { expireAfterSeconds: 15552000 });
+
+const FocusSession = analyticsConnection.model('FocusSession', focusSessionSchema);
 export default FocusSession;
