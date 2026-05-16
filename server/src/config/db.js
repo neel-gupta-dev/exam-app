@@ -4,9 +4,10 @@ import { MONGO_URI, ANALYTICS_MONGO_URI } from './index.js';
 const connectionOptions = {
   maxPoolSize: 10,
   socketTimeoutMS: 45000,
-  serverSelectionTimeoutMS: 5000,
+  serverSelectionTimeoutMS: 10000, // Increased to 10s for slower local startups
   heartbeatFrequencyMS: 10000,
   retryWrites: true,
+  family: 4, // Enforce IPv4, avoids IPv6 localhost timeouts in Node 17+
 };
 
 // 1. Establish isolated connections
@@ -22,26 +23,19 @@ analyticsConnection.on('error', (err) => console.error('[DB] Analytics DB Error:
 
 /**
  * Ensures both connections are fully established before proceeding.
+ * Uses Mongoose's native asPromise() to safely await the connection pool.
  */
-export const waitForConnections = () => {
-  const wait = (conn, label) => {
-    if (conn.readyState === 1) return Promise.resolve();
-    return new Promise((resolve, reject) => {
-      conn.once('connected', () => {
-        console.log(`[DB] ${label} resolved connection.`);
-        resolve();
-      });
-      conn.once('error', (err) => {
-        console.error(`[DB] ${label} failed to connect.`);
-        reject(err);
-      });
-    });
-  };
-
-  return Promise.all([
-    wait(coreConnection, 'CORE'),
-    wait(analyticsConnection, 'ANALYTICS')
-  ]);
+export const waitForConnections = async () => {
+  try {
+    await Promise.all([
+      coreConnection.asPromise(),
+      analyticsConnection.asPromise()
+    ]);
+    console.log('[DB] Both connections fully established.');
+  } catch (err) {
+    console.error('[DB] Failed to establish connections:', err);
+    throw err;
+  }
 };
 
 /**
