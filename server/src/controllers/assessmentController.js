@@ -2,8 +2,18 @@ import asyncHandler from 'express-async-handler';
 import Test from '../models/Test.js';
 import Question from '../models/Question.js';
 import TestAttempt from '../models/TestAttempt.js';
+import User from '../models/User.js';
 import { getRedis } from '../config/redis.js';
 import { assertCanAttemptTest } from '../services/attemptService.js';
+
+/** Split an array into chunks of `size` */
+const chunkArray = (arr, size) => {
+  const result = [];
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size));
+  }
+  return result;
+};
 
 const VALID_ANSWER_STATUSES = new Set([
   'unanswered',
@@ -576,11 +586,9 @@ export const getTestLeaderboard = asyncHandler(async (req, res) => {
     .sort({ submittedAt: 1 })
     .lean();
 
-  import User from '../models/User.js'; // Needed for batch-fetch
   const userIds = [...new Set(attempts.map(a => a.userId))];
   // Batch fetch users in chunks of 500
-  import chunk from 'lodash/chunk.js';
-  const userChunks = chunk(userIds, 500);
+  const userChunks = chunkArray(userIds, 500);
   const users = [];
   for (const c of userChunks) {
     const fetched = await User.find({ _id: { $in: c } }).select('name username').lean();

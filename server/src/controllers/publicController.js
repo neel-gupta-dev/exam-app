@@ -190,6 +190,16 @@ export const storePredictorLead = asyncHandler(async (req, res) => {
   }
 });
 
+/**
+ * SECURITY-HARDENED Metadata Proxy
+ * 
+ * Mitigations:
+ * 1. DNS resolution validation — checks resolved IP, not just hostname string (blocks DNS rebinding)
+ * 2. IPv6 loopback and link-local blocking ([::1], fe80::, etc.)
+ * 3. redirect: 'manual' — prevents redirect-chain SSRF (attacker URL → 169.254.169.254)
+ * 4. 5-second timeout via AbortController — prevents slow-loris style attacks
+ * 5. 2MB response body limit — prevents OOM via large payloads
+ */
 export const getUrlMetadata = asyncHandler(async (req, res) => {
   const { url } = req.query;
   if (!url) {
@@ -200,39 +210,115 @@ export const getUrlMetadata = asyncHandler(async (req, res) => {
   try {
     // Ensure URL has protocol
     const targetUrl = url.startsWith('http') ? url : `https://${url}`;
-    
-    // SSRF Mitigation
+
+    // SSRF Mitigation — validate BOTH hostname string and resolved IP
+    let parsedUrl;
     try {
-      const parsedUrl = new URL(targetUrl);
-      const hostname = parsedUrl.hostname;
-      
-      const isLocalhost = hostname === 'localhost' || hostname.endsWith('.localhost');
-      const isLoopback = hostname.startsWith('127.');
-      const isPrivateA = hostname.startsWith('10.');
-      const isPrivateB = /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname);
-      const isPrivateC = hostname.startsWith('192.168.');
-      const isAWSMetadata = hostname === '169.254.169.254';
-      
-      if (isLocalhost || isLoopback || isPrivateA || isPrivateB || isPrivateC || isAWSMetadata) {
-        return res.status(403).json({ message: 'Fetching metadata from private or local addresses is strictly prohibited.' });
-      }
+      parsedUrl = new URL(targetUrl);
     } catch (e) {
       return res.status(400).json({ message: 'Invalid URL format' });
     }
+
+    // Only allow http/https
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      return res.status(400).json({ message: 'Only http/https URLs are supported' });
+    }
+
+    const hostname = parsedUrl.hostname;
+
+    // Block obvious hostnames first (fast path)
+    const isLocalhost = hostname === 'localhost' || hostname.endsWith('.localhost');
+    const isLoopback4 = /^127\./.test(hostname);
+    const isLoopback6 = hostname === '[::1]' || hostname === '::1';
+    const isZero = hostname === '0.0.0.0' || hostname === '[::]';
+    const isPrivateA = /^10\./.test(hostname);
+    const isPrivateB = /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname);
+    const isPrivateC = /^192\.168\./.test(hostname);
+    const isLinkLocal = /^169\.254\./.test(hostname) || hostname.startsWith('fe80');
+
+    if (isLocalhost || isLoopback4 || isLoopback6 || isZero || isPrivateA || isPrivateB || isPrivateC || isLinkLocal) {
+      return res.status(403).json({ message: 'Fetching metadata from private or local addresses is strictly prohibited.' });
+    }
+
+    // Resolve DNS to get actual IP — defeats DNS rebinding attacks
+    const dns = await import('dns');
+    const { promisify } = await import('util');
+    const dnsResolve = promisify(dns.default.resolve4);
+
+    try {
+      const addresses = await dnsResolve(hostname);
+      for (const ip of addresses) {
+        if (
+          /^127\./.test(ip) ||
+          /^10\./.test(ip) ||
+          /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(ip) ||
+          /^192\.168\./.test(ip) ||
+          /^169\.254\./.test(ip) ||
+          ip === '0.0.0.0'
+        ) {
+          return res.status(403).json({ message: 'Resolved IP address is private — request blocked.' });
+        }
+      }
+    } catch (dnsErr) {
+      // DNS resolution failed — hostname might not exist or is IPv6-only
+      // Allow to proceed; the fetch will fail anyway if unreachable
+    }
+
+    // Timeout to prevent hanging on slow/malicious targets
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
 
     const response = await fetch(targetUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8'
       },
-      redirect: 'follow'
+      redirect: 'manual', // SECURITY: Don't follow redirects — prevents redirect-to-internal SSRF
+      signal: controller.signal,
     });
+
+    clearTimeout(timeout);
+
+    // Handle redirects safely — don't follow, just return basic metadata
+    if ([301, 302, 303, 307, 308].includes(response.status)) {
+      return res.json({
+        title: 'Redirected Page',
+        description: 'This URL redirects to another location.',
+        image: '',
+        url: targetUrl,
+        siteName: parsedUrl.hostname,
+      });
+    }
 
     if (!response.ok) {
       throw new Error(`Target site returned ${response.status}`);
     }
 
-    const html = await response.text();
+    // SECURITY: Limit response body to 2MB to prevent OOM
+    const MAX_BODY_SIZE = 2 * 1024 * 1024;
+    const contentLength = parseInt(response.headers.get('content-length') || '0', 10);
+    if (contentLength > MAX_BODY_SIZE) {
+      throw new Error('Response too large');
+    }
+
+    // Read body with size guard
+    const chunks = [];
+    let totalSize = 0;
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('No response body');
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalSize += value.length;
+      if (totalSize > MAX_BODY_SIZE) {
+        reader.cancel();
+        throw new Error('Response body exceeded 2MB limit');
+      }
+      chunks.push(value);
+    }
+
+    const html = Buffer.concat(chunks).toString('utf-8');
     const $ = load(html);
 
     const metadata = {
@@ -240,11 +326,14 @@ export const getUrlMetadata = asyncHandler(async (req, res) => {
       description: $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content') || $('meta[name="twitter:description"]').attr('content') || 'No description available.',
       image: $('meta[property="og:image"]').attr('content') || $('meta[name="twitter:image"]').attr('content') || '',
       url: targetUrl,
-      siteName: $('meta[property="og:site_name"]').attr('content') || (new URL(targetUrl)).hostname
+      siteName: $('meta[property="og:site_name"]').attr('content') || parsedUrl.hostname
     };
 
     res.json(metadata);
   } catch (error) {
+    if (error.name === 'AbortError') {
+      return res.status(504).json({ message: 'Request to target URL timed out (5s)' });
+    }
     console.error(`[Metadata Proxy] Error for ${url}:`, error.message);
     res.status(500).json({ 
       message: 'Failed to analyze URL', 

@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import User from '../models/User.js';
 import Session from '../models/Session.js';
 import Resource from '../models/Resource.js';
@@ -5,6 +6,31 @@ import OtpCode from '../models/OtpCode.js';
 import { generateVaultId } from '../utils/generateVaultId.js';
 import generateToken from '../utils/generateToken.js';
 import { sendOtpEmail } from '../utils/mailer.js';
+
+/**
+ * SECURITY: Validate password strength.
+ * - Min 8 characters (industry standard)
+ * - Max 72 characters (bcrypt silently truncates beyond this)
+ * - At least 1 letter and 1 number
+ */
+const validatePasswordStrength = (password) => {
+  if (!password || typeof password !== 'string') {
+    return 'Password is required';
+  }
+  if (password.length < 8) {
+    return 'Password must be at least 8 characters long';
+  }
+  if (password.length > 72) {
+    return 'Password must not exceed 72 characters (security limit)';
+  }
+  if (!/[a-zA-Z]/.test(password)) {
+    return 'Password must contain at least one letter';
+  }
+  if (!/[0-9]/.test(password)) {
+    return 'Password must contain at least one number';
+  }
+  return null; // valid
+};
 /**
  * Mock helper to get location from IP (skips localhost)
  * Removed geoip-lite to speed up Railway builds (large database download).
@@ -41,6 +67,14 @@ export const registerUser = async ({ name, email, password, ipAddress }) => {
 
   // Clean up the verified OTP record now that we're creating the account
   await OtpCode.deleteMany({ email: cleanEmail, type: 'signup' });
+
+  // SECURITY: Validate password strength before creating user
+  const passwordError = validatePasswordStrength(password);
+  if (passwordError) {
+    const error = new Error(passwordError);
+    error.statusCode = 400;
+    throw error;
+  }
 
   const user = await User.create({ 
     name, 
@@ -295,7 +329,8 @@ export const sendOtp = async (email) => {
   // Delete any existing OTP for this email
   await OtpCode.deleteMany({ email: cleanEmail, type: 'student_verify' });
 
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  // SECURITY: Use crypto.randomInt for cryptographically secure OTP generation
+  const code = crypto.randomInt(100000, 1000000).toString();
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
   await OtpCode.create({ email: cleanEmail, code, expiresAt, type: 'student_verify' });
@@ -367,7 +402,8 @@ export const sendSignupOtp = async (email) => {
   // Delete any existing signup OTPs for this email
   await OtpCode.deleteMany({ email: cleanEmail, type: 'signup' });
 
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  // SECURITY: Use crypto.randomInt for cryptographically secure OTP generation
+  const code = crypto.randomInt(100000, 1000000).toString();
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
   await OtpCode.create({ email: cleanEmail, code, expiresAt, type: 'signup' });
@@ -513,6 +549,14 @@ export const updateUserPassword = async ({ userId, oldPassword, newPassword }) =
       error.statusCode = 401;
       throw error;
     }
+  }
+
+  // SECURITY: Validate new password strength
+  const passwordError = validatePasswordStrength(newPassword);
+  if (passwordError) {
+    const error = new Error(passwordError);
+    error.statusCode = 400;
+    throw error;
   }
 
   user.password = newPassword;

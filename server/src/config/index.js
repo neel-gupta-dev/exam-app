@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -29,8 +30,21 @@ export const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
   : [FRONTEND_URL];
 
-export const JWT_SECRET = process.env.JWT_SECRET || (isProd ? undefined : 'your_jwt_secret_here');
+// SECURITY: JWT_SECRET must be explicitly configured.
+// In production: crash immediately if missing (fail-fast, not fail-silently-on-first-request).
+// In development: generate a random ephemeral secret per process start (never hardcoded).
 
+export const JWT_SECRET = (() => {
+  if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
+  if (isProd) {
+    console.error('\n[FATAL] JWT_SECRET environment variable is not set in production.\nThe server cannot start without it — all authentication would be broken.\nSet it in your hosting dashboard (Vercel/Railway env vars).\n');
+    process.exit(1);
+  }
+  // Dev: generate a per-process random secret (never a well-known hardcoded string)
+  const devSecret = crypto.randomBytes(32).toString('hex');
+  console.warn('[Config] JWT_SECRET not set — using a random ephemeral secret for this dev session.');
+  return devSecret;
+})();
 
 // Google OAuth Configuration
 export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -40,11 +54,15 @@ export const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL ||
     ? '' 
     : 'http://localhost:5000/auth/google/callback');
 
-// Validation in Dev
-if (!isProd) {
-    if (!MONGO_URI) console.warn('[Config] MONGO_URI missing.');
-    if (!JWT_SECRET) console.warn('[Config] JWT_SECRET missing.');
-    if (!GOOGLE_CLIENT_ID) console.warn('[Config] GOOGLE_CLIENT_ID missing.');
+// Validation — crash in production if critical vars are missing
+if (isProd) {
+  if (!MONGO_URI) {
+    console.error('[FATAL] MONGO_URI is not set in production. Exiting.');
+    process.exit(1);
+  }
+} else {
+  if (!MONGO_URI) console.warn('[Config] MONGO_URI missing.');
+  if (!GOOGLE_CLIENT_ID) console.warn('[Config] GOOGLE_CLIENT_ID missing.');
 }
 
 export default {
