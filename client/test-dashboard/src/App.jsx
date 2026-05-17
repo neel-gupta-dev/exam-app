@@ -132,7 +132,7 @@ export default function App() {
       params.delete('exam');
     }
     const newSearch = params.toString();
-    const newUrl = `${window.location.pathname}${newSearch ? '?' + newSearch : ''}`;
+    const newUrl = `${window.location.pathname}${newSearch ? '?' + newSearch : ''}${window.location.hash}`;
     window.history.replaceState(null, '', newUrl);
   }, [examFilter]);
   const [showExamHint, setShowExamHint] = useState(() => {
