@@ -6,7 +6,7 @@ const testSchema = new mongoose.Schema(
     tenantId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Tenant',
-      required: true,
+      required: false, // Global/B2C tests don't have a specific tenant
       index: true,
     },
     title: {
@@ -20,9 +20,14 @@ const testSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['JEE Mains', 'JEE Advanced', 'NEET', 'BITSAT', 'CUET', 'Other'],
+      enum: ['JEE Mains', 'JEE Advanced', 'NEET', 'BITSAT', 'CUET', 'Other', 'General'],
       required: true,
       index: true,
+    },
+    testType: {
+      type: String,
+      enum: ['full', 'part', 'pyp'],
+      default: 'full',
     },
     totalMarks: {
       type: Number,
@@ -40,6 +45,10 @@ const testSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
+    questionCount: {
+      type: Number,
+      default: 0,
+    },
     sections: [
       {
         name: { type: String, required: true },
@@ -47,15 +56,34 @@ const testSchema = new mongoose.Schema(
         maxAttemptable: { type: Number },
       }
     ],
+    visibility: {
+      type: String,
+      enum: ['b2c_public', 'b2c_group', 'b2b_coaching', 'b2b_group'],
+      default: 'b2c_public',
+    },
+    targetTenants: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Tenant',
+    }],
+    targetGroups: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Group',
+    }],
+    syllabus: [String],
+    instructions: {
+      general: [String],
+      other: [String],
+      declaration: String,
+    },
     isPublished: {
       type: Boolean,
       default: false,
     },
-    startDate: {
+    scheduledStartAt: {
       type: Date,
       default: null,
     },
-    endDate: {
+    scheduledEndAt: {
       type: Date,
       default: null,
     },

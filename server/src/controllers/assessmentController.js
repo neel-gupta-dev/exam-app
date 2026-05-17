@@ -356,13 +356,10 @@ export const syncAssessment = asyncHandler(async (req, res) => {
   const userId = req.user._id.toString();
   const redis = getRedis();
 
-  const { answers, timeLeft, deviceInfo } = req.body;
+  // SECURITY: Accept answers and deviceInfo from client, but IGNORE timeLeft —
+  // the server always computes remaining time from the authoritative startTime.
+  const { answers, deviceInfo } = req.body;
   const sessionKey = `cbt_session:${userId}:${testId}`;
-  const parsedTimeLeft = timeLeft === undefined ? null : Number(timeLeft);
-
-  if (timeLeft !== undefined && (!Number.isFinite(parsedTimeLeft) || parsedTimeLeft < 0)) {
-    return res.status(400).json({ message: 'timeLeft must be a non-negative number' });
-  }
 
   if (answers !== undefined && (typeof answers !== 'object' || Array.isArray(answers) || answers === null)) {
     return res.status(400).json({ message: 'answers must be an object keyed by question ID' });
@@ -378,6 +375,20 @@ export const syncAssessment = asyncHandler(async (req, res) => {
   }
   await assertCanAttemptTest(test, req.user);
 
+  // SECURITY: Whitelist question IDs — only allow answers for questions
+  // that actually belong to this test. Prevents injecting foreign question IDs.
+  let sanitizedAnswers = answers;
+  if (answers !== undefined) {
+    const validQuestionIds = await Question.find({ testId }).distinct('_id');
+    const validIdSet = new Set(validQuestionIds.map(id => id.toString()));
+    sanitizedAnswers = {};
+    for (const [qId, answer] of Object.entries(answers)) {
+      if (validIdSet.has(qId)) {
+        sanitizedAnswers[qId] = answer;
+      }
+    }
+  }
+
   if (!redis) {
     const attempt = await TestAttempt.findOne({
       userId,
@@ -389,8 +400,8 @@ export const syncAssessment = asyncHandler(async (req, res) => {
       return res.status(404).json({ message: 'Active session not found or expired' });
     }
 
-    if (answers !== undefined) {
-      attempt.answers = sessionAnswersToRows(answers);
+    if (sanitizedAnswers !== undefined) {
+      attempt.answers = sessionAnswersToRows(sanitizedAnswers);
     }
     if (deviceInfo !== undefined) {
       attempt.deviceInfo = {
@@ -412,9 +423,10 @@ export const syncAssessment = asyncHandler(async (req, res) => {
 
   const activeSession = JSON.parse(activeSessionRaw);
   
-  // Merge answers
+  // SECURITY: timeLeft is always computed server-side from the authoritative startTime
   activeSession.timeLeft = computeTimeLeft(test, activeSession.startTime);
-  activeSession.answers = { ...activeSession.answers, ...(answers || {}) };
+  // Merge only whitelisted answers
+  activeSession.answers = { ...activeSession.answers, ...(sanitizedAnswers || {}) };
   if (deviceInfo !== undefined) {
     activeSession.deviceInfo = {
       ...(activeSession.deviceInfo || {}),
@@ -425,7 +437,7 @@ export const syncAssessment = asyncHandler(async (req, res) => {
   // Update Redis
   await redis.hSet(sessionKey, 'data', JSON.stringify(activeSession));
 
-  res.status(200).json({ message: 'Synced' });
+  res.status(200).json({ message: 'Synced', timeLeft: activeSession.timeLeft });
 });
 
 /**
@@ -501,7 +513,7 @@ export const submitAssessment = asyncHandler(async (req, res) => {
 export const getMyAssessmentResults = asyncHandler(async (req, res) => {
   const attempts = await TestAttempt.find({
     userId: req.user._id,
-    status: { $in: ['SUBMITTED', 'EVALUATED'] },
+    status: { $in: ['completed', 'auto-submitted'] },
   })
     .sort({ submittedAt: -1, createdAt: -1 })
     .limit(50)
@@ -581,7 +593,7 @@ export const getTestLeaderboard = asyncHandler(async (req, res) => {
 
   const attempts = await TestAttempt.find({
     testId,
-    status: { $in: ['SUBMITTED', 'EVALUATED'] }
+    status: { $in: ['completed', 'auto-submitted'] }
   })
     .sort({ submittedAt: 1 })
     .lean();

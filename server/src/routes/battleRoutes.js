@@ -681,6 +681,16 @@ router.post('/submit', protect, async (req, res) => {
     const scoreField = isPlayer1 ? 'player1Score' : 'player2Score';
     const lastAnswerField = isPlayer1 ? 'player1LastAnswerAt' : 'player2LastAnswerAt';
 
+    // SECURITY: Verify the submitted questionId actually belongs to this battle's
+    // question set. Without this, a cheater could submit any easy question's ID
+    // against a hard battle to guarantee correct answers and farm leaderboard points.
+    const questionInBattle = battle.questions.some(
+      q => q.toString() === questionId
+    );
+    if (!questionInBattle) {
+      return res.status(400).json({ error: 'Question is not part of this battle' });
+    }
+
     const question = await BattleQuestion.findById(questionId);
     if (!question) {
       return res.status(404).json({ error: 'Question not found' });

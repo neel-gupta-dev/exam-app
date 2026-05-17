@@ -86,7 +86,9 @@ router.get('/google/callback',
       res.clearCookie('oauth_shared_test_id');
       
       let url = `${TESTS_FRONTEND_URL}/`;
-      if (sharedTestId) {
+      // SECURITY: Validate sharedTestId is a valid MongoDB ObjectId (24 hex chars)
+      // before injecting into URL — prevents query string injection / open redirect
+      if (sharedTestId && /^[a-f0-9]{24}$/i.test(sharedTestId)) {
         url += `?shared_test_id=${sharedTestId}`;
       }
       return res.redirect(`${url}#token=${token}`);

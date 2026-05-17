@@ -65,7 +65,7 @@ configurePassport();
 const app = express();
 
 // Trust proxy for accurate IP detection (needed for Hostinger/Nginx & Vercel)
-app.set('trust proxy', true);
+app.set('trust proxy', 1);
 
 // --- CORS Configuration (MUST be FIRST — before connectDB) ---
 // On Vercel, every cold start re-runs connectDB which takes 3-5s.

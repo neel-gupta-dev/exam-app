@@ -144,7 +144,7 @@ export const bulkCreateStudents = asyncHandler(async (req, res) => {
       });
 
       createdUsers.push(user._id);
-      credentials.push({ name, username, password }); // Plaintext password for CSV export
+      credentials.push({ name, username }); // SECURITY: never return plaintext passwords
     } catch (err) {
       // If username collision, append random suffix
       if (err.code === 11000) {
@@ -162,7 +162,7 @@ export const bulkCreateStudents = asyncHandler(async (req, res) => {
           isOnboarded: true,
         });
         createdUsers.push(user._id);
-        credentials.push({ name, username: fallbackUsername, password });
+        credentials.push({ name, username: fallbackUsername });
       } else {
         throw err;
       }
@@ -184,7 +184,7 @@ export const bulkCreateStudents = asyncHandler(async (req, res) => {
     message: `${createdUsers.length} students created successfully`,
     groupId: group._id,
     groupName: group.name,
-    credentials, // Frontend will render this as a downloadable CSV
+    credentials, // Contains {name, username} only — frontend pairs with its own defaultPassword for CSV
   });
 });
 

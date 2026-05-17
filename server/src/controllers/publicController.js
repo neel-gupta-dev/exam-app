@@ -240,14 +240,34 @@ export const getUrlMetadata = asyncHandler(async (req, res) => {
       return res.status(403).json({ message: 'Fetching metadata from private or local addresses is strictly prohibited.' });
     }
 
-    // Resolve DNS to get actual IP — defeats DNS rebinding attacks
+    // Resolve DNS to get actual IPs — defeats DNS rebinding attacks
+    // SECURITY: Resolve BOTH IPv4 and IPv6 to prevent bypass via IPv6-only domains
     const dns = await import('dns');
     const { promisify } = await import('util');
-    const dnsResolve = promisify(dns.default.resolve4);
+    const dnsResolve4 = promisify(dns.default.resolve4);
+    const dnsResolve6 = promisify(dns.default.resolve6);
+
+    /** Check if an IPv6 address is private/reserved */
+    const isPrivateIPv6 = (ip) => {
+      const lower = ip.toLowerCase();
+      return (
+        lower === '::1' ||                          // Loopback
+        lower.startsWith('fc') || lower.startsWith('fd') ||  // Unique Local (fc00::/7)
+        lower.startsWith('fe80') ||                  // Link-Local (fe80::/10)
+        lower === '::' ||                            // Unspecified
+        lower.startsWith('::ffff:127.') ||           // IPv4-mapped loopback
+        lower.startsWith('::ffff:10.') ||            // IPv4-mapped private
+        lower.startsWith('::ffff:192.168.') ||       // IPv4-mapped private
+        lower.startsWith('::ffff:169.254.')           // IPv4-mapped link-local
+      );
+    };
 
     try {
-      const addresses = await dnsResolve(hostname);
-      for (const ip of addresses) {
+      // Resolve IPv4
+      let ipv4Addresses = [];
+      try { ipv4Addresses = await dnsResolve4(hostname); } catch (e) { /* no A records */ }
+
+      for (const ip of ipv4Addresses) {
         if (
           /^127\./.test(ip) ||
           /^10\./.test(ip) ||
@@ -259,9 +279,26 @@ export const getUrlMetadata = asyncHandler(async (req, res) => {
           return res.status(403).json({ message: 'Resolved IP address is private — request blocked.' });
         }
       }
+
+      // Resolve IPv6
+      let ipv6Addresses = [];
+      try { ipv6Addresses = await dnsResolve6(hostname); } catch (e) { /* no AAAA records */ }
+
+      for (const ip of ipv6Addresses) {
+        if (isPrivateIPv6(ip)) {
+          return res.status(403).json({ message: 'Resolved IPv6 address is private — request blocked.' });
+        }
+      }
+
+      // SECURITY: If hostname resolved to zero addresses total, block the request
+      // (fail-closed). This prevents bypass via hostnames that only resolve at
+      // fetch-time via a different resolver or DNS rebinding.
+      if (ipv4Addresses.length === 0 && ipv6Addresses.length === 0) {
+        return res.status(400).json({ message: 'Could not resolve hostname — request blocked.' });
+      }
     } catch (dnsErr) {
-      // DNS resolution failed — hostname might not exist or is IPv6-only
-      // Allow to proceed; the fetch will fail anyway if unreachable
+      // DNS resolution failed entirely — fail closed to prevent bypass
+      return res.status(400).json({ message: 'DNS resolution failed — request blocked.' });
     }
 
     // Timeout to prevent hanging on slow/malicious targets

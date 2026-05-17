@@ -7,11 +7,13 @@ const connectionOptions = {
   serverSelectionTimeoutMS: 10000, // Increased to 10s for slower local startups
   heartbeatFrequencyMS: 10000,
   retryWrites: true,
-  family: 4, // Enforce IPv4, avoids IPv6 localhost timeouts in Node 17+
 };
 
 // 1. Establish isolated connections
-export const coreConnection = mongoose.createConnection(MONGO_URI, connectionOptions);
+// Use global mongoose.connect for the core so health checks work automatically
+mongoose.connect(MONGO_URI, connectionOptions);
+export const coreConnection = mongoose.connection;
+
 export const analyticsConnection = mongoose.createConnection(ANALYTICS_MONGO_URI, connectionOptions);
 
 // Logging
