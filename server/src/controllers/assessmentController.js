@@ -325,13 +325,29 @@ export const startAssessment = asyncHandler(async (req, res) => {
   if (activeSessionRaw) {
     activeSession = JSON.parse(activeSessionRaw);
   } else {
-    // Initialize a new session
-    activeSession = {
-      startTime: new Date().toISOString(),
-      timeLeft: test.durationMinutes * 60, // in seconds
-      publicIp: getClientIp(req),
-      answers: {}, // map of questionId -> { status: 'not_visited', selectedOption: null, markedForReview: false }
-    };
+    // Check if an in-progress attempt exists in MongoDB
+    const attempt = await TestAttempt.findOne({
+      userId,
+      testId,
+      status: 'in-progress',
+    }).sort({ createdAt: -1 });
+
+    if (attempt) {
+      activeSession = {
+        startTime: attempt.startedAt.toISOString(),
+        timeLeft: computeTimeLeft(test, attempt.startedAt),
+        publicIp: attempt.ipAddress || getClientIp(req),
+        answers: answerRowsToSessionMap(attempt.answers),
+      };
+    } else {
+      // Initialize a new session
+      activeSession = {
+        startTime: new Date().toISOString(),
+        timeLeft: test.durationMinutes * 60, // in seconds
+        publicIp: getClientIp(req),
+        answers: {}, // map of questionId -> { status: 'not_visited', selectedOption: null, markedForReview: false }
+      };
+    }
     await redis.hSet(sessionKey, 'data', JSON.stringify(activeSession));
     // Set expiry for safety (duration + 1 hour buffer)
     await redis.expire(sessionKey, (test.durationMinutes * 60) + 3600);
@@ -373,7 +389,6 @@ export const syncAssessment = asyncHandler(async (req, res) => {
   if (!test) {
     return res.status(404).json({ message: 'Test not found' });
   }
-  await assertCanAttemptTest(test, req.user);
 
   // SECURITY: Whitelist question IDs — only allow answers for questions
   // that actually belong to this test. Prevents injecting foreign question IDs.
@@ -455,7 +470,6 @@ export const submitAssessment = asyncHandler(async (req, res) => {
   if (!test) {
     return res.status(404).json({ message: 'Test not found' });
   }
-  await assertCanAttemptTest(test, req.user);
 
   if (!redis) {
     const attempt = await TestAttempt.findOne({
@@ -470,6 +484,7 @@ export const submitAssessment = asyncHandler(async (req, res) => {
 
     const questions = await Question.find({ testId }).sort({ order: 1 }).lean();
     const answers = answerRowsToSessionMap(attempt.answers);
+    attempt.status = 'completed';
     attempt.durationUsedMinutes = Math.round((Date.now() - new Date(attempt.startedAt).getTime()) / 60000);
     attempt.ipAddress = attempt.ipAddress || getClientIp(req);
     attempt.answers = buildCompleteAnswerRows(questions, answers);
@@ -481,7 +496,27 @@ export const submitAssessment = asyncHandler(async (req, res) => {
 
   const activeSessionRaw = await redis.hGet(sessionKey, 'data');
   if (!activeSessionRaw) {
-    return res.status(404).json({ message: 'Session expired or not found. Cannot evaluate.' });
+    // FALLBACK TO MONGO: Check if an in-progress attempt exists in MongoDB
+    const attempt = await TestAttempt.findOne({
+      userId,
+      testId,
+      status: 'in-progress',
+    }).sort({ createdAt: -1 });
+
+    if (!attempt) {
+      return res.status(404).json({ message: 'Session expired or not found. Cannot evaluate.' });
+    }
+
+    const questions = await Question.find({ testId }).sort({ order: 1 }).lean();
+    const answers = answerRowsToSessionMap(attempt.answers);
+    attempt.status = 'completed';
+    attempt.durationUsedMinutes = Math.round((Date.now() - new Date(attempt.startedAt).getTime()) / 60000);
+    attempt.ipAddress = attempt.ipAddress || getClientIp(req);
+    attempt.answers = buildCompleteAnswerRows(questions, answers);
+    gradeAttempt(attempt, test, questions);
+    await attempt.save();
+
+    return res.status(201).json({ message: 'Evaluation completed', attempt });
   }
 
   const { answers, startTime, publicIp, deviceInfo } = JSON.parse(activeSessionRaw);

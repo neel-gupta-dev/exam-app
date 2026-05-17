@@ -60,7 +60,11 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     } catch {
       data = { message: text || 'Invalid server response' };
     }
-    if (!res.ok) throw new Error(data.message || 'Request failed');
+    if (!res.ok) {
+      const err = new Error(data.message || 'Request failed');
+      err.status = res.status;
+      throw err;
+    }
     return data;
   }, [token]);
 
@@ -610,7 +614,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
         clearInterval(timerRef.current);
         clearInterval(syncRef.current);
       } catch (e) {
-        if (!isAutoSubmit) {
+        if (!isAutoSubmit || (e.status >= 400 && e.status < 500)) {
           if (currentQuestion) openQuestionVisit(currentQuestion._id);
           alert('Failed to submit: ' + e.message);
           setIsSubmitting(false);
