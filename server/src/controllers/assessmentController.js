@@ -270,6 +270,7 @@ const gradeAttempt = (attempt, test, questions) => {
  */
 export const startAssessment = asyncHandler(async (req, res) => {
   const { testId } = req.params;
+  const attemptId = req.query.attemptId;
   const userId = req.user._id.toString();
   const redis = getRedis();
 
@@ -284,14 +285,20 @@ export const startAssessment = asyncHandler(async (req, res) => {
   const safeQuestions = toSafeQuestions(questions);
 
   if (!redis) {
-    let attempt = await TestAttempt.findOne({
-      userId,
-      testId,
-      status: 'in-progress',
-    }).sort({ createdAt: -1 });
+    let attempt;
+    if (attemptId) {
+      attempt = await TestAttempt.findById(attemptId);
+    } else {
+      attempt = await TestAttempt.findOne({
+        userId,
+        testId,
+        status: 'in-progress',
+      }).sort({ createdAt: -1 });
+    }
 
     if (!attempt) {
       attempt = await TestAttempt.create({
+        _id: attemptId || undefined,
         userId,
         testId,
         status: 'in-progress',
@@ -316,7 +323,9 @@ export const startAssessment = asyncHandler(async (req, res) => {
   }
 
   // Removed the block so students can attempt the test again (retakes).
-  const sessionKey = `cbt_session:${userId}:${testId}`;
+  const sessionKey = attemptId 
+    ? `cbt_session:${userId}:${testId}:${attemptId}` 
+    : `cbt_session:${userId}:${testId}`;
 
   // Check if an active session exists in Redis
   const activeSessionRaw = await redis.hGet(sessionKey, 'data');
@@ -326,11 +335,16 @@ export const startAssessment = asyncHandler(async (req, res) => {
     activeSession = JSON.parse(activeSessionRaw);
   } else {
     // Check if an in-progress attempt exists in MongoDB
-    const attempt = await TestAttempt.findOne({
-      userId,
-      testId,
-      status: 'in-progress',
-    }).sort({ createdAt: -1 });
+    let attempt;
+    if (attemptId) {
+      attempt = await TestAttempt.findById(attemptId);
+    } else {
+      attempt = await TestAttempt.findOne({
+        userId,
+        testId,
+        status: 'in-progress',
+      }).sort({ createdAt: -1 });
+    }
 
     if (attempt) {
       activeSession = {
@@ -369,13 +383,16 @@ export const startAssessment = asyncHandler(async (req, res) => {
  */
 export const syncAssessment = asyncHandler(async (req, res) => {
   const { testId } = req.params;
+  const attemptId = req.query.attemptId;
   const userId = req.user._id.toString();
   const redis = getRedis();
 
   // SECURITY: Accept answers and deviceInfo from client, but IGNORE timeLeft —
   // the server always computes remaining time from the authoritative startTime.
   const { answers, deviceInfo } = req.body;
-  const sessionKey = `cbt_session:${userId}:${testId}`;
+  const sessionKey = attemptId 
+    ? `cbt_session:${userId}:${testId}:${attemptId}` 
+    : `cbt_session:${userId}:${testId}`;
 
   if (answers !== undefined && (typeof answers !== 'object' || Array.isArray(answers) || answers === null)) {
     return res.status(400).json({ message: 'answers must be an object keyed by question ID' });
@@ -462,21 +479,29 @@ export const syncAssessment = asyncHandler(async (req, res) => {
  */
 export const submitAssessment = asyncHandler(async (req, res) => {
   const { testId } = req.params;
+  const attemptId = req.query.attemptId;
   const userId = req.user._id.toString();
   const redis = getRedis();
 
-  const sessionKey = `cbt_session:${userId}:${testId}`;
+  const sessionKey = attemptId 
+    ? `cbt_session:${userId}:${testId}:${attemptId}` 
+    : `cbt_session:${userId}:${testId}`;
   const test = await Test.findById(testId);
   if (!test) {
     return res.status(404).json({ message: 'Test not found' });
   }
 
   if (!redis) {
-    const attempt = await TestAttempt.findOne({
-      userId,
-      testId,
-      status: 'in-progress',
-    }).sort({ createdAt: -1 });
+    let attempt;
+    if (attemptId) {
+      attempt = await TestAttempt.findById(attemptId);
+    } else {
+      attempt = await TestAttempt.findOne({
+        userId,
+        testId,
+        status: 'in-progress',
+      }).sort({ createdAt: -1 });
+    }
 
     if (!attempt) {
       return res.status(404).json({ message: 'Session expired or not found. Cannot evaluate.' });
@@ -497,11 +522,16 @@ export const submitAssessment = asyncHandler(async (req, res) => {
   const activeSessionRaw = await redis.hGet(sessionKey, 'data');
   if (!activeSessionRaw) {
     // FALLBACK TO MONGO: Check if an in-progress attempt exists in MongoDB
-    const attempt = await TestAttempt.findOne({
-      userId,
-      testId,
-      status: 'in-progress',
-    }).sort({ createdAt: -1 });
+    let attempt;
+    if (attemptId) {
+      attempt = await TestAttempt.findById(attemptId);
+    } else {
+      attempt = await TestAttempt.findOne({
+        userId,
+        testId,
+        status: 'in-progress',
+      }).sort({ createdAt: -1 });
+    }
 
     if (!attempt) {
       return res.status(404).json({ message: 'Session expired or not found. Cannot evaluate.' });

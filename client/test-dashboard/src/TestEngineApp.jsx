@@ -3,7 +3,7 @@ import TestEngineLogin from './pages/TestEngineLogin';
 import TestEngineInstructions from './TestEngineInstructions';
 import TestEngine from './pages/TestEngine';
 
-export default function TestEngineApp({ user, test }) {
+export default function TestEngineApp({ user, test, attemptId }) {
   // steps: 'login' -> 'instructions' -> 'test'
   const [step, setStep] = useState(() => {
     return (test && test.state === 'in-progress') ? 'test' : 'login';
@@ -53,6 +53,7 @@ export default function TestEngineApp({ user, test }) {
       <TestEngine
         testId={test?._id}
         user={user}
+        attemptId={attemptId}
         onSubmitted={() => {
           // Could redirect or show result — TestEngine handles result display internally
         }}

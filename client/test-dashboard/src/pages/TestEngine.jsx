@@ -4,7 +4,7 @@ import LatexRenderer from '../components/LatexRenderer';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-export default function TestEngine({ testId, user, onSubmitted }) {
+export default function TestEngine({ testId, user, attemptId, onSubmitted }) {
   // ─── State ───
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -77,7 +77,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
         }
 
         // We use assessment start route which is tied to /assessment if we updated the server
-        const data = await apiFetch(`/assessment/${testId}/start`, { method: 'GET' });
+        const data = await apiFetch(`/assessment/${testId}/start?attemptId=${attemptId || ''}`, { method: 'GET' });
         if (!data.test) {
           throw new Error('Invalid assessment response: missing test metadata.');
         }
@@ -146,7 +146,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
           isMobile: /Mobi|Android/i.test(navigator.userAgent),
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
         };
-        await apiFetch(`/assessment/${testId}/sync`, {
+        await apiFetch(`/assessment/${testId}/sync?attemptId=${attemptId || ''}`, {
           method: 'POST',
           body: JSON.stringify({ deviceInfo: info }),
         });
@@ -410,7 +410,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
           idleSeconds: idleSecondsRef.current[questionId] || 0,
         };
       });
-      await apiFetch(`/assessment/${testId}/sync`, {
+      await apiFetch(`/assessment/${testId}/sync?attemptId=${attemptId || ''}`, {
         method: 'POST',
         body: JSON.stringify({ answers: outAnswers, timeLeft: latestTimeLeftRef.current }),
       });
@@ -607,7 +607,7 @@ export default function TestEngine({ testId, user, onSubmitted }) {
     while (!success && attempts < maxAttempts) {
       attempts += 1;
       try {
-        const res = await apiFetch(`/assessment/${testId}/submit`, { method: 'POST' });
+        const res = await apiFetch(`/assessment/${testId}/submit?attemptId=${attemptId || ''}`, { method: 'POST' });
         setResult(res);
         setSubmitted(true);
         success = true;

@@ -389,6 +389,7 @@ export default function App() {
   // Router override for the popup test engine
   const searchParams = new URL(window.location.href).searchParams;
   const isAttemptMode = searchParams.get('attempt') === 'true';
+  const attemptId = searchParams.get('attemptId') || '';
 
   if (isAttemptMode && user) {
     let currentTest = null;
@@ -402,6 +403,7 @@ export default function App() {
       <TestEngineApp
         user={user}
         test={currentTest}
+        attemptId={attemptId}
       />
     );
   }
@@ -1870,8 +1872,14 @@ export default function App() {
                   <p className={`text-sm font-medium mb-6 ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>Ready to begin your mock exam? Take a deep breath.</p>
                   <button
                     onClick={() => {
+                      const generateMongoId = () => {
+                        const timestamp = Math.floor(Date.now() / 1000).toString(16).padStart(8, '0');
+                        const random = 'xxxxxxxxxxxxxxxx'.replace(/[x]/g, () => Math.floor(Math.random() * 16).toString(16));
+                        return timestamp + random;
+                      };
+                      const attemptId = generateMongoId();
                       localStorage.setItem('current_test', JSON.stringify(selectedTest));
-                      window.open(window.location.origin + '?attempt=true', 'TestEngine', 'width=1024,height=768,fullscreen=yes,toolbar=0,location=0,menubar=0');
+                      window.open(`${window.location.origin}?attempt=true&attemptId=${attemptId}`, 'TestEngine', 'width=1024,height=768,fullscreen=yes,toolbar=0,location=0,menubar=0');
                     }}
                     className="cursor-pointer border-none w-full py-4 bg-indigo-500 text-on-primary font-bold rounded-xl text-lg transition-all shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:scale-95"
                   >
