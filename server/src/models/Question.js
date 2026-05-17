@@ -36,15 +36,21 @@ const questionSchema = new mongoose.Schema(
     },
     text: {
       type: String,
-      required: true,
+      required: false,
+    },
+    content: {
+      type: String,
+      required: false,
     },
     imageUrl: {
       type: String,
     },
     options: [
       {
-        key: { type: String, required: true }, // e.g., "A"
+        key: { type: String, required: false },
+        label: { type: String, required: false },
         text: { type: String },
+        content: { type: String },
         imageUrl: { type: String },
       }
     ],

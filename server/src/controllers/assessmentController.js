@@ -40,6 +40,24 @@ const computeTimeLeft = (test, startTime) => {
 
 const toSafeQuestions = (questions) => questions.map((q) => {
   const qObj = typeof q.toObject === 'function' ? q.toObject() : { ...q };
+
+  // Normalize fields between text/content and key/label for frontend/LaTeX renderer compatibility
+  if (qObj.text && !qObj.content) {
+    qObj.content = qObj.text;
+  }
+  if (qObj.options && Array.isArray(qObj.options)) {
+    qObj.options = qObj.options.map(opt => {
+      const optObj = typeof opt.toObject === 'function' ? opt.toObject() : { ...opt };
+      if (optObj.text && !optObj.content) {
+        optObj.content = optObj.text;
+      }
+      if (optObj.key && !optObj.label) {
+        optObj.label = optObj.key;
+      }
+      return optObj;
+    });
+  }
+
   delete qObj.correctAnswer;
   delete qObj.solution;
   delete qObj.solutionImageUrl;
