@@ -65,7 +65,7 @@ const testAttemptSchema = new mongoose.Schema(
     tenantId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Tenant',
-      required: true,
+      required: false,
       index: true,
     },
     userId: {
@@ -82,8 +82,8 @@ const testAttemptSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['IN_PROGRESS', 'SUBMITTED', 'EVALUATED'],
-      default: 'IN_PROGRESS',
+      enum: ['IN_PROGRESS', 'SUBMITTED', 'EVALUATED', 'in-progress', 'completed', 'evaluating', 'auto-submitted'],
+      default: 'in-progress',
       index: true,
     },
     isManual: {

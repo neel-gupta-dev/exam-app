@@ -301,6 +301,7 @@ export const startAssessment = asyncHandler(async (req, res) => {
         _id: attemptId || undefined,
         userId,
         testId,
+        tenantId: req.user.tenantId || test.tenantId || undefined,
         status: 'in-progress',
         ipAddress: getClientIp(req),
         answers: [],
