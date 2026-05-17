@@ -95,8 +95,8 @@ questionSchema.pre('validate', function normalizeQuestion(next) {
 
   if (!this.content && this.text) this.content = this.text;
   if (!this.text && this.content) this.text = this.content;
-  if (!String(this.content || this.text || '').trim()) {
-    this.invalidate('content', 'Question content is required');
+  if (!String(this.content || this.text || this.imageUrl || '').trim()) {
+    this.invalidate('content', 'Question content or image is required');
   }
 
   if (this.section && (!this.subject || this.subject === 'General')) {
@@ -115,8 +115,8 @@ questionSchema.pre('validate', function normalizeQuestion(next) {
         if (!option.key) option.key = option.label;
         if (!option.content && option.text) option.content = option.text;
         if (!option.text && option.content) option.text = option.content;
-        if (!String(option.content || option.text || '').trim()) {
-          this.invalidate(`options.${index}.content`, 'Option content is required');
+        if (!String(option.content || option.text || option.imageUrl || '').trim()) {
+          this.invalidate(`options.${index}.content`, 'Option content or image is required');
         }
       });
     }

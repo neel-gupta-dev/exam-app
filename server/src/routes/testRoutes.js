@@ -16,11 +16,20 @@ import {
   updateQuestion,
   deleteQuestion,
   importPdfQuestions,
+  uploadTestImage,
   getShareDetails,
 } from '../controllers/testController.js';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } }); // 15MB max
+const imageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype?.startsWith('image/')) return cb(null, true);
+    cb(new Error('Only image files are allowed.'));
+  },
+});
 
 // ─── PUBLIC ──────────────────────────────────────────────────────────────────
 router.get('/:testId/share-details', getShareDetails);
@@ -42,6 +51,7 @@ router.get('/:testId/questions', protectAdmin, getTestQuestions);
 router.post('/:testId/questions', protectAdmin, addQuestion);
 router.post('/:testId/questions/bulk', protectAdmin, bulkAddQuestions);
 router.post('/:testId/questions/import-pdf', protectAdmin, upload.single('pdf'), importPdfQuestions);
+router.post('/:testId/images', protectAdmin, imageUpload.single('image'), uploadTestImage);
 router.patch('/:testId/questions/:questionId', protectAdmin, updateQuestion);
 router.delete('/:testId/questions/:questionId', protectAdmin, deleteQuestion);
 

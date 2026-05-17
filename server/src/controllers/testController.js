@@ -5,6 +5,7 @@ import Group from '../models/Group.js';
 import TestAttempt from '../models/TestAttempt.js';
 import { getRedis } from '../config/redis.js';
 import { parsePdfBuffer } from '../services/pdfParserService.js';
+import { uploadBufferToCloudinary } from '../utils/cloudinaryUpload.js';
 
 const normalizeQuestionPayload = (source, test, order) => {
   const content = source.content ?? source.text ?? source.questionText ?? '';
@@ -488,6 +489,56 @@ export const importPdfQuestions = asyncHandler(async (req, res) => {
     count: inserted.length,
     stats,
   });
+});
+
+/**
+ * @desc    Upload a question/option image for a test
+ * @route   POST /api/tests/:testId/images
+ * @access  Admin
+ */
+export const uploadTestImage = asyncHandler(async (req, res) => {
+  const test = await Test.findById(req.params.testId);
+  if (!test) {
+    res.status(404);
+    throw new Error('Test not found');
+  }
+
+  if (!req.file) {
+    res.status(400);
+    throw new Error('Please select an image to upload.');
+  }
+
+  if (!req.file.mimetype?.startsWith('image/')) {
+    res.status(400);
+    throw new Error('Only image uploads are allowed for test questions.');
+  }
+
+  const safePurpose = String(req.body.purpose || 'question')
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '-')
+    .slice(0, 40) || 'question';
+  const publicId = `${safePurpose}-${Date.now()}`;
+
+  try {
+    const uploadResult = await uploadBufferToCloudinary(
+      req.file.buffer,
+      `vayl/tests/${test._id}`,
+      publicId
+    );
+
+    res.status(201).json({
+      url: uploadResult.secure_url,
+      publicId: uploadResult.public_id,
+      width: uploadResult.width,
+      height: uploadResult.height,
+      bytes: uploadResult.bytes,
+      format: uploadResult.format,
+    });
+  } catch (error) {
+    console.error('[Test Image Upload] Cloudinary upload failed:', error);
+    res.status(500);
+    throw new Error(`Failed to upload image: ${error.message}`);
+  }
 });
 
 /**

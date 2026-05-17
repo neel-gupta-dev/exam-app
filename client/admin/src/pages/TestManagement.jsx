@@ -27,6 +27,7 @@ export default function TestManagement() {
   const [jsonPreview, setJsonPreview] = useState(null);
   const [jsonLoading, setJsonLoading] = useState(false);
   const [jsonError, setJsonError] = useState(null);
+  const [imageUploading, setImageUploading] = useState('');
 
   const handleCopyShareLink = (testId) => {
     // Determine student URL based on environment
@@ -52,10 +53,10 @@ export default function TestManagement() {
   const [qForm, setQForm] = useState({
     section: 'General', type: 'single', content: '', imageUrl: '',
     options: [
-      { label: 'A', content: '' }, { label: 'B', content: '' },
-      { label: 'C', content: '' }, { label: 'D', content: '' },
+      { label: 'A', content: '', imageUrl: '' }, { label: 'B', content: '', imageUrl: '' },
+      { label: 'C', content: '', imageUrl: '' }, { label: 'D', content: '', imageUrl: '' },
     ],
-    correctAnswer: [], solution: '', positiveMarks: '', negativeMarks: '',
+    correctAnswer: [], solution: '', solutionImageUrl: '', positiveMarks: '', negativeMarks: '',
     tags: '', difficulty: 'medium',
   });
 
@@ -130,6 +131,29 @@ export default function TestManagement() {
       setQuestions(res.data || []);
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const handleTestImageUpload = async (file, purpose, onUploaded) => {
+    if (!file || !selectedTest) return;
+    if (!file.type?.startsWith('image/')) {
+      alert('Please select an image file.');
+      return;
+    }
+
+    try {
+      setImageUploading(purpose);
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('purpose', purpose);
+      const res = await api.post(`/tests/${selectedTest._id}/images`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      onUploaded(res.data.url);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to upload image');
+    } finally {
+      setImageUploading('');
     }
   };
 
@@ -218,10 +242,10 @@ export default function TestManagement() {
       setQForm({
         section: 'General', type: 'single', content: '', imageUrl: '',
         options: [
-          { label: 'A', content: '' }, { label: 'B', content: '' },
-          { label: 'C', content: '' }, { label: 'D', content: '' },
+          { label: 'A', content: '', imageUrl: '' }, { label: 'B', content: '', imageUrl: '' },
+          { label: 'C', content: '', imageUrl: '' }, { label: 'D', content: '', imageUrl: '' },
         ],
-        correctAnswer: [], solution: '', positiveMarks: '', negativeMarks: '',
+        correctAnswer: [], solution: '', solutionImageUrl: '', positiveMarks: '', negativeMarks: '',
         tags: '', difficulty: 'medium',
       });
       fetchQuestions(selectedTest._id);
@@ -516,10 +540,10 @@ export default function TestManagement() {
                     section: selectedTest.sections?.[0]?.name || 'General', 
                     type: 'single', content: '', imageUrl: '',
                     options: [
-                      { label: 'A', content: '' }, { label: 'B', content: '' },
-                      { label: 'C', content: '' }, { label: 'D', content: '' },
+                      { label: 'A', content: '', imageUrl: '' }, { label: 'B', content: '', imageUrl: '' },
+                      { label: 'C', content: '', imageUrl: '' }, { label: 'D', content: '', imageUrl: '' },
                     ],
-                    correctAnswer: [], solution: '', positiveMarks: '', negativeMarks: '',
+                    correctAnswer: [], solution: '', solutionImageUrl: '', positiveMarks: '', negativeMarks: '',
                     tags: '', difficulty: 'medium',
                   });
                   setShowQuestionForm(!showQuestionForm);
@@ -560,12 +584,25 @@ export default function TestManagement() {
                   </select>
                 </div>
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label>Question Text *</label>
-                  <textarea value={qForm.content} onChange={e => setQForm({ ...qForm, content: e.target.value })} rows={3} required />
+                  <label>Question Text</label>
+                  <textarea value={qForm.content} onChange={e => setQForm({ ...qForm, content: e.target.value })} rows={3} placeholder="Add text, an image, or both." />
                 </div>
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                   <label>Image URL (optional)</label>
-                  <input value={qForm.imageUrl} onChange={e => setQForm({ ...qForm, imageUrl: e.target.value })} placeholder="https://..." />
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <input style={{ flex: 1 }} value={qForm.imageUrl} onChange={e => setQForm({ ...qForm, imageUrl: e.target.value })} placeholder="https://..." />
+                    <label className="btn btn-sm" style={{ margin: 0, cursor: 'pointer' }}>
+                      {imageUploading === 'question' ? 'Uploading...' : 'Upload'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        disabled={imageUploading === 'question'}
+                        onChange={e => handleTestImageUpload(e.target.files?.[0], 'question', (url) => setQForm({ ...qForm, imageUrl: url }))}
+                      />
+                    </label>
+                  </div>
+                  {qForm.imageUrl && <img src={qForm.imageUrl} alt="Question preview" style={{ maxHeight: 140, maxWidth: '100%', marginTop: 8, border: '1px solid var(--border)' }} />}
                 </div>
 
                 {/* Options (for MCQ types) */}
@@ -580,6 +617,25 @@ export default function TestManagement() {
                           opts[idx] = { ...opts[idx], content: e.target.value };
                           setQForm({ ...qForm, options: opts });
                         }} placeholder={`Option ${opt.label}`} />
+                        <input style={{ flex: 1 }} value={opt.imageUrl || ''} onChange={e => {
+                          const opts = [...qForm.options];
+                          opts[idx] = { ...opts[idx], imageUrl: e.target.value };
+                          setQForm({ ...qForm, options: opts });
+                        }} placeholder="Option image URL" />
+                        <label className="btn btn-sm" style={{ margin: 0, cursor: 'pointer' }}>
+                          {imageUploading === `option-${opt.label}` ? 'Uploading...' : 'Upload'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            disabled={imageUploading === `option-${opt.label}`}
+                            onChange={e => handleTestImageUpload(e.target.files?.[0], `option-${opt.label}`, (url) => {
+                              const opts = [...qForm.options];
+                              opts[idx] = { ...opts[idx], imageUrl: url };
+                              setQForm({ ...qForm, options: opts });
+                            })}
+                          />
+                        </label>
                         <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
                           <input
                             type={qForm.type === 'single' ? 'radio' : 'checkbox'}
@@ -596,6 +652,7 @@ export default function TestManagement() {
                           />
                           Correct
                         </label>
+                        {opt.imageUrl && <img src={opt.imageUrl} alt={`Option ${opt.label} preview`} style={{ maxHeight: 42, maxWidth: 80, border: '1px solid var(--border)' }} />}
                       </div>
                     ))}
                   </div>
@@ -612,6 +669,23 @@ export default function TestManagement() {
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                   <label>Solution / Explanation</label>
                   <textarea value={qForm.solution} onChange={e => setQForm({ ...qForm, solution: e.target.value })} rows={2} />
+                </div>
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label>Solution Image URL (optional)</label>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <input style={{ flex: 1 }} value={qForm.solutionImageUrl || ''} onChange={e => setQForm({ ...qForm, solutionImageUrl: e.target.value })} placeholder="https://..." />
+                    <label className="btn btn-sm" style={{ margin: 0, cursor: 'pointer' }}>
+                      {imageUploading === 'solution' ? 'Uploading...' : 'Upload'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        disabled={imageUploading === 'solution'}
+                        onChange={e => handleTestImageUpload(e.target.files?.[0], 'solution', (url) => setQForm({ ...qForm, solutionImageUrl: url }))}
+                      />
+                    </label>
+                  </div>
+                  {qForm.solutionImageUrl && <img src={qForm.solutionImageUrl} alt="Solution preview" style={{ maxHeight: 140, maxWidth: '100%', marginTop: 8, border: '1px solid var(--border)' }} />}
                 </div>
                 <div className="form-group">
                   <label>Difficulty</label>
@@ -759,16 +833,25 @@ export default function TestManagement() {
                   <div style={{ margin: '4px 0', display: 'block' }}>
                     <LatexRenderer text={q.content} />
                   </div>
+                  {q.imageUrl && (
+                    <img src={q.imageUrl} alt="Question" style={{ maxHeight: 120, maxWidth: '100%', marginTop: 8, border: '1px solid var(--border)' }} />
+                  )}
                   {q.options?.length > 0 && (
                     <div style={{ marginTop: 4, fontSize: 13, opacity: 0.8 }}>
                       {q.options.map(o => (
-                        <span key={o.label} style={{ marginRight: 12, color: q.correctAnswer?.includes(o.label) ? '#2ecc71' : 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <span key={o.label} style={{ marginRight: 12, color: q.correctAnswer?.includes(o.label) ? '#2ecc71' : 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4, verticalAlign: 'top' }}>
                           {q.correctAnswer?.includes(o.label) ? '✅' : '○'} {o.label}. <LatexRenderer text={o.content} />
+                          {o.imageUrl && <img src={o.imageUrl} alt={`Option ${o.label}`} style={{ maxHeight: 42, maxWidth: 80, border: '1px solid var(--border)' }} />}
                         </span>
                       ))}
                     </div>
                   )}
                   {q.type === 'integer' && <div style={{ fontSize: 13 }}>Answer: <strong style={{ color: '#2ecc71' }}>{q.correctAnswer?.join(', ')}</strong></div>}
+                  {q.solutionImageUrl && (
+                    <div style={{ marginTop: 8, fontSize: 12, opacity: 0.75 }}>
+                      Solution image: <img src={q.solutionImageUrl} alt="Solution" style={{ maxHeight: 80, maxWidth: 140, marginLeft: 8, border: '1px solid var(--border)', verticalAlign: 'middle' }} />
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button className="btn btn-sm" onClick={() => {
@@ -778,9 +861,10 @@ export default function TestManagement() {
                       type: q.type || 'single',
                       content: q.content,
                       imageUrl: q.imageUrl || '',
+                      solutionImageUrl: q.solutionImageUrl || '',
                       options: q.options && q.options.length > 0 ? q.options : [
-                        { label: 'A', content: '' }, { label: 'B', content: '' },
-                        { label: 'C', content: '' }, { label: 'D', content: '' },
+                        { label: 'A', content: '', imageUrl: '' }, { label: 'B', content: '', imageUrl: '' },
+                        { label: 'C', content: '', imageUrl: '' }, { label: 'D', content: '', imageUrl: '' },
                       ],
                       correctAnswer: q.correctAnswer || [],
                       solution: q.solution || '',
