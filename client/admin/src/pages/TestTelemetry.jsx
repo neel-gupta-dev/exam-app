@@ -166,8 +166,11 @@ export default function TestTelemetry() {
                     ['Started', formatDate(selectedAttempt.startedAt)],
                     ['Submitted', formatDate(selectedAttempt.submittedAt)],
                     ['Total Tracked', formatDuration(selectedAttempt.telemetry?.totalTimeSpentSeconds || 0)],
+                    ['Effective Time', formatDuration(selectedAttempt.telemetry?.totalEffectiveTimeSeconds || 0)],
+                    ['Idle Time', formatDuration(selectedAttempt.telemetry?.totalIdleSeconds || 0)],
                     ['Avg / Question', `${selectedAttempt.telemetry?.averageQuestionTimeSeconds || 0}s`],
                     ['Answered', `${selectedAttempt.telemetry?.answeredQuestions || 0} / ${selectedAttempt.telemetry?.totalQuestions || 0}`],
+                    ['Answer Changes', selectedAttempt.telemetry?.totalAnswerChanges || 0],
                     ['Tab Switches', selectedAttempt.integrity?.tabSwitchCount || 0],
                     ['Slowest Question', selectedAttempt.telemetry?.slowestQuestion ? `Q${selectedAttempt.telemetry.slowestQuestion.questionNumber} (${formatDuration(selectedAttempt.telemetry.slowestQuestion.timeSpentSeconds)})` : '-'],
                     ['Most Visited', selectedAttempt.telemetry?.mostVisitedQuestion ? `Q${selectedAttempt.telemetry.mostVisitedQuestion.questionNumber} (${selectedAttempt.telemetry.mostVisitedQuestion.visitCount} visits)` : '-'],
@@ -193,6 +196,33 @@ export default function TestTelemetry() {
                       <div className="text-muted" style={{ fontSize: 10, marginTop: 3 }}>
                         First: {formatDate(question.firstVisitedAt)} | Last: {formatDate(question.lastVisitedAt)}
                       </div>
+                      <div className="text-muted" style={{ fontSize: 10, marginTop: 3 }}>
+                        Effective: {formatDuration(question.effectiveTimeSeconds || 0)} | Idle: {formatDuration(question.idleSeconds || 0)} | Changes: {question.answerChangeCount || 0} | Selected: {(question.selectedAnswer || []).join(', ') || '-'}
+                      </div>
+                      {question.visitLog?.length > 0 && (
+                        <div style={{ marginTop: 6, border: '1px solid #e5e7eb', borderRadius: 3, overflow: 'hidden' }}>
+                          <table>
+                            <thead>
+                              <tr>
+                                <th>Visit</th>
+                                <th>Entered</th>
+                                <th>Left</th>
+                                <th>Duration</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {question.visitLog.map((visit, index) => (
+                                <tr key={`${question.questionId || question.questionNumber}-${index}`}>
+                                  <td className="td-mono">#{index + 1}</td>
+                                  <td className="td-mono">{formatDate(visit.enteredAt)}</td>
+                                  <td className="td-mono">{formatDate(visit.leftAt)}</td>
+                                  <td className="td-mono">{formatDuration(visit.durationSeconds || 0)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

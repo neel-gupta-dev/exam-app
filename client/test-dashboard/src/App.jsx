@@ -4,8 +4,7 @@ import ForcePasswordChange from './ForcePasswordChange';
 import TestEngineApp from './TestEngineApp';
 import LatexRenderer from './components/LatexRenderer';
 import PublicTestLanding from './pages/PublicTestLanding';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_BASE } from './config/api';
 
 export default function App() {
   const [isDark, setIsDark] = useState(() => {
@@ -37,6 +36,34 @@ export default function App() {
     return 'dashboard';
   });
 
+  const searchInputRef = useRef(null);
+  const [osKey] = useState(() => {
+    if (typeof window !== 'undefined' && navigator?.platform) {
+      return navigator.platform.toUpperCase().includes('MAC') ? '⌘' : 'Ctrl';
+    }
+    return 'Ctrl';
+  });
+  const [selectedTest, setSelectedTest] = useState(null);
+  const [sharedTestId, setSharedTestId] = useState(() => {
+    if (typeof window === 'undefined') return null;
+    const path = window.location.pathname;
+    const match = path.match(/^\/t\/([a-f\d]{24})$/i);
+    if (match) return match[1];
+    const searchParams = new URLSearchParams(window.location.search);
+    const qId = searchParams.get('shared_test_id');
+    if (qId) return qId;
+    return localStorage.getItem('shared_test_id');
+  });
+  const [tests, setTests] = useState([]);
+  const [loadingTests, setLoadingTests] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('full');
+  const [examFilter, setExamFilter] = useState(() => {
+    if (typeof window === 'undefined') return 'jee-mains';
+    const params = new URLSearchParams(window.location.search);
+    return params.get('exam') || 'jee-mains';
+  });
+
   const navigateTo = (newView) => {
     if (newView === view) return;
     
@@ -61,13 +88,6 @@ export default function App() {
     }
     setSearchQuery('');
   };
-  const searchInputRef = useRef(null);
-  const [osKey] = useState(() => {
-    if (typeof window !== 'undefined' && navigator?.platform) {
-      return navigator.platform.toUpperCase().includes('MAC') ? '⌘' : 'Ctrl';
-    }
-    return 'Ctrl';
-  });
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -102,27 +122,6 @@ export default function App() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
-  const [selectedTest, setSelectedTest] = useState(null);
-  const [sharedTestId, setSharedTestId] = useState(() => {
-    if (typeof window === 'undefined') return null;
-    const path = window.location.pathname;
-    const match = path.match(/^\/t\/([a-f\d]{24})$/i);
-    if (match) return match[1];
-    const searchParams = new URLSearchParams(window.location.search);
-    const qId = searchParams.get('shared_test_id');
-    if (qId) return qId;
-    return localStorage.getItem('shared_test_id');
-  });
-
-  const [tests, setTests] = useState([]);
-  const [loadingTests, setLoadingTests] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState('full');
-  const [examFilter, setExamFilter] = useState(() => {
-    if (typeof window === 'undefined') return 'jee-mains';
-    const params = new URLSearchParams(window.location.search);
-    return params.get('exam') || 'jee-mains';
-  });
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

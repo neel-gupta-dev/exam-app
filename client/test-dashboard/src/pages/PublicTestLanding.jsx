@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_BASE } from '../config/api';
 
 export default function PublicTestLanding({ testId, onLogin }) {
   const [test, setTest] = useState(null);

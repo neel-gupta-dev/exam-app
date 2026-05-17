@@ -22,6 +22,15 @@ const VALID_ANSWER_STATUSES = new Set([
   'answered-and-marked',
 ]);
 
+const normalizeQuestionType = (value) => {
+  const raw = String(value || 'single').trim().toLowerCase();
+  if (raw === 'scq') return 'single';
+  if (raw === 'mcq' || raw === 'multi') return 'multiple';
+  if (raw === 'numerical' || raw === 'numeric') return 'integer';
+  if (raw === 'decimal') return 'float';
+  return raw;
+};
+
 const getClientIp = (req) => {
   const forwarded = req.headers['x-forwarded-for'];
   const rawIp = Array.isArray(forwarded)
@@ -40,6 +49,7 @@ const computeTimeLeft = (test, startTime) => {
 
 const toSafeQuestions = (questions) => questions.map((q) => {
   const qObj = typeof q.toObject === 'function' ? q.toObject() : { ...q };
+  qObj.type = normalizeQuestionType(qObj.type);
 
   // Normalize fields between text/content and key/label for frontend/LaTeX renderer compatibility
   if (qObj.text && !qObj.content) {
@@ -271,6 +281,7 @@ const gradeAttempt = (attempt, test, questions) => {
     }
   });
 
+  attempt.score = totalScore;
   attempt.totalScore = totalScore;
   attempt.maxPossibleScore = adjustedMaxPossibleScore;
   attempt.percentage = adjustedMaxPossibleScore > 0
@@ -704,7 +715,9 @@ export const getTestLeaderboard = asyncHandler(async (req, res) => {
   }
 
   uniqueAttempts.sort((a, b) => {
-    if (b.score !== a.score) return (b.score || 0) - (a.score || 0);
+    const scoreA = a.totalScore ?? a.score ?? 0;
+    const scoreB = b.totalScore ?? b.score ?? 0;
+    if (scoreB !== scoreA) return scoreB - scoreA;
     return new Date(a.submittedAt) - new Date(b.submittedAt);
   });
 
@@ -720,7 +733,7 @@ export const getTestLeaderboard = asyncHandler(async (req, res) => {
       rank: index + 1,
       name: isMe ? 'You' : attempt.user.name,
       username: attempt.user.username,
-      totalScore: attempt.score || attempt.totalScore,
+      totalScore: attempt.totalScore ?? attempt.score ?? 0,
       maxPossibleScore: attempt.maxPossibleScore,
       percentage: attempt.percentage,
       sectionScores,
@@ -762,7 +775,7 @@ export const getAssessmentReview = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: 'Attempt must be completed to review answers.' });
   }
 
-  const questions = await Question.find({ testId: attempt.testId._id }).sort({ order: 1 }).lean();
+  const questions = await Question.find({ testId: attempt.testId }).sort({ order: 1 }).lean();
 
   const userAnswersMap = new Map();
   for (const ans of attempt.answers || []) {
@@ -770,6 +783,20 @@ export const getAssessmentReview = asyncHandler(async (req, res) => {
   }
 
   const reviewedQuestions = questions.map((q) => {
+    const questionContent = q.content || q.text || '';
+    const normalizedOptions = Array.isArray(q.options)
+      ? q.options.map((option, index) => {
+          const label = option.label || option.key || String.fromCharCode(65 + index);
+          const optionContent = option.content || option.text || '';
+          return {
+            ...option,
+            label,
+            key: option.key || label,
+            content: optionContent,
+            text: option.text || optionContent,
+          };
+        })
+      : [];
     const userAns = userAnswersMap.get(q._id.toString()) || {
       selectedAnswer: [],
       status: 'unanswered',
@@ -786,6 +813,10 @@ export const getAssessmentReview = asyncHandler(async (req, res) => {
 
     return {
       ...q,
+      type: normalizeQuestionType(q.type),
+      content: questionContent,
+      text: q.text || questionContent,
+      options: normalizedOptions,
       userAnswer: selected,
       status: userAns.status,
       timeSpentSeconds: userAns.timeSpentSeconds,
@@ -804,7 +835,7 @@ export const getAssessmentReview = asyncHandler(async (req, res) => {
     attemptSummary: {
       testId: test?._id,
       testTitle: test?.title,
-      totalScore: attempt.score || attempt.totalScore,
+      totalScore: attempt.totalScore ?? attempt.score ?? 0,
       maxPossibleScore: attempt.maxPossibleScore,
       percentage: attempt.percentage,
       submittedAt: attempt.submittedAt,

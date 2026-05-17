@@ -160,7 +160,9 @@ export default function TopNav() {
       }
 
       try {
-        const { data } = await api.get(`/resources?search=${searchQuery}&limit=5`);
+        const { data } = await api.get('/resources', {
+          params: { search: searchQuery.trim(), limit: 5 },
+        });
         setResults(data.resources || []);
       } catch (err) {
         console.error("Search fetch error:", err);
@@ -187,8 +189,12 @@ export default function TopNav() {
 
   const handleResultSelect = (result: ResourceSearchResult) => {
     setShowResults(false);
-    // Open external URL in new tab or navigate to internal viewer
-    window.open(result.url, '_blank');
+    setSearchQuery('');
+    if (isDemo) {
+      window.open(result.url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    router.push(`/resource/${result._id}`);
   };
 
   /**

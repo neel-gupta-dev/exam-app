@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { List, ChevronLeft, ChevronRight, X, Grid } from 'lucide-react';
 import LatexRenderer from '../components/LatexRenderer';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_BASE } from '../config/api';
 
 export default function TestEngine({ testId, user, attemptId, onSubmitted }) {
   // ─── State ───

@@ -9,6 +9,7 @@ import { AudioProvider } from "@/context/AudioContext";
 import { WebVitals } from "@/components/WebVitals";
 import CookieConsent from "@/components/CookieConsent";
 import GoogleSchema from "@/components/GoogleSchema";
+import MathProvider from "@/components/MathProvider";
 import Script from "next/script";
 import "../globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -126,7 +127,9 @@ export default function MainLayout({
       <AuthProvider>
         <SearchProvider>
           <AudioProvider>
-            <AppShell>{children}</AppShell>
+            <MathProvider>
+              <AppShell>{children}</AppShell>
+            </MathProvider>
           </AudioProvider>
         </SearchProvider>
       </AuthProvider>

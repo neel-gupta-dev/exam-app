@@ -9,8 +9,8 @@ export default defineConfig({
   // base sets the public URL prefix for all assets in the production build
   base: process.env.NODE_ENV === 'production' ? ADMIN_PATH + '/' : '/',
   build: {
-    // Output directly into the server folder so Railway picks it up
-    outDir: '../../server/admin-static',
+    // Build inside the Vite project first; a postbuild script copies this to server/admin-static.
+    outDir: 'dist',
     emptyOutDir: true,
   },
   server: {

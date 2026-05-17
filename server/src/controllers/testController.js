@@ -6,6 +6,43 @@ import TestAttempt from '../models/TestAttempt.js';
 import { getRedis } from '../config/redis.js';
 import { parsePdfBuffer } from '../services/pdfParserService.js';
 
+const normalizeQuestionPayload = (source, test, order) => {
+  const content = source.content ?? source.text ?? source.questionText ?? '';
+  const options = Array.isArray(source.options)
+    ? source.options.map((option, index) => {
+        const label = option.label || option.key || String.fromCharCode(65 + index);
+        const optionContent = option.content ?? option.text ?? '';
+        return {
+          ...option,
+          label,
+          key: option.key || label,
+          content: optionContent,
+          text: option.text ?? optionContent,
+        };
+      })
+    : [];
+
+  return {
+    tenantId: test.tenantId || undefined,
+    testId: test._id,
+    section: source.section || 'General',
+    subject: source.subject || source.section || 'General',
+    order,
+    type: source.type || 'single',
+    text: source.text ?? content,
+    content,
+    imageUrl: source.imageUrl || null,
+    options,
+    correctAnswer: source.correctAnswer,
+    positiveMarks: source.positiveMarks ?? null,
+    negativeMarks: source.negativeMarks ?? null,
+    solution: source.solution || '',
+    solutionImageUrl: source.solutionImageUrl || null,
+    tags: source.tags || [],
+    difficulty: source.difficulty || 'medium',
+  };
+};
+
 /**
  * @desc    Create a new test (Admin only)
  * @route   POST /api/tests
@@ -292,28 +329,11 @@ export const addQuestion = asyncHandler(async (req, res) => {
     throw new Error('Test not found');
   }
 
-  const { section, type, content, imageUrl, options, correctAnswer, positiveMarks, negativeMarks, solution, solutionImageUrl, tags, difficulty } = req.body;
-
   // Auto-assign order as next in sequence
   const lastQuestion = await Question.findOne({ testId: test._id }).sort({ order: -1 });
   const order = lastQuestion ? lastQuestion.order + 1 : 1;
 
-  const question = await Question.create({
-    testId: test._id,
-    section: section || 'General',
-    order,
-    type: (type === 'numerical' || type === 'numeric') ? 'integer' : (type || 'single'),
-    content,
-    imageUrl: imageUrl || null,
-    options: options || [],
-    correctAnswer,
-    positiveMarks: positiveMarks || null,
-    negativeMarks: negativeMarks || null,
-    solution: solution || '',
-    solutionImageUrl: solutionImageUrl || null,
-    tags: tags || [],
-    difficulty: difficulty || 'medium',
-  });
+  const question = await Question.create(normalizeQuestionPayload(req.body, test, order));
 
   // Update denormalized count
   test.questionCount = await Question.countDocuments({ testId: test._id });
@@ -344,22 +364,7 @@ export const bulkAddQuestions = asyncHandler(async (req, res) => {
   const lastQuestion = await Question.findOne({ testId: test._id }).sort({ order: -1 });
   let currentOrder = lastQuestion ? lastQuestion.order : 0;
 
-  const docs = questions.map((q) => ({
-    testId: test._id,
-    section: q.section || 'General',
-    order: ++currentOrder,
-    type: (q.type === 'numerical' || q.type === 'numeric') ? 'integer' : (q.type || 'single'),
-    content: q.content,
-    imageUrl: q.imageUrl || null,
-    options: q.options || [],
-    correctAnswer: q.correctAnswer,
-    positiveMarks: q.positiveMarks || null,
-    negativeMarks: q.negativeMarks || null,
-    solution: q.solution || '',
-    solutionImageUrl: q.solutionImageUrl || null,
-    tags: q.tags || [],
-    difficulty: q.difficulty || 'medium',
-  }));
+  const docs = questions.map((q) => normalizeQuestionPayload(q, test, ++currentOrder));
 
   const inserted = await Question.insertMany(docs);
 
@@ -468,9 +473,7 @@ export const importPdfQuestions = asyncHandler(async (req, res) => {
   const docs = questions.map(q => {
     const { _meta, ...rest } = q;
     return {
-      testId: test._id,
-      order: ++currentOrder,
-      ...rest,
+      ...normalizeQuestionPayload(rest, test, ++currentOrder),
     };
   });
 

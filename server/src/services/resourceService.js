@@ -45,7 +45,13 @@ export const getUserResources = async ({ userId, page = 1, limit = 20, folder, s
   }
   
   if (search) {
-    query.title = { $regex: escapeRegex(String(search)), $options: 'i' };
+    const pattern = { $regex: escapeRegex(String(search)), $options: 'i' };
+    query.$or = [
+      { title: pattern },
+      { folderName: pattern },
+      { type: pattern },
+      { url: pattern },
+    ];
   }
 
   const [resources, total] = await Promise.all([

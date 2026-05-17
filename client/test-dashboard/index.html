@@ -18,11 +18,6 @@
   <meta name="robots" content="index, follow, max-image-preview:large" />
   <link rel="canonical" href="https://tests.vayl.in" />
 
-  <!-- KaTeX for production math rendering -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/contrib/mhchem.min.js"></script>
-
   <!-- Open Graph / Facebook / WhatsApp -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://tests.vayl.in" />
@@ -150,23 +145,6 @@
     };
   </script>
 
-  <!-- MathJax for LaTeX support -->
-  <script>
-    window.MathJax = {
-      tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']],
-        processEscapes: true
-      },
-      loader: {
-        load: ['[tex]/mhchem']
-      },
-      options: {
-        ignoreHtmlClass: 'tex2jax_ignore',
-        processHtmlClass: 'tex2jax_process'
-      }
-    };
-  </script>
   <link rel="preconnect" href="https://api.vayl.in">
 </head>
 
@@ -174,24 +152,6 @@
   <noscript>You need to enable JavaScript to run this app.</noscript>
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
-  <script>
-    window.MathJax = {
-      tex: {
-        inlineMath: [
-          ["$", "$"],
-          ["\\(", "\\)"],
-        ],
-        processEscapes: true,
-      },
-      options: {
-        renderActions: {
-          addMenu: [],
-        },
-        skipHtmlTags: ["script", "noscript", "style", "textarea", "pre"],
-      },
-    };
-  </script>
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js"></script>
 </body>
 
 </html>
