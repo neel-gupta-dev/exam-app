@@ -3,9 +3,11 @@ import Test from '../models/Test.js';
 import Question from '../models/Question.js';
 import Group from '../models/Group.js';
 import TestAttempt from '../models/TestAttempt.js';
+import crypto from 'crypto';
 import { getRedis } from '../config/redis.js';
 import { parsePdfBuffer } from '../services/pdfParserService.js';
 import { uploadBufferToCloudinary } from '../utils/cloudinaryUpload.js';
+import MediaAsset from '../models/MediaAsset.js';
 
 const normalizeQuestionPayload = (source, test, order) => {
   const content = source.content ?? source.text ?? source.questionText ?? '';
@@ -520,11 +522,35 @@ export const uploadTestImage = asyncHandler(async (req, res) => {
   const publicId = `${safePurpose}-${Date.now()}`;
 
   try {
+    const fileHash = crypto.createHash('md5').update(req.file.buffer).digest('hex');
+    
+    // Check for existing file
+    const existingAsset = await MediaAsset.findOne({ hash: fileHash });
+    if (existingAsset) {
+      return res.status(200).json({
+        url: existingAsset.url,
+        publicId: existingAsset.publicId,
+        format: existingAsset.format,
+        bytes: existingAsset.bytes,
+        fromCache: true
+      });
+    }
+
     const uploadResult = await uploadBufferToCloudinary(
       req.file.buffer,
       `vayl/tests/${test._id}`,
       publicId
     );
+
+    // Save to MediaAsset collection
+    await MediaAsset.create({
+      hash: fileHash,
+      url: uploadResult.secure_url,
+      publicId: uploadResult.public_id,
+      format: uploadResult.format,
+      bytes: uploadResult.bytes,
+      uploadedBy: req.user?._id
+    });
 
     res.status(201).json({
       url: uploadResult.secure_url,

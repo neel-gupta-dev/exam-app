@@ -90,7 +90,7 @@ const questionSchema = new mongoose.Schema(
   }
 );
 
-questionSchema.pre('validate', function normalizeQuestion(next) {
+questionSchema.pre('validate', function normalizeQuestion() {
   this.type = normalizeQuestionType(this.type);
 
   if (!this.content && this.text) this.content = this.text;
@@ -125,8 +125,6 @@ questionSchema.pre('validate', function normalizeQuestion(next) {
   if (!Array.isArray(this.correctAnswer) || this.correctAnswer.length === 0) {
     this.invalidate('correctAnswer', 'Correct answer is required');
   }
-
-  next();
 });
 
 // Fast lookup for questions in a test within a tenant
