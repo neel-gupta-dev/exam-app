@@ -34,7 +34,7 @@ function RenderContentTable({ table }) {
   );
 }
 
-export default function TestEngine({ testId, user, attemptId, onSubmitted }) {
+export default function TestEngine({ testId, user, attemptId, attemptToken, onSubmitted }) {
   // ─── State ───
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -72,6 +72,7 @@ export default function TestEngine({ testId, user, attemptId, onSubmitted }) {
   const paletteScrollRef = useRef(null);
   const questionScrollRef = useRef(null);
   const token = user?.token || localStorage.getItem('test_token');
+  const attemptQuery = `${attemptId || ''}${attemptToken ? `&attemptToken=${encodeURIComponent(attemptToken)}` : ''}`;
 
   // ─── API helper ───
   const apiFetch = useCallback(async (path, opts = {}) => {
@@ -100,6 +101,7 @@ export default function TestEngine({ testId, user, attemptId, onSubmitted }) {
 
   // ─── Start session on mount ───
   useEffect(() => {
+    sessionStorage.setItem('cbt_tab_switch_count', '0');
     const init = async () => {
       try {
         if (!testId) {
@@ -107,7 +109,7 @@ export default function TestEngine({ testId, user, attemptId, onSubmitted }) {
         }
 
         // We use assessment start route which is tied to /assessment if we updated the server
-        const data = await apiFetch(`/assessment/${testId}/start?attemptId=${attemptId || ''}`, { method: 'GET' });
+        const data = await apiFetch(`/assessment/${testId}/start?attemptId=${attemptQuery}`, { method: 'GET' });
         if (!data.test) {
           throw new Error('Invalid assessment response: missing test metadata.');
         }
@@ -176,7 +178,7 @@ export default function TestEngine({ testId, user, attemptId, onSubmitted }) {
           isMobile: /Mobi|Android/i.test(navigator.userAgent),
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
         };
-        await apiFetch(`/assessment/${testId}/sync?attemptId=${attemptId || ''}`, {
+        await apiFetch(`/assessment/${testId}/sync?attemptId=${attemptQuery}`, {
           method: 'POST',
           body: JSON.stringify({ deviceInfo: info }),
         });
@@ -393,6 +395,14 @@ export default function TestEngine({ testId, user, attemptId, onSubmitted }) {
       if (document.hidden) {
         setTabSwitchCount((prev) => {
           const newCount = prev + 1;
+          sessionStorage.setItem('cbt_tab_switch_count', String(newCount));
+          apiFetch(`/assessment/${testId}/sync?attemptId=${attemptQuery}`, {
+            method: 'POST',
+            body: JSON.stringify({
+              tabSwitchCount: newCount,
+              warnings: [{ type: 'tab-switch', timestamp: new Date().toISOString() }],
+            }),
+          }).catch(() => {});
           if (newCount >= 4) {
             handleSubmitRef.current?.();
           } else {
@@ -440,9 +450,13 @@ export default function TestEngine({ testId, user, attemptId, onSubmitted }) {
           idleSeconds: idleSecondsRef.current[questionId] || 0,
         };
       });
-      await apiFetch(`/assessment/${testId}/sync?attemptId=${attemptId || ''}`, {
+      await apiFetch(`/assessment/${testId}/sync?attemptId=${attemptQuery}`, {
         method: 'POST',
-        body: JSON.stringify({ answers: outAnswers, timeLeft: latestTimeLeftRef.current }),
+        body: JSON.stringify({
+          answers: outAnswers,
+          timeLeft: latestTimeLeftRef.current,
+          tabSwitchCount: Number(sessionStorage.getItem('cbt_tab_switch_count') || 0),
+        }),
       });
       syncDirty.current = false;
       return true;
@@ -637,7 +651,7 @@ export default function TestEngine({ testId, user, attemptId, onSubmitted }) {
     while (!success && attempts < maxAttempts) {
       attempts += 1;
       try {
-        const res = await apiFetch(`/assessment/${testId}/submit?attemptId=${attemptId || ''}`, { method: 'POST' });
+        const res = await apiFetch(`/assessment/${testId}/submit?attemptId=${attemptQuery}`, { method: 'POST' });
         setResult(res);
         setSubmitted(true);
         success = true;
@@ -1008,12 +1022,12 @@ export default function TestEngine({ testId, user, attemptId, onSubmitted }) {
           <div className="relative min-h-0 flex-1 border-b border-[#cfcfcf] bg-white">
             <div ref={questionScrollRef} className="w-full h-full overflow-y-auto relative">
               <div className="relative min-h-full w-full">
-                <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-[0.045]">
-                  <div className="grid w-full grid-cols-4 gap-x-12 gap-y-20 pt-12 -rotate-12 place-items-center text-[17px] font-bold uppercase tracking-wide text-[#111]">
+                <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-[0.085]">
+                  <div className="grid w-full grid-cols-3 sm:grid-cols-4 gap-x-14 gap-y-24 pt-12 -rotate-12 place-items-center text-[16px] font-bold uppercase tracking-wide text-[#111]">
                     {Array.from({ length: 200 }).map((_, idx) => (
-                      <span key={idx} className="flex max-w-[200px] flex-col items-center text-center leading-tight">
-                        <span className="max-w-full truncate">{watermarkName}</span>
-                        <span className="max-w-full truncate text-[13px]">{watermarkIp}</span>
+                      <span key={idx} className="flex max-w-[240px] flex-col items-center gap-1 text-center leading-tight">
+                        <span className="max-w-full whitespace-nowrap">{watermarkName}</span>
+                        <span className="max-w-full whitespace-nowrap text-[12px]">{watermarkIp}</span>
                       </span>
                     ))}
                   </div>

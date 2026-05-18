@@ -9,6 +9,15 @@ import { parsePdfBuffer } from '../services/pdfParserService.js';
 import { uploadBufferToCloudinary } from '../utils/cloudinaryUpload.js';
 import MediaAsset from '../models/MediaAsset.js';
 
+const normalizeQuestionTypeValue = (value) => {
+  const raw = String(value || 'single').trim().toLowerCase();
+  if (raw === 'scq') return 'single';
+  if (raw === 'mcq' || raw === 'multi') return 'multiple';
+  if (raw === 'numerical' || raw === 'numeric') return 'integer';
+  if (raw === 'decimal') return 'float';
+  return raw;
+};
+
 const normalizeQuestionPayload = (source, test, order) => {
   const content = source.content ?? source.text ?? source.questionText ?? '';
   const options = Array.isArray(source.options)
@@ -46,6 +55,71 @@ const normalizeQuestionPayload = (source, test, order) => {
   };
 };
 
+const buildReadinessReport = async (test) => {
+  const questions = await Question.find({ testId: test._id }).sort({ order: 1 }).lean();
+  const errors = [];
+  const warnings = [];
+  const sectionCounts = {};
+
+  if (!test.title?.trim()) errors.push('Test title is required.');
+  if (!Number.isFinite(Number(test.durationMinutes)) || Number(test.durationMinutes) <= 0) errors.push('Duration must be greater than 0.');
+  if (!Number.isFinite(Number(test.totalMarks)) || Number(test.totalMarks) <= 0) errors.push('Total marks must be greater than 0.');
+  if (!questions.length) errors.push('At least one question is required before publishing.');
+
+  questions.forEach((question, index) => {
+    const qNo = question.order || index + 1;
+    const section = question.section || 'General';
+    sectionCounts[section] = (sectionCounts[section] || 0) + 1;
+    const hasBody = String(question.content || question.text || question.imageUrl || '').trim()
+      || question.contentTable?.headers?.length;
+    if (!hasBody) errors.push(`Q${qNo}: question text, image, or table is missing.`);
+
+    if (question.type !== 'comprehension_parent' && (!Array.isArray(question.correctAnswer) || !question.correctAnswer.length)) {
+      errors.push(`Q${qNo}: correct answer is missing.`);
+    }
+
+    if (['single', 'multiple'].includes(normalizeQuestionTypeValue(question.type))) {
+      if (!Array.isArray(question.options) || question.options.length < 2) {
+        errors.push(`Q${qNo}: at least two options are required.`);
+      }
+      const labels = new Set((question.options || []).map((option, optionIndex) => String(option.label || option.key || String.fromCharCode(65 + optionIndex))));
+      (question.options || []).forEach((option, optionIndex) => {
+        const hasOptionBody = String(option.content || option.text || option.imageUrl || '').trim()
+          || option.contentTable?.headers?.length;
+        if (!hasOptionBody) errors.push(`Q${qNo}: option ${option.label || optionIndex + 1} is empty.`);
+      });
+      (question.correctAnswer || []).forEach((answer) => {
+        if (!labels.has(String(answer))) errors.push(`Q${qNo}: correct answer "${answer}" does not match any option label.`);
+      });
+    }
+
+    if (!question.tags?.length) warnings.push(`Q${qNo}: no chapter/topic tags added.`);
+    if (question.imageUrl && !/^https?:\/\//i.test(question.imageUrl)) warnings.push(`Q${qNo}: image URL does not look public.`);
+  });
+
+  (test.sections || []).forEach((section) => {
+    const actual = sectionCounts[section.name] || 0;
+    if (section.questionCount && actual !== section.questionCount) {
+      warnings.push(`${section.name}: configured for ${section.questionCount} questions, found ${actual}.`);
+    }
+    if (section.maxAttemptable && section.maxAttemptable > actual) {
+      errors.push(`${section.name}: max attemptable cannot exceed available questions.`);
+    }
+  });
+
+  if (test.scheduledStartAt && test.scheduledEndAt && new Date(test.scheduledEndAt) <= new Date(test.scheduledStartAt)) {
+    errors.push('Scheduled end time must be after start time.');
+  }
+
+  return {
+    ready: errors.length === 0,
+    errors,
+    warnings,
+    questionCount: questions.length,
+    sectionCounts,
+  };
+};
+
 /**
  * @desc    Create a new test (Admin only)
  * @route   POST /api/tests
@@ -56,6 +130,7 @@ export const createTest = asyncHandler(async (req, res) => {
     title,
     description,
     category,
+    testType,
     durationMinutes,
     totalMarks,
     sections,
@@ -66,6 +141,9 @@ export const createTest = asyncHandler(async (req, res) => {
     defaultNegativeMarks,
     scheduledStartAt,
     scheduledEndAt,
+    allowedAttemptCount,
+    solutionReleaseMode,
+    solutionsReleasedAt,
     syllabus,
     instructions,
   } = req.body;
@@ -74,6 +152,7 @@ export const createTest = asyncHandler(async (req, res) => {
     title,
     description,
     category,
+    testType: testType || 'full',
     durationMinutes,
     totalMarks,
     sections: sections || [],
@@ -86,6 +165,9 @@ export const createTest = asyncHandler(async (req, res) => {
     instructions: instructions || undefined,
     scheduledStartAt: scheduledStartAt || null,
     scheduledEndAt: scheduledEndAt || null,
+    allowedAttemptCount: Math.max(1, Number(allowedAttemptCount) || 1),
+    solutionReleaseMode: solutionReleaseMode || 'immediate',
+    solutionsReleasedAt: solutionsReleasedAt || null,
     createdBy: req.user._id,
     isPublished: false,
   });
@@ -158,9 +240,14 @@ export const getStudentTests = asyncHandler(async (req, res) => {
   const now = new Date();
   const rawTests = await Test.find({
     isPublished: true,
-    ...audienceFilter
+    ...audienceFilter,
+    $or: [
+      { scheduledEndAt: null },
+      { scheduledEndAt: { $exists: false } },
+      { scheduledEndAt: { $gte: now } },
+    ],
   })
-    .select('title description category durationMinutes totalMarks sections syllabus instructions questionCount visibility scheduledStartAt scheduledEndAt')
+    .select('title description category testType durationMinutes totalMarks sections syllabus instructions questionCount visibility scheduledStartAt scheduledEndAt allowedAttemptCount solutionReleaseMode solutionsReleasedAt')
     .sort({ createdAt: -1 });
 
   const redis = getRedis();
@@ -254,10 +341,11 @@ export const updateTest = asyncHandler(async (req, res) => {
   }
 
   const allowed = [
-    'title', 'description', 'category', 'durationMinutes', 'totalMarks',
+    'title', 'description', 'category', 'testType', 'durationMinutes', 'totalMarks',
     'sections', 'visibility', 'targetGroups', 'targetTenants',
     'defaultPositiveMarks', 'defaultNegativeMarks',
     'scheduledStartAt', 'scheduledEndAt', 'instructions', 'syllabus',
+    'allowedAttemptCount', 'solutionReleaseMode', 'solutionsReleasedAt',
   ];
 
   for (const key of allowed) {
@@ -280,6 +368,16 @@ export const togglePublish = asyncHandler(async (req, res) => {
     throw new Error('Test not found');
   }
 
+  if (!test.isPublished) {
+    const readiness = await buildReadinessReport(test);
+    if (!readiness.ready) {
+      return res.status(422).json({
+        message: 'Test is not ready to publish.',
+        readiness,
+      });
+    }
+  }
+
   test.isPublished = !test.isPublished;
   await test.save();
 
@@ -296,6 +394,34 @@ export const togglePublish = asyncHandler(async (req, res) => {
   // }
 
   res.json({ message: `Test ${test.isPublished ? 'published' : 'unpublished'}`, isPublished: test.isPublished });
+});
+
+export const getTestReadiness = asyncHandler(async (req, res) => {
+  const test = await Test.findById(req.params.id);
+  if (!test) {
+    res.status(404);
+    throw new Error('Test not found');
+  }
+  res.json(await buildReadinessReport(test));
+});
+
+export const getTestPreview = asyncHandler(async (req, res) => {
+  const test = await Test.findById(req.params.id).lean();
+  if (!test) {
+    res.status(404);
+    throw new Error('Test not found');
+  }
+  const questions = await Question.find({ testId: req.params.id }).sort({ order: 1 }).lean();
+  res.json({
+    test,
+    questions: questions.map((question) => {
+      const q = { ...question };
+      delete q.correctAnswer;
+      delete q.solution;
+      delete q.solutionImageUrl;
+      return q;
+    }),
+  });
 });
 
 /**

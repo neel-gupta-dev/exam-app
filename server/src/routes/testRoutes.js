@@ -9,6 +9,8 @@ import {
   getTestById,
   updateTest,
   togglePublish,
+  getTestReadiness,
+  getTestPreview,
   deleteTest,
   addQuestion,
   bulkAddQuestions,
@@ -43,6 +45,8 @@ router.get('/admin', protectAdmin, getAllTestsAdmin);
 router.post('/', protectAdmin, createTest);
 router.get('/:id', protectAdmin, getTestById);
 router.patch('/:id', protectAdmin, updateTest);
+router.get('/:id/readiness', protectAdmin, getTestReadiness);
+router.get('/:id/preview', protectAdmin, getTestPreview);
 router.patch('/:id/publish', protectAdmin, togglePublish);
 router.delete('/:id', protectAdmin, deleteTest);
 

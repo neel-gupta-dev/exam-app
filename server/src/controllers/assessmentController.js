@@ -5,6 +5,7 @@ import TestAttempt from '../models/TestAttempt.js';
 import User from '../models/User.js';
 import { getRedis } from '../config/redis.js';
 import { assertCanAttemptTest } from '../services/attemptService.js';
+import crypto from 'crypto';
 
 /** Split an array into chunks of `size` */
 const chunkArray = (arr, size) => {
@@ -37,6 +38,28 @@ const getClientIp = (req) => {
     ? forwarded[0]
     : forwarded?.split(',')[0] || req.ip || req.socket?.remoteAddress || '';
   return rawIp.replace(/^::ffff:/, '').trim();
+};
+
+const createSessionToken = () => crypto.randomBytes(32).toString('hex');
+const hashSessionToken = (token = '') => crypto.createHash('sha256').update(String(token)).digest('hex');
+
+const getAttemptSessionToken = (req) => (
+  req.query.attemptToken ||
+  req.headers['x-attempt-token'] ||
+  req.body?.attemptToken ||
+  ''
+);
+
+const assertAttemptLock = (attempt, req) => {
+  if (!attempt) return;
+  const expected = attempt.sessionTokenHash;
+  if (!expected) return;
+  const token = getAttemptSessionToken(req);
+  if (!token || hashSessionToken(token) !== expected) {
+    const err = new Error('This attempt is open in another active test window. Please close this window and resume from the dashboard.');
+    err.statusCode = 423;
+    throw err;
+  }
 };
 
 const computeTimeLeft = (test, startTime) => {
@@ -136,6 +159,20 @@ const normalizeDeviceInfo = (deviceInfo = {}) => {
   };
 };
 
+const areSolutionsUnlocked = (test = {}) => {
+  const mode = test.solutionReleaseMode || 'immediate';
+  const now = Date.now();
+  if (mode === 'immediate') return true;
+  if (mode === 'never') return false;
+  if (mode === 'manual') {
+    return Boolean(test.solutionsReleasedAt && new Date(test.solutionsReleasedAt).getTime() <= now);
+  }
+  if (mode === 'after_end') {
+    return Boolean(test.scheduledEndAt && new Date(test.scheduledEndAt).getTime() <= now);
+  }
+  return true;
+};
+
 const sessionAnswersToRows = (answers = {}) => Object.entries(answers).map(([questionId, answer]) => {
   const selectedAnswer = normalizeSelectedAnswer(answer);
   const telemetry = normalizeTelemetry(answer);
@@ -174,11 +211,69 @@ const buildCompleteAnswerRows = (questions, answers = {}) => questions.map((ques
   };
 });
 
+export const createAssessmentAttempt = asyncHandler(async (req, res) => {
+  const { testId } = req.params;
+  const userId = req.user._id.toString();
+  const test = await Test.findById(testId);
+
+  if (!test) {
+    return res.status(404).json({ message: 'Test not found' });
+  }
+
+  await assertCanAttemptTest(test, req.user);
+
+  let attempt = await TestAttempt.findOne({
+    userId,
+    testId,
+    status: 'in-progress',
+  }).select('+sessionTokenHash').sort({ createdAt: -1 });
+
+  if (!attempt) {
+    const completedAttemptCount = await TestAttempt.countDocuments({
+      userId,
+      testId,
+      status: { $in: ['completed', 'auto-submitted'] },
+    });
+    const allowedAttemptCount = Math.max(1, Number(test.allowedAttemptCount) || 1);
+    if (completedAttemptCount >= allowedAttemptCount) {
+      return res.status(403).json({
+        message: `You have used all ${allowedAttemptCount} allowed attempt${allowedAttemptCount === 1 ? '' : 's'} for this test.`,
+      });
+    }
+
+    attempt = await TestAttempt.create({
+      userId,
+      testId,
+      tenantId: req.user.tenantId || test.tenantId || undefined,
+      status: 'in-progress',
+      ipAddress: getClientIp(req),
+      answers: [],
+    });
+    attempt = await TestAttempt.findById(attempt._id).select('+sessionTokenHash');
+  }
+
+  const sessionToken = createSessionToken();
+  attempt.sessionTokenHash = hashSessionToken(sessionToken);
+  attempt.sessionStartedAt = new Date();
+  attempt.lastSyncAt = new Date();
+  attempt.lockReleasedAt = null;
+  attempt.ipAddress = attempt.ipAddress || getClientIp(req);
+  await attempt.save();
+
+  res.status(201).json({
+    attemptId: attempt._id,
+    attemptToken: sessionToken,
+    publicIp: attempt.ipAddress,
+    test: test.toRedisPayload(),
+  });
+});
+
 const gradeAttempt = (attempt, test, questions) => {
   const questionMap = new Map(questions.map((q) => [q._id.toString(), q]));
   let totalScore = 0;
   let maxPossibleScore = 0;
   const sectionScores = {};
+  const topicPerformance = {};
 
   // Map section definitions for easy lookup
   const sectionConfigs = {};
@@ -211,6 +306,16 @@ const gradeAttempt = (attempt, test, questions) => {
 
     const selected = [...(answer.selectedAnswer || [])].sort();
     const isAttempted = selected.length > 0;
+    const recordTopics = (bucket) => {
+      const tags = Array.isArray(question.tags) && question.tags.length ? question.tags : [question.section || 'General'];
+      tags.forEach((tag) => {
+        const key = String(tag || 'General').trim() || 'General';
+        if (!topicPerformance[key]) {
+          topicPerformance[key] = { correct: 0, wrong: 0, skipped: 0 };
+        }
+        topicPerformance[key][bucket] += 1;
+      });
+    };
 
     // NEET/Capped Logic: Check if we've exceeded the maxAttemptable for this section
     if (config?.maxAttemptable && isAttempted) {
@@ -236,6 +341,7 @@ const gradeAttempt = (attempt, test, questions) => {
 
     if (!isAttempted) {
       sectionScores[section].unattempted += 1;
+      recordTopics('skipped');
       continue;
     }
 
@@ -248,10 +354,12 @@ const gradeAttempt = (attempt, test, questions) => {
       totalScore += pos;
       sectionScores[section].correct += 1;
       sectionScores[section].score += pos;
+      recordTopics('correct');
     } else {
       totalScore -= neg;
       sectionScores[section].wrong += 1;
       sectionScores[section].score -= neg;
+      recordTopics('wrong');
     }
   }
 
@@ -288,6 +396,7 @@ const gradeAttempt = (attempt, test, questions) => {
     ? Math.round((totalScore / adjustedMaxPossibleScore) * 10000) / 100
     : 0;
   attempt.sectionScores = sectionScores;
+  attempt.topicPerformance = topicPerformance;
   attempt.submittedAt = new Date();
   attempt.status = 'completed';
 };
@@ -310,13 +419,41 @@ export const startAssessment = asyncHandler(async (req, res) => {
   }
   await assertCanAttemptTest(test, req.user);
 
+  if (!attemptId) {
+    const [activeAttempt, completedAttemptCount] = await Promise.all([
+      TestAttempt.findOne({ userId, testId, status: 'in-progress' }).select('_id'),
+      TestAttempt.countDocuments({ userId, testId, status: { $in: ['completed', 'auto-submitted'] } }),
+    ]);
+    const allowedAttemptCount = Math.max(1, Number(test.allowedAttemptCount) || 1);
+    if (!activeAttempt && completedAttemptCount >= allowedAttemptCount) {
+      return res.status(403).json({
+        message: `You have used all ${allowedAttemptCount} allowed attempt${allowedAttemptCount === 1 ? '' : 's'} for this test.`,
+      });
+    }
+  }
+
   const questions = await Question.find({ testId }).sort({ order: 1 });
   const safeQuestions = toSafeQuestions(questions);
+  let lockedAttempt = null;
+  if (attemptId) {
+    lockedAttempt = await TestAttempt.findOne({ _id: attemptId, userId, testId }).select('+sessionTokenHash');
+    if (!lockedAttempt) {
+      return res.status(404).json({ message: 'Attempt not found for this test.' });
+    }
+    if (lockedAttempt.status !== 'in-progress') {
+      return res.status(400).json({ message: 'This attempt has already been submitted.' });
+    }
+    assertAttemptLock(lockedAttempt, req);
+    if (!lockedAttempt.ipAddress) {
+      lockedAttempt.ipAddress = getClientIp(req);
+      await lockedAttempt.save();
+    }
+  }
 
   if (!redis) {
     let attempt;
     if (attemptId) {
-      attempt = await TestAttempt.findById(attemptId);
+      attempt = lockedAttempt;
     } else {
       attempt = await TestAttempt.findOne({
         userId,
@@ -335,6 +472,7 @@ export const startAssessment = asyncHandler(async (req, res) => {
         ipAddress: getClientIp(req),
         answers: [],
       });
+      attempt = await TestAttempt.findById(attempt._id).select('+sessionTokenHash');
     } else if (!attempt.ipAddress) {
       attempt.ipAddress = getClientIp(req);
       await attempt.save();
@@ -367,7 +505,7 @@ export const startAssessment = asyncHandler(async (req, res) => {
     // Check if an in-progress attempt exists in MongoDB
     let attempt;
     if (attemptId) {
-      attempt = await TestAttempt.findById(attemptId);
+      attempt = lockedAttempt;
     } else {
       attempt = await TestAttempt.findOne({
         userId,
@@ -397,7 +535,7 @@ export const startAssessment = asyncHandler(async (req, res) => {
     await redis.expire(sessionKey, (test.durationMinutes * 60) + 3600);
   }
   activeSession.timeLeft = computeTimeLeft(test, activeSession.startTime);
-  activeSession.publicIp = activeSession.publicIp || getClientIp(req);
+  activeSession.publicIp = lockedAttempt?.ipAddress || activeSession.publicIp || getClientIp(req);
 
   res.status(200).json({
     test: test.toRedisPayload(),
@@ -419,7 +557,7 @@ export const syncAssessment = asyncHandler(async (req, res) => {
 
   // SECURITY: Accept answers and deviceInfo from client, but IGNORE timeLeft —
   // the server always computes remaining time from the authoritative startTime.
-  const { answers, deviceInfo } = req.body;
+  const { answers, deviceInfo, tabSwitchCount, warnings } = req.body;
   const sessionKey = attemptId 
     ? `cbt_session:${userId}:${testId}:${attemptId}` 
     : `cbt_session:${userId}:${testId}`;
@@ -437,6 +575,18 @@ export const syncAssessment = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'Test not found' });
   }
 
+  let lockedAttempt = null;
+  if (attemptId) {
+    lockedAttempt = await TestAttempt.findOne({ _id: attemptId, userId, testId }).select('+sessionTokenHash');
+    if (!lockedAttempt) {
+      return res.status(404).json({ message: 'Attempt not found for this test.' });
+    }
+    if (lockedAttempt.status !== 'in-progress') {
+      return res.status(400).json({ message: 'This attempt has already been submitted.' });
+    }
+    assertAttemptLock(lockedAttempt, req);
+  }
+
   // SECURITY: Whitelist question IDs — only allow answers for questions
   // that actually belong to this test. Prevents injecting foreign question IDs.
   let sanitizedAnswers = answers;
@@ -452,7 +602,7 @@ export const syncAssessment = asyncHandler(async (req, res) => {
   }
 
   if (!redis) {
-    const attempt = await TestAttempt.findOne({
+    const attempt = lockedAttempt || await TestAttempt.findOne({
       userId,
       testId,
       status: 'in-progress',
@@ -471,6 +621,16 @@ export const syncAssessment = asyncHandler(async (req, res) => {
         ...normalizeDeviceInfo(deviceInfo),
       };
     }
+    if (typeof tabSwitchCount === 'number') {
+      attempt.tabSwitchCount = Math.max(attempt.tabSwitchCount || 0, Math.round(tabSwitchCount));
+    }
+    if (Array.isArray(warnings) && warnings.length) {
+      attempt.warnings.push(...warnings.map((warning) => ({
+        type: String(warning?.type || warning || 'warning').slice(0, 80),
+        timestamp: warning?.timestamp ? new Date(warning.timestamp) : new Date(),
+      })));
+    }
+    attempt.lastSyncAt = new Date();
     await attempt.save();
     return res.status(200).json({
       message: 'Synced',
@@ -494,6 +654,33 @@ export const syncAssessment = asyncHandler(async (req, res) => {
       ...(activeSession.deviceInfo || {}),
       ...normalizeDeviceInfo(deviceInfo),
     };
+  }
+  if (typeof tabSwitchCount === 'number') {
+    activeSession.tabSwitchCount = Math.max(activeSession.tabSwitchCount || 0, Math.round(tabSwitchCount));
+  }
+  if (Array.isArray(warnings) && warnings.length) {
+    activeSession.warnings = [
+      ...(activeSession.warnings || []),
+      ...warnings.map((warning) => ({
+        type: String(warning?.type || warning || 'warning').slice(0, 80),
+        timestamp: warning?.timestamp || new Date().toISOString(),
+      })),
+    ].slice(-100);
+  }
+  activeSession.lastSyncAt = new Date().toISOString();
+
+  if (lockedAttempt) {
+    lockedAttempt.lastSyncAt = new Date();
+    if (typeof tabSwitchCount === 'number') {
+      lockedAttempt.tabSwitchCount = Math.max(lockedAttempt.tabSwitchCount || 0, Math.round(tabSwitchCount));
+    }
+    if (Array.isArray(warnings) && warnings.length) {
+      lockedAttempt.warnings.push(...warnings.map((warning) => ({
+        type: String(warning?.type || warning || 'warning').slice(0, 80),
+        timestamp: warning?.timestamp ? new Date(warning.timestamp) : new Date(),
+      })));
+    }
+    await lockedAttempt.save();
   }
 
   // Update Redis
@@ -520,11 +707,22 @@ export const submitAssessment = asyncHandler(async (req, res) => {
   if (!test) {
     return res.status(404).json({ message: 'Test not found' });
   }
+  let lockedAttempt = null;
+  if (attemptId) {
+    lockedAttempt = await TestAttempt.findOne({ _id: attemptId, userId, testId }).select('+sessionTokenHash');
+    if (!lockedAttempt) {
+      return res.status(404).json({ message: 'Attempt not found for this test.' });
+    }
+    if (lockedAttempt.status !== 'in-progress') {
+      return res.status(400).json({ message: 'This attempt has already been submitted.' });
+    }
+    assertAttemptLock(lockedAttempt, req);
+  }
 
   if (!redis) {
     let attempt;
     if (attemptId) {
-      attempt = await TestAttempt.findById(attemptId);
+      attempt = lockedAttempt;
     } else {
       attempt = await TestAttempt.findOne({
         userId,
@@ -543,6 +741,8 @@ export const submitAssessment = asyncHandler(async (req, res) => {
     attempt.durationUsedMinutes = Math.round((Date.now() - new Date(attempt.startedAt).getTime()) / 60000);
     attempt.ipAddress = attempt.ipAddress || getClientIp(req);
     attempt.answers = buildCompleteAnswerRows(questions, answers);
+    attempt.lockReleasedAt = new Date();
+    attempt.sessionTokenHash = '';
     gradeAttempt(attempt, test, questions);
     await attempt.save();
 
@@ -554,7 +754,7 @@ export const submitAssessment = asyncHandler(async (req, res) => {
     // FALLBACK TO MONGO: Check if an in-progress attempt exists in MongoDB
     let attempt;
     if (attemptId) {
-      attempt = await TestAttempt.findById(attemptId);
+      attempt = lockedAttempt;
     } else {
       attempt = await TestAttempt.findOne({
         userId,
@@ -573,20 +773,37 @@ export const submitAssessment = asyncHandler(async (req, res) => {
     attempt.durationUsedMinutes = Math.round((Date.now() - new Date(attempt.startedAt).getTime()) / 60000);
     attempt.ipAddress = attempt.ipAddress || getClientIp(req);
     attempt.answers = buildCompleteAnswerRows(questions, answers);
+    attempt.lockReleasedAt = new Date();
+    attempt.sessionTokenHash = '';
     gradeAttempt(attempt, test, questions);
     await attempt.save();
 
     return res.status(201).json({ message: 'Evaluation completed', attempt });
   }
 
-  const { answers, startTime, publicIp, deviceInfo } = JSON.parse(activeSessionRaw);
+  const { answers, startTime, publicIp, deviceInfo, tabSwitchCount, warnings } = JSON.parse(activeSessionRaw);
 
   const endTime = new Date();
   const durationUsedMinutes = Math.round((endTime.getTime() - new Date(startTime).getTime()) / 60000);
   const questions = await Question.find({ testId }).sort({ order: 1 }).lean();
   const answerRows = buildCompleteAnswerRows(questions, answers);
 
-  const attempt = new TestAttempt({
+  if (lockedAttempt) {
+    lockedAttempt.status = 'completed';
+    lockedAttempt.startedAt = startTime ? new Date(startTime) : lockedAttempt.startedAt;
+    lockedAttempt.durationUsedMinutes = durationUsedMinutes;
+    lockedAttempt.ipAddress = publicIp || lockedAttempt.ipAddress || getClientIp(req);
+    lockedAttempt.deviceInfo = normalizeDeviceInfo(deviceInfo);
+    lockedAttempt.tabSwitchCount = Math.max(lockedAttempt.tabSwitchCount || 0, Math.round(Number(tabSwitchCount) || 0));
+    lockedAttempt.warnings = Array.isArray(warnings) ? warnings.map((warning) => ({
+      type: String(warning?.type || warning || 'warning').slice(0, 80),
+      timestamp: warning?.timestamp ? new Date(warning.timestamp) : new Date(),
+    })) : lockedAttempt.warnings;
+    lockedAttempt.answers = answerRows;
+    lockedAttempt.lockReleasedAt = new Date();
+    lockedAttempt.sessionTokenHash = '';
+  }
+  const attempt = lockedAttempt || new TestAttempt({
     userId,
     testId,
     status: 'completed',
@@ -594,8 +811,16 @@ export const submitAssessment = asyncHandler(async (req, res) => {
     durationUsedMinutes,
     ipAddress: publicIp || getClientIp(req),
     deviceInfo: normalizeDeviceInfo(deviceInfo),
+    tabSwitchCount: Math.max(0, Math.round(Number(tabSwitchCount) || 0)),
+    warnings: Array.isArray(warnings) ? warnings.map((warning) => ({
+      type: String(warning?.type || warning || 'warning').slice(0, 80),
+      timestamp: warning?.timestamp ? new Date(warning.timestamp) : new Date(),
+    })) : [],
     answers: answerRows,
   });
+  if (lockedAttempt) {
+    attempt.tenantId = lockedAttempt.tenantId || req.user.tenantId || test.tenantId || undefined;
+  }
   gradeAttempt(attempt, test, questions);
   await attempt.save();
 
@@ -616,7 +841,7 @@ export const getMyAssessmentResults = asyncHandler(async (req, res) => {
 
   const testIds = [...new Set(attempts.map(a => a.testId))];
   const tests = await Test.find({ _id: { $in: testIds } })
-    .select('title category totalMarks durationMinutes sections')
+    .select('title category totalMarks durationMinutes sections solutionReleaseMode solutionsReleasedAt scheduledEndAt')
     .lean();
   const testMap = Object.fromEntries(tests.map(t => [t._id.toString(), t]));
 
@@ -657,6 +882,8 @@ export const getMyAssessmentResults = asyncHandler(async (req, res) => {
       maxPossibleScore: attempt.maxPossibleScore,
       percentage: attempt.percentage,
       sectionScores,
+      topicPerformance: attempt.topicPerformance instanceof Map ? Object.fromEntries(attempt.topicPerformance) : attempt.topicPerformance || {},
+      solutionsUnlocked: areSolutionsUnlocked(test || {}),
       answered: attempt.answers?.filter((answer) => answer.selectedAnswer?.length > 0).length || 0,
       totalQuestions: attempt.answers?.length || 0,
       ipAddress: attempt.ipAddress || '',
@@ -764,8 +991,11 @@ export const getAssessmentReview = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'Attempt not found.' });
   }
 
-  const test = await Test.findById(attempt.testId).select('title category durationMinutes totalMarks').lean();
+  const test = await Test.findById(attempt.testId)
+    .select('title category durationMinutes totalMarks solutionReleaseMode solutionsReleasedAt scheduledEndAt')
+    .lean();
   attempt.test = test;
+  const solutionsUnlocked = areSolutionsUnlocked(test || {});
 
   if (attempt.userId.toString() !== userId) {
     return res.status(403).json({ message: 'Access denied.' });
@@ -817,6 +1047,9 @@ export const getAssessmentReview = asyncHandler(async (req, res) => {
       content: questionContent,
       text: q.text || questionContent,
       options: normalizedOptions,
+      correctAnswer: solutionsUnlocked ? q.correctAnswer : [],
+      solution: solutionsUnlocked ? q.solution : '',
+      solutionImageUrl: solutionsUnlocked ? q.solutionImageUrl : '',
       userAnswer: selected,
       status: userAns.status,
       timeSpentSeconds: userAns.timeSpentSeconds,
@@ -840,6 +1073,8 @@ export const getAssessmentReview = asyncHandler(async (req, res) => {
       percentage: attempt.percentage,
       submittedAt: attempt.submittedAt,
       sectionScores: attempt.sectionScores instanceof Map ? Object.fromEntries(attempt.sectionScores) : attempt.sectionScores || {},
+      topicPerformance: attempt.topicPerformance instanceof Map ? Object.fromEntries(attempt.topicPerformance) : attempt.topicPerformance || {},
+      solutionsUnlocked,
     },
     questions: reviewedQuestions,
   });

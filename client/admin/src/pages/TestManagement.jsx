@@ -138,6 +138,9 @@ export default function TestManagement() {
   const [jsonLoading, setJsonLoading] = useState(false);
   const [jsonError, setJsonError] = useState(null);
   const [imageUploading, setImageUploading] = useState('');
+  const [readinessReport, setReadinessReport] = useState(null);
+  const [previewData, setPreviewData] = useState(null);
+  const [questionAnalytics, setQuestionAnalytics] = useState(null);
 
   const handleCopyShareLink = (testId) => {
     // Determine student URL based on environment
@@ -153,6 +156,11 @@ export default function TestManagement() {
     title: '', description: '', category: 'General', testType: 'full', durationMinutes: 180,
     totalMarks: 300, visibility: 'b2c_public', targetTenants: [], targetGroups: [],
     defaultPositiveMarks: 4, defaultNegativeMarks: 1, syllabusText: '',
+    scheduledStartAt: '',
+    scheduledEndAt: '',
+    allowedAttemptCount: 1,
+    solutionReleaseMode: 'immediate',
+    solutionsReleasedAt: '',
     instructionGeneralText: '',
     instructionOtherText: '',
     instructionDeclaration: '',
@@ -240,10 +248,30 @@ export default function TestManagement() {
     try {
       const res = await api.get(`/tests/${testId}/questions`);
       setQuestions(res.data || []);
+      fetchQuestionAnalytics(testId);
     } catch (e) {
       console.error(e);
     }
   };
+
+  const fetchQuestionAnalytics = async (testId) => {
+    try {
+      const res = await api.get(`/admin/tests/${testId}/question-analytics`);
+      setQuestionAnalytics(res.data || null);
+    } catch {
+      setQuestionAnalytics(null);
+    }
+  };
+
+  const formatDateTimeLocal = (value) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    const pad = (num) => String(num).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  };
+
+  const normalizeDateTime = (value) => value ? new Date(value).toISOString() : null;
 
   const handleTestImageUpload = async (file, purpose, onUploaded) => {
     if (!file || !selectedTest) return;
@@ -280,6 +308,10 @@ export default function TestManagement() {
       } = form;
       const payload = {
         ...testFields,
+        scheduledStartAt: normalizeDateTime(form.scheduledStartAt),
+        scheduledEndAt: normalizeDateTime(form.scheduledEndAt),
+        solutionsReleasedAt: normalizeDateTime(form.solutionsReleasedAt),
+        allowedAttemptCount: Math.max(1, Number(form.allowedAttemptCount) || 1),
         syllabus: syllabusText?.split('\n').map(s => s.trim()).filter(Boolean) || [],
         instructions: {
           general: instructionGeneralText?.split('\n').map(s => s.trim()).filter(Boolean) || [],
@@ -314,7 +346,7 @@ export default function TestManagement() {
       }
       setShowForm(false);
       setEditingTest(null);
-      setForm({ title: '', description: '', category: 'General', testType: 'full', durationMinutes: 180, totalMarks: 300, visibility: 'b2c_public', targetTenants: [], targetGroups: [], defaultPositiveMarks: 4, defaultNegativeMarks: 1, syllabusText: '', instructionGeneralText: '', instructionOtherText: '', instructionDeclaration: '', sectionsText: '' });
+      setForm({ title: '', description: '', category: 'General', testType: 'full', durationMinutes: 180, totalMarks: 300, visibility: 'b2c_public', targetTenants: [], targetGroups: [], defaultPositiveMarks: 4, defaultNegativeMarks: 1, scheduledStartAt: '', scheduledEndAt: '', allowedAttemptCount: 1, solutionReleaseMode: 'immediate', solutionsReleasedAt: '', syllabusText: '', instructionGeneralText: '', instructionOtherText: '', instructionDeclaration: '', sectionsText: '' });
       fetchTests();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to save test');
@@ -324,9 +356,30 @@ export default function TestManagement() {
   const handleTogglePublish = async (testId) => {
     try {
       await api.patch(`/tests/${testId}/publish`);
+      setReadinessReport(null);
       fetchTests();
     } catch (err) {
+      const readiness = err.response?.data?.readiness;
+      if (readiness) setReadinessReport({ testId, ...readiness });
       alert(err.response?.data?.message || 'Failed to toggle publish');
+    }
+  };
+
+  const handleCheckReadiness = async (testId) => {
+    try {
+      const res = await api.get(`/tests/${testId}/readiness`);
+      setReadinessReport({ testId, ...res.data });
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to check readiness');
+    }
+  };
+
+  const handleOpenPreview = async (testId) => {
+    try {
+      const res = await api.get(`/tests/${testId}/preview`);
+      setPreviewData(res.data);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to load CBT preview');
     }
   };
 
@@ -533,6 +586,35 @@ export default function TestManagement() {
                 <label>-ve Marks per Q</label>
                 <input type="number" value={form.defaultNegativeMarks} onChange={e => setForm({ ...form, defaultNegativeMarks: Number(e.target.value) })} min={0} />
               </div>
+              <div className="form-group">
+                <label>Scheduled Start</label>
+                <input type="datetime-local" value={form.scheduledStartAt || ''} onChange={e => setForm({ ...form, scheduledStartAt: e.target.value })} />
+                <small>Leave empty to go live instantly when published.</small>
+              </div>
+              <div className="form-group">
+                <label>Scheduled End</label>
+                <input type="datetime-local" value={form.scheduledEndAt || ''} onChange={e => setForm({ ...form, scheduledEndAt: e.target.value })} />
+                <small>After this, the test disappears from student test list.</small>
+              </div>
+              <div className="form-group">
+                <label>Allowed Attempts</label>
+                <input type="number" value={form.allowedAttemptCount || 1} onChange={e => setForm({ ...form, allowedAttemptCount: Number(e.target.value) })} min={1} />
+              </div>
+              <div className="form-group">
+                <label>Solutions Release</label>
+                <select value={form.solutionReleaseMode || 'immediate'} onChange={e => setForm({ ...form, solutionReleaseMode: e.target.value })}>
+                  <option value="immediate">Immediately after submission</option>
+                  <option value="after_end">After scheduled end time</option>
+                  <option value="manual">Manual release time</option>
+                  <option value="never">Never show solutions</option>
+                </select>
+              </div>
+              {form.solutionReleaseMode === 'manual' && (
+                <div className="form-group">
+                  <label>Manual Solution Release Time</label>
+                  <input type="datetime-local" value={form.solutionsReleasedAt || ''} onChange={e => setForm({ ...form, solutionsReleasedAt: e.target.value })} />
+                </div>
+              )}
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                 <label>Description</label>
                 <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} />
@@ -632,10 +714,16 @@ export default function TestManagement() {
                   <span className={`badge ${test.isPublished ? 'badge-success' : 'badge-warning'}`}>
                     {test.isPublished ? '✅ Published' : '📝 Draft'}
                   </span>
+                  <div style={{ marginTop: 4, fontSize: 11, opacity: 0.7 }}>
+                    {test.scheduledStartAt ? `Starts ${new Date(test.scheduledStartAt).toLocaleString()}` : 'Instant when published'}
+                    {test.scheduledEndAt ? ` · Ends ${new Date(test.scheduledEndAt).toLocaleString()}` : ''}
+                  </div>
                 </td>
                 <td>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button className="btn btn-sm" onClick={() => { setSelectedTest(test); fetchQuestions(test._id); }}>📋 Questions</button>
+                    <button className="btn btn-sm" onClick={() => handleCheckReadiness(test._id)}>✅ Check</button>
+                    <button className="btn btn-sm" onClick={() => handleOpenPreview(test._id)}>🖥 Preview</button>
                     <button className="btn btn-sm" onClick={() => handleTogglePublish(test._id)}>
                       {test.isPublished ? '⏸ Unpublish' : '🚀 Publish'}
                     </button>
@@ -653,6 +741,11 @@ export default function TestManagement() {
                         targetGroups: test.targetGroups?.map(g => g._id || g) || [],
                         defaultPositiveMarks: test.defaultPositiveMarks || 4,
                         defaultNegativeMarks: test.defaultNegativeMarks || 1,
+                        scheduledStartAt: formatDateTimeLocal(test.scheduledStartAt),
+                        scheduledEndAt: formatDateTimeLocal(test.scheduledEndAt),
+                        allowedAttemptCount: test.allowedAttemptCount || 1,
+                        solutionReleaseMode: test.solutionReleaseMode || 'immediate',
+                        solutionsReleasedAt: formatDateTimeLocal(test.solutionsReleasedAt),
                         syllabusText: test.syllabus?.join('\n') || '',
                         instructionGeneralText: test.instructions?.general?.join('\n') || '',
                         instructionOtherText: test.instructions?.other?.join('\n') || '',
@@ -671,6 +764,82 @@ export default function TestManagement() {
           </tbody>
         </table>
       </div>
+
+      {readinessReport && (
+        <div className="card" style={{ marginTop: 16, borderLeft: `4px solid ${readinessReport.ready ? '#22c55e' : '#ef4444'}` }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+            <div>
+              <h3 style={{ marginTop: 0 }}>{readinessReport.ready ? '✅ Ready to Publish' : '⚠️ Publish Readiness Issues'}</h3>
+              <p style={{ opacity: 0.75, margin: 0 }}>{readinessReport.questionCount || 0} questions checked.</p>
+            </div>
+            <button className="btn btn-sm" onClick={() => setReadinessReport(null)}>Close</button>
+          </div>
+          {readinessReport.errors?.length > 0 && (
+            <div style={{ marginTop: 12 }}>
+              <strong style={{ color: '#ef4444' }}>Errors</strong>
+              <ul>{readinessReport.errors.map((item, idx) => <li key={idx}>{item}</li>)}</ul>
+            </div>
+          )}
+          {readinessReport.warnings?.length > 0 && (
+            <div style={{ marginTop: 12 }}>
+              <strong style={{ color: '#f59e0b' }}>Warnings</strong>
+              <ul>{readinessReport.warnings.map((item, idx) => <li key={idx}>{item}</li>)}</ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      {previewData && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', zIndex: 1000, padding: 24, overflow: 'auto' }}>
+          <div className="card" style={{ maxWidth: 1180, margin: '0 auto', padding: 0, overflow: 'hidden' }}>
+            <div style={{ height: 38, background: '#333', color: '#ffff00', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', fontWeight: 600 }}>
+              <span>{previewData.test?.title || 'CBT Preview'}</span>
+              <button className="btn btn-sm" onClick={() => setPreviewData(null)}>Close Preview</button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', minHeight: 560, background: '#fff', color: '#111' }}>
+              <div>
+                <div style={{ padding: '10px 16px', borderBottom: '1px solid #ccc', display: 'flex', justifyContent: 'space-between' }}>
+                  <strong>Question Type: {previewData.questions?.[0]?.type || 'single'}</strong>
+                  <span>Time Left : {previewData.test?.durationMinutes || 0}:00</span>
+                </div>
+                <div style={{ padding: 18, position: 'relative', minHeight: 480 }}>
+                  <div style={{ position: 'absolute', inset: 0, opacity: 0.06, transform: 'rotate(-12deg)', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 40, alignItems: 'center', textAlign: 'center', fontWeight: 700 }}>
+                    {Array.from({ length: 24 }).map((_, idx) => <span key={idx}>PREVIEW WATERMARK<br />IP WILL APPEAR HERE</span>)}
+                  </div>
+                  <div style={{ position: 'relative', zIndex: 1 }}>
+                    <h2>Question No. 1</h2>
+                    <LatexRenderer text={previewData.questions?.[0]?.content || 'No question available.'} />
+                    {previewData.questions?.[0]?.imageUrl && <img src={previewData.questions[0].imageUrl} alt="" style={{ maxHeight: 220, maxWidth: '100%', marginTop: 12 }} />}
+                    <div style={{ marginTop: 24 }}>
+                      {(previewData.questions?.[0]?.options || []).map((option) => (
+                        <div key={option.label} style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 12 }}>
+                          <span style={{ height: 16, width: 16, border: '1px solid #777', borderRadius: 99 }} />
+                          <strong>{option.label}.</strong>
+                          <LatexRenderer text={option.content} />
+                          {option.imageUrl && <img src={option.imageUrl} alt="" style={{ maxHeight: 60, maxWidth: 100 }} />}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <aside style={{ background: '#dff4fc', borderLeft: '1px solid #bbb' }}>
+                <div style={{ padding: 16, background: '#f3f7fb', borderBottom: '1px solid #bbb', fontWeight: 700 }}>Candidate Preview</div>
+                <div style={{ padding: 16 }}>
+                  <h3 style={{ margin: '0 0 12px' }}>{previewData.test?.sections?.[0]?.name || 'General'}</h3>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {(previewData.questions || []).slice(0, 60).map((question, idx) => (
+                      <span key={question._id || idx} style={{ display: 'inline-flex', width: 42, height: 34, alignItems: 'center', justifyContent: 'center', background: idx === 0 ? '#e43d00' : '#eee', color: idx === 0 ? '#fff' : '#111', border: '1px solid #aaa', fontWeight: 700 }}>
+                        {idx + 1}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Question Management Panel */}
       {selectedTest && (
@@ -703,6 +872,43 @@ export default function TestManagement() {
               <button className="btn btn-sm" onClick={() => { setSelectedTest(null); setQuestions([]); setShowQuestionForm(false); setShowPdfImport(false); setShowJsonImport(false); }}>✕ Close</button>
             </div>
           </div>
+
+          {questionAnalytics && (
+            <div style={{ marginTop: 16, padding: 16, border: '1px solid rgba(79,70,229,0.2)', borderRadius: 8, background: 'rgba(79,70,229,0.05)' }}>
+              <h4 style={{ marginTop: 0 }}>📈 Per-Question Performance ({questionAnalytics.attempts || 0} attempts)</h4>
+              <div style={{ overflowX: 'auto', maxHeight: 300, overflowY: 'auto' }}>
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Q</th>
+                      <th>Section</th>
+                      <th>Tags</th>
+                      <th>Accuracy</th>
+                      <th>Wrong</th>
+                      <th>Skip</th>
+                      <th>Avg Time</th>
+                      <th>Option Spread</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {questionAnalytics.questions?.map((row) => (
+                      <tr key={row.questionId}>
+                        <td>Q{row.questionNumber}</td>
+                        <td>{row.section}</td>
+                        <td>{row.tags?.join(', ') || '-'}</td>
+                        <td><strong style={{ color: row.accuracy >= 60 ? '#22c55e' : row.accuracy >= 35 ? '#f59e0b' : '#ef4444' }}>{row.accuracy}%</strong></td>
+                        <td>{row.wrongRate}%</td>
+                        <td>{row.skipRate}%</td>
+                        <td>{row.averageTimeSeconds}s</td>
+                        <td>{Object.entries(row.optionDistribution || {}).map(([key, count]) => `${key}:${count}`).join(' · ') || '-'}</td>
+                      </tr>
+                    ))}
+                    {!questionAnalytics.questions?.length && <tr><td colSpan={8} style={{ textAlign: 'center', padding: 16 }}>No submitted attempts yet.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {/* Add NEW Question Form — only shown when not editing an existing one */}
           {showQuestionForm && !editingQuestion && (

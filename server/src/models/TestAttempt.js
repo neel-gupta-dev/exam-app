@@ -110,6 +110,23 @@ const testAttemptSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    sessionTokenHash: {
+      type: String,
+      default: '',
+      select: false,
+    },
+    sessionStartedAt: {
+      type: Date,
+      default: null,
+    },
+    lastSyncAt: {
+      type: Date,
+      default: null,
+    },
+    lockReleasedAt: {
+      type: Date,
+      default: null,
+    },
     /**
      * Per-question answer state.
      * During live test, this is synced from Redis periodically.
@@ -212,6 +229,7 @@ const testAttemptSchema = new mongoose.Schema(
 // Compound indexes for high-performance dashboarding
 testAttemptSchema.index({ tenantId: 1, testId: 1 });
 testAttemptSchema.index({ userId: 1, status: 1 });
+testAttemptSchema.index({ userId: 1, testId: 1, status: 1 });
 
 const TestAttempt = coreConnection.model('TestAttempt', testAttemptSchema);
 

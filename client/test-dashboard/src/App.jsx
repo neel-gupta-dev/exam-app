@@ -416,10 +416,38 @@ export default function App() {
   const showDashboard = () => navigateTo('dashboard');
   const showTestSeries = () => navigateTo('test-series');
 
+  const openTestAttempt = async (test) => {
+    if (!test?._id) return;
+    const popup = window.open('about:blank', 'TestEngine', 'width=1024,height=768,fullscreen=yes,toolbar=0,location=0,menubar=0');
+    if (!popup) {
+      alert('Please allow pop-ups for this site, then start the test again.');
+      return;
+    }
+    try {
+      popup.document.write('<div style="font-family:Arial,sans-serif;padding:32px">Preparing secure test session...</div>');
+      const res = await fetch(`${API_BASE}/assessment/${test._id}/attempts/start`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      const text = await res.text();
+      let data = {};
+      try { data = text ? JSON.parse(text) : {}; } catch { data = { message: text }; }
+      if (!res.ok) throw new Error(data.message || 'Failed to create test attempt');
+
+      localStorage.setItem('current_test', JSON.stringify({ ...test, state: 'in-progress' }));
+      popup.location.href = `${window.location.origin}?attempt=true&attemptId=${encodeURIComponent(data.attemptId)}&attemptToken=${encodeURIComponent(data.attemptToken)}`;
+      setResultsRefreshKey((key) => key + 1);
+    } catch (err) {
+      popup.close();
+      alert(err.message || 'Could not start the test.');
+    }
+  };
+
   // Router override for the popup test engine
   const searchParams = new URL(window.location.href).searchParams;
   const isAttemptMode = searchParams.get('attempt') === 'true';
   const attemptId = searchParams.get('attemptId') || '';
+  const attemptToken = searchParams.get('attemptToken') || '';
 
   if (isAttemptMode && user) {
     let currentTest = null;
@@ -434,6 +462,7 @@ export default function App() {
         user={user}
         test={currentTest}
         attemptId={attemptId}
+        attemptToken={attemptToken}
       />
     );
   }
@@ -549,6 +578,7 @@ export default function App() {
     return `${x},${y}`;
   }).join(' ');
   const latestSectionEntries = Object.entries(latestResult?.sectionScores || {});
+  const latestTopicEntries = Object.entries(latestResult?.topicPerformance || {});
   const latestTelemetryQuestions = latestResult?.telemetry?.questions || [];
   const maxQuestionTime = Math.max(1, ...latestTelemetryQuestions.map((question) => question.timeSpentSeconds || 0));
   const totalTelemetryMinutes = latestResult?.telemetry?.totalTimeSpentSeconds
@@ -1162,6 +1192,12 @@ export default function App() {
                   </div>
                 )}
 
+                {!reviewData.attemptSummary.solutionsUnlocked && (
+                  <div className={`p-4 rounded-2xl border text-sm font-semibold ${isDark ? 'bg-amber-500/10 border-amber-500/20 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-800'}`}>
+                    Solutions and answer keys are locked for this test by the admin release policy. Your score and attempt analytics remain available.
+                  </div>
+                )}
+
                 <div className="space-y-6">
                   {reviewData.questions.map((q, idx) => {
                     const isCorrect = q.resultStatus === 'correct';
@@ -1709,6 +1745,28 @@ export default function App() {
                     </div>
                   </div>
                   <div className={`p-6 rounded-xl ${isDark ? 'bg-surface-container' : 'bg-white shadow-sm border border-slate-100'}`}>
+                    <p className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-4">Chapter / Topic Strength</p>
+                    <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                      {latestTopicEntries.length ? latestTopicEntries.map(([topic, perf]) => {
+                        const total = (perf.correct || 0) + (perf.wrong || 0) + (perf.skipped || 0);
+                        const accuracy = total ? Math.round(((perf.correct || 0) / total) * 100) : 0;
+                        return (
+                          <div key={topic}>
+                            <div className="flex justify-between text-xs mb-1">
+                              <span className="font-bold truncate">{topic}</span>
+                              <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>{perf.correct || 0}C · {perf.wrong || 0}W · {perf.skipped || 0}S</span>
+                            </div>
+                            <div className={`h-2 rounded-full overflow-hidden ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
+                              <div className={`${accuracy >= 60 ? 'bg-emerald-500' : accuracy >= 35 ? 'bg-amber-500' : 'bg-red-500'} h-full`} style={{ width: `${accuracy}%` }} />
+                            </div>
+                          </div>
+                        );
+                      }) : <p className="text-sm text-slate-500">Add tags to questions to unlock topic analytics.</p>}
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                  <div className={`p-6 rounded-xl ${isDark ? 'bg-surface-container' : 'bg-white shadow-sm border border-slate-100'}`}>
                     <p className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-4">Question Time Distribution</p>
                     <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
                       {latestTelemetryQuestions.length ? latestTelemetryQuestions.map((question, idx) => (
@@ -1901,16 +1959,7 @@ export default function App() {
                 <div className={`p-8 rounded-2xl sticky top-32 transition-all duration-300 ${isDark ? 'bg-surface-container' : 'bg-white shadow-2xl border border-indigo-100/50'}`}>
                   <p className={`text-sm font-medium mb-6 ${isDark ? 'text-on-surface-variant' : 'text-slate-500'}`}>Ready to begin your mock exam? Take a deep breath.</p>
                   <button
-                    onClick={() => {
-                      const generateMongoId = () => {
-                        const timestamp = Math.floor(Date.now() / 1000).toString(16).padStart(8, '0');
-                        const random = 'xxxxxxxxxxxxxxxx'.replace(/[x]/g, () => Math.floor(Math.random() * 16).toString(16));
-                        return timestamp + random;
-                      };
-                      const attemptId = generateMongoId();
-                      localStorage.setItem('current_test', JSON.stringify(selectedTest));
-                      window.open(`${window.location.origin}?attempt=true&attemptId=${attemptId}`, 'TestEngine', 'width=1024,height=768,fullscreen=yes,toolbar=0,location=0,menubar=0');
-                    }}
+                    onClick={() => openTestAttempt(selectedTest)}
                     className="cursor-pointer border-none w-full py-4 bg-indigo-500 text-on-primary font-bold rounded-xl text-lg transition-all shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:scale-95"
                   >
                     {selectedTest?.state === 'completed' ? 'Retake Test' : 'Start Test Now'}

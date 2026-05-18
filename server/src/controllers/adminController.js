@@ -9,6 +9,8 @@ import ActivityLog from '../models/ActivityLog.js';
 import FocusSession from '../models/FocusSession.js';
 import Flashcard from '../models/Flashcard.js';
 import TestAttempt from '../models/TestAttempt.js';
+import Test from '../models/Test.js';
+import Question from '../models/Question.js';
 
 /**
  * @desc    Individual User Analytics (God Mode)
@@ -240,5 +242,82 @@ export const getTestTelemetry = asyncHandler(async (req, res) => {
     total,
     page,
     pages: Math.ceil(total / limit),
+  });
+});
+
+export const getTestQuestionAnalytics = asyncHandler(async (req, res) => {
+  const { testId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(testId)) {
+    res.status(400);
+    throw new Error('Invalid test ID');
+  }
+
+  const [test, questions, attempts] = await Promise.all([
+    Test.findById(testId).select('title totalMarks sections').lean(),
+    Question.find({ testId }).sort({ order: 1 }).lean(),
+    TestAttempt.find({ testId, status: { $in: ['completed', 'auto-submitted'] } }).lean(),
+  ]);
+
+  if (!test) {
+    res.status(404);
+    throw new Error('Test not found');
+  }
+
+  const questionMap = new Map(questions.map((question, index) => [question._id.toString(), { ...question, questionNumber: index + 1 }]));
+  const stats = questions.map((question, index) => ({
+    questionId: question._id,
+    questionNumber: index + 1,
+    section: question.section || 'General',
+    type: question.type,
+    tags: question.tags || [],
+    difficulty: question.difficulty || 'medium',
+    attempts: 0,
+    correct: 0,
+    wrong: 0,
+    skipped: 0,
+    totalTimeSeconds: 0,
+    totalVisits: 0,
+    totalAnswerChanges: 0,
+    optionDistribution: {},
+  }));
+  const statMap = new Map(stats.map((stat) => [stat.questionId.toString(), stat]));
+
+  attempts.forEach((attempt) => {
+    (attempt.answers || []).forEach((answer) => {
+      const stat = statMap.get(answer.questionId?.toString());
+      const question = questionMap.get(answer.questionId?.toString());
+      if (!stat || !question) return;
+
+      const selected = (answer.selectedAnswer || []).map(String).sort();
+      const expected = (question.correctAnswer || []).map(String).sort();
+      const answered = selected.length > 0;
+      const correct = answered && selected.length === expected.length && selected.every((value, idx) => value === expected[idx]);
+
+      stat.attempts += 1;
+      if (!answered) stat.skipped += 1;
+      else if (correct) stat.correct += 1;
+      else stat.wrong += 1;
+
+      stat.totalTimeSeconds += Math.max(0, Math.round(Number(answer.timeSpentSeconds) || 0));
+      stat.totalVisits += Math.max(0, Math.round(Number(answer.visitCount) || 0));
+      stat.totalAnswerChanges += Math.max(0, Math.round(Number(answer.answerChangeCount) || 0));
+      selected.forEach((option) => {
+        stat.optionDistribution[option] = (stat.optionDistribution[option] || 0) + 1;
+      });
+    });
+  });
+
+  res.json({
+    test,
+    attempts: attempts.length,
+    questions: stats.map((stat) => ({
+      ...stat,
+      accuracy: stat.attempts ? Math.round((stat.correct / stat.attempts) * 10000) / 100 : 0,
+      skipRate: stat.attempts ? Math.round((stat.skipped / stat.attempts) * 10000) / 100 : 0,
+      wrongRate: stat.attempts ? Math.round((stat.wrong / stat.attempts) * 10000) / 100 : 0,
+      averageTimeSeconds: stat.attempts ? Math.round(stat.totalTimeSeconds / stat.attempts) : 0,
+      averageVisits: stat.attempts ? Math.round((stat.totalVisits / stat.attempts) * 100) / 100 : 0,
+      averageAnswerChanges: stat.attempts ? Math.round((stat.totalAnswerChanges / stat.attempts) * 100) / 100 : 0,
+    })),
   });
 });

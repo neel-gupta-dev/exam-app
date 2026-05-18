@@ -20,7 +20,7 @@ import TestAttempt from '../models/TestAttempt.js';
 import UserCardProgress from '../models/UserCardProgress.js';
 import asyncHandler from 'express-async-handler';
 import mongoose from 'mongoose';
-import { getDashboardStats, getUserAnalytics, getTestTelemetry } from '../controllers/adminController.js';
+import { getDashboardStats, getUserAnalytics, getTestTelemetry, getTestQuestionAnalytics } from '../controllers/adminController.js';
 import { sendFeedbackEmail } from '../utils/mailer.js';
 import multer from 'multer';
 import Cutoff from '../models/Cutoff.js';
@@ -50,6 +50,7 @@ router.use(protectAdmin);
  */
 router.get('/stats', getDashboardStats);
 router.get('/test-telemetry', getTestTelemetry);
+router.get('/tests/:testId/question-analytics', getTestQuestionAnalytics);
 
 // ── Link Shortener Management ────────────────────────────────────────────────
 router.post('/short-links', shortLinkController.createShortLink);

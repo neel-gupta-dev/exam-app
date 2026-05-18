@@ -102,6 +102,15 @@ const testSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
+    solutionReleaseMode: {
+      type: String,
+      enum: ['immediate', 'after_end', 'manual', 'never'],
+      default: 'immediate',
+    },
+    solutionsReleasedAt: {
+      type: Date,
+      default: null,
+    },
     tags: [String],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -122,6 +131,11 @@ testSchema.methods.toRedisPayload = function() {
     durationMinutes: obj.durationMinutes,
     totalMarks: obj.totalMarks,
     sections: obj.sections,
+    instructions: obj.instructions,
+    scheduledStartAt: obj.scheduledStartAt,
+    scheduledEndAt: obj.scheduledEndAt,
+    solutionReleaseMode: obj.solutionReleaseMode,
+    solutionsReleasedAt: obj.solutionsReleasedAt,
   };
 };
 
