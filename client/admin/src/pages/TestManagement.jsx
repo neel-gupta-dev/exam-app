@@ -2,6 +2,115 @@ import { useState, useEffect } from 'react';
 import api from '../api';
 import LatexRenderer from '../components/LatexRenderer';
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   TableEditor — builds a header + data-rows table for a question or option
+   ─────────────────────────────────────────────────────────────────────────── */
+function TableEditor({ value, onChange, label = 'Table' }) {
+  const table = value || { headers: [], rows: [] };
+  const cols = table.headers?.length || 2;
+  const rows = table.rows?.length || 0;
+
+  const setCols = (n) => {
+    const n2 = Math.max(1, Math.min(8, n));
+    const headers = Array.from({ length: n2 }, (_, i) => table.headers?.[i] ?? '');
+    const newRows = (table.rows || []).map(r => Array.from({ length: n2 }, (_, i) => r[i] ?? ''));
+    onChange({ headers, rows: newRows });
+  };
+
+  const setRows = (n) => {
+    const n2 = Math.max(0, Math.min(20, n));
+    const currentCols = table.headers?.length || 2;
+    const newRows = Array.from({ length: n2 }, (_, i) => table.rows?.[i] ?? Array(currentCols).fill(''));
+    const headers = table.headers?.length ? table.headers : Array(currentCols).fill('');
+    onChange({ headers, rows: newRows });
+  };
+
+  const setHeader = (ci, val) => {
+    const h = [...(table.headers || [])];
+    while (h.length <= ci) h.push('');
+    h[ci] = val;
+    onChange({ ...table, headers: h });
+  };
+
+  const setCell = (ri, ci, val) => {
+    const nr = (table.rows || []).map(r => [...r]);
+    while (nr.length <= ri) {
+      nr.push(Array(cols).fill(''));
+    }
+    nr[ri][ci] = val;
+    onChange({ ...table, rows: nr });
+  };
+
+  const cellStyle = { border: '1px solid var(--border)', padding: '4px 6px', minWidth: 70, background: 'rgba(0,0,0,0.15)', color: 'inherit', fontSize: 12, width: '100%' };
+  const thStyle = { ...cellStyle, background: 'rgba(79,70,229,0.18)', fontWeight: 600 };
+
+  return (
+    <div style={{ marginTop: 8, padding: 10, background: 'rgba(79,70,229,0.05)', borderRadius: 6, border: '1px solid rgba(79,70,229,0.2)' }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
+        <strong style={{ fontSize: 12, color: '#818cf8' }}>📊 ${label}</strong>
+        <label style={{ fontSize: 12 }}>Cols: <input type="number" min={1} max={8} value={cols} onChange={e => setCols(Number(e.target.value))} style={{ width: 44, padding: '2px 4px', fontSize: 12 }} /></label>
+        <label style={{ fontSize: 12 }}>Rows: <input type="number" min={0} max={20} value={rows} onChange={e => setRows(Number(e.target.value))} style={{ width: 44, padding: '2px 4px', fontSize: 12 }} /></label>
+        <button type="button" className="btn btn-sm" style={{ fontSize: 11, padding: '2px 8px', marginLeft: 'auto', background: 'rgba(239,68,68,0.15)', color: '#ef4444' }} onClick={() => onChange(null)}>✕ Remove Table</button>
+      </div>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+          <thead>
+            <tr>
+              {Array.from({ length: cols }, (_, ci) => (
+                <th key={ci} style={{ padding: 2 }}>
+                  <input value={table.headers?.[ci] ?? ''} onChange={e => setHeader(ci, e.target.value)} placeholder={`Col ${ci + 1}`} style={thStyle} />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {Array.from({ length: rows }, (_, ri) => (
+              <tr key={ri}>
+                {Array.from({ length: cols }, (_, ci) => (
+                  <td key={ci} style={{ padding: 2 }}>
+                    <input value={(table.rows?.[ri] ?? [])[ci] ?? ''} onChange={e => setCell(ri, ci, e.target.value)} placeholder="—" style={cellStyle} />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   RenderContentTable — beautifully renders the custom question/option table
+   ─────────────────────────────────────────────────────────────────────────── */
+function RenderContentTable({ table }) {
+  if (!table || !table.headers || table.headers.length === 0) return null;
+  const thStyle = { border: '1px solid rgba(255,255,255,0.15)', padding: '6px 10px', background: 'rgba(79,70,229,0.12)', fontWeight: 600, fontSize: '12px', textAlign: 'left' };
+  const tdStyle = { border: '1px solid rgba(255,255,255,0.1)', padding: '6px 10px', fontSize: '12px' };
+  return (
+    <div style={{ margin: '8px 0', overflowX: 'auto' }}>
+      <table style={{ borderCollapse: 'collapse', minWidth: '150px', background: 'rgba(0,0,0,0.1)' }}>
+        <thead>
+          <tr>
+            {table.headers.map((h, i) => (
+              <th key={i} style={thStyle}><LatexRenderer text={h || ''} /></th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {(table.rows || []).map((row, ri) => (
+            <tr key={ri}>
+              {row.map((cell, ci) => (
+                <td key={ci} style={tdStyle}><LatexRenderer text={cell || ''} /></td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function TestManagement() {
   const [tests, setTests] = useState([]);
   const [tenants, setTenants] = useState([]);
@@ -13,7 +122,7 @@ export default function TestManagement() {
   const [questions, setQuestions] = useState([]);
   const [showQuestionForm, setShowQuestionForm] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(null);
-  
+
   // PDF Import state
   const [showPdfImport, setShowPdfImport] = useState(false);
   const [pdfFile, setPdfFile] = useState(null);
@@ -21,6 +130,7 @@ export default function TestManagement() {
   const [pdfStats, setPdfStats] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState(null);
+
   // JSON Import state
   const [showJsonImport, setShowJsonImport] = useState(false);
   const [jsonFile, setJsonFile] = useState(null);
@@ -52,9 +162,10 @@ export default function TestManagement() {
   // Question form state
   const [qForm, setQForm] = useState({
     section: 'General', type: 'single', content: '', imageUrl: '',
+    contentTable: null,
     options: [
-      { label: 'A', content: '', imageUrl: '' }, { label: 'B', content: '', imageUrl: '' },
-      { label: 'C', content: '', imageUrl: '' }, { label: 'D', content: '', imageUrl: '' },
+      { label: 'A', content: '', imageUrl: '', contentTable: null }, { label: 'B', content: '', imageUrl: '', contentTable: null },
+      { label: 'C', content: '', imageUrl: '', contentTable: null }, { label: 'D', content: '', imageUrl: '', contentTable: null },
     ],
     correctAnswer: [], solution: '', solutionImageUrl: '', positiveMarks: '', negativeMarks: '',
     tags: '', difficulty: 'medium',
@@ -176,13 +287,24 @@ export default function TestManagement() {
           declaration: instructionDeclaration?.trim() || undefined,
         },
         sections: form.sectionsText?.split('\n').map(line => {
-          const [name, count, max] = line.split(',').map(s => s.trim());
+          const [name, count, max, correct, incorrect, unattempted, partial, partialMark, partialIncorrect] = line.split(',').map(s => s.trim());
           if (!name) return null;
-          return {
+          const sectionObj = {
             name,
             questionCount: parseInt(count) || 0,
             maxAttemptable: max && max !== 'null' ? parseInt(max) : null
           };
+          if (correct !== undefined) {
+            sectionObj.markingScheme = {
+              correct: Number(correct) || 0,
+              incorrect: Number(incorrect) || 0,
+              unattempted: Number(unattempted) || 0,
+              partial: partial === 'true',
+              partialMarkPerOption: Number(partialMark) || 0,
+              partialIncorrect: Number(partialIncorrect) || 0,
+            };
+          }
+          return sectionObj;
         }).filter(Boolean) || [],
       };
       if (editingTest) {
@@ -232,13 +354,13 @@ export default function TestManagement() {
         matrixColumns: qForm.matrixColumns || [],
         tags: qForm.tags ? qForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
       };
-      
+
       if (editingQuestion) {
         await api.patch(`/tests/${selectedTest._id}/questions/${editingQuestion._id}`, payload);
       } else {
         await api.post(`/tests/${selectedTest._id}/questions`, payload);
       }
-      
+
       setShowQuestionForm(false);
       setEditingQuestion(null);
       setQForm({
@@ -342,6 +464,26 @@ export default function TestManagement() {
           }}>
             ⚡ JEE Mains Preset
           </button>
+          <button className="btn" onClick={() => {
+            setForm({
+              ...form,
+              title: 'JEE Advanced Practice Test',
+              category: 'JEE Advance',
+              totalMarks: 372,
+              durationMinutes: 180,
+              defaultPositiveMarks: 3,
+              defaultNegativeMarks: 1,
+              syllabusText: 'Physics: Mechanics, Waves, Electromagnetism, Modern Physics\nChemistry: Physical, Organic, Inorganic\nMathematics: Algebra, Calculus, Coordinate Geometry, Vectors',
+              instructionGeneralText: 'The test is of 3 hours duration.\nThe test consists of three parts: Physics, Chemistry, and Mathematics.\nEach part has three sections.\nSection 1 contains 6 Single Correct Option questions.\nSection 2 contains 6 Multiple Correct Option questions with partial marking.\nSection 3 contains 6 Numerical Answer questions.',
+              instructionOtherText: 'Make sure your internet connection is stable.\nDo not refresh the page during the exam.',
+              instructionDeclaration: 'I have read all the instructions carefully and agree to abide by the rules of the examination.',
+              sectionsText: 'Physics Section 1 (SCQ), 6, null, 3, -1, 0, false, 0, -1\nPhysics Section 2 (MCQ), 6, null, 4, -2, 0, true, 1, -2\nPhysics Section 3 (Numerical), 6, null, 3, 0, 0, false, 0, 0\nChemistry Section 1 (SCQ), 6, null, 3, -1, 0, false, 0, -1\nChemistry Section 2 (MCQ), 6, null, 4, -2, 0, true, 1, -2\nChemistry Section 3 (Numerical), 6, null, 3, 0, 0, false, 0, 0\nMathematics Section 1 (SCQ), 6, null, 3, -1, 0, false, 0, -1\nMathematics Section 2 (MCQ), 6, null, 4, -2, 0, true, 1, -2\nMathematics Section 3 (Numerical), 6, null, 3, 0, 0, false, 0, 0'
+            });
+            setShowForm(true);
+            setEditingTest(null);
+          }}>
+            🌟 JEE Advanced Preset
+          </button>
           <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingTest(null); }}>
             {showForm ? 'Cancel' : '+ Create Test'}
           </button>
@@ -409,11 +551,11 @@ export default function TestManagement() {
               </div>
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                 <label>Test Sections (Format: Name, QuestionCount, MaxAttemptable)</label>
-                <textarea 
-                  value={form.sectionsText || ''} 
-                  onChange={e => setForm({ ...form, sectionsText: e.target.value })} 
-                  rows={4} 
-                  placeholder="Physics Sec A, 35, null&#10;Physics Sec B, 15, 10" 
+                <textarea
+                  value={form.sectionsText || ''}
+                  onChange={e => setForm({ ...form, sectionsText: e.target.value })}
+                  rows={4}
+                  placeholder="Physics Sec A, 35, null&#10;Physics Sec B, 15, 10"
                 />
                 <small>One section per line. Use 'null' for MaxAttemptable if there is no attempt limit.</small>
               </div>
@@ -497,27 +639,27 @@ export default function TestManagement() {
                     <button className="btn btn-sm" onClick={() => handleTogglePublish(test._id)}>
                       {test.isPublished ? '⏸ Unpublish' : '🚀 Publish'}
                     </button>
-                    <button className="btn btn-sm" onClick={() => { 
-                      setEditingTest(test); 
-                      setForm({ 
-                        title: test.title, 
-                        description: test.description || '', 
-                        category: test.category || 'General', 
-                        testType: test.testType || 'full', 
-                        durationMinutes: test.durationMinutes, 
-                        totalMarks: test.totalMarks, 
-                        visibility: test.visibility, 
-                        targetTenants: test.targetTenants?.map(t => t._id || t) || [], 
-                        targetGroups: test.targetGroups?.map(g => g._id || g) || [], 
-                        defaultPositiveMarks: test.defaultPositiveMarks || 4, 
-                        defaultNegativeMarks: test.defaultNegativeMarks || 1, 
-                        syllabusText: test.syllabus?.join('\n') || '', 
-                        instructionGeneralText: test.instructions?.general?.join('\n') || '', 
-                        instructionOtherText: test.instructions?.other?.join('\n') || '', 
+                    <button className="btn btn-sm" onClick={() => {
+                      setEditingTest(test);
+                      setForm({
+                        title: test.title,
+                        description: test.description || '',
+                        category: test.category || 'General',
+                        testType: test.testType || 'full',
+                        durationMinutes: test.durationMinutes,
+                        totalMarks: test.totalMarks,
+                        visibility: test.visibility,
+                        targetTenants: test.targetTenants?.map(t => t._id || t) || [],
+                        targetGroups: test.targetGroups?.map(g => g._id || g) || [],
+                        defaultPositiveMarks: test.defaultPositiveMarks || 4,
+                        defaultNegativeMarks: test.defaultNegativeMarks || 1,
+                        syllabusText: test.syllabus?.join('\n') || '',
+                        instructionGeneralText: test.instructions?.general?.join('\n') || '',
+                        instructionOtherText: test.instructions?.other?.join('\n') || '',
                         instructionDeclaration: test.instructions?.declaration || '',
                         sectionsText: test.sections?.map(s => `${s.name}, ${s.questionCount}, ${s.maxAttemptable || 'null'}`).join('\n') || ''
-                      }); 
-                      setShowForm(true); 
+                      });
+                      setShowForm(true);
                     }}>✏️ Edit</button>
                     <button className="btn btn-sm" onClick={() => handleCopyShareLink(test._id)} title="Copy Share Link">🔗 Share</button>
                     <button className="btn btn-sm btn-danger" onClick={() => handleDeleteTest(test._id)}>🗑</button>
@@ -536,31 +678,31 @@ export default function TestManagement() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3>📋 Questions: {selectedTest.title} ({questions.length})</h3>
             <div style={{ display: 'flex', gap: 10 }}>
-                <button className="btn btn-primary" onClick={() => {
-                  setEditingQuestion(null);
-                  setQForm({
-                    section: selectedTest.sections?.[0]?.name || 'General', 
-                    type: 'single', content: '', imageUrl: '',
-                    options: [
-                      { label: 'A', content: '', imageUrl: '' }, { label: 'B', content: '', imageUrl: '' },
-                      { label: 'C', content: '', imageUrl: '' }, { label: 'D', content: '', imageUrl: '' },
-                    ],
-                    correctAnswer: [], solution: '', solutionImageUrl: '', positiveMarks: '', negativeMarks: '',
-                    tags: '', difficulty: 'medium',
-                  });
-                  setShowQuestionForm(!showQuestionForm);
-                }}>
-                  {showQuestionForm ? 'Cancel' : '➕ Add Question'}
-                </button>
-                <button className="btn" onClick={() => { setShowPdfImport(!showPdfImport); setShowJsonImport(false); }} style={{ background: 'rgba(124,58,237,0.2)', color: '#a78bfa' }}>
-                  {showPdfImport ? 'Cancel PDF' : '📄 Import PDF'}
-                </button>
-                <button className="btn" onClick={() => { setShowJsonImport(!showJsonImport); setShowPdfImport(false); }} style={{ background: 'rgba(5,150,105,0.2)', color: '#34d399' }}>
-                  {showJsonImport ? 'Cancel JSON' : 'JSON Import'}
-                </button>
-                <button className="btn btn-sm" onClick={() => { setSelectedTest(null); setQuestions([]); setShowQuestionForm(false); setShowPdfImport(false); setShowJsonImport(false); }}>✕ Close</button>
-              </div>
+              <button className="btn btn-primary" onClick={() => {
+                setEditingQuestion(null);
+                setQForm({
+                  section: selectedTest.sections?.[0]?.name || 'General',
+                  type: 'single', content: '', imageUrl: '',
+                  options: [
+                    { label: 'A', content: '', imageUrl: '' }, { label: 'B', content: '', imageUrl: '' },
+                    { label: 'C', content: '', imageUrl: '' }, { label: 'D', content: '', imageUrl: '' },
+                  ],
+                  correctAnswer: [], solution: '', solutionImageUrl: '', positiveMarks: '', negativeMarks: '',
+                  tags: '', difficulty: 'medium',
+                });
+                setShowQuestionForm(!showQuestionForm);
+              }}>
+                {showQuestionForm ? 'Cancel' : '➕ Add Question'}
+              </button>
+              <button className="btn" onClick={() => { setShowPdfImport(!showPdfImport); setShowJsonImport(false); }} style={{ background: 'rgba(124,58,237,0.2)', color: '#a78bfa' }}>
+                {showPdfImport ? 'Cancel PDF' : '📄 Import PDF'}
+              </button>
+              <button className="btn" onClick={() => { setShowJsonImport(!showJsonImport); setShowPdfImport(false); }} style={{ background: 'rgba(5,150,105,0.2)', color: '#34d399' }}>
+                {showJsonImport ? 'Cancel JSON' : 'JSON Import'}
+              </button>
+              <button className="btn btn-sm" onClick={() => { setSelectedTest(null); setQuestions([]); setShowQuestionForm(false); setShowPdfImport(false); setShowJsonImport(false); }}>✕ Close</button>
             </div>
+          </div>
 
           {/* Add NEW Question Form — only shown when not editing an existing one */}
           {showQuestionForm && !editingQuestion && (
@@ -590,8 +732,18 @@ export default function TestManagement() {
                   </select>
                 </div>
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label>Question Text</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <label style={{ margin: 0 }}>Question Text</label>
+                    {!qForm.contentTable && (
+                      <button type="button" className="btn btn-sm" style={{ padding: '2px 8px', fontSize: 11, background: 'rgba(79,70,229,0.15)', color: '#818cf8', border: 'none', cursor: 'pointer' }} onClick={() => setQForm({ ...qForm, contentTable: { headers: ['Header 1', 'Header 2'], rows: [['Cell 1', 'Cell 2']] } })}>
+                        📊 Add Grid/Table to Question
+                      </button>
+                    )}
+                  </div>
                   <textarea value={qForm.content} onChange={e => setQForm({ ...qForm, content: e.target.value })} rows={3} placeholder="Add text, an image, or both." />
+                  {qForm.contentTable && (
+                    <TableEditor value={qForm.contentTable} onChange={(tbl) => setQForm({ ...qForm, contentTable: tbl })} label="Question Table" />
+                  )}
                 </div>
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                   <label>Image URL (optional)</label>
@@ -766,7 +918,7 @@ export default function TestManagement() {
             <div style={{ marginTop: 16, padding: 20, background: 'rgba(124,58,237,0.08)', borderRadius: 8, border: '1px solid rgba(124,58,237,0.2)' }}>
               <h4 style={{ margin: '0 0 12px', color: '#7c3aed' }}>📄 Import Questions from PDF</h4>
               <p style={{ fontSize: 13, opacity: 0.7, margin: '0 0 16px' }}>Upload a JEE/NEET/CUET style PDF. The engine will auto-detect sections, question types, and answer keys. Questions with images will be flagged for manual review.</p>
-              
+
               <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                 <input type="file" accept=".pdf" onChange={e => { setPdfFile(e.target.files[0]); setPdfPreview(null); setPdfStats(null); setPdfError(null); }} style={{ flex: 1 }} />
                 <button className="btn btn-primary" onClick={handlePdfPreview} disabled={!pdfFile || pdfLoading} style={{ background: '#7c3aed' }}>
@@ -852,7 +1004,7 @@ export default function TestManagement() {
             <div style={{ marginTop: 16, padding: 20, background: 'rgba(5,150,105,0.08)', borderRadius: 8, border: '1px solid rgba(5,150,105,0.2)' }}>
               <h4 style={{ margin: '0 0 12px', color: '#059669' }}>JSON Import Questions</h4>
               <p style={{ fontSize: 13, opacity: 0.7, margin: '0 0 16px' }}>Upload a JSON file containing an array of question objects. Images can be provided as URLs or Base64 strings.</p>
-              
+
               <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                 <input type="file" accept=".json" onChange={handleJsonPreview} style={{ flex: 1 }} />
               </div>
@@ -893,12 +1045,14 @@ export default function TestManagement() {
                       <LatexRenderer text={q.content} />
                     </div>
                     {q.imageUrl && <img src={q.imageUrl} alt="Question" style={{ maxHeight: 120, maxWidth: '100%', marginTop: 8, border: '1px solid var(--border)' }} />}
+                    {q.contentTable && <RenderContentTable table={q.contentTable} />}
                     {q.options?.length > 0 && (
                       <div style={{ marginTop: 4, fontSize: 13, opacity: 0.8 }}>
                         {q.options.map(o => (
                           <span key={o.label} style={{ marginRight: 12, color: q.correctAnswer?.includes(o.label) ? '#2ecc71' : 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4, verticalAlign: 'top' }}>
                             {q.correctAnswer?.includes(o.label) ? '✅' : '○'} {o.label}. <LatexRenderer text={o.content} />
                             {o.imageUrl && <img src={o.imageUrl} alt={`Option ${o.label}`} style={{ maxHeight: 42, maxWidth: 80, border: '1px solid var(--border)' }} />}
+                            {o.contentTable && <RenderContentTable table={o.contentTable} />}
                           </span>
                         ))}
                       </div>
@@ -924,10 +1078,15 @@ export default function TestManagement() {
                         solutionImageUrl: q.solutionImageUrl || '',
                         matrixRows: q.matrixRows || [],
                         matrixColumns: q.matrixColumns || [],
-                        options: q.options?.length > 0 ? q.options : [
-                          { label: 'A', content: '', imageUrl: '' }, { label: 'B', content: '', imageUrl: '' },
-                          { label: 'C', content: '', imageUrl: '' }, { label: 'D', content: '', imageUrl: '' },
-                        ],
+                        contentTable: q.contentTable || null,
+                        options: q.options?.length > 0
+                          ? q.options.map(o => ({ ...o, contentTable: o.contentTable || null }))
+                          : [
+                            { label: 'A', content: '', imageUrl: '', contentTable: null },
+                            { label: 'B', content: '', imageUrl: '', contentTable: null },
+                            { label: 'C', content: '', imageUrl: '', contentTable: null },
+                            { label: 'D', content: '', imageUrl: '', contentTable: null },
+                          ],
                         correctAnswer: q.correctAnswer || [],
                         solution: q.solution || '',
                         positiveMarks: q.positiveMarks || '',
@@ -972,8 +1131,18 @@ export default function TestManagement() {
                         </select>
                       </div>
                       <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                        <label>Question Text</label>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                          <label style={{ margin: 0 }}>Question Text</label>
+                          {!qForm.contentTable && (
+                            <button type="button" className="btn btn-sm" style={{ padding: '2px 8px', fontSize: 11, background: 'rgba(79,70,229,0.15)', color: '#818cf8', border: 'none', cursor: 'pointer' }} onClick={() => setQForm({ ...qForm, contentTable: { headers: ['Header 1', 'Header 2'], rows: [['Cell 1', 'Cell 2']] } })}>
+                              📊 Add Grid/Table to Question
+                            </button>
+                          )}
+                        </div>
                         <textarea value={qForm.content} onChange={e => setQForm({ ...qForm, content: e.target.value })} rows={3} placeholder="Add text, an image, or both." />
+                        {qForm.contentTable && (
+                          <TableEditor value={qForm.contentTable} onChange={(tbl) => setQForm({ ...qForm, contentTable: tbl })} label="Question Table" />
+                        )}
                       </div>
                       <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                         <label>Image URL (optional)</label>
@@ -990,20 +1159,39 @@ export default function TestManagement() {
                         <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                           <label>Options</label>
                           {qForm.options.map((opt, oidx) => (
-                            <div key={oidx} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
-                              <strong style={{ width: 24 }}>{opt.label}.</strong>
-                              <input style={{ flex: 1 }} value={opt.content} onChange={e => { const o = [...qForm.options]; o[oidx] = { ...o[oidx], content: e.target.value }; setQForm({ ...qForm, options: o }); }} placeholder={`Option ${opt.label}`} />
-                              <label className="btn btn-sm" style={{ margin: 0, cursor: 'pointer' }}>
-                                {imageUploading === `opt-edit-${opt.label}` ? '...' : 'Img'}
-                                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleTestImageUpload(e.target.files?.[0], `opt-edit-${opt.label}`, (url) => { const o = [...qForm.options]; o[oidx] = { ...o[oidx], imageUrl: url }; setQForm(f => ({ ...f, options: o })); })} />
-                              </label>
-                              {opt.imageUrl && <img src={opt.imageUrl} alt={`Opt ${opt.label}`} style={{ maxHeight: 36, maxWidth: 60, border: '1px solid var(--border)' }} />}
-                              <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
-                                <input type={qForm.type === 'single' ? 'radio' : 'checkbox'} name="editCorrectAnswer" checked={qForm.correctAnswer.includes(opt.label)} onChange={() => {
-                                  if (qForm.type === 'single') { setQForm({ ...qForm, correctAnswer: [opt.label] }); }
-                                  else { const has = qForm.correctAnswer.includes(opt.label); setQForm({ ...qForm, correctAnswer: has ? qForm.correctAnswer.filter(a => a !== opt.label) : [...qForm.correctAnswer, opt.label] }); }
-                                }} /> Correct
-                              </label>
+                            <div key={oidx} style={{ marginBottom: 12, padding: 8, background: 'rgba(255,255,255,0.02)', borderRadius: 6, border: '1px solid rgba(255,255,255,0.05)' }}>
+                              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                <strong style={{ width: 24 }}>{opt.label}.</strong>
+                                <input style={{ flex: 2 }} value={opt.content} onChange={e => { const o = [...qForm.options]; o[oidx] = { ...o[oidx], content: e.target.value }; setQForm({ ...qForm, options: o }); }} placeholder={`Option ${opt.label} text`} />
+                                <label className="btn btn-sm" style={{ margin: 0, cursor: 'pointer' }}>
+                                  {imageUploading === `opt-edit-${opt.label}` ? '...' : 'Img'}
+                                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleTestImageUpload(e.target.files?.[0], `opt-edit-${opt.label}`, (url) => { const o = [...qForm.options]; o[oidx] = { ...o[oidx], imageUrl: url }; setQForm(f => ({ ...f, options: o })); })} />
+                                </label>
+                                <button type="button" className="btn btn-sm" style={{ padding: '2px 6px', fontSize: 11, background: opt.contentTable ? 'rgba(129,140,248,0.25)' : 'rgba(255,255,255,0.08)', color: opt.contentTable ? '#818cf8' : 'inherit' }} onClick={() => {
+                                  const o = [...qForm.options];
+                                  o[oidx] = {
+                                    ...o[oidx],
+                                    contentTable: o[oidx].contentTable ? null : { headers: ['Header 1', 'Header 2'], rows: [['Cell 1', 'Cell 2']] }
+                                  };
+                                  setQForm({ ...qForm, options: o });
+                                }}>
+                                  📊 Table
+                                </button>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', flexShrink: 0 }}>
+                                  <input type={qForm.type === 'single' ? 'radio' : 'checkbox'} name="editCorrectAnswer" checked={qForm.correctAnswer.includes(opt.label)} onChange={() => {
+                                    if (qForm.type === 'single') { setQForm({ ...qForm, correctAnswer: [opt.label] }); }
+                                    else { const has = qForm.correctAnswer.includes(opt.label); setQForm({ ...qForm, correctAnswer: has ? qForm.correctAnswer.filter(a => a !== opt.label) : [...qForm.correctAnswer, opt.label] }); }
+                                  }} /> Correct
+                                </label>
+                                {opt.imageUrl && <img src={opt.imageUrl} alt={`Opt ${opt.label}`} style={{ maxHeight: 32, maxWidth: 60, border: '1px solid var(--border)' }} />}
+                              </div>
+                              {opt.contentTable && (
+                                <TableEditor value={opt.contentTable} onChange={(tbl) => {
+                                  const o = [...qForm.options];
+                                  o[oidx] = { ...o[oidx], contentTable: tbl };
+                                  setQForm({ ...qForm, options: o });
+                                }} label={`Option ${opt.label} Table`} />
+                              )}
                             </div>
                           ))}
                         </div>
@@ -1018,11 +1206,11 @@ export default function TestManagement() {
                         <>
                           <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                             <label>List I Rows (A. text per line)</label>
-                            <textarea rows={3} value={(qForm.matrixRows || []).map(r => `${r.label}. ${r.content}`).join('\n')} onChange={e => { const rows = e.target.value.split('\n').map(line => { const d = line.indexOf('.'); return d > -1 ? { label: line.slice(0,d).trim(), content: line.slice(d+1).trim() } : { label: '', content: line.trim() }; }); setQForm({ ...qForm, matrixRows: rows }); }} />
+                            <textarea rows={3} value={(qForm.matrixRows || []).map(r => `${r.label}. ${r.content}`).join('\n')} onChange={e => { const rows = e.target.value.split('\n').map(line => { const d = line.indexOf('.'); return d > -1 ? { label: line.slice(0, d).trim(), content: line.slice(d + 1).trim() } : { label: '', content: line.trim() }; }); setQForm({ ...qForm, matrixRows: rows }); }} />
                           </div>
                           <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                             <label>List II Columns (P. text per line)</label>
-                            <textarea rows={3} value={(qForm.matrixColumns || []).map(c => `${c.label}. ${c.content}`).join('\n')} onChange={e => { const cols = e.target.value.split('\n').map(line => { const d = line.indexOf('.'); return d > -1 ? { label: line.slice(0,d).trim(), content: line.slice(d+1).trim() } : { label: '', content: line.trim() }; }); setQForm({ ...qForm, matrixColumns: cols }); }} />
+                            <textarea rows={3} value={(qForm.matrixColumns || []).map(c => `${c.label}. ${c.content}`).join('\n')} onChange={e => { const cols = e.target.value.split('\n').map(line => { const d = line.indexOf('.'); return d > -1 ? { label: line.slice(0, d).trim(), content: line.slice(d + 1).trim() } : { label: '', content: line.trim() }; }); setQForm({ ...qForm, matrixColumns: cols }); }} />
                           </div>
                           <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                             <label>Correct Matches (A-P,Q per line)</label>

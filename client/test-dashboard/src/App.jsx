@@ -6,6 +6,37 @@ import LatexRenderer from './components/LatexRenderer';
 import PublicTestLanding from './pages/PublicTestLanding';
 import { API_BASE } from './config/api';
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   RenderContentTable — beautifully renders the custom question/option table
+   ─────────────────────────────────────────────────────────────────────────── */
+function RenderContentTable({ table }) {
+  if (!table || !table.headers || table.headers.length === 0) return null;
+  const thStyle = { border: '1px solid rgba(255,255,255,0.1)', padding: '6px 10px', background: 'rgba(79,70,229,0.08)', fontWeight: 600, fontSize: '12px', textAlign: 'left', color: '#94a3b8' };
+  const tdStyle = { border: '1px solid rgba(255,255,255,0.05)', padding: '6px 10px', fontSize: '12px', color: '#cbd5e1' };
+  return (
+    <div style={{ margin: '8px 0', overflowX: 'auto', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+      <table style={{ borderCollapse: 'collapse', minWidth: '150px', width: '100%', background: 'rgba(255,255,255,0.02)' }}>
+        <thead>
+          <tr>
+            {table.headers.map((h, i) => (
+              <th key={i} style={thStyle}><LatexRenderer text={h || ''} /></th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {(table.rows || []).map((row, ri) => (
+            <tr key={ri}>
+              {row.map((cell, ci) => (
+                <td key={ci} style={tdStyle}><LatexRenderer text={cell || ''} /></td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function App() {
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== 'undefined') {

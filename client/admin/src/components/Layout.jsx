@@ -6,28 +6,28 @@ const NAV = [
   { section: 'Main' },
   { to: '/dashboard', label: '📊 Dashboard' },
   { section: 'Exam Platform' },
-  { to: '/tests',     label: '📝 Test Management' },
+  { to: '/tests', label: '📝 Test Management' },
   { to: '/test-telemetry', label: '📡 Test Telemetry' },
-  { to: '/b2b',       label: '🏢 B2B Coaching' },
+  { to: '/b2b', label: '🏢 B2B Coaching' },
   { to: '/battle-questions', label: '⚔️ Battle Questions' },
   { section: 'Data' },
-  { to: '/users',     label: '👤 Users' },
-  { to: '/writers',   label: '✍️ Writers' },
-  { to: '/cutoffs',   label: '📈 Predictor Cutoffs' },
-  { to: '/exams',     label: '📅 Track Exams' },
-  { to: '/cheatsheets',label: '📋 Cheatsheets' },
+  { to: '/users', label: '👤 Users' },
+  { to: '/writers', label: '✍️ Writers' },
+  { to: '/cutoffs', label: '📈 Predictor Cutoffs' },
+  { to: '/exams', label: '📅 Track Exams' },
+  { to: '/cheatsheets', label: '📋 Cheatsheets' },
   { to: '/study-materials', label: '📚 Study Materials' },
-  { to: '/sessions',  label: '🔐 Sessions' },
+  { to: '/sessions', label: '🔐 Sessions' },
   { to: '/resources', label: '📁 Resources' },
-  { to: '/feedback',  label: '💬 Feedback' },
+  { to: '/feedback', label: '💬 Feedback' },
   { section: 'Marketing' },
   { to: '/utm-generator', label: '🚀 UTM Generator' },
   { to: '/link-shortener', label: '✂️ Link Shortener' },
   { to: '/meta-previewer', label: '📱 Social Meta Preview' },
-  { to: '/segmentation',   label: '🎯 User Segmentation' },
+  { to: '/segmentation', label: '🎯 User Segmentation' },
   { section: 'System' },
-  { to: '/settings',  label: '⚙️ Settings' },
-  { to: '/health',    label: '🩺 Health Monitor' },
+  { to: '/settings', label: '⚙️ Settings' },
+  { to: '/health', label: '🩺 Health Monitor' },
 ];
 
 export default function Layout() {
@@ -45,8 +45,8 @@ export default function Layout() {
             item.section
               ? <div key={i} className="sidebar-section">{item.section}</div>
               : <NavLink key={item.to} to={item.to} className={({ isActive }) => isActive ? 'active' : ''}>
-                  {item.label}
-                </NavLink>
+                {item.label}
+              </NavLink>
           )}
         </nav>
         <div className="sidebar-footer">
@@ -62,7 +62,7 @@ export default function Layout() {
         <div className="topbar">
           <span className="topbar-title">Vayl Admin Panel</span>
           <div className="topbar-right">
-            <span>v1.0</span>
+            <span>v1.4</span>
             <span className="topbar-user">{user?.name}</span>
           </div>
         </div>

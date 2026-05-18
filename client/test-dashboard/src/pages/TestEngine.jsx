@@ -3,6 +3,37 @@ import { List, ChevronLeft, ChevronRight, X, Grid } from 'lucide-react';
 import LatexRenderer from '../components/LatexRenderer';
 import { API_BASE } from '../config/api';
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   RenderContentTable — beautifully renders the custom question/option table
+   ─────────────────────────────────────────────────────────────────────────── */
+function RenderContentTable({ table }) {
+  if (!table || !table.headers || table.headers.length === 0) return null;
+  const thStyle = { border: '1px solid rgba(226,232,240,0.2)', padding: '6px 10px', background: 'rgba(79,70,229,0.08)', fontWeight: 600, fontSize: '12px', textAlign: 'left', color: '#475569' };
+  const tdStyle = { border: '1px solid rgba(226,232,240,0.15)', padding: '6px 10px', fontSize: '12px', color: '#1e293b' };
+  return (
+    <div style={{ margin: '8px 0', overflowX: 'auto', borderRadius: '8px', border: '1px solid rgba(226,232,240,0.15)' }}>
+      <table style={{ borderCollapse: 'collapse', minWidth: '150px', width: '100%', background: 'rgba(255,255,255,0.6)' }}>
+        <thead>
+          <tr>
+            {table.headers.map((h, i) => (
+              <th key={i} style={thStyle}><LatexRenderer text={h || ''} /></th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {(table.rows || []).map((row, ri) => (
+            <tr key={ri}>
+              {row.map((cell, ci) => (
+                <td key={ci} style={tdStyle}><LatexRenderer text={cell || ''} /></td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function TestEngine({ testId, user, attemptId, onSubmitted }) {
   // ─── State ───
   const [loading, setLoading] = useState(true);
@@ -993,6 +1024,7 @@ export default function TestEngine({ testId, user, attemptId, onSubmitted }) {
                 <div className="mb-7 min-h-[34px] whitespace-pre-wrap text-black">
                   <LatexRenderer text={currentQuestion?.content} />
                   {currentQuestion?.imageUrl && <img src={currentQuestion.imageUrl} alt="" className="mt-4 max-w-full" />}
+                  {currentQuestion?.contentTable && <RenderContentTable table={currentQuestion.contentTable} />}
                 </div>
                 {currentQuestion?.type !== 'integer' && currentQuestion?.options?.map((opt, i) => {
                   const isSelected = currentAnswer?.selectedAnswer?.includes(opt.label);
@@ -1035,6 +1067,7 @@ export default function TestEngine({ testId, user, attemptId, onSubmitted }) {
                         <LatexRenderer text={opt.content} />
                       </span>
                       {opt.imageUrl && <img src={opt.imageUrl} alt="" className="max-h-28 ml-2" />}
+                      {opt.contentTable && <RenderContentTable table={opt.contentTable} />}
                     </label>
                   );
                 })}
@@ -1373,10 +1406,12 @@ export default function TestEngine({ testId, user, attemptId, onSubmitted }) {
                   </div>
                   <div className="text-sm leading-relaxed">
                     <LatexRenderer text={question.content} />
+                    {question.contentTable && <RenderContentTable table={question.contentTable} />}
                     {question.options?.map((option) => (
                       <div key={option.label} className="mt-2 flex gap-2">
                         <span className="font-bold">{option.label}.</span>
                         <LatexRenderer text={option.content} />
+                        {option.contentTable && <RenderContentTable table={option.contentTable} />}
                       </div>
                     ))}
                   </div>
