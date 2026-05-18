@@ -262,41 +262,130 @@ export const submitSession = async (attemptId, userId, finalStatus = 'completed'
   let maxPossible = 0;
   const sectionScores = {};
 
+  // Build a sectionScheme lookup map: sectionName -> markingScheme
+  const sectionSchemeMap = {};
+  if (test.sections && test.sections.length > 0) {
+    for (const sec of test.sections) {
+      sectionSchemeMap[sec.name] = sec.markingScheme || null;
+    }
+  }
+
   for (const ans of attempt.answers) {
     const question = questionMap.get(ans.questionId.toString());
     if (!question) continue;
 
-    const posMarks = question.positiveMarks ?? test.defaultPositiveMarks;
-    const negMarks = question.negativeMarks ?? test.defaultNegativeMarks;
-    maxPossible += posMarks;
+    // Skip comprehension parent — it carries no marks itself
+    if (question.type === 'comprehension_parent') continue;
 
-    // Initialize section score
+    // Resolve the effective marking scheme for this question:
+    // Priority: question.markingSchemeOverride > section.markingScheme > test defaults
+    const secScheme = sectionSchemeMap[question.section] || null;
+    const override = question.markingSchemeOverride || {};
+
+    const correctMarks  = override.correct    ?? secScheme?.correct    ?? question.positiveMarks ?? test.defaultPositiveMarks;
+    const incorrectMarks = override.incorrect  ?? secScheme?.incorrect  ?? question.negativeMarks ?? test.defaultNegativeMarks;
+    const isPartial     = override.partial     ?? secScheme?.partial    ?? false;
+    const partialPerOpt = override.partialMarkPerOption ?? secScheme?.partialMarkPerOption ?? 1;
+    const partialIncorr = override.partialIncorrect     ?? secScheme?.partialIncorrect     ?? incorrectMarks;
+
+    maxPossible += correctMarks;
+
+    // Initialize section score tracker
     const section = question.section || 'General';
     if (!sectionScores[section]) {
-      sectionScores[section] = { correct: 0, wrong: 0, unattempted: 0, score: 0 };
+      sectionScores[section] = { correct: 0, wrong: 0, unattempted: 0, partial: 0, score: 0 };
     }
 
-    // Grade
+    // Unattempted
     if (!ans.selectedAnswer || ans.selectedAnswer.length === 0) {
       sectionScores[section].unattempted++;
+      const unattemptedMark = override.unattempted ?? secScheme?.unattempted ?? 0;
+      totalScore += unattemptedMark;
+      sectionScores[section].score += unattemptedMark;
       continue;
     }
 
-    const isCorrect = arraysEqual(
-      ans.selectedAnswer.sort(),
-      question.correctAnswer.sort()
-    );
+    const correctSet = new Set((question.correctAnswer || []).map(String));
+    const selected   = (ans.selectedAnswer || []).map(String);
 
-    if (isCorrect) {
-      totalScore += posMarks;
-      sectionScores[section].correct++;
-      sectionScores[section].score += posMarks;
-    } else {
-      totalScore -= negMarks;
-      sectionScores[section].wrong++;
-      sectionScores[section].score -= negMarks;
+    // ── GRADING STRATEGIES ────────────────────────────────────────────────────
+
+    if (question.type === 'single' || question.type === 'integer' || question.type === 'float') {
+      // Exact match required
+      const exactCorrect = arraysEqual(selected.sort(), [...correctSet].sort());
+      if (exactCorrect) {
+        totalScore += correctMarks;
+        sectionScores[section].correct++;
+        sectionScores[section].score += correctMarks;
+      } else {
+        totalScore -= incorrectMarks;
+        sectionScores[section].wrong++;
+        sectionScores[section].score -= incorrectMarks;
+      }
+
+    } else if (question.type === 'multiple') {
+      // Multi-correct: check if the student selected ANY wrong option first
+      const hasWrongSelected = selected.some(s => !correctSet.has(s));
+
+      if (hasWrongSelected) {
+        // Any wrong option selected → negative marks (no partial credit)
+        totalScore -= incorrectMarks;
+        sectionScores[section].wrong++;
+        sectionScores[section].score -= incorrectMarks;
+      } else if (arraysEqual(selected.sort(), [...correctSet].sort())) {
+        // All correct options selected → full marks
+        totalScore += correctMarks;
+        sectionScores[section].correct++;
+        sectionScores[section].score += correctMarks;
+      } else if (isPartial && selected.length > 0) {
+        // Only correct options selected but not all → partial credit
+        const partialScore = Math.min(selected.length * partialPerOpt, correctMarks);
+        totalScore += partialScore;
+        sectionScores[section].partial++;
+        sectionScores[section].score += partialScore;
+      } else {
+        // Partial marking disabled, subset of correct selected → treat as wrong
+        totalScore -= partialIncorr;
+        sectionScores[section].wrong++;
+        sectionScores[section].score -= partialIncorr;
+      }
+
+    } else if (question.type === 'matrix') {
+      // Matrix match: each correct row mapping earns marks
+      // correctAnswer format: ["A-P,Q", "B-R", "C-P,R,S", "D-Q,S"]
+      // selected format:      ["A-P,Q", "B-R", "C-S", "D-Q"]
+      let correctRows = 0;
+      const correctMap = new Map(
+        (question.correctAnswer || []).map(s => {
+          const [row, cols] = s.split('-');
+          return [row, new Set((cols || '').split(',').map(c => c.trim()))];
+        })
+      );
+      for (const sel of selected) {
+        const [row, cols] = sel.split('-');
+        const colSet = new Set((cols || '').split(',').map(c => c.trim()));
+        const expectedCols = correctMap.get(row);
+        if (expectedCols && arraysEqual([...colSet].sort(), [...expectedCols].sort())) {
+          correctRows++;
+        }
+      }
+      if (correctRows === correctMap.size && correctRows > 0) {
+        totalScore += correctMarks;
+        sectionScores[section].correct++;
+        sectionScores[section].score += correctMarks;
+      } else if (isPartial && correctRows > 0) {
+        const partialScore = Math.min(correctRows * partialPerOpt, correctMarks);
+        totalScore += partialScore;
+        sectionScores[section].partial++;
+        sectionScores[section].score += partialScore;
+      } else {
+        totalScore -= incorrectMarks;
+        sectionScores[section].wrong++;
+        sectionScores[section].score -= incorrectMarks;
+      }
     }
-  }
+
+  } // end for (const ans of attempt.answers)
 
   // Finalize
   attempt.totalScore = totalScore;

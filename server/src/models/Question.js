@@ -7,8 +7,16 @@ const normalizeQuestionType = (value) => {
   if (raw === 'mcq' || raw === 'multi') return 'multiple';
   if (raw === 'numerical' || raw === 'numeric') return 'integer';
   if (raw === 'decimal') return 'float';
+  if (raw === 'matrix' || raw === 'match') return 'matrix';
+  if (raw === 'comprehension' || raw === 'paragraph') return 'comprehension_parent';
   return raw;
 };
+
+// Reusable sub-schema for a content table (header row + data rows)
+const contentTableSchema = new mongoose.Schema({
+  headers: [{ type: String }],
+  rows: [[{ type: String }]],
+}, { _id: false });
 
 const questionSchema = new mongoose.Schema(
   {
@@ -36,15 +44,20 @@ const questionSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['single', 'multiple', 'integer', 'float'],
+      enum: ['single', 'multiple', 'integer', 'float', 'matrix', 'comprehension_parent', 'comprehension_child'],
       set: normalizeQuestionType,
       get: normalizeQuestionType,
       required: true,
+    },
+    parentQuestionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Question',
     },
     order: {
       type: Number,
       default: 0,
     },
+    // Question body — text, image, OR a content table (or a combination)
     text: {
       type: String,
       required: false,
@@ -56,36 +69,58 @@ const questionSchema = new mongoose.Schema(
     imageUrl: {
       type: String,
     },
+    contentTable: contentTableSchema,
+
+    // Options (for single/multiple/comprehension_child types)
     options: [
       {
-        key: { type: String, required: false },
-        label: { type: String, required: false },
-        text: { type: String },
+        key:    { type: String, required: false },
+        label:  { type: String, required: false },
+        text:   { type: String },
         content: { type: String },
         imageUrl: { type: String },
+        contentTable: contentTableSchema,  // table embedded inside an option
       }
     ],
+
+    // Matrix Match fields (List I rows and List II columns)
+    matrixRows: [
+      {
+        label:   { type: String },
+        content: { type: String },
+      }
+    ],
+    matrixColumns: [
+      {
+        label:   { type: String },
+        content: { type: String },
+      }
+    ],
+
+    // Per-question marking scheme override (overrides section scheme)
+    markingSchemeOverride: {
+      correct:             { type: Number },
+      incorrect:           { type: Number },
+      unattempted:         { type: Number },
+      partial:             { type: Boolean },
+      partialMarkPerOption: { type: Number },
+      partialIncorrect:    { type: Number },
+    },
+
     correctAnswer: {
-      type: [String], // ["A"] or ["A", "C"] or ["42"]
+      type: [String], // ["A"] or ["A", "C"] or ["42"] or ["A-P,Q", "B-R"]
       required: true,
     },
-    solution: {
-      type: String,
-    },
-    solutionImageUrl: {
-      type: String,
-    },
-    positiveMarks: {
-      type: Number,
-    },
-    negativeMarks: {
-      type: Number,
-    },
+    solution: { type: String },
+    solutionImageUrl: { type: String },
+    positiveMarks: { type: Number },
+    negativeMarks: { type: Number },
     tags: [String],
+    difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium' },
   },
   {
     timestamps: true,
-    toJSON: { getters: true },
+    toJSON:   { getters: true },
     toObject: { getters: true },
   }
 );
@@ -95,8 +130,13 @@ questionSchema.pre('validate', function normalizeQuestion() {
 
   if (!this.content && this.text) this.content = this.text;
   if (!this.text && this.content) this.text = this.content;
-  if (!String(this.content || this.text || this.imageUrl || '').trim()) {
-    this.invalidate('content', 'Question content or image is required');
+
+  // Allow contentTable as a substitute for text content
+  const hasContent = String(this.content || this.text || this.imageUrl || '').trim() ||
+                     (this.contentTable?.headers?.length > 0);
+
+  if (!hasContent) {
+    this.invalidate('content', 'Question content, image, or table is required');
   }
 
   if (this.section && (!this.subject || this.subject === 'General')) {
@@ -115,14 +155,17 @@ questionSchema.pre('validate', function normalizeQuestion() {
         if (!option.key) option.key = option.label;
         if (!option.content && option.text) option.content = option.text;
         if (!option.text && option.content) option.text = option.content;
-        if (!String(option.content || option.text || option.imageUrl || '').trim()) {
-          this.invalidate(`options.${index}.content`, 'Option content or image is required');
+        // Allow contentTable as option content substitute
+        const hasOptContent = String(option.content || option.text || option.imageUrl || '').trim() ||
+                              (option.contentTable?.headers?.length > 0);
+        if (!hasOptContent) {
+          this.invalidate(`options.${index}.content`, 'Option content, image, or table is required');
         }
       });
     }
   }
 
-  if (!Array.isArray(this.correctAnswer) || this.correctAnswer.length === 0) {
+  if (this.type !== 'comprehension_parent' && (!Array.isArray(this.correctAnswer) || this.correctAnswer.length === 0)) {
     this.invalidate('correctAnswer', 'Correct answer is required');
   }
 });

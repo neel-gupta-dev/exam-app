@@ -40,41 +40,112 @@ const processQueue = async () => {
         let maxPossibleScore = 0;
         const sectionScores = {};
 
+        // Build section scheme map
+        const sectionSchemeMap = {};
+        for (const sec of test.sections || []) {
+          sectionSchemeMap[sec.name] = sec.markingScheme || null;
+        }
+
+        const arraysEqual = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+
         for (const answer of attempt.answers || []) {
           const question = questionMap.get(answer.questionId.toString());
           if (!question) continue;
+          if (question.type === 'comprehension_parent') continue;
 
-          const pos = question.positiveMarks ?? test.defaultPositiveMarks;
-          const neg = question.negativeMarks ?? test.defaultNegativeMarks;
+          const secScheme = sectionSchemeMap[question.section] || null;
+          const override = question.markingSchemeOverride || {};
+
+          const correctMarks  = override.correct    ?? secScheme?.correct    ?? question.positiveMarks ?? test.defaultPositiveMarks;
+          const incorrectMarks = override.incorrect  ?? secScheme?.incorrect  ?? question.negativeMarks ?? test.defaultNegativeMarks;
+          const isPartial     = override.partial     ?? secScheme?.partial    ?? false;
+          const partialPerOpt = override.partialMarkPerOption ?? secScheme?.partialMarkPerOption ?? 1;
+          const partialIncorr = override.partialIncorrect     ?? secScheme?.partialIncorrect     ?? incorrectMarks;
+
           const section = question.section || 'General';
-          maxPossibleScore += pos;
+          maxPossibleScore += correctMarks;
 
           if (!sectionScores[section]) {
-            sectionScores[section] = { correct: 0, wrong: 0, unattempted: 0, score: 0 };
+            sectionScores[section] = { correct: 0, wrong: 0, unattempted: 0, partial: 0, score: 0 };
           }
 
           const selectedAnswer = answer.selectedAnswer || [];
           if (selectedAnswer.length === 0) {
-            sectionScores[section].unattempted += 1;
+            sectionScores[section].unattempted++;
+            const unattemptedMark = override.unattempted ?? secScheme?.unattempted ?? 0;
+            totalScore += unattemptedMark;
+            sectionScores[section].score += unattemptedMark;
             continue;
           }
 
-          const expected = [...(question.correctAnswer || [])].sort();
-          const selected = [...selectedAnswer].sort();
-          const isCorrect =
-            selected.length === expected.length &&
-            selected.every((opt, idx) => opt === expected[idx]);
+          const correctSet = new Set((question.correctAnswer || []).map(String));
+          const selected   = selectedAnswer.map(String);
 
-          if (isCorrect) {
-            totalScore += pos;
-            sectionScores[section].correct += 1;
-            sectionScores[section].score += pos;
-          } else {
-            totalScore -= neg;
-            sectionScores[section].wrong += 1;
-            sectionScores[section].score -= neg;
+          if (question.type === 'single' || question.type === 'integer' || question.type === 'float') {
+            const exactCorrect = arraysEqual(selected.sort(), [...correctSet].sort());
+            if (exactCorrect) {
+              totalScore += correctMarks;
+              sectionScores[section].correct++;
+              sectionScores[section].score += correctMarks;
+            } else {
+              totalScore -= incorrectMarks;
+              sectionScores[section].wrong++;
+              sectionScores[section].score -= incorrectMarks;
+            }
+
+          } else if (question.type === 'multiple') {
+            const hasWrongSelected = selected.some(s => !correctSet.has(s));
+            if (hasWrongSelected) {
+              totalScore -= incorrectMarks;
+              sectionScores[section].wrong++;
+              sectionScores[section].score -= incorrectMarks;
+            } else if (arraysEqual(selected.sort(), [...correctSet].sort())) {
+              totalScore += correctMarks;
+              sectionScores[section].correct++;
+              sectionScores[section].score += correctMarks;
+            } else if (isPartial && selected.length > 0) {
+              const partialScore = Math.min(selected.length * partialPerOpt, correctMarks);
+              totalScore += partialScore;
+              sectionScores[section].partial++;
+              sectionScores[section].score += partialScore;
+            } else {
+              totalScore -= partialIncorr;
+              sectionScores[section].wrong++;
+              sectionScores[section].score -= partialIncorr;
+            }
+
+          } else if (question.type === 'matrix') {
+            let correctRows = 0;
+            const correctMap = new Map(
+              (question.correctAnswer || []).map(s => {
+                const [row, cols] = s.split('-');
+                return [row, new Set((cols || '').split(',').map(c => c.trim()))];
+              })
+            );
+            for (const sel of selected) {
+              const [row, cols] = sel.split('-');
+              const colSet = new Set((cols || '').split(',').map(c => c.trim()));
+              const expectedCols = correctMap.get(row);
+              if (expectedCols && arraysEqual([...colSet].sort(), [...expectedCols].sort())) {
+                correctRows++;
+              }
+            }
+            if (correctRows === correctMap.size && correctRows > 0) {
+              totalScore += correctMarks;
+              sectionScores[section].correct++;
+              sectionScores[section].score += correctMarks;
+            } else if (isPartial && correctRows > 0) {
+              const partialScore = Math.min(correctRows * partialPerOpt, correctMarks);
+              totalScore += partialScore;
+              sectionScores[section].partial++;
+              sectionScores[section].score += partialScore;
+            } else {
+              totalScore -= incorrectMarks;
+              sectionScores[section].wrong++;
+              sectionScores[section].score -= incorrectMarks;
+            }
           }
-        }
+        } // end for answers
 
         const percentage = maxPossibleScore > 0
           ? Math.round((totalScore / maxPossibleScore) * 10000) / 100

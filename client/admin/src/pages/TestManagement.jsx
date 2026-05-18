@@ -228,6 +228,8 @@ export default function TestManagement() {
         positiveMarks: qForm.positiveMarks ? Number(qForm.positiveMarks) : null,
         negativeMarks: qForm.negativeMarks ? Number(qForm.negativeMarks) : null,
         imageUrl: qForm.imageUrl || null,
+        matrixRows: qForm.matrixRows || [],
+        matrixColumns: qForm.matrixColumns || [],
         tags: qForm.tags ? qForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
       };
       
@@ -560,8 +562,8 @@ export default function TestManagement() {
               </div>
             </div>
 
-          {/* Add Question Form */}
-          {showQuestionForm && (
+          {/* Add NEW Question Form — only shown when not editing an existing one */}
+          {showQuestionForm && !editingQuestion && (
             <form onSubmit={handleAddQuestion} style={{ marginTop: 16, padding: 16, background: 'rgba(0,0,0,0.05)', borderRadius: 8 }}>
               <div className="form-grid">
                 <div className="form-group">
@@ -578,9 +580,13 @@ export default function TestManagement() {
                 <div className="form-group">
                   <label>Type</label>
                   <select value={qForm.type} onChange={e => setQForm({ ...qForm, type: e.target.value })}>
-                    <option value="single">Single Correct</option>
-                    <option value="multiple">Multiple Correct</option>
-                    <option value="integer">Integer Answer</option>
+                    <option value="single">Single Correct (SCQ)</option>
+                    <option value="multiple">Multiple Correct (MCQ)</option>
+                    <option value="integer">Integer / Numerical</option>
+                    <option value="float">Decimal / Float</option>
+                    <option value="matrix">Matrix Match</option>
+                    <option value="comprehension_parent">Comprehension (Paragraph)</option>
+                    <option value="comprehension_child">Comprehension (Child Question)</option>
                   </select>
                 </div>
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
@@ -658,12 +664,61 @@ export default function TestManagement() {
                   </div>
                 )}
 
-                {/* Integer answer */}
-                {qForm.type === 'integer' && (
+                {/* Integer / Float answer */}
+                {(qForm.type === 'integer' || qForm.type === 'float') && (
                   <div className="form-group">
-                    <label>Correct Answer (integer)</label>
-                    <input type="number" value={qForm.correctAnswer[0] || ''} onChange={e => setQForm({ ...qForm, correctAnswer: [e.target.value] })} required />
+                    <label>Correct Answer {qForm.type === 'float' ? '(decimal)' : '(integer)'}</label>
+                    <input type="number" step={qForm.type === 'float' ? '0.01' : '1'} value={qForm.correctAnswer[0] || ''} onChange={e => setQForm({ ...qForm, correctAnswer: [e.target.value] })} required />
                   </div>
+                )}
+
+                {/* Matrix Match rows/columns */}
+                {qForm.type === 'matrix' && (
+                  <>
+                    <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                      <label>List I — Rows (one per line, format: <code>A. Uniform velocity</code>)</label>
+                      <textarea
+                        rows={4}
+                        value={(qForm.matrixRows || []).map(r => `${r.label}. ${r.content}`).join('\n')}
+                        onChange={e => {
+                          const rows = e.target.value.split('\n').map(line => {
+                            const dotIdx = line.indexOf('.');
+                            return dotIdx > -1
+                              ? { label: line.slice(0, dotIdx).trim(), content: line.slice(dotIdx + 1).trim() }
+                              : { label: '', content: line.trim() };
+                          });
+                          setQForm({ ...qForm, matrixRows: rows });
+                        }}
+                        placeholder={'A. Uniform velocity\nB. Uniform acceleration\nC. Non-uniform acceleration'}
+                      />
+                    </div>
+                    <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                      <label>List II — Columns (one per line, format: <code>P. Motion with constant speed</code>)</label>
+                      <textarea
+                        rows={4}
+                        value={(qForm.matrixColumns || []).map(c => `${c.label}. ${c.content}`).join('\n')}
+                        onChange={e => {
+                          const cols = e.target.value.split('\n').map(line => {
+                            const dotIdx = line.indexOf('.');
+                            return dotIdx > -1
+                              ? { label: line.slice(0, dotIdx).trim(), content: line.slice(dotIdx + 1).trim() }
+                              : { label: '', content: line.trim() };
+                          });
+                          setQForm({ ...qForm, matrixColumns: cols });
+                        }}
+                        placeholder={'P. Motion with constant speed\nQ. v-t graph is a straight line\nR. Acceleration is zero'}
+                      />
+                    </div>
+                    <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                      <label>Correct Answers (one row per line, format: <code>A-P,Q</code>)</label>
+                      <textarea
+                        rows={4}
+                        value={(qForm.correctAnswer || []).join('\n')}
+                        onChange={e => setQForm({ ...qForm, correctAnswer: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) })}
+                        placeholder={'A-P,Q\nB-R\nC-P,R,S\nD-Q,S'}
+                      />
+                    </div>
+                  </>
                 )}
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
@@ -820,63 +875,189 @@ export default function TestManagement() {
             </div>
           )}
 
-          {/* Question List */}
+          {/* Question List — edit form renders inline below the selected question */}
           <div style={{ marginTop: 16 }}>
             {questions.map((q, idx) => (
-              <div key={q._id} style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
-                    <strong>Q{q.order || idx + 1}.</strong>
-                    <span className="badge">{q.section}</span>
-                    <span className="badge">{q.type}</span>
-                  </div>
-                  <div style={{ margin: '4px 0', display: 'block' }}>
-                    <LatexRenderer text={q.content} />
-                  </div>
-                  {q.imageUrl && (
-                    <img src={q.imageUrl} alt="Question" style={{ maxHeight: 120, maxWidth: '100%', marginTop: 8, border: '1px solid var(--border)' }} />
-                  )}
-                  {q.options?.length > 0 && (
-                    <div style={{ marginTop: 4, fontSize: 13, opacity: 0.8 }}>
-                      {q.options.map(o => (
-                        <span key={o.label} style={{ marginRight: 12, color: q.correctAnswer?.includes(o.label) ? '#2ecc71' : 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4, verticalAlign: 'top' }}>
-                          {q.correctAnswer?.includes(o.label) ? '✅' : '○'} {o.label}. <LatexRenderer text={o.content} />
-                          {o.imageUrl && <img src={o.imageUrl} alt={`Option ${o.label}`} style={{ maxHeight: 42, maxWidth: 80, border: '1px solid var(--border)' }} />}
-                        </span>
-                      ))}
+              <div key={q._id}>
+                {/* Question row */}
+                <div style={{ padding: '12px 16px', borderBottom: editingQuestion?._id === q._id ? 'none' : '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: editingQuestion?._id === q._id ? 'rgba(79,70,229,0.06)' : 'transparent', borderRadius: editingQuestion?._id === q._id ? '6px 6px 0 0' : 0 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
+                      <strong>Q{q.order || idx + 1}.</strong>
+                      <span className="badge">{q.section}</span>
+                      <span className="badge">{q.type}</span>
+                      {q.positiveMarks && <span className="badge" style={{ background: 'rgba(46,204,113,0.2)', color: '#2ecc71' }}>+{q.positiveMarks}</span>}
+                      {q.negativeMarks && <span className="badge" style={{ background: 'rgba(231,76,60,0.2)', color: '#e74c3c' }}>-{q.negativeMarks}</span>}
                     </div>
-                  )}
-                  {q.type === 'integer' && <div style={{ fontSize: 13 }}>Answer: <strong style={{ color: '#2ecc71' }}>{q.correctAnswer?.join(', ')}</strong></div>}
-                  {q.solutionImageUrl && (
-                    <div style={{ marginTop: 8, fontSize: 12, opacity: 0.75 }}>
-                      Solution image: <img src={q.solutionImageUrl} alt="Solution" style={{ maxHeight: 80, maxWidth: 140, marginLeft: 8, border: '1px solid var(--border)', verticalAlign: 'middle' }} />
+                    <div style={{ margin: '4px 0', display: 'block' }}>
+                      <LatexRenderer text={q.content} />
                     </div>
-                  )}
+                    {q.imageUrl && <img src={q.imageUrl} alt="Question" style={{ maxHeight: 120, maxWidth: '100%', marginTop: 8, border: '1px solid var(--border)' }} />}
+                    {q.options?.length > 0 && (
+                      <div style={{ marginTop: 4, fontSize: 13, opacity: 0.8 }}>
+                        {q.options.map(o => (
+                          <span key={o.label} style={{ marginRight: 12, color: q.correctAnswer?.includes(o.label) ? '#2ecc71' : 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4, verticalAlign: 'top' }}>
+                            {q.correctAnswer?.includes(o.label) ? '✅' : '○'} {o.label}. <LatexRenderer text={o.content} />
+                            {o.imageUrl && <img src={o.imageUrl} alt={`Option ${o.label}`} style={{ maxHeight: 42, maxWidth: 80, border: '1px solid var(--border)' }} />}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {(q.type === 'integer' || q.type === 'float') && <div style={{ fontSize: 13 }}>Answer: <strong style={{ color: '#2ecc71' }}>{q.correctAnswer?.join(', ')}</strong></div>}
+                    {q.type === 'matrix' && q.correctAnswer?.length > 0 && <div style={{ fontSize: 13, opacity: 0.7 }}>Matches: {q.correctAnswer.join(' | ')}</div>}
+                    {q.solutionImageUrl && <div style={{ marginTop: 8, fontSize: 12, opacity: 0.75 }}>Solution image: <img src={q.solutionImageUrl} alt="Solution" style={{ maxHeight: 80, maxWidth: 140, marginLeft: 8, border: '1px solid var(--border)', verticalAlign: 'middle' }} /></div>}
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                    <button className="btn btn-sm" onClick={() => {
+                      if (editingQuestion?._id === q._id) {
+                        // toggle off
+                        setEditingQuestion(null);
+                        return;
+                      }
+                      setEditingQuestion(q);
+                      setShowQuestionForm(false);
+                      setQForm({
+                        section: q.section || 'General',
+                        type: q.type || 'single',
+                        content: q.content || '',
+                        imageUrl: q.imageUrl || '',
+                        solutionImageUrl: q.solutionImageUrl || '',
+                        matrixRows: q.matrixRows || [],
+                        matrixColumns: q.matrixColumns || [],
+                        options: q.options?.length > 0 ? q.options : [
+                          { label: 'A', content: '', imageUrl: '' }, { label: 'B', content: '', imageUrl: '' },
+                          { label: 'C', content: '', imageUrl: '' }, { label: 'D', content: '', imageUrl: '' },
+                        ],
+                        correctAnswer: q.correctAnswer || [],
+                        solution: q.solution || '',
+                        positiveMarks: q.positiveMarks || '',
+                        negativeMarks: q.negativeMarks || '',
+                        tags: q.tags?.join(', ') || '',
+                        difficulty: q.difficulty || 'medium',
+                      });
+                    }} title="Edit Question" style={{ background: editingQuestion?._id === q._id ? 'rgba(79,70,229,0.2)' : undefined }}>✏️</button>
+                    <button className="btn btn-sm btn-danger" onClick={() => handleDeleteQuestion(q._id)} title="Delete Question">🗑</button>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <button className="btn btn-sm" onClick={() => {
-                    setEditingQuestion(q);
-                    setQForm({
-                      section: q.section || 'General',
-                      type: q.type || 'single',
-                      content: q.content,
-                      imageUrl: q.imageUrl || '',
-                      solutionImageUrl: q.solutionImageUrl || '',
-                      options: q.options && q.options.length > 0 ? q.options : [
-                        { label: 'A', content: '', imageUrl: '' }, { label: 'B', content: '', imageUrl: '' },
-                        { label: 'C', content: '', imageUrl: '' }, { label: 'D', content: '', imageUrl: '' },
-                      ],
-                      correctAnswer: q.correctAnswer || [],
-                      solution: q.solution || '',
-                      positiveMarks: q.positiveMarks || '',
-                      negativeMarks: q.negativeMarks || '',
-                      tags: q.tags?.join(', ') || '',
-                      difficulty: q.difficulty || 'medium',
-                    });
-                    setShowQuestionForm(true);
-                  }} title="Edit Question">✏️</button>
-                  <button className="btn btn-sm btn-danger" onClick={() => handleDeleteQuestion(q._id)} title="Delete Question">🗑</button>
-                </div>
+
+                {/* Inline Edit Form — renders immediately below this question */}
+                {editingQuestion?._id === q._id && (
+                  <form onSubmit={handleAddQuestion} style={{ padding: 16, background: 'rgba(79,70,229,0.06)', border: '1px solid rgba(79,70,229,0.25)', borderTop: 'none', borderRadius: '0 0 6px 6px', marginBottom: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                      <strong style={{ color: '#818cf8' }}>✏️ Editing Q{q.order || idx + 1}</strong>
+                      <button type="button" className="btn btn-sm" onClick={() => setEditingQuestion(null)}>✕ Cancel</button>
+                    </div>
+                    <div className="form-grid">
+                      <div className="form-group">
+                        <label>Section</label>
+                        {selectedTest?.sections?.length > 0 ? (
+                          <select value={qForm.section} onChange={e => setQForm({ ...qForm, section: e.target.value })}>
+                            <option value="">Select Section</option>
+                            {selectedTest.sections.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
+                          </select>
+                        ) : (
+                          <input value={qForm.section} onChange={e => setQForm({ ...qForm, section: e.target.value })} placeholder="Physics, Chemistry..." />
+                        )}
+                      </div>
+                      <div className="form-group">
+                        <label>Type</label>
+                        <select value={qForm.type} onChange={e => setQForm({ ...qForm, type: e.target.value })}>
+                          <option value="single">Single Correct (SCQ)</option>
+                          <option value="multiple">Multiple Correct (MCQ)</option>
+                          <option value="integer">Integer / Numerical</option>
+                          <option value="float">Decimal / Float</option>
+                          <option value="matrix">Matrix Match</option>
+                          <option value="comprehension_parent">Comprehension (Paragraph)</option>
+                          <option value="comprehension_child">Comprehension (Child Question)</option>
+                        </select>
+                      </div>
+                      <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                        <label>Question Text</label>
+                        <textarea value={qForm.content} onChange={e => setQForm({ ...qForm, content: e.target.value })} rows={3} placeholder="Add text, an image, or both." />
+                      </div>
+                      <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                        <label>Image URL (optional)</label>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <input style={{ flex: 1 }} value={qForm.imageUrl} onChange={e => setQForm({ ...qForm, imageUrl: e.target.value })} placeholder="https://..." />
+                          <label className="btn btn-sm" style={{ margin: 0, cursor: 'pointer' }}>
+                            {imageUploading === 'q-edit-img' ? 'Uploading...' : 'Upload'}
+                            <input type="file" accept="image/*" style={{ display: 'none' }} disabled={imageUploading === 'q-edit-img'} onChange={e => handleTestImageUpload(e.target.files?.[0], 'q-edit-img', (url) => setQForm(f => ({ ...f, imageUrl: url })))} />
+                          </label>
+                        </div>
+                        {qForm.imageUrl && <img src={qForm.imageUrl} alt="Preview" style={{ maxHeight: 100, maxWidth: '100%', marginTop: 8, border: '1px solid var(--border)' }} />}
+                      </div>
+                      {(qForm.type === 'single' || qForm.type === 'multiple') && (
+                        <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                          <label>Options</label>
+                          {qForm.options.map((opt, oidx) => (
+                            <div key={oidx} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+                              <strong style={{ width: 24 }}>{opt.label}.</strong>
+                              <input style={{ flex: 1 }} value={opt.content} onChange={e => { const o = [...qForm.options]; o[oidx] = { ...o[oidx], content: e.target.value }; setQForm({ ...qForm, options: o }); }} placeholder={`Option ${opt.label}`} />
+                              <label className="btn btn-sm" style={{ margin: 0, cursor: 'pointer' }}>
+                                {imageUploading === `opt-edit-${opt.label}` ? '...' : 'Img'}
+                                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleTestImageUpload(e.target.files?.[0], `opt-edit-${opt.label}`, (url) => { const o = [...qForm.options]; o[oidx] = { ...o[oidx], imageUrl: url }; setQForm(f => ({ ...f, options: o })); })} />
+                              </label>
+                              {opt.imageUrl && <img src={opt.imageUrl} alt={`Opt ${opt.label}`} style={{ maxHeight: 36, maxWidth: 60, border: '1px solid var(--border)' }} />}
+                              <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+                                <input type={qForm.type === 'single' ? 'radio' : 'checkbox'} name="editCorrectAnswer" checked={qForm.correctAnswer.includes(opt.label)} onChange={() => {
+                                  if (qForm.type === 'single') { setQForm({ ...qForm, correctAnswer: [opt.label] }); }
+                                  else { const has = qForm.correctAnswer.includes(opt.label); setQForm({ ...qForm, correctAnswer: has ? qForm.correctAnswer.filter(a => a !== opt.label) : [...qForm.correctAnswer, opt.label] }); }
+                                }} /> Correct
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {(qForm.type === 'integer' || qForm.type === 'float') && (
+                        <div className="form-group">
+                          <label>Correct Answer</label>
+                          <input type="number" step={qForm.type === 'float' ? '0.01' : '1'} value={qForm.correctAnswer[0] || ''} onChange={e => setQForm({ ...qForm, correctAnswer: [e.target.value] })} />
+                        </div>
+                      )}
+                      {qForm.type === 'matrix' && (
+                        <>
+                          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                            <label>List I Rows (A. text per line)</label>
+                            <textarea rows={3} value={(qForm.matrixRows || []).map(r => `${r.label}. ${r.content}`).join('\n')} onChange={e => { const rows = e.target.value.split('\n').map(line => { const d = line.indexOf('.'); return d > -1 ? { label: line.slice(0,d).trim(), content: line.slice(d+1).trim() } : { label: '', content: line.trim() }; }); setQForm({ ...qForm, matrixRows: rows }); }} />
+                          </div>
+                          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                            <label>List II Columns (P. text per line)</label>
+                            <textarea rows={3} value={(qForm.matrixColumns || []).map(c => `${c.label}. ${c.content}`).join('\n')} onChange={e => { const cols = e.target.value.split('\n').map(line => { const d = line.indexOf('.'); return d > -1 ? { label: line.slice(0,d).trim(), content: line.slice(d+1).trim() } : { label: '', content: line.trim() }; }); setQForm({ ...qForm, matrixColumns: cols }); }} />
+                          </div>
+                          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                            <label>Correct Matches (A-P,Q per line)</label>
+                            <textarea rows={3} value={(qForm.correctAnswer || []).join('\n')} onChange={e => setQForm({ ...qForm, correctAnswer: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) })} />
+                          </div>
+                        </>
+                      )}
+                      <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                        <label>Solution / Explanation</label>
+                        <textarea value={qForm.solution} onChange={e => setQForm({ ...qForm, solution: e.target.value })} rows={2} />
+                      </div>
+                      <div className="form-group">
+                        <label>+ve Marks Override</label>
+                        <input type="number" value={qForm.positiveMarks} onChange={e => setQForm({ ...qForm, positiveMarks: e.target.value })} placeholder="Leave blank for section default" />
+                      </div>
+                      <div className="form-group">
+                        <label>-ve Marks Override</label>
+                        <input type="number" value={qForm.negativeMarks} onChange={e => setQForm({ ...qForm, negativeMarks: e.target.value })} placeholder="Leave blank for section default" />
+                      </div>
+                      <div className="form-group">
+                        <label>Difficulty</label>
+                        <select value={qForm.difficulty} onChange={e => setQForm({ ...qForm, difficulty: e.target.value })}>
+                          <option value="easy">Easy</option>
+                          <option value="medium">Medium</option>
+                          <option value="hard">Hard</option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>Tags</label>
+                        <input value={qForm.tags} onChange={e => setQForm({ ...qForm, tags: e.target.value })} placeholder="Kinematics, Projectile" />
+                      </div>
+                    </div>
+                    <button type="submit" className="btn btn-primary" style={{ marginTop: 12 }}>💾 Update Question</button>
+                  </form>
+                )}
               </div>
             ))}
             {questions.length === 0 && <p style={{ textAlign: 'center', padding: 24, opacity: 0.5 }}>No questions yet. Add your first question above.</p>}

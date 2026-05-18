@@ -52,8 +52,19 @@ const testSchema = new mongoose.Schema(
     sections: [
       {
         name: { type: String, required: true },
+        subject: { type: String, enum: ['Physics', 'Chemistry', 'Mathematics', 'Biology', 'General'], default: 'General' },
+        type: { type: String, enum: ['single', 'multiple', 'integer', 'float', 'matrix', 'comprehension', 'mixed'], default: 'mixed' },
         questionCount: { type: Number, required: true },
         maxAttemptable: { type: Number },
+        instructions: { type: String },
+        markingScheme: {
+          correct: { type: Number, default: 4 },
+          incorrect: { type: Number, default: -1 },
+          unattempted: { type: Number, default: 0 },
+          partial: { type: Boolean, default: false },
+          partialMarkPerOption: { type: Number, default: 1 },
+          partialIncorrect: { type: Number, default: -1 },
+        }
       }
     ],
     visibility: {

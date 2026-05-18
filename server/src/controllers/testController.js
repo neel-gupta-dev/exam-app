@@ -400,7 +400,7 @@ export const updateQuestion = asyncHandler(async (req, res) => {
     throw new Error('Question not found');
   }
 
-  const allowed = ['section', 'order', 'type', 'content', 'imageUrl', 'options', 'correctAnswer', 'positiveMarks', 'negativeMarks', 'solution', 'solutionImageUrl', 'tags', 'difficulty'];
+  const allowed = ['section', 'order', 'type', 'content', 'imageUrl', 'contentTable', 'options', 'correctAnswer', 'positiveMarks', 'negativeMarks', 'solution', 'solutionImageUrl', 'tags', 'difficulty', 'matrixRows', 'matrixColumns', 'markingSchemeOverride', 'parentQuestionId'];
   for (const key of allowed) {
     if (req.body[key] !== undefined) question[key] = req.body[key];
   }
