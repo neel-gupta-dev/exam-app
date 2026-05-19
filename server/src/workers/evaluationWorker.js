@@ -81,7 +81,7 @@ const processQueue = async () => {
           const correctSet = new Set((question.correctAnswer || []).map(String));
           const selected   = selectedAnswer.map(String);
 
-          if (question.type === 'single' || question.type === 'integer' || question.type === 'float') {
+          if (question.type === 'single' || question.type === 'integer' || question.type === 'float' || question.type === 'matrix') {
             const exactCorrect = arraysEqual(selected.sort(), [...correctSet].sort());
             if (exactCorrect) {
               totalScore += correctMarks;
@@ -112,37 +112,6 @@ const processQueue = async () => {
               totalScore -= partialIncorr;
               sectionScores[section].wrong++;
               sectionScores[section].score -= partialIncorr;
-            }
-
-          } else if (question.type === 'matrix') {
-            let correctRows = 0;
-            const correctMap = new Map(
-              (question.correctAnswer || []).map(s => {
-                const [row, cols] = s.split('-');
-                return [row, new Set((cols || '').split(',').map(c => c.trim()))];
-              })
-            );
-            for (const sel of selected) {
-              const [row, cols] = sel.split('-');
-              const colSet = new Set((cols || '').split(',').map(c => c.trim()));
-              const expectedCols = correctMap.get(row);
-              if (expectedCols && arraysEqual([...colSet].sort(), [...expectedCols].sort())) {
-                correctRows++;
-              }
-            }
-            if (correctRows === correctMap.size && correctRows > 0) {
-              totalScore += correctMarks;
-              sectionScores[section].correct++;
-              sectionScores[section].score += correctMarks;
-            } else if (isPartial && correctRows > 0) {
-              const partialScore = Math.min(correctRows * partialPerOpt, correctMarks);
-              totalScore += partialScore;
-              sectionScores[section].partial++;
-              sectionScores[section].score += partialScore;
-            } else {
-              totalScore -= incorrectMarks;
-              sectionScores[section].wrong++;
-              sectionScores[section].score -= incorrectMarks;
             }
           }
         } // end for answers

@@ -975,7 +975,7 @@ export default function TestManagement() {
                 </div>
 
                 {/* Options (for MCQ types) */}
-                {(qForm.type === 'single' || qForm.type === 'multiple') && (
+                {(qForm.type === 'single' || qForm.type === 'multiple' || qForm.type === 'matrix') && (
                   <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                     <label>Options</label>
                     {qForm.options.map((opt, idx) => (
@@ -1007,11 +1007,11 @@ export default function TestManagement() {
                         </label>
                         <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
                           <input
-                            type={qForm.type === 'single' ? 'radio' : 'checkbox'}
+                            type={qForm.type === 'single' || qForm.type === 'matrix' ? 'radio' : 'checkbox'}
                             name="correctAnswer"
                             checked={qForm.correctAnswer.includes(opt.label)}
                             onChange={() => {
-                              if (qForm.type === 'single') {
+                              if (qForm.type === 'single' || qForm.type === 'matrix') {
                                 setQForm({ ...qForm, correctAnswer: [opt.label] });
                               } else {
                                 const has = qForm.correctAnswer.includes(opt.label);
@@ -1033,55 +1033,6 @@ export default function TestManagement() {
                     <label>Correct Answer {qForm.type === 'float' ? '(decimal)' : '(integer)'}</label>
                     <input type="number" step={qForm.type === 'float' ? '0.01' : '1'} value={qForm.correctAnswer[0] || ''} onChange={e => setQForm({ ...qForm, correctAnswer: [e.target.value] })} required />
                   </div>
-                )}
-
-                {/* Matrix Match rows/columns */}
-                {qForm.type === 'matrix' && (
-                  <>
-                    <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                      <label>List I — Rows (one per line, format: <code>A. Uniform velocity</code>)</label>
-                      <textarea
-                        rows={4}
-                        value={(qForm.matrixRows || []).map(r => `${r.label}. ${r.content}`).join('\n')}
-                        onChange={e => {
-                          const rows = e.target.value.split('\n').map(line => {
-                            const dotIdx = line.indexOf('.');
-                            return dotIdx > -1
-                              ? { label: line.slice(0, dotIdx).trim(), content: line.slice(dotIdx + 1).trim() }
-                              : { label: '', content: line.trim() };
-                          });
-                          setQForm({ ...qForm, matrixRows: rows });
-                        }}
-                        placeholder={'A. Uniform velocity\nB. Uniform acceleration\nC. Non-uniform acceleration'}
-                      />
-                    </div>
-                    <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                      <label>List II — Columns (one per line, format: <code>P. Motion with constant speed</code>)</label>
-                      <textarea
-                        rows={4}
-                        value={(qForm.matrixColumns || []).map(c => `${c.label}. ${c.content}`).join('\n')}
-                        onChange={e => {
-                          const cols = e.target.value.split('\n').map(line => {
-                            const dotIdx = line.indexOf('.');
-                            return dotIdx > -1
-                              ? { label: line.slice(0, dotIdx).trim(), content: line.slice(dotIdx + 1).trim() }
-                              : { label: '', content: line.trim() };
-                          });
-                          setQForm({ ...qForm, matrixColumns: cols });
-                        }}
-                        placeholder={'P. Motion with constant speed\nQ. v-t graph is a straight line\nR. Acceleration is zero'}
-                      />
-                    </div>
-                    <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                      <label>Correct Answers (one row per line, format: <code>A-P,Q</code>)</label>
-                      <textarea
-                        rows={4}
-                        value={(qForm.correctAnswer || []).join('\n')}
-                        onChange={e => setQForm({ ...qForm, correctAnswer: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) })}
-                        placeholder={'A-P,Q\nB-R\nC-P,R,S\nD-Q,S'}
-                      />
-                    </div>
-                  </>
                 )}
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
@@ -1269,7 +1220,6 @@ export default function TestManagement() {
                       </div>
                     )}
                     {(q.type === 'integer' || q.type === 'float') && <div style={{ fontSize: 13 }}>Answer: <strong style={{ color: '#2ecc71' }}>{q.correctAnswer?.join(', ')}</strong></div>}
-                    {q.type === 'matrix' && q.correctAnswer?.length > 0 && <div style={{ fontSize: 13, opacity: 0.7 }}>Matches: {q.correctAnswer.join(' | ')}</div>}
                     {q.solutionImageUrl && <div style={{ marginTop: 8, fontSize: 12, opacity: 0.75 }}>Solution image: <img src={q.solutionImageUrl} alt="Solution" style={{ maxHeight: 80, maxWidth: 140, marginLeft: 8, border: '1px solid var(--border)', verticalAlign: 'middle' }} /></div>}
                   </div>
                   <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
@@ -1366,7 +1316,7 @@ export default function TestManagement() {
                         </div>
                         {qForm.imageUrl && <img src={qForm.imageUrl} alt="Preview" style={{ maxHeight: 100, maxWidth: '100%', marginTop: 8, border: '1px solid var(--border)' }} />}
                       </div>
-                      {(qForm.type === 'single' || qForm.type === 'multiple') && (
+                      {(qForm.type === 'single' || qForm.type === 'multiple' || qForm.type === 'matrix') && (
                         <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                           <label>Options</label>
                           {qForm.options.map((opt, oidx) => (
@@ -1389,8 +1339,8 @@ export default function TestManagement() {
                                   📊 Table
                                 </button>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', flexShrink: 0 }}>
-                                  <input type={qForm.type === 'single' ? 'radio' : 'checkbox'} name="editCorrectAnswer" checked={qForm.correctAnswer.includes(opt.label)} onChange={() => {
-                                    if (qForm.type === 'single') { setQForm({ ...qForm, correctAnswer: [opt.label] }); }
+                                  <input type={qForm.type === 'single' || qForm.type === 'matrix' ? 'radio' : 'checkbox'} name="editCorrectAnswer" checked={qForm.correctAnswer.includes(opt.label)} onChange={() => {
+                                    if (qForm.type === 'single' || qForm.type === 'matrix') { setQForm({ ...qForm, correctAnswer: [opt.label] }); }
                                     else { const has = qForm.correctAnswer.includes(opt.label); setQForm({ ...qForm, correctAnswer: has ? qForm.correctAnswer.filter(a => a !== opt.label) : [...qForm.correctAnswer, opt.label] }); }
                                   }} /> Correct
                                 </label>
@@ -1412,22 +1362,6 @@ export default function TestManagement() {
                           <label>Correct Answer</label>
                           <input type="number" step={qForm.type === 'float' ? '0.01' : '1'} value={qForm.correctAnswer[0] || ''} onChange={e => setQForm({ ...qForm, correctAnswer: [e.target.value] })} />
                         </div>
-                      )}
-                      {qForm.type === 'matrix' && (
-                        <>
-                          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                            <label>List I Rows (A. text per line)</label>
-                            <textarea rows={3} value={(qForm.matrixRows || []).map(r => `${r.label}. ${r.content}`).join('\n')} onChange={e => { const rows = e.target.value.split('\n').map(line => { const d = line.indexOf('.'); return d > -1 ? { label: line.slice(0, d).trim(), content: line.slice(d + 1).trim() } : { label: '', content: line.trim() }; }); setQForm({ ...qForm, matrixRows: rows }); }} />
-                          </div>
-                          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                            <label>List II Columns (P. text per line)</label>
-                            <textarea rows={3} value={(qForm.matrixColumns || []).map(c => `${c.label}. ${c.content}`).join('\n')} onChange={e => { const cols = e.target.value.split('\n').map(line => { const d = line.indexOf('.'); return d > -1 ? { label: line.slice(0, d).trim(), content: line.slice(d + 1).trim() } : { label: '', content: line.trim() }; }); setQForm({ ...qForm, matrixColumns: cols }); }} />
-                          </div>
-                          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                            <label>Correct Matches (A-P,Q per line)</label>
-                            <textarea rows={3} value={(qForm.correctAnswer || []).join('\n')} onChange={e => setQForm({ ...qForm, correctAnswer: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) })} />
-                          </div>
-                        </>
                       )}
                       <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                         <label>Solution / Explanation</label>
