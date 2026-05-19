@@ -249,11 +249,7 @@ export default function LoginPage({ isDark, onLogin }) {
 
         {/* Footer */}
         <p className={`text-center mt-8 text-xs font-medium ${isDark ? 'text-outline' : 'text-slate-400'}`}>
-          {activeTab === 'scholar' ? (
-            <>Don't have an account? <button onClick={() => {}} className={`cursor-pointer border-none bg-transparent font-bold ${isDark ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-500'}`}>Sign Up</button></>
-          ) : (
-            <>Need an account? Contact your coaching institute admin.</>
-          )}
+          <>Don't have an account? <button onClick={() => {}} className={`cursor-pointer border-none bg-transparent font-bold ${isDark ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-500'}`}>Sign Up</button></>
         </p>
       </div>
     </div>
