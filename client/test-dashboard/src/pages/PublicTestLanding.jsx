@@ -9,7 +9,7 @@ export default function PublicTestLanding({ testId, onLogin }) {
   useEffect(() => {
     const fetchDetails = async () => {
       try {
-        const res = await fetch(`${API_BASE}/tests/${testId}/share-details`);
+        const res = await fetch(`${API_BASE}/tests/share/${testId}`);
         if (!res.ok) {
           const data = await res.json();
           throw new Error(data.message || 'Failed to load test details');

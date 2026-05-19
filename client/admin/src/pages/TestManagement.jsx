@@ -142,11 +142,12 @@ export default function TestManagement() {
   const [previewData, setPreviewData] = useState(null);
   const [questionAnalytics, setQuestionAnalytics] = useState(null);
 
-  const handleCopyShareLink = (testId) => {
+  const handleCopyShareLink = (test) => {
     // Determine student URL based on environment
     const isProd = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1');
     const studentBase = isProd ? 'https://tests.vayl.in' : 'http://localhost:5173';
-    const shareUrl = `${studentBase}/t/${testId}`;
+    const identifier = test.slug || test._id;
+    const shareUrl = `${studentBase}/t/${identifier}`;
     navigator.clipboard.writeText(shareUrl);
     alert(`🔗 Share link copied to clipboard:\n${shareUrl}`);
   };
@@ -522,15 +523,15 @@ export default function TestManagement() {
               ...form,
               title: 'JEE Advanced Practice Test',
               category: 'JEE Advanced',
-              totalMarks: 372,
+              totalMarks: 180,
               durationMinutes: 180,
               defaultPositiveMarks: 3,
               defaultNegativeMarks: 1,
               syllabusText: 'Physics: Mechanics, Waves, Electromagnetism, Modern Physics\nChemistry: Physical, Organic, Inorganic\nMathematics: Algebra, Calculus, Coordinate Geometry, Vectors',
-              instructionGeneralText: 'The test is of 3 hours duration.\nThe test consists of three parts: Physics, Chemistry, and Mathematics.\nEach part has four sections.\nSection 1 contains 6 Single Correct Option questions.\nSection 2 contains 6 Multiple Correct Option questions with partial marking.\nSection 3 contains 6 Numerical Answer questions.\nSection 4 contains 4 Matrix Match questions.',
+              instructionGeneralText: 'The test is of 3 hours duration.\nThe test consists of three parts: Physics, Chemistry, and Mathematics.\nEach part has four sections.\nSection 1 contains 4 Single Correct Option questions.\nSection 2 contains 6 Multiple Correct Option questions with partial marking.\nSection 3 contains 6 Numerical Answer questions.\nSection 4 contains 2 Matrix Match questions.',
               instructionOtherText: 'Make sure your internet connection is stable.\nDo not refresh the page during the exam.',
               instructionDeclaration: 'I have read all the instructions carefully and agree to abide by the rules of the examination.',
-              sectionsText: 'Physics Section 1 (SCQ), 6, null, 3, -1, 0, false, 0, -1\nPhysics Section 2 (MCQ), 6, null, 4, -2, 0, true, 1, -2\nPhysics Section 3 (Numerical), 6, null, 3, 0, 0, false, 0, 0\nPhysics Section 4 (Matrix), 4, null, 3, -1, 0, false, 0, -1\nChemistry Section 1 (SCQ), 6, null, 3, -1, 0, false, 0, -1\nChemistry Section 2 (MCQ), 6, null, 4, -2, 0, true, 1, -2\nChemistry Section 3 (Numerical), 6, null, 3, 0, 0, false, 0, 0\nChemistry Section 4 (Matrix), 4, null, 3, -1, 0, false, 0, -1\nMathematics Section 1 (SCQ), 6, null, 3, -1, 0, false, 0, -1\nMathematics Section 2 (MCQ), 6, null, 4, -2, 0, true, 1, -2\nMathematics Section 3 (Numerical), 6, null, 3, 0, 0, false, 0, 0\nMathematics Section 4 (Matrix), 4, null, 3, -1, 0, false, 0, -1'
+              sectionsText: 'Physics Section 1 (SCQ), 4, null, 3, -1, 0, false, 0, -1\nPhysics Section 2 (MCQ), 6, null, 4, -2, 0, true, 1, -2\nPhysics Section 3 (Numerical), 6, null, 3, 0, 0, false, 0, 0\nPhysics Section 4 (Matrix), 2, null, 3, -1, 0, false, 0, -1\nChemistry Section 1 (SCQ), 4, null, 3, -1, 0, false, 0, -1\nChemistry Section 2 (MCQ), 6, null, 4, -2, 0, true, 1, -2\nChemistry Section 3 (Numerical), 6, null, 3, 0, 0, false, 0, 0\nChemistry Section 4 (Matrix), 2, null, 3, -1, 0, false, 0, -1\nMathematics Section 1 (SCQ), 4, null, 3, -1, 0, false, 0, -1\nMathematics Section 2 (MCQ), 6, null, 4, -2, 0, true, 1, -2\nMathematics Section 3 (Numerical), 6, null, 3, 0, 0, false, 0, 0\nMathematics Section 4 (Matrix), 2, null, 3, -1, 0, false, 0, -1'
             });
             setShowForm(true);
             setEditingTest(null);
@@ -578,14 +579,18 @@ export default function TestManagement() {
                 <label>Total Marks</label>
                 <input type="number" value={form.totalMarks} onChange={e => setForm({ ...form, totalMarks: Number(e.target.value) })} min={1} required />
               </div>
-              <div className="form-group">
-                <label>+ve Marks per Q</label>
-                <input type="number" value={form.defaultPositiveMarks} onChange={e => setForm({ ...form, defaultPositiveMarks: Number(e.target.value) })} min={0} />
-              </div>
-              <div className="form-group">
-                <label>-ve Marks per Q</label>
-                <input type="number" value={form.defaultNegativeMarks} onChange={e => setForm({ ...form, defaultNegativeMarks: Number(e.target.value) })} min={0} />
-              </div>
+              {form.category !== 'JEE Advanced' && (
+                <>
+                  <div className="form-group">
+                    <label>+ve Marks per Q</label>
+                    <input type="number" value={form.defaultPositiveMarks} onChange={e => setForm({ ...form, defaultPositiveMarks: Number(e.target.value) })} min={0} />
+                  </div>
+                  <div className="form-group">
+                    <label>-ve Marks per Q</label>
+                    <input type="number" value={form.defaultNegativeMarks} onChange={e => setForm({ ...form, defaultNegativeMarks: Number(e.target.value) })} min={0} />
+                  </div>
+                </>
+              )}
               <div className="form-group">
                 <label>Scheduled Start</label>
                 <input type="datetime-local" value={form.scheduledStartAt || ''} onChange={e => setForm({ ...form, scheduledStartAt: e.target.value })} />
@@ -754,7 +759,7 @@ export default function TestManagement() {
                       });
                       setShowForm(true);
                     }}>✏️ Edit</button>
-                    <button className="btn btn-sm" onClick={() => handleCopyShareLink(test._id)} title="Copy Share Link">🔗 Share</button>
+                    <button className="btn btn-sm" onClick={() => handleCopyShareLink(test)} title="Copy Share Link">🔗 Share</button>
                     <button className="btn btn-sm btn-danger" onClick={() => handleDeleteTest(test._id)}>🗑</button>
                   </div>
                 </td>

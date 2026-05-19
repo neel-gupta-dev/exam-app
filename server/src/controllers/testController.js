@@ -9,6 +9,19 @@ import { parsePdfBuffer } from '../services/pdfParserService.js';
 import { uploadBufferToCloudinary } from '../utils/cloudinaryUpload.js';
 import MediaAsset from '../models/MediaAsset.js';
 
+// Generate a URL-safe slug from a title, appending a short random suffix for uniqueness
+const generateSlug = (title) => {
+  const base = title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')   // strip special chars
+    .trim()
+    .replace(/\s+/g, '-')           // spaces → hyphens
+    .replace(/-+/g, '-')             // collapse multiple hyphens
+    .slice(0, 60);                   // max 60 chars
+  const suffix = crypto.randomBytes(3).toString('hex'); // 6-char unique suffix
+  return `${base}-${suffix}`;
+};
+
 const normalizeQuestionTypeValue = (value) => {
   const raw = String(value || 'single').trim().toLowerCase();
   if (raw === 'scq') return 'single';
@@ -148,10 +161,13 @@ export const createTest = asyncHandler(async (req, res) => {
     instructions,
   } = req.body;
 
+  const slug = generateSlug(title);
+
   const test = await Test.create({
     title,
     description,
     category,
+    slug,
     testType: testType || 'full',
     durationMinutes,
     totalMarks,
@@ -345,7 +361,7 @@ export const updateTest = asyncHandler(async (req, res) => {
     'sections', 'visibility', 'targetGroups', 'targetTenants',
     'defaultPositiveMarks', 'defaultNegativeMarks',
     'scheduledStartAt', 'scheduledEndAt', 'instructions', 'syllabus',
-    'allowedAttemptCount', 'solutionReleaseMode', 'solutionsReleasedAt',
+    'allowedAttemptCount', 'solutionReleaseMode', 'solutionsReleasedAt', 'slug',
   ];
 
   for (const key of allowed) {
@@ -694,13 +710,19 @@ export const uploadTestImage = asyncHandler(async (req, res) => {
 });
 
 /**
- * @desc    Get public test details for shareable links
- * @route   GET /api/tests/:testId/share-details
+ * @desc    Get public test details for shareable links (by slug or id)
+ * @route   GET /api/tests/share/:slugOrId
  * @access  Public
  */
 export const getShareDetails = asyncHandler(async (req, res) => {
-  const test = await Test.findById(req.params.testId).select(
-    'title description totalMarks durationMinutes category isPublished scheduledStartAt scheduledEndAt sections'
+  const { slugOrId } = req.params;
+
+  // Try slug first, fall back to ObjectId lookup
+  const isObjectId = /^[a-f\d]{24}$/i.test(slugOrId);
+  const query = isObjectId ? { _id: slugOrId } : { slug: slugOrId };
+
+  const test = await Test.findOne(query).select(
+    'title description totalMarks durationMinutes category isPublished scheduledStartAt scheduledEndAt sections slug'
   );
 
   if (!test) {

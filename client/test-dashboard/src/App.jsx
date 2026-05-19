@@ -78,7 +78,7 @@ export default function App() {
   const [sharedTestId, setSharedTestId] = useState(() => {
     if (typeof window === 'undefined') return null;
     const path = window.location.pathname;
-    const match = path.match(/^\/t\/([a-f\d]{24})$/i);
+    const match = path.match(/^\/t\/([^/]+)$/i);
     if (match) return match[1];
     const searchParams = new URLSearchParams(window.location.search);
     const qId = searchParams.get('shared_test_id');

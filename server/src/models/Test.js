@@ -18,6 +18,14 @@ const testSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    slug: {
+      type: String,
+      unique: true,
+      sparse: true,
+      index: true,
+      lowercase: true,
+      trim: true,
+    },
     category: {
       type: String,
       enum: ['JEE Mains', 'JEE Advanced', 'NEET', 'BITSAT', 'CUET', 'Other', 'General'],
