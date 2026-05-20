@@ -5,9 +5,7 @@ import TestEngine from './pages/TestEngine';
 
 export default function TestEngineApp({ user, test, attemptId, attemptToken }) {
   // steps: 'login' -> 'instructions' -> 'test'
-  const [step, setStep] = useState(() => {
-    return (test && test.state === 'in-progress') ? 'test' : 'login';
-  });
+  const [step, setStep] = useState('login');
 
   if (!test?._id) {
     return (

@@ -149,14 +149,21 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
         setTimeLeft(data.session ? data.session.timeLeft : data.test.durationMinutes * 60);
         setPublicIp(data.session?.publicIp || '');
 
-        // Set initial section with safety checks
+        // Set initial section and index with safety checks
+        let initialSection = 'General';
         if (data.test.sections && data.test.sections.length > 0) {
-          setActiveSection(data.test.sections[0].name);
+          initialSection = data.test.sections[0].name;
         } else if (data.questions && data.questions.length > 0) {
           const firstValidSection = data.questions.find(q => q.section)?.section;
-          setActiveSection(firstValidSection || data.questions[0].section || 'General');
-        } else {
-          setActiveSection('General');
+          initialSection = firstValidSection || data.questions[0].section || 'General';
+        }
+        setActiveSection(initialSection);
+
+        if (data.questions && data.questions.length > 0) {
+          const firstQIndex = data.questions.findIndex((q) => q.section === initialSection);
+          if (firstQIndex !== -1) {
+            setCurrentIdx(firstQIndex);
+          }
         }
 
         setLoading(false);

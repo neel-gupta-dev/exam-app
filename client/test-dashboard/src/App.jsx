@@ -351,7 +351,9 @@ export default function App() {
 
   const openTestAttempt = async (test) => {
     if (!test?._id) return;
-    const popup = window.open('about:blank', 'TestEngine', 'width=1024,height=768,fullscreen=yes,toolbar=0,location=0,menubar=0');
+    const width = window.screen.availWidth;
+    const height = window.screen.availHeight;
+    const popup = window.open('about:blank', 'TestEngine', `width=${width},height=${height},left=0,top=0,fullscreen=yes,toolbar=0,location=0,menubar=0`);
     if (!popup) {
       alert('Please allow pop-ups for this site, then start the test again.');
       return;
