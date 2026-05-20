@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import LoginPage from './LoginPage';
 import ForcePasswordChange from './ForcePasswordChange';
 import TestEngineApp from './TestEngineApp';
@@ -21,7 +22,6 @@ const getInitialView = () => {
     return postSubmitView;
   }
   if (localStorage.getItem('shared_test_id')) return 'loading-shared';
-
   const path = window.location.pathname;
   if (/^\/tests\/[^/]+$/i.test(path)) return 'instructions';
   if (path === '/tests') return 'test-series';
@@ -48,6 +48,14 @@ const getExamFromUrl = () => {
   if (typeof window === 'undefined') return 'jee-mains';
   return new URLSearchParams(window.location.search).get('exam') || 'jee-mains';
 };
+
+const navItems = [
+  { view: 'dashboard', icon: 'grid_view', label: 'Dashboard' },
+  { view: 'test-series', icon: 'layers', label: 'Tests' },
+  { view: 'pyp', icon: 'history_edu', label: 'PYP' },
+  { view: 'leaderboard', icon: 'emoji_events', label: 'Ranks' },
+  { view: 'analytics', icon: 'insights', label: 'Analytics' },
+];
 
 export default function App() {
   const searchInputRef = useRef(null);
@@ -88,10 +96,9 @@ export default function App() {
     try {
       const saved = localStorage.getItem('test_user');
       return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
+    } catch { return null; }
   });
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const navigateTo = useCallback((nextView, options = {}) => {
     const nextPath = getPathForView(nextView, options.test);
@@ -100,18 +107,12 @@ export default function App() {
     else params.delete('exam');
     const search = params.toString();
     window.history.pushState(null, '', `${nextPath}${search ? `?${search}` : ''}`);
-
     setView(nextView);
     if (nextView !== 'instructions') setSelectedTest(null);
-    if (nextView !== 'leaderboard') {
-      setSelectedLeaderboardTest(null);
-      setLeaderboardData(null);
-    }
-    if (nextView !== 'review') {
-      setReviewData(null);
-      setSelectedReviewAttemptId(null);
-    }
+    if (nextView !== 'leaderboard') { setSelectedLeaderboardTest(null); setLeaderboardData(null); }
+    if (nextView !== 'review') { setReviewData(null); setSelectedReviewAttemptId(null); }
     setSearchQuery('');
+    setMobileNavOpen(false);
   }, [examFilter]);
 
   const showDashboard = () => navigateTo('dashboard');
@@ -145,12 +146,10 @@ export default function App() {
       else if (path === '/leaderboard') nextView = 'leaderboard';
       else if (path === '/settings') nextView = 'settings';
       else if (path === '/support') nextView = 'support';
-
       setExamFilter(nextExam);
       setView(nextView);
       if (nextView !== 'instructions') setSelectedTest(null);
     };
-
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
@@ -166,19 +165,12 @@ export default function App() {
   useEffect(() => {
     const shouldLoadTests = user && ['dashboard', 'test-series', 'pyp', 'instructions', 'leaderboard'].includes(view);
     if (!shouldLoadTests) return;
-
     setLoadingTests(true);
-    fetch(`${API_BASE}/tests`, {
-      headers: { Authorization: `Bearer ${user.token}` },
-    })
+    fetch(`${API_BASE}/tests`, { headers: { Authorization: `Bearer ${user.token}` } })
       .then(async (res) => {
         const text = await res.text();
         let data;
-        try {
-          data = text ? JSON.parse(text) : [];
-        } catch {
-          throw new Error(text || 'Invalid tests response');
-        }
+        try { data = text ? JSON.parse(text) : []; } catch { throw new Error(text || 'Invalid tests response'); }
         if (!res.ok) throw new Error(data.message || 'Failed to load tests');
         if (!Array.isArray(data)) throw new Error('Invalid tests response');
         return data;
@@ -199,20 +191,13 @@ export default function App() {
   useEffect(() => {
     const shouldLoadResults = user && ['analytics', 'dashboard', 'test-series', 'pyp', 'leaderboard'].includes(view);
     if (!shouldLoadResults) return;
-
     setLoadingResults(true);
     setResultsError('');
-    fetch(`${API_BASE}/assessment/results`, {
-      headers: { Authorization: `Bearer ${user.token}` },
-    })
+    fetch(`${API_BASE}/assessment/results`, { headers: { Authorization: `Bearer ${user.token}` } })
       .then(async (res) => {
         const text = await res.text();
         let data;
-        try {
-          data = text ? JSON.parse(text) : [];
-        } catch {
-          throw new Error(text || 'Invalid results response');
-        }
+        try { data = text ? JSON.parse(text) : []; } catch { throw new Error(text || 'Invalid results response'); }
         if (!res.ok) throw new Error(data.message || 'Failed to load results');
         return Array.isArray(data) ? data : [];
       })
@@ -223,20 +208,13 @@ export default function App() {
 
   useEffect(() => {
     if (!user || view !== 'leaderboard' || !selectedLeaderboardTest?._id) return;
-
     setLoadingLeaderboard(true);
     setLeaderboardError('');
-    fetch(`${API_BASE}/assessment/${selectedLeaderboardTest._id}/leaderboard`, {
-      headers: { Authorization: `Bearer ${user.token}` },
-    })
+    fetch(`${API_BASE}/assessment/${selectedLeaderboardTest._id}/leaderboard`, { headers: { Authorization: `Bearer ${user.token}` } })
       .then(async (res) => {
         const text = await res.text();
         let data;
-        try {
-          data = text ? JSON.parse(text) : null;
-        } catch {
-          throw new Error('Invalid response');
-        }
+        try { data = text ? JSON.parse(text) : null; } catch { throw new Error('Invalid response'); }
         if (!res.ok) throw new Error(data?.message || 'Failed to fetch leaderboard');
         return data;
       })
@@ -247,10 +225,7 @@ export default function App() {
 
   useEffect(() => {
     if (!user || !sharedTestId) return;
-
-    fetch(`${API_BASE}/tests`, {
-      headers: { Authorization: `Bearer ${user.token}` },
-    })
+    fetch(`${API_BASE}/tests`, { headers: { Authorization: `Bearer ${user.token}` } })
       .then((res) => res.json())
       .then((data) => {
         if (!Array.isArray(data)) return;
@@ -266,20 +241,13 @@ export default function App() {
 
   useEffect(() => {
     if (!user || view !== 'review' || !selectedReviewAttemptId) return;
-
     setLoadingReview(true);
     setReviewError('');
-    fetch(`${API_BASE}/assessment/attempts/${selectedReviewAttemptId}/review`, {
-      headers: { Authorization: `Bearer ${user.token}` },
-    })
+    fetch(`${API_BASE}/assessment/attempts/${selectedReviewAttemptId}/review`, { headers: { Authorization: `Bearer ${user.token}` } })
       .then(async (res) => {
         const text = await res.text();
         let data;
-        try {
-          data = text ? JSON.parse(text) : null;
-        } catch {
-          throw new Error('Invalid response');
-        }
+        try { data = text ? JSON.parse(text) : null; } catch { throw new Error('Invalid response'); }
         if (!res.ok) throw new Error(data?.message || 'Failed to fetch review data');
         return data;
       })
@@ -304,7 +272,6 @@ export default function App() {
         openAnalytics();
       }
     };
-
     window.addEventListener('message', handleAttemptMessage);
     window.addEventListener('storage', handleStorage);
     return () => {
@@ -318,14 +285,8 @@ export default function App() {
     if (!hash.startsWith('#token=')) return;
     const token = hash.split('=')[1];
     window.history.replaceState(null, '', window.location.pathname);
-
-    fetch(`${API_BASE}/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error('Token verification failed');
-        return res.json();
-      })
+    fetch(`${API_BASE}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => { if (!res.ok) throw new Error('Token verification failed'); return res.json(); })
       .then((data) => handleLogin({ ...data, token }))
       .catch((err) => console.error('OAuth Login Error:', err));
   }, []);
@@ -354,11 +315,7 @@ export default function App() {
     const width = window.screen.availWidth;
     const height = window.screen.availHeight;
     const popup = window.open('about:blank', 'TestEngine', `width=${width},height=${height},left=0,top=0,fullscreen=yes,toolbar=0,location=0,menubar=0`);
-    if (!popup) {
-      alert('Please allow pop-ups for this site, then start the test again.');
-      return;
-    }
-
+    if (!popup) { alert('Please allow pop-ups for this site, then start the test again.'); return; }
     try {
       popup.document.write('<div style="font-family:Arial,sans-serif;padding:32px">Preparing secure test session...</div>');
       const res = await fetch(`${API_BASE}/assessment/${test._id}/attempts/start`, {
@@ -367,13 +324,8 @@ export default function App() {
       });
       const text = await res.text();
       let data = {};
-      try {
-        data = text ? JSON.parse(text) : {};
-      } catch {
-        data = { message: text };
-      }
+      try { data = text ? JSON.parse(text) : {}; } catch { data = { message: text }; }
       if (!res.ok) throw new Error(data.message || 'Failed to create test attempt');
-
       localStorage.setItem('current_test', JSON.stringify({ ...test, state: 'in-progress' }));
       popup.location.href = `${window.location.origin}?attempt=true&attemptId=${encodeURIComponent(data.attemptId)}&attemptToken=${encodeURIComponent(data.attemptToken)}`;
       setResultsRefreshKey((key) => key + 1);
@@ -406,20 +358,8 @@ export default function App() {
 
   if (isAttemptMode && user) {
     let currentTest = null;
-    try {
-      currentTest = JSON.parse(localStorage.getItem('current_test'));
-    } catch {
-      currentTest = null;
-    }
-
-    return (
-      <TestEngineApp
-        user={user}
-        test={currentTest}
-        attemptId={attemptId}
-        attemptToken={attemptToken}
-      />
-    );
+    try { currentTest = JSON.parse(localStorage.getItem('current_test')); } catch { currentTest = null; }
+    return <TestEngineApp user={user} test={currentTest} attemptId={attemptId} attemptToken={attemptToken} />;
   }
 
   if (!user) {
@@ -438,23 +378,13 @@ export default function App() {
   }
 
   if (user.hasChangedPassword === false) {
-    return (
-      <ForcePasswordChange
-        user={user}
-        onPasswordChanged={() => handleLogin({ ...user, hasChangedPassword: true })}
-        onLogout={handleLogout}
-      />
-    );
+    return <ForcePasswordChange user={user} onPasswordChanged={() => handleLogin({ ...user, hasChangedPassword: true })} onLogout={handleLogout} />;
   }
 
   const normalizedSearch = searchQuery.trim().toLowerCase();
   const matchesCategory = (test) => {
-    if (view === 'pyp') {
-      if (test.testType !== 'pyp') return false;
-    } else if (test.testType === 'pyp') {
-      return false;
-    }
-
+    if (view === 'pyp') { if (test.testType !== 'pyp') return false; }
+    else if (test.testType === 'pyp') { return false; }
     if (examFilter !== 'all') {
       const category = (test.category || '').toLowerCase();
       const title = (test.title || '').toLowerCase();
@@ -462,179 +392,53 @@ export default function App() {
       if (examFilter === 'jee-adv' && !category.includes('adv') && !title.includes('adv')) return false;
       if (examFilter === 'neet' && !category.includes('neet') && !title.includes('neet')) return false;
     }
-
     if (view !== 'pyp') {
       const type = test.testType || 'full';
       if (activeCategory === 'full') return type === 'full';
       if (activeCategory === 'part') return type === 'part';
     }
-
     return true;
   };
 
   const filteredTests = tests.filter((test) => {
     if (!matchesCategory(test)) return false;
     if (!normalizedSearch) return true;
-    const haystack = [
-      test.title,
-      test.category,
-      test.status,
-      ...(test.sections?.map((section) => section.name) || []),
-      ...(test.syllabus || []),
-    ].filter(Boolean).join(' ').toLowerCase();
+    const haystack = [test.title, test.category, test.status, ...(test.sections?.map((s) => s.name) || []), ...(test.syllabus || [])].filter(Boolean).join(' ').toLowerCase();
     return haystack.includes(normalizedSearch);
   });
 
-  const completedResults = results.filter((result) => result.status === 'completed' || result.status === 'auto-submitted');
+  const completedResults = results.filter((r) => r.status === 'completed' || r.status === 'auto-submitted');
   const sortedResults = [...completedResults].sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
-  const givenCount = tests.filter((test) => test.state === 'completed' || test.state === 'evaluating').length;
-  const missedCount = tests.filter((test) => test.state === 'missed').length;
-  const ongoingCount = tests.filter((test) => test.state === 'in-progress').length;
-  const upcomingCount = tests.filter((test) => test.state === 'upcoming').length;
-  const bestResult = completedResults.reduce((best, result) => {
-    if (!best) return result;
-    return (result.percentage || 0) > (best.percentage || 0) ? result : best;
-  }, null);
-  const averagePercentage = completedResults.length
-    ? Math.round(completedResults.reduce((sum, result) => sum + (result.percentage || 0), 0) / completedResults.length)
-    : 0;
+  const givenCount = tests.filter((t) => t.state === 'completed' || t.state === 'evaluating').length;
+  const missedCount = tests.filter((t) => t.state === 'missed').length;
+  const ongoingCount = tests.filter((t) => t.state === 'in-progress').length;
+  const upcomingCount = tests.filter((t) => t.state === 'upcoming').length;
+  const bestResult = completedResults.reduce((best, r) => (!best ? r : (r.percentage || 0) > (best.percentage || 0) ? r : best), null);
+  const averagePercentage = completedResults.length ? Math.round(completedResults.reduce((sum, r) => sum + (r.percentage || 0), 0) / completedResults.length) : 0;
   const latestResult = sortedResults[0] || null;
   const trendResults = sortedResults.slice(0, 8).reverse();
   const latestSectionEntries = Object.entries(latestResult?.sectionScores || {});
   const latestTopicEntries = Object.entries(latestResult?.topicPerformance || {});
   const latestTelemetryQuestions = latestResult?.telemetry?.questions || [];
-  const maxQuestionTime = Math.max(1, ...latestTelemetryQuestions.map((question) => question.timeSpentSeconds || 0));
-
-  const navItems = [
-    ['dashboard', 'dashboard', 'Dashboard', showDashboard],
-    ['test-series', 'layers', 'Tests', showTestSeries],
-    ['pyp', 'history_edu', 'PYP', () => navigateTo('pyp')],
-    ['leaderboard', 'emoji_events', 'Ranks', () => navigateTo('leaderboard')],
-    ['analytics', 'insights', 'Analytics', () => navigateTo('analytics')],
-  ];
+  const maxQuestionTime = Math.max(1, ...latestTelemetryQuestions.map((q) => q.timeSpentSeconds || 0));
 
   const renderContent = () => {
-    if (view === 'dashboard') {
-      return (
-        <DashboardHome
-          user={user}
-          loading={loadingTests || loadingResults}
-          tests={tests}
-          completedResults={completedResults}
-          givenCount={givenCount}
-          ongoingCount={ongoingCount}
-          upcomingCount={upcomingCount}
-          missedCount={missedCount}
-          averagePercentage={averagePercentage}
-          bestResult={bestResult}
-          latestResult={latestResult}
-          trendResults={trendResults}
-          onOpenTests={showTestSeries}
-          onOpenAnalytics={() => navigateTo('analytics')}
-        />
-      );
-    }
-
-    if (view === 'test-series' || view === 'pyp') {
-      return (
-        <TestsPage
-          mode={view === 'pyp' ? 'pyp' : 'tests'}
-          tests={filteredTests}
-          loading={loadingTests}
-          searchQuery={searchQuery}
-          activeCategory={activeCategory}
-          onCategoryChange={setActiveCategory}
-          examFilter={examFilter}
-          onExamFilterChange={handleExamFilterChange}
-          showExamHint={showExamHint}
-          onDismissExamHint={dismissExamHint}
-          completedResults={completedResults}
-          averagePercentage={averagePercentage}
-          bestResult={bestResult}
-          onSelectTest={openTestDetails}
-          onOpenAnalytics={() => navigateTo('analytics')}
-        />
-      );
-    }
-
+    if (view === 'dashboard') return <DashboardHome user={user} loading={loadingTests || loadingResults} tests={tests} completedResults={completedResults} givenCount={givenCount} ongoingCount={ongoingCount} upcomingCount={upcomingCount} missedCount={missedCount} averagePercentage={averagePercentage} bestResult={bestResult} latestResult={latestResult} trendResults={trendResults} onOpenTests={showTestSeries} onOpenAnalytics={() => navigateTo('analytics')} />;
+    if (view === 'test-series' || view === 'pyp') return <TestsPage mode={view === 'pyp' ? 'pyp' : 'tests'} tests={filteredTests} loading={loadingTests} searchQuery={searchQuery} activeCategory={activeCategory} onCategoryChange={setActiveCategory} examFilter={examFilter} onExamFilterChange={handleExamFilterChange} showExamHint={showExamHint} onDismissExamHint={dismissExamHint} completedResults={completedResults} averagePercentage={averagePercentage} bestResult={bestResult} onSelectTest={openTestDetails} onOpenAnalytics={() => navigateTo('analytics')} />;
     if (view === 'instructions') {
-      if (!selectedTest) {
-        return (
-          <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-            <span className="material-symbols-outlined animate-spin text-4xl text-indigo-500">sync</span>
-            <p className="mt-3 font-semibold text-slate-500">Loading test instructions...</p>
+      if (!selectedTest) return (
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto" />
+            <p className="mt-4 text-sm font-semibold text-slate-500">Loading test instructions...</p>
           </div>
-        );
-      }
-      return (
-        <InstructionsPage
-          test={selectedTest}
-          onBack={showTestSeries}
-          onStart={() => openTestAttempt(selectedTest)}
-          onReview={() => openReview(selectedTest.latestAttemptId)}
-        />
+        </div>
       );
+      return <InstructionsPage test={selectedTest} onBack={showTestSeries} onStart={() => openTestAttempt(selectedTest)} onReview={() => openReview(selectedTest.latestAttemptId)} />;
     }
-
-    if (view === 'review') {
-      return (
-        <ReviewPage
-          user={user}
-          attemptId={selectedReviewAttemptId}
-          loading={loadingReview}
-          error={reviewError}
-          reviewData={reviewData}
-          onBack={() => {
-            setReviewData(null);
-            setSelectedReviewAttemptId(null);
-            navigateTo('test-series');
-          }}
-        />
-      );
-    }
-
-    if (view === 'leaderboard') {
-      return (
-        <LeaderboardPage
-          completedResults={completedResults}
-          loadingResults={loadingResults}
-          selectedTest={selectedLeaderboardTest}
-          leaderboardData={leaderboardData}
-          loadingLeaderboard={loadingLeaderboard}
-          leaderboardError={leaderboardError}
-          onSelectTest={(test) => {
-            setSelectedLeaderboardTest(test);
-            setLeaderboardData(null);
-          }}
-          onBack={() => {
-            setSelectedLeaderboardTest(null);
-            setLeaderboardData(null);
-          }}
-          onOpenTests={showTestSeries}
-        />
-      );
-    }
-
-    if (view === 'analytics') {
-      return (
-        <AnalyticsPage
-          loading={loadingResults}
-          error={resultsError}
-          results={results}
-          completedResults={completedResults}
-          averagePercentage={averagePercentage}
-          bestResult={bestResult}
-          latestResult={latestResult}
-          trendResults={trendResults}
-          latestSectionEntries={latestSectionEntries}
-          latestTopicEntries={latestTopicEntries}
-          latestTelemetryQuestions={latestTelemetryQuestions}
-          maxQuestionTime={maxQuestionTime}
-          onReview={openReview}
-        />
-      );
-    }
-
+    if (view === 'review') return <ReviewPage user={user} attemptId={selectedReviewAttemptId} loading={loadingReview} error={reviewError} reviewData={reviewData} onBack={() => { setReviewData(null); setSelectedReviewAttemptId(null); navigateTo('test-series'); }} />;
+    if (view === 'leaderboard') return <LeaderboardPage completedResults={completedResults} loadingResults={loadingResults} selectedTest={selectedLeaderboardTest} leaderboardData={leaderboardData} loadingLeaderboard={loadingLeaderboard} leaderboardError={leaderboardError} onSelectTest={(test) => { setSelectedLeaderboardTest(test); setLeaderboardData(null); }} onBack={() => { setSelectedLeaderboardTest(null); setLeaderboardData(null); }} onOpenTests={showTestSeries} />;
+    if (view === 'analytics') return <AnalyticsPage loading={loadingResults} error={resultsError} results={results} completedResults={completedResults} averagePercentage={averagePercentage} bestResult={bestResult} latestResult={latestResult} trendResults={trendResults} latestSectionEntries={latestSectionEntries} latestTopicEntries={latestTopicEntries} latestTelemetryQuestions={latestTelemetryQuestions} maxQuestionTime={maxQuestionTime} onReview={openReview} />;
     if (view === 'settings') return <SettingsPage user={user} onLogout={handleLogout} />;
     if (view === 'support') return <SupportPage />;
     return null;
@@ -643,123 +447,150 @@ export default function App() {
   if (view === 'loading-shared') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-          <span className="material-symbols-outlined animate-spin text-4xl text-indigo-500">sync</span>
-          <h1 className="mt-3 text-2xl font-black text-slate-950">Preparing Assessment</h1>
-          <p className="mt-2 text-sm font-bold uppercase tracking-widest text-indigo-600">Setting up your test environment...</p>
-        </div>
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="rounded-3xl bg-white border border-slate-200 shadow-xl p-12 text-center">
+          <div className="w-14 h-14 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto" />
+          <h1 className="mt-5 text-2xl font-black text-slate-900 font-headline">Preparing Assessment</h1>
+          <p className="mt-2 text-sm font-semibold text-indigo-600 uppercase tracking-widest">Setting up your test environment...</p>
+        </motion.div>
       </div>
     );
   }
 
+  const userInitial = user.name?.charAt(0).toUpperCase() || 'S';
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <aside className="fixed bottom-0 left-0 z-50 flex h-16 w-full flex-row border-t border-slate-200 bg-white/95 px-2 py-1 shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.05)] backdrop-blur-md lg:top-0 lg:h-screen lg:w-64 lg:flex-col lg:border-r lg:border-t-0 lg:px-4 lg:py-6 lg:shadow-sm">
-        <div className="mb-8 hidden px-3 lg:block">
+      {/* Sidebar */}
+      <aside className="fixed bottom-0 left-0 z-50 flex h-16 w-full flex-row border-t border-slate-200 bg-white/90 px-2 py-1 backdrop-blur-xl shadow-[0_-4px_24px_rgba(0,0,0,0.06)] lg:top-0 lg:h-screen lg:w-64 lg:flex-col lg:border-r lg:border-t-0 lg:px-4 lg:py-6 lg:shadow-none">
+        {/* Logo */}
+        <div className="mb-8 hidden px-2 lg:block">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-sm font-black text-white">V</div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl overflow-hidden bg-white shadow-md border border-slate-100">
+              <img src="/vayl-logo.png" alt="Vayl" className="h-8 w-8 object-contain" />
+            </div>
             <div>
-              <p className="text-sm font-black uppercase tracking-widest text-slate-950">Vayl</p>
-              <p className="text-xs font-bold text-slate-400">CBT Platform</p>
+              <p className="text-sm font-black uppercase tracking-widest text-slate-900">Vayl</p>
+              <p className="text-[11px] font-semibold text-slate-400">CBT Platform</p>
             </div>
           </div>
         </div>
 
-        <nav className="flex h-full w-full items-center justify-around gap-1 lg:h-auto lg:flex-1 lg:flex-col lg:items-stretch lg:justify-start">
-          {navItems.map(([itemView, icon, label, action]) => {
+        {/* Nav */}
+        <nav className="flex h-full w-full items-center justify-around gap-1 lg:h-auto lg:flex-1 lg:flex-col lg:items-stretch lg:justify-start lg:gap-0.5">
+          {navItems.map(({ view: itemView, icon, label }) => {
             const active = view === itemView || (itemView === 'test-series' && view === 'instructions');
+            const action = itemView === 'dashboard' ? showDashboard : itemView === 'test-series' ? showTestSeries : () => navigateTo(itemView);
             return (
-              <button
+              <motion.button
                 key={itemView}
                 onClick={action}
-                className={`flex flex-1 flex-col items-center justify-center rounded-xl border-none bg-transparent px-1 py-1 transition lg:flex-initial lg:flex-row lg:justify-start lg:px-3 lg:py-3 ${
-                  active ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
-                }`}
+                whileHover={{ x: 2 }}
+                whileTap={{ scale: 0.97 }}
+                className={`relative flex flex-1 flex-col items-center justify-center rounded-2xl px-1 py-1.5 transition-all lg:flex-initial lg:flex-row lg:justify-start lg:px-3 lg:py-2.5 lg:gap-3 ${active ? 'bg-indigo-50 text-indigo-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'}`}
               >
-                <span className="material-symbols-outlined mb-0.5 text-[22px] lg:mb-0 lg:mr-3 lg:text-2xl">{icon}</span>
-                <span className="text-[9px] font-extrabold tracking-tight lg:text-sm lg:font-bold">{label}</span>
-              </button>
+                {active && (
+                  <motion.div
+                    layoutId="nav-indicator"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 hidden lg:block w-1 h-6 bg-indigo-600 rounded-r-full"
+                  />
+                )}
+                <span className={`material-symbols-outlined text-[22px] lg:text-xl ${active ? 'text-indigo-600' : ''}`} style={{ fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}>{icon}</span>
+                <span className={`text-[9px] font-bold tracking-tight lg:text-[13px] lg:font-semibold ${active ? 'text-indigo-700' : ''}`}>{label}</span>
+              </motion.button>
             );
           })}
         </nav>
 
-        <div className="hidden space-y-1 border-t border-slate-200 pt-5 lg:block">
-          {[
-            ['settings', 'settings', 'Settings'],
-            ['support', 'help_outline', 'Support'],
-          ].map(([itemView, icon, label]) => (
-            <button
+        {/* Bottom section */}
+        <div className="hidden space-y-0.5 border-t border-slate-100 pt-4 lg:block">
+          {[['settings', 'settings', 'Settings'], ['support', 'help_outline', 'Support']].map(([itemView, icon, label]) => (
+            <motion.button
               key={itemView}
               onClick={() => navigateTo(itemView)}
-              className={`flex w-full items-center rounded-xl border-none bg-transparent px-3 py-3 transition ${
-                view === itemView ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
-              }`}
+              whileHover={{ x: 2 }}
+              className={`flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-[13px] font-semibold transition ${view === itemView ? 'bg-indigo-50 text-indigo-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'}`}
             >
-              <span className="material-symbols-outlined mr-3">{icon}</span>
-              <span className="text-sm font-bold">{label}</span>
-            </button>
+              <span className="material-symbols-outlined text-xl">{icon}</span>
+              {label}
+            </motion.button>
           ))}
 
-          {user.levelData && (
-            <div className="mt-4 rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-indigo-700">Level {user.levelData.currentLevel}</span>
-                <span className="text-xs font-bold text-indigo-500">{user.levelData.totalXP} XP</span>
-              </div>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-indigo-100">
-                <div className="h-full rounded-full bg-indigo-600" style={{ width: `${Math.min(100, user.levelData.progressToNext || 0)}%` }} />
-              </div>
-            </div>
-          )}
 
-          <div className="mt-5 flex items-center justify-between px-2">
-            <div className="flex min-w-0 items-center">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-50 text-sm font-black text-indigo-700">
-                {user.profilePic ? <img src={user.profilePic} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" /> : user.name?.charAt(0).toUpperCase() || 'S'}
+
+          {/* User card */}
+          <div className="mt-3 flex items-center justify-between rounded-2xl px-2 py-2 hover:bg-slate-50 transition">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 text-sm font-black text-indigo-700 ring-2 ring-white ring-offset-1">
+                {user.profilePicture || user.profilePic ? (
+                  <img src={user.profilePicture || user.profilePic} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+                ) : userInitial}
               </div>
-              <div className="ml-3 min-w-0">
-                <p className="truncate text-xs font-black text-slate-900">{user.name || user.username}</p>
-                <p className="truncate text-[10px] font-semibold text-slate-400">{user.authMethod === 'b2b' ? user.tenantId?.name || 'Coaching Member' : 'Student'}</p>
+              <div className="min-w-0">
+                <p className="truncate text-xs font-bold text-slate-900">{user.name || user.username}</p>
+                <p className="truncate text-[10px] text-slate-400">{user.authMethod === 'b2b' ? user.tenantId?.name || 'Coaching Member' : 'Student'}</p>
               </div>
             </div>
-            <button onClick={handleLogout} title="Logout" className="rounded-xl border-none bg-transparent p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-950">
+            <motion.button
+              onClick={handleLogout}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              title="Logout"
+              className="rounded-xl p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition"
+            >
               <span className="material-symbols-outlined text-lg">logout</span>
-            </button>
+            </motion.button>
           </div>
         </div>
       </aside>
 
-      <header className="fixed right-0 top-0 z-40 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white/90 px-4 backdrop-blur-xl lg:w-[calc(100%-16rem)] lg:px-8">
-        <div className="mr-2 flex shrink-0 items-center gap-2 lg:hidden">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-950 text-xs font-black text-white">V</div>
+      {/* Top header */}
+      <header className="fixed right-0 top-0 z-40 flex h-16 w-full items-center justify-between border-b border-slate-200/80 bg-white/80 px-4 backdrop-blur-xl lg:w-[calc(100%-16rem)] lg:px-8">
+        <div className="mr-3 flex shrink-0 items-center gap-2 lg:hidden">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl overflow-hidden bg-white border border-slate-200 shadow-sm">
+              <img src="/vayl-logo.png" alt="Vayl" className="h-6 w-6 object-contain" />
+            </div>
         </div>
-        <div className="mr-2 flex max-w-md flex-1 items-center rounded-2xl bg-slate-100 px-3 transition focus-within:ring-4 focus-within:ring-indigo-100">
-          <span className="material-symbols-outlined shrink-0 text-xl text-slate-500">search</span>
+
+        <div className="mr-3 flex flex-1 max-w-md items-center gap-2.5 rounded-2xl bg-slate-100 px-3 py-2 transition focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-300 focus-within:shadow-md">
+          <span className="material-symbols-outlined shrink-0 text-[18px] text-slate-400">search</span>
           <input
             ref={searchInputRef}
-            className="flex-1 border-none bg-transparent px-2 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400"
-            placeholder="Search tests, topics, or results..."
+            className="flex-1 border-none bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
+            placeholder="Search tests, topics..."
             type="text"
             value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            onFocus={() => {
-              if (view !== 'test-series' && view !== 'pyp') showTestSeries();
-            }}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => { if (view !== 'test-series' && view !== 'pyp') showTestSeries(); }}
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="mr-1 rounded-full border-none bg-transparent p-1 text-slate-500 hover:text-slate-800">
-              <span className="material-symbols-outlined text-base">close</span>
+            <button onClick={() => setSearchQuery('')} className="text-slate-400 hover:text-slate-700 transition">
+              <span className="material-symbols-outlined text-[16px]">close</span>
             </button>
           )}
-          <span className="hidden rounded bg-white px-1.5 py-0.5 text-[10px] font-black text-slate-400 md:block">{osKey} K</span>
+          <span className="hidden rounded-lg bg-white border border-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-400 md:block">{osKey} K</span>
         </div>
-        <div className="hidden text-right sm:block">
-          <p className="text-xs font-black uppercase tracking-wider text-slate-900">The Focused Scholar</p>
+
+        <div className="hidden items-center gap-3 sm:flex">
+          <div className="text-right">
+            <p className="text-xs font-black uppercase tracking-wider text-slate-700">The Focused Scholar</p>
+            <p className="text-[10px] text-slate-400">Powered by Vayl</p>
+          </div>
         </div>
       </header>
 
-      <main className="min-h-screen px-4 pb-24 pt-20 md:px-8 lg:ml-64 lg:px-10 lg:pb-16 lg:pt-24">
-        {renderContent()}
+      {/* Main */}
+      <main className="min-h-screen px-4 pb-24 pt-20 md:px-6 lg:ml-64 lg:px-8 lg:pb-10 lg:pt-24">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={view}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+          >
+            {renderContent()}
+          </motion.div>
+        </AnimatePresence>
       </main>
     </div>
   );

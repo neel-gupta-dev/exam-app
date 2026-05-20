@@ -1,8 +1,19 @@
+import { motion } from 'framer-motion';
+
 const formatDuration = (seconds = 0) => {
   const total = Math.max(0, Math.round(Number(seconds) || 0));
   const mins = Math.floor(total / 60);
   const secs = total % 60;
   return mins ? `${mins}m ${secs}s` : `${secs}s`;
+};
+
+const container = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
+};
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35 } },
 };
 
 export default function AnalyticsPage({
@@ -20,209 +31,271 @@ export default function AnalyticsPage({
   maxQuestionTime = 1,
   onReview,
 }) {
-  const trendPath = trendResults.map((result, idx) => {
+  const trendPoints = trendResults.map((r, idx) => {
     const x = trendResults.length <= 1 ? 50 : (idx / (trendResults.length - 1)) * 100;
-    const y = 100 - Math.max(0, Math.min(100, Number(result.percentage) || 0));
-    return `${x},${y}`;
-  }).join(' ');
-  const totalTrackedSeconds = completedResults.reduce((sum, result) => sum + (result.telemetry?.totalTimeSpentSeconds || 0), 0);
-  const totalVisits = completedResults.reduce((sum, result) => sum + (result.telemetry?.totalVisits || 0), 0);
-  const totalChanges = completedResults.reduce((sum, result) => sum + (result.telemetry?.totalAnswerChanges || 0), 0);
-  const highTimeQuestions = [...latestTelemetryQuestions]
-    .sort((a, b) => (b.timeSpentSeconds || 0) - (a.timeSpentSeconds || 0))
-    .slice(0, 6);
+    const y = 100 - Math.max(0, Math.min(100, Number(r.percentage) || 0));
+    return [x, y];
+  });
+
+  const generateSmoothPath = (pts) => {
+    if (pts.length === 0) return '';
+    if (pts.length === 1) return `M ${pts[0][0]},${pts[0][1]}`;
+    let d = `M ${pts[0][0]},${pts[0][1]}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const cp1x = p1[0] + (p2[0] - p1[0]) / 2;
+      const cp2x = p1[0] + (p2[0] - p1[0]) / 2;
+      d += ` C ${cp1x},${p1[1]} ${cp2x},${p2[1]} ${p2[0]},${p2[1]}`;
+    }
+    return d;
+  };
+
+  const smoothPathLine = generateSmoothPath(trendPoints);
+  const smoothPathFill = `${smoothPathLine} L 100,100 L 0,100 Z`;
+
+  const totalTrackedSeconds = completedResults.reduce((sum, r) => sum + (r.telemetry?.totalTimeSpentSeconds || 0), 0);
+  const totalVisits = completedResults.reduce((sum, r) => sum + (r.telemetry?.totalVisits || 0), 0);
+  const totalChanges = completedResults.reduce((sum, r) => sum + (r.telemetry?.totalAnswerChanges || 0), 0);
+  const highTimeQuestions = [...latestTelemetryQuestions].sort((a, b) => (b.timeSpentSeconds || 0) - (a.timeSpentSeconds || 0)).slice(0, 6);
 
   if (loading) {
     return (
-      <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-        <span className="material-symbols-outlined animate-spin text-4xl text-indigo-500">sync</span>
-        <p className="mt-3 font-semibold text-slate-500">Loading analytics...</p>
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin mx-auto" />
+          <p className="mt-4 text-sm font-semibold text-slate-400">Loading analytics...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
-    return <div className="rounded-3xl border border-red-100 bg-red-50 p-6 font-semibold text-red-600">{error}</div>;
-  }
-
-  if (!results.length) {
     return (
-      <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
-        <span className="material-symbols-outlined text-5xl text-slate-300">analytics</span>
-        <h2 className="mt-3 text-2xl font-black text-slate-950">No Results Yet</h2>
-        <p className="mt-2 text-slate-500">Submit a CBT test to unlock score, timing, topic, and review analytics.</p>
+      <div className="rounded-3xl border border-red-100 bg-red-50 p-6">
+        <div className="flex items-center gap-3">
+          <span className="material-symbols-outlined text-red-500" style={{ fontVariationSettings: "'FILL' 1" }}>error</span>
+          <p className="font-semibold text-red-700">{error}</p>
+        </div>
       </div>
     );
   }
 
+  if (!results.length) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl border border-slate-200 bg-white p-16 text-center shadow-sm">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-indigo-50">
+          <span className="material-symbols-outlined text-4xl text-indigo-400">analytics</span>
+        </div>
+        <h2 className="mt-5 text-2xl font-black text-slate-900">No Results Yet</h2>
+        <p className="mt-2 text-slate-500 max-w-sm mx-auto">Submit a CBT test to unlock score, timing, topic, and review analytics.</p>
+      </motion.div>
+    );
+  }
+
   return (
-    <div className="mx-auto max-w-7xl space-y-7">
-      <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Paper Analytics</p>
-        <div className="mt-3 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+    <div className="mx-auto max-w-7xl space-y-6">
+      {/* Hero */}
+      <motion.section
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-3xl border border-rose-100 bg-gradient-to-br from-rose-50 via-white to-pink-50 p-7 shadow-sm md:p-9"
+      >
+        <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-rose-200/40 blur-3xl" />
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-950 md:text-5xl">Performance Review</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
-              Use score, section, topic, timing, visits, and answer-change data to find exactly where marks are being gained or lost.
+            <span className="inline-block rounded-full bg-rose-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-rose-700">Paper Analytics</span>
+            <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900 md:text-4xl font-headline">Performance Review</h1>
+            <p className="mt-3 max-w-xl text-sm leading-7 text-slate-500">
+              Use score, section, topic, timing, and answer-change data to find where marks are gained or lost.
             </p>
           </div>
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div className="rounded-2xl bg-slate-50 px-4 py-3">
-              <p className="text-xs font-bold text-slate-400">Tests</p>
-              <p className="text-2xl font-black text-slate-950">{completedResults.length}</p>
-            </div>
-            <div className="rounded-2xl bg-slate-50 px-4 py-3">
-              <p className="text-xs font-bold text-slate-400">Avg</p>
-              <p className="text-2xl font-black text-slate-950">{averagePercentage}%</p>
-            </div>
-            <div className="rounded-2xl bg-slate-50 px-4 py-3">
-              <p className="text-xs font-bold text-slate-400">Best</p>
-              <p className="text-2xl font-black text-slate-950">{bestResult?.percentage ?? 0}%</p>
-            </div>
+          <div className="grid grid-cols-3 gap-3 shrink-0">
+            {[
+              ['Tests', completedResults.length],
+              ['Average', `${averagePercentage}%`],
+              ['Best', `${bestResult?.percentage ?? 0}%`],
+            ].map(([label, val]) => (
+              <div key={label} className="rounded-2xl border border-rose-100 bg-white/60 px-4 py-3 text-center shadow-sm backdrop-blur-md">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-rose-500">{label}</p>
+                <p className="mt-1 text-xl font-black text-slate-900">{val}</p>
+              </div>
+            ))}
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      <section className="grid gap-5 md:grid-cols-3">
+      {/* Telemetry stats */}
+      <motion.section variants={container} initial="hidden" animate="show" className="grid gap-4 md:grid-cols-3">
         {[
-          ['Tracked Time', formatDuration(totalTrackedSeconds), 'timer'],
-          ['Question Visits', totalVisits, 'visibility'],
-          ['Answer Changes', totalChanges, 'swap_horiz'],
-        ].map(([label, value, icon]) => (
-          <div key={label} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <span className="material-symbols-outlined rounded-2xl bg-indigo-50 p-3 text-indigo-600">{icon}</span>
-            <p className="mt-5 text-xs font-bold uppercase tracking-widest text-slate-400">{label}</p>
-            <p className="mt-2 text-3xl font-black text-slate-950">{value}</p>
-          </div>
+          { label: 'Tracked Time', value: formatDuration(totalTrackedSeconds), icon: 'timer', color: 'text-violet-600', bg: 'bg-violet-50' },
+          { label: 'Question Visits', value: totalVisits, icon: 'visibility', color: 'text-sky-600', bg: 'bg-sky-50' },
+          { label: 'Answer Changes', value: totalChanges, icon: 'swap_horiz', color: 'text-amber-600', bg: 'bg-amber-50' },
+        ].map(({ label, value, icon, color, bg }) => (
+          <motion.div key={label} variants={fadeUp} whileHover={{ y: -2 }} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${bg}`}>
+              <span className={`material-symbols-outlined ${color}`} style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+            </div>
+            <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">{label}</p>
+            <p className="mt-1 text-3xl font-black text-slate-900">{value}</p>
+          </motion.div>
         ))}
-      </section>
+      </motion.section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      {/* Trend + Latest */}
+      <section className="grid gap-5 xl:grid-cols-[1.3fr_0.7fr]">
+        <motion.div initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-5 flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Score Trend</p>
-              <h2 className="mt-1 text-xl font-black text-slate-950">Recent Test Performance</h2>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Score Trend</p>
+              <h2 className="mt-0.5 text-xl font-black text-slate-900">Recent Performance</h2>
             </div>
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500">{trendResults.length} attempts</span>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">{trendResults.length} attempts</span>
           </div>
-          <div className="h-64 rounded-2xl bg-slate-50 p-5">
+          <div className="h-64 rounded-2xl bg-gradient-to-b from-slate-50 to-slate-100/50 p-4">
             {trendResults.length > 1 ? (
-              <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full overflow-visible">
-                <polyline points={trendPath} fill="none" stroke="#4f46e5" strokeWidth="3" vectorEffect="non-scaling-stroke" />
-                {trendResults.map((result, idx) => {
-                  const x = trendResults.length <= 1 ? 50 : (idx / (trendResults.length - 1)) * 100;
-                  const y = 100 - Math.max(0, Math.min(100, Number(result.percentage) || 0));
-                  return <circle key={result._id || idx} cx={x} cy={y} r="2.5" fill="#4f46e5" />;
-                })}
+              <svg viewBox="0 -10 100 120" preserveAspectRatio="none" className="h-full w-full overflow-visible">
+                <defs>
+                  <linearGradient id="trendGrad2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#e11d48" stopOpacity="0.25" />
+                    <stop offset="100%" stopColor="#e11d48" stopOpacity="0.0" />
+                  </linearGradient>
+                  <filter id="glow2" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                </defs>
+                <path d={smoothPathFill} fill="url(#trendGrad2)" />
+                <path d={smoothPathLine} fill="none" stroke="#e11d48" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" filter="url(#glow2)" />
               </svg>
             ) : (
               <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-400">Submit more tests to build a trend.</div>
             )}
           </div>
-        </div>
+        </motion.div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Latest Attempt</p>
-          <h2 className="mt-1 text-xl font-black text-slate-950">{latestResult?.test?.title || 'No latest result'}</h2>
-          <div className="mt-6 flex items-end gap-3">
-            <p className="text-5xl font-black text-indigo-600">{latestResult?.percentage ?? 0}%</p>
-            <p className="pb-2 text-sm font-semibold text-slate-400">{latestResult?.totalScore ?? 0} / {latestResult?.maxPossibleScore ?? 0}</p>
+        <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Latest Attempt</p>
+          <h2 className="mt-1 text-lg font-black text-slate-900 line-clamp-2">{latestResult?.test?.title || 'No latest result'}</h2>
+          <div className="mt-4 flex items-end gap-2">
+            <p className="text-5xl font-black text-indigo-600">{latestResult?.percentage ?? 0}</p>
+            <p className="pb-1.5 text-xl font-black text-slate-300">%</p>
           </div>
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            <div className="rounded-2xl bg-slate-50 p-4">
-              <p className="text-xs font-bold text-slate-400">Avg/Q</p>
-              <p className="mt-1 text-xl font-black text-slate-950">{latestResult?.telemetry?.averageQuestionTimeSeconds || 0}s</p>
-            </div>
-            <div className="rounded-2xl bg-slate-50 p-4">
-              <p className="text-xs font-bold text-slate-400">Visits</p>
-              <p className="mt-1 text-xl font-black text-slate-950">{latestResult?.telemetry?.totalVisits || 0}</p>
-            </div>
+          <p className="text-sm text-slate-500">{latestResult?.totalScore ?? 0} / {latestResult?.maxPossibleScore ?? 0} marks</p>
+          <div className="mt-1 h-1.5 rounded-full bg-slate-100">
+            <motion.div initial={{ width: 0 }} animate={{ width: `${latestResult?.percentage ?? 0}%` }} transition={{ duration: 0.8 }} className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" />
           </div>
-        </div>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            {[
+              ['Avg/Q', `${latestResult?.telemetry?.averageQuestionTimeSeconds || 0}s`],
+              ['Visits', latestResult?.telemetry?.totalVisits || 0],
+            ].map(([label, val]) => (
+              <div key={label} className="rounded-2xl bg-slate-50 p-3">
+                <p className="text-[10px] font-bold text-slate-400">{label}</p>
+                <p className="mt-1 text-xl font-black text-slate-900">{val}</p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-2">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-black text-slate-950">Section Breakdown</h2>
+      {/* Section + Topic */}
+      <section className="grid gap-5 xl:grid-cols-2">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-xl font-black text-slate-900">Section Breakdown</h2>
           <div className="mt-5 space-y-4">
             {latestSectionEntries.length ? latestSectionEntries.map(([section, score]) => {
               const total = (score.correct || 0) + (score.wrong || 0) + (score.unattempted || 0);
               const accuracy = total ? Math.round(((score.correct || 0) / total) * 100) : 0;
               return (
                 <div key={section}>
-                  <div className="mb-2 flex justify-between text-sm">
+                  <div className="mb-1.5 flex justify-between text-sm">
                     <span className="font-bold text-slate-800">{section}</span>
-                    <span className="font-bold text-slate-500">{score.score || 0} pts · {accuracy}% accuracy</span>
+                    <span className="font-semibold text-slate-500">{score.score || 0} pts · {accuracy}%</span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                    <div className="h-full rounded-full bg-indigo-500" style={{ width: `${accuracy}%` }} />
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${accuracy}%` }} transition={{ duration: 0.7, ease: 'easeOut' }} className="h-full rounded-full bg-indigo-500" />
                   </div>
                 </div>
               );
             }) : <p className="text-sm font-semibold text-slate-400">No section data yet.</p>}
           </div>
-        </div>
+        </motion.div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-black text-slate-950">Topic Strength</h2>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-xl font-black text-slate-900">Topic Strength</h2>
           <div className="mt-5 space-y-4">
             {latestTopicEntries.length ? latestTopicEntries.map(([topic, perf]) => {
               const total = (perf.correct || 0) + (perf.wrong || 0) + (perf.skipped || 0);
               const accuracy = total ? Math.round(((perf.correct || 0) / total) * 100) : 0;
+              const color = accuracy >= 60 ? 'bg-emerald-500' : accuracy >= 35 ? 'bg-amber-500' : 'bg-rose-500';
               return (
                 <div key={topic}>
-                  <div className="mb-2 flex justify-between gap-4 text-sm">
+                  <div className="mb-1.5 flex justify-between gap-2 text-sm">
                     <span className="truncate font-bold text-slate-800">{topic}</span>
-                    <span className="shrink-0 font-bold text-slate-500">{perf.correct || 0}C · {perf.wrong || 0}W · {perf.skipped || 0}S</span>
+                    <span className="shrink-0 font-semibold text-slate-500">{perf.correct || 0}C · {perf.wrong || 0}W · {perf.skipped || 0}S</span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                    <div className={`h-full rounded-full ${accuracy >= 60 ? 'bg-emerald-500' : accuracy >= 35 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${accuracy}%` }} />
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${accuracy}%` }} transition={{ duration: 0.7, ease: 'easeOut' }} className={`h-full rounded-full ${color}`} />
                   </div>
                 </div>
               );
             }) : <p className="text-sm font-semibold text-slate-400">Question tags will unlock chapter-wise analysis.</p>}
           </div>
-        </div>
+        </motion.div>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-black text-slate-950">Time Sink Questions</h2>
+      {/* Time sink + History */}
+      <section className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-xl font-black text-slate-900">Time Sink Questions</h2>
           <div className="mt-5 space-y-3">
-            {highTimeQuestions.length ? highTimeQuestions.map((question, idx) => (
-              <div key={question.questionId || idx}>
+            {highTimeQuestions.length ? highTimeQuestions.map((q, idx) => (
+              <div key={q.questionId || idx}>
                 <div className="mb-1 flex justify-between text-xs font-bold text-slate-500">
-                  <span>Q{latestTelemetryQuestions.findIndex((item) => item.questionId === question.questionId) + 1 || idx + 1}</span>
-                  <span>{formatDuration(question.timeSpentSeconds)} · {question.visitCount || 0} visits</span>
+                  <span>Q{latestTelemetryQuestions.findIndex((item) => item.questionId === q.questionId) + 1 || idx + 1}</span>
+                  <span>{formatDuration(q.timeSpentSeconds)} · {q.visitCount || 0} visits</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                  <div className="h-full rounded-full bg-slate-900" style={{ width: `${Math.min(100, ((question.timeSpentSeconds || 0) / maxQuestionTime) * 100)}%` }} />
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, ((q.timeSpentSeconds || 0) / maxQuestionTime) * 100)}%` }} transition={{ duration: 0.6, delay: idx * 0.05 }} className="h-full rounded-full bg-slate-800" />
                 </div>
               </div>
             )) : <p className="text-sm font-semibold text-slate-400">Timing telemetry appears after a submitted test.</p>}
           </div>
-        </div>
+        </motion.div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-black text-slate-950">Attempt History</h2>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-xl font-black text-slate-900">Attempt History</h2>
           <div className="mt-5 overflow-hidden rounded-2xl border border-slate-100">
-            {completedResults.map((result) => (
-              <div key={result._id} className="grid gap-3 border-b border-slate-100 p-4 last:border-b-0 md:grid-cols-[1fr_auto_auto] md:items-center">
+            {completedResults.map((result, idx) => (
+              <motion.div
+                key={result._id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: idx * 0.05 }}
+                className="grid gap-3 border-b border-slate-100 p-4 last:border-b-0 md:grid-cols-[1fr_auto_auto] md:items-center hover:bg-slate-50 transition"
+              >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-black text-slate-900">{result.test?.title || 'Deleted Test'}</p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {result.durationUsedMinutes || 0} mins · {result.answered || 0}/{result.totalQuestions || 0} answered · IP {result.ipAddress || 'not captured'}
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    {result.durationUsedMinutes || 0} mins · {result.answered || 0}/{result.totalQuestions || 0} answered
                   </p>
                 </div>
-                <p className="text-xl font-black text-indigo-600">{result.percentage ?? 0}%</p>
-                <button onClick={() => onReview?.(result._id)} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50">
+                <span className={`text-xl font-black ${(result.percentage || 0) >= 60 ? 'text-emerald-600' : (result.percentage || 0) >= 35 ? 'text-amber-600' : 'text-rose-500'}`}>
+                  {result.percentage ?? 0}%
+                </span>
+                <motion.button
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => onReview?.(result._id)}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-600"
+                >
                   Review
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </section>
     </div>
   );

@@ -163,6 +163,12 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
           const firstQIndex = data.questions.findIndex((q) => q.section === initialSection);
           if (firstQIndex !== -1) {
             setCurrentIdx(firstQIndex);
+            
+            // Mark the first question as unanswered so it shows up as red immediately
+            const firstQId = data.questions[firstQIndex]._id;
+            if (!parsedAnswers.some(a => a.questionId === firstQId)) {
+              parsedAnswers.push({ questionId: firstQId, selectedAnswer: [], status: 'unanswered' });
+            }
           }
         }
 
@@ -468,6 +474,11 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
       syncDirty.current = false;
       return true;
     } catch (e) {
+      if (e.message.includes('No matching document') || e.message.includes('VersionError')) {
+        console.warn('Sync version collision ignored:', e.message);
+        syncDirty.current = false;
+        return true;
+      }
       console.warn('[Sync] Failed:', e.message);
       if (!silent) throw e;
       return false;

@@ -7,6 +7,17 @@ export default function TestEngineApp({ user, test, attemptId, attemptToken }) {
   // steps: 'login' -> 'instructions' -> 'test'
   const [step, setStep] = useState('login');
 
+  const handleSignIn = () => {
+    try {
+      if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    } catch {
+      // ignore
+    }
+    setStep('instructions');
+  };
+
   if (!test?._id) {
     return (
       <div className="flex h-screen items-center justify-center bg-white p-6 text-center">
@@ -31,7 +42,7 @@ export default function TestEngineApp({ user, test, attemptId, attemptToken }) {
       <TestEngineLogin 
         user={user} 
         test={test} 
-        onSignIn={() => setStep('instructions')} 
+        onSignIn={handleSignIn} 
       />
     );
   }
