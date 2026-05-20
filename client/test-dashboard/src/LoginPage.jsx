@@ -184,58 +184,62 @@ export default function LoginPage({ onLogin }) {
                 </svg>
                 Continue with Google
               </button>
-              <div className="flex items-center gap-4">
-                <div className="h-px flex-1 bg-slate-200" />
-                <span className="text-xs font-black uppercase tracking-widest text-slate-400">
-                  or
-                </span>
-                <div className="h-px flex-1 bg-slate-200" />
-              </div>
-              <div>
-                <label className="mb-2 block text-xs font-black uppercase tracking-widest text-slate-500">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400">
-                    mail
-                  </span>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder="you@example.com"
-                    required
-                    className="w-full rounded-2xl border border-slate-200 bg-white py-3.5 pl-12 pr-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
-                  />
-                </div>
-              </div>
+              {import.meta.env.MODE !== 'production' && (
+                <>
+                  <div className="flex items-center gap-4">
+                    <div className="h-px flex-1 bg-slate-200" />
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-400">
+                      or
+                    </span>
+                    <div className="h-px flex-1 bg-slate-200" />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-xs font-black uppercase tracking-widest text-slate-500">
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400">
+                        mail
+                      </span>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        placeholder="you@example.com"
+                        required
+                        className="w-full rounded-2xl border border-slate-200 bg-white py-3.5 pl-12 pr-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
+                      />
+                    </div>
+                  </div>
 
-              <div>
-                <label className="mb-2 block text-xs font-black uppercase tracking-widest text-slate-500">
-                  Password
-                </label>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400">
-                    lock
-                  </span>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    placeholder="Enter your password"
-                    required
-                    className="w-full rounded-2xl border border-slate-200 bg-white py-3.5 pl-12 pr-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
-                  />
-                </div>
-              </div>
+                  <div>
+                    <label className="mb-2 block text-xs font-black uppercase tracking-widest text-slate-500">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400">
+                        lock
+                      </span>
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        placeholder="Enter your password"
+                        required
+                        className="w-full rounded-2xl border border-slate-200 bg-white py-3.5 pl-12 pr-4 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
+                      />
+                    </div>
+                  </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full rounded-2xl border border-slate-950 bg-slate-950 px-5 py-4 text-sm font-black text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {loading ? "Signing in..." : "Sign In"}
-              </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full rounded-2xl border border-slate-950 bg-slate-950 px-5 py-4 text-sm font-black text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {loading ? "Signing in..." : "Sign In"}
+                  </button>
+                </>
+              )}
             </form>
           )}
 
