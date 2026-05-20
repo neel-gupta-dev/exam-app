@@ -29,6 +29,7 @@ const getInitialView = () => {
   if (path === '/terms') return 'terms';
 
   if (localStorage.getItem('shared_test_id')) return 'loading-shared';
+  if (/^\/t\/[^/]+$/i.test(path)) return 'loading-shared';
   
   if (/^\/tests\/[^/]+$/i.test(path)) return 'instructions';
   if (path === '/tests') return 'test-series';
@@ -267,15 +268,31 @@ export default function App() {
     fetch(`${API_BASE}/tests`, { headers: { Authorization: `Bearer ${user.token}` } })
       .then((res) => res.json())
       .then((data) => {
-        if (!Array.isArray(data)) return;
+        if (!Array.isArray(data)) {
+          console.error('Shared test: unexpected response', data);
+          localStorage.removeItem('shared_test_id');
+          setSharedTestId(null);
+          navigateTo('test-series');
+          return;
+        }
         const target = data.find((test) => test._id === sharedTestId);
-        if (!target) return;
-        setSelectedTest(target);
         localStorage.removeItem('shared_test_id');
         setSharedTestId(null);
-        navigateTo('instructions', { test: target });
+        if (target) {
+          setSelectedTest(target);
+          navigateTo('instructions', { test: target });
+        } else {
+          // Test not found in student's list — go to test series instead of hanging
+          console.warn('Shared test not found in student test list:', sharedTestId);
+          navigateTo('test-series');
+        }
       })
-      .catch((err) => console.error('Shared test auto-select error:', err));
+      .catch((err) => {
+        console.error('Shared test auto-select error:', err);
+        localStorage.removeItem('shared_test_id');
+        setSharedTestId(null);
+        navigateTo('test-series');
+      });
   }, [user, sharedTestId, navigateTo]);
 
   useEffect(() => {
@@ -323,11 +340,16 @@ export default function App() {
     const hash = window.location.hash;
     if (!hash.startsWith('#token=')) return;
     const token = hash.split('=')[1];
-    window.history.replaceState(null, '', window.location.pathname);
+    // Preserve query params (e.g. ?shared_test_id=xxx) when stripping the hash
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
     fetch(`${API_BASE}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => { if (!res.ok) throw new Error('Token verification failed'); return res.json(); })
       .then((data) => handleLogin({ ...data, token }))
-      .catch((err) => console.error('OAuth Login Error:', err));
+      .catch((err) => {
+        console.error('OAuth Login Error:', err);
+        // If token verification fails while on loading-shared, fall back to dashboard
+        if (view === 'loading-shared') setView('dashboard');
+      });
   }, []);
 
   const handleLogin = (userData) => {

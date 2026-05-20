@@ -91,8 +91,8 @@ export default function LoginPage({ onLogin }) {
             {features.map(({ icon, label, sub }) => (
               <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm hover:bg-white/10 transition">
                 <span className="material-symbols-outlined text-indigo-300 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
-                <p className="mt-2 text-sm font-black">{label}</p>
-                <p className="text-xs text-slate-400">{sub}</p>
+                <p className="mt-2 text-sm font-black text-white">{label}</p>
+                <p className="mt-0.5 text-xs font-medium text-indigo-200/80">{sub}</p>
               </div>
             ))}
           </motion.div>
