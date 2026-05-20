@@ -1,75 +1,55 @@
 import React from 'react';
 
-export default function TestCard({ 
-  badge, 
-  subject, 
-  title, 
-  duration, 
-  marks, 
-  status, 
+export default function TestCard({
+  badge,
+  subject,
+  title,
+  duration,
+  marks,
+  status,
   statusIcon,
   buttonText,
   state,
   onAction,
 }) {
-  // Determine styles dynamically to match the 3 states from code.html
-  let wrapperClass = "bg-surface-container hover:bg-surface-container-high transition-all duration-300 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between group";
-  
-  if (state === 'locked') {
-    wrapperClass += " opacity-70 grayscale-[0.5] hover:opacity-100 hover:grayscale-0";
-  }
-
-  let badgeClass = "px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider ";
-  if (state === 'in-progress') {
-    badgeClass += "bg-tertiary-container/20 text-tertiary";
-  } else if (state === 'locked') {
-    badgeClass += "bg-slate-800 text-slate-400";
-  } else {
-    badgeClass += "bg-indigo-500/20 text-indigo-400";
-  }
-
-  let buttonClass = "w-full md:w-auto px-8 py-3 rounded-lg flex items-center justify-center font-bold cursor-pointer transition-all ";
-  if (state === 'in-progress') {
-    buttonClass += "bg-indigo-500 text-on-primary shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20 border-none";
-  } else {
-    buttonClass += "bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 hover:border-indigo-500/40";
-  }
-
-  let statusIconClass = "material-symbols-outlined text-sm mr-2 opacity-60 ";
-  if (state === 'in-progress') {
-    statusIconClass += "text-indigo-400";
-  } else {
-    statusIconClass += "text-error";
-  }
+  const disabled = state === 'locked' || state === 'upcoming' || state === 'missed';
 
   return (
-    <div className={wrapperClass}>
-      <div className="flex-1">
-        <div className="flex items-center space-x-3 mb-2">
-          <span className={badgeClass}>{badge}</span>
-          <span className="text-xs text-on-surface-variant font-medium">{subject}</span>
+    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300 hover:shadow-md">
+      <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+        <div className="min-w-0">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-black uppercase tracking-wider text-indigo-700">{badge}</span>
+            <span className="truncate text-xs font-bold text-slate-500">{subject}</span>
+          </div>
+          <h3 className="truncate text-xl font-black text-slate-950">{title}</h3>
+          <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-slate-600">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-base text-slate-400">schedule</span>
+              {duration} mins
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-base text-slate-400">grade</span>
+              {marks} marks
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-base text-slate-400">{statusIcon}</span>
+              {status}
+            </span>
+          </div>
         </div>
-        <h3 className="text-xl font-bold text-on-surface font-headline mb-4">{title}</h3>
-        <div className="flex items-center space-x-6 text-sm text-on-surface-variant">
-          <div className="flex items-center">
-            <span className="material-symbols-outlined text-sm mr-2 opacity-60">schedule</span>
-            {duration} mins
-          </div>
-          <div className="flex items-center">
-            <span className="material-symbols-outlined text-sm mr-2 opacity-60">grade</span>
-            {marks} Marks
-          </div>
-          <div className="flex items-center">
-            <span className={statusIconClass}>{statusIcon}</span>
-            {status}
-          </div>
-        </div>
-      </div>
-      <div className="mt-6 md:mt-0 md:ml-8">
-        <button onClick={onAction} disabled={state === 'locked'} className={buttonClass}>
+        <button
+          onClick={onAction}
+          disabled={disabled}
+          className={`rounded-2xl px-5 py-3 text-sm font-black transition ${
+            disabled
+              ? 'border border-slate-200 bg-slate-100 text-slate-500'
+              : 'border border-slate-950 bg-slate-950 text-white hover:bg-slate-800'
+          }`}
+        >
           {buttonText}
         </button>
       </div>
-    </div>
+    </article>
   );
 }

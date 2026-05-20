@@ -7,43 +7,36 @@ export default function TestSeriesPage({ tests = [], results = [], onSelectTest 
   const [activeCategory, setActiveCategory] = useState('full');
 
   const matchesCategory = (test) => {
-    const categoryField = (test.category || '').toLowerCase();
-    const titleText = (test.title || '').toLowerCase();
-    const combined = `${categoryField} ${titleText}`;
+    const category = (test.category || '').toLowerCase();
+    const title = (test.title || '').toLowerCase();
+    const combined = `${category} ${title}`;
 
-    if (activeCategory === 'neet') {
-      return categoryField.includes('neet') || titleText.includes('neet');
-    }
-
+    if (activeCategory === 'neet') return category.includes('neet') || title.includes('neet');
     if (activeCategory === 'full') {
-      // Show everything that is NOT NEET, NOT part, NOT chapter, NOT pyq
-      // OR explicitly marked as JEE Advance/Main
-      if (categoryField.includes('neet')) return false;
+      if (category.includes('neet')) return false;
       return combined.includes('full')
-        || (!combined.includes('part')
-          && !combined.includes('chapter')
-          && !combined.includes('pyq')
-          && !combined.includes('previous year'));
+        || (!combined.includes('part') && !combined.includes('chapter') && !combined.includes('pyq') && !combined.includes('previous year'));
     }
-
     if (activeCategory === 'part') return combined.includes('part');
     if (activeCategory === 'chapter') return combined.includes('chapter');
     if (activeCategory === 'pyq') return combined.includes('pyq') || combined.includes('previous year');
     return true;
   };
+
   const filteredTests = tests.filter(matchesCategory);
 
   return (
-    <>
-      <header className="mb-12">
-        <h2 className="text-4xl font-extrabold font-headline tracking-tight text-on-background">Test Series</h2>
-        <p className="text-on-surface-variant mt-2 text-lg font-medium opacity-70">Level up your exam readiness.</p>
-      </header>
-      
+    <div className="mx-auto max-w-7xl space-y-7">
+      <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+        <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Assessment Library</p>
+        <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 md:text-5xl">Test Series</h1>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500 md:text-base">Level up your exam readiness with focused mocks and analytics.</p>
+      </section>
+
       <CategoryTabs activeCategory={activeCategory} onChange={setActiveCategory} />
-      
-      <div className="grid grid-cols-12 gap-10">
-        <div className="col-span-12 lg:col-span-8 space-y-4">
+
+      <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
+        <section className="space-y-4">
           {filteredTests.map((test) => (
             <TestCard
               key={test._id}
@@ -60,13 +53,13 @@ export default function TestSeriesPage({ tests = [], results = [], onSelectTest 
             />
           ))}
           {filteredTests.length === 0 && (
-            <div className="bg-surface-container rounded-xl p-8 text-center text-on-surface-variant">
+            <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-sm font-semibold text-slate-500 shadow-sm">
               No tests are available for this category.
             </div>
           )}
-        </div>
+        </section>
         <StatsPanel tests={tests} results={results} onNavigate={onNavigate} />
       </div>
-    </>
+    </div>
   );
 }

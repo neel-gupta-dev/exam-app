@@ -1,5 +1,5 @@
-export { Sidebar } from './Sidebar';
-export { TopNav } from './TopNav';
-export { TestCard } from './TestCard';
-export { StatsPanel } from './StatsPanel';
-export { CategoryTabs } from './CategoryTabs';
+export { default as Sidebar } from './Sidebar';
+export { default as TopNav } from './TopNav';
+export { default as TestCard } from './TestCard';
+export { default as StatsPanel } from './StatsPanel';
+export { default as CategoryTabs } from './CategoryTabs';
