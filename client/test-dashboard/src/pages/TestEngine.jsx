@@ -1118,7 +1118,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
                     </label>
                   );
                 })}
-                {currentQuestion?.type === 'integer' && (
+                {['integer', 'float', 'numerical'].includes(currentQuestion?.type) && (
                   <div className="mt-4 flex max-w-[260px] flex-col items-center bg-[#f3f3f3] p-3">
                     <input
                       type="text"
