@@ -25,11 +25,7 @@ export default function AnalyticsPage({
   bestResult = null,
   latestResult = null,
   trendResults = [],
-  latestSectionEntries = [],
-  latestTopicEntries = [],
-  latestTelemetryQuestions = [],
-  maxQuestionTime = 1,
-  onReview,
+  onAnalyze,
 }) {
   const trendPoints = trendResults.map((r, idx) => {
     const x = trendResults.length <= 1 ? 50 : (idx / (trendResults.length - 1)) * 100;
@@ -57,7 +53,6 @@ export default function AnalyticsPage({
   const totalTrackedSeconds = completedResults.reduce((sum, r) => sum + (r.telemetry?.totalTimeSpentSeconds || 0), 0);
   const totalVisits = completedResults.reduce((sum, r) => sum + (r.telemetry?.totalVisits || 0), 0);
   const totalChanges = completedResults.reduce((sum, r) => sum + (r.telemetry?.totalAnswerChanges || 0), 0);
-  const highTimeQuestions = [...latestTelemetryQuestions].sort((a, b) => (b.timeSpentSeconds || 0) - (a.timeSpentSeconds || 0)).slice(0, 6);
 
   if (loading) {
     return (
@@ -128,11 +123,11 @@ export default function AnalyticsPage({
       {/* Telemetry stats */}
       <motion.section variants={container} initial="hidden" animate="show" className="grid gap-4 md:grid-cols-3">
         {[
-          { label: 'Tracked Time', value: formatDuration(totalTrackedSeconds), icon: 'timer', color: 'text-violet-600', bg: 'bg-violet-50' },
-          { label: 'Question Visits', value: totalVisits, icon: 'visibility', color: 'text-sky-600', bg: 'bg-sky-50' },
-          { label: 'Answer Changes', value: totalChanges, icon: 'swap_horiz', color: 'text-amber-600', bg: 'bg-amber-50' },
+          { label: 'Total Tracked Time', value: formatDuration(totalTrackedSeconds), icon: 'timer', color: 'text-violet-600', bg: 'bg-violet-50' },
+          { label: 'Total Question Visits', value: totalVisits, icon: 'visibility', color: 'text-sky-600', bg: 'bg-sky-50' },
+          { label: 'Overall Answer Changes', value: totalChanges, icon: 'swap_horiz', color: 'text-amber-600', bg: 'bg-amber-50' },
         ].map(({ label, value, icon, color, bg }) => (
-          <motion.div key={label} variants={fadeUp} whileHover={{ y: -2 }} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          <motion.div key={label} variants={fadeUp} whileHover={{ y: -2 }} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm relative overflow-hidden">
             <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${bg}`}>
               <span className={`material-symbols-outlined ${color}`} style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
             </div>
@@ -199,71 +194,9 @@ export default function AnalyticsPage({
         </motion.div>
       </section>
 
-      {/* Section + Topic */}
-      <section className="grid gap-5 xl:grid-cols-2">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-black text-slate-900">Section Breakdown</h2>
-          <div className="mt-5 space-y-4">
-            {latestSectionEntries.length ? latestSectionEntries.map(([section, score]) => {
-              const total = (score.correct || 0) + (score.wrong || 0) + (score.unattempted || 0);
-              const accuracy = total ? Math.round(((score.correct || 0) / total) * 100) : 0;
-              return (
-                <div key={section}>
-                  <div className="mb-1.5 flex justify-between text-sm">
-                    <span className="font-bold text-slate-800">{section}</span>
-                    <span className="font-semibold text-slate-500">{score.score || 0} pts · {accuracy}%</span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${accuracy}%` }} transition={{ duration: 0.7, ease: 'easeOut' }} className="h-full rounded-full bg-indigo-500" />
-                  </div>
-                </div>
-              );
-            }) : <p className="text-sm font-semibold text-slate-400">No section data yet.</p>}
-          </div>
-        </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-black text-slate-900">Topic Strength</h2>
-          <div className="mt-5 space-y-4">
-            {latestTopicEntries.length ? latestTopicEntries.map(([topic, perf]) => {
-              const total = (perf.correct || 0) + (perf.wrong || 0) + (perf.skipped || 0);
-              const accuracy = total ? Math.round(((perf.correct || 0) / total) * 100) : 0;
-              const color = accuracy >= 60 ? 'bg-emerald-500' : accuracy >= 35 ? 'bg-amber-500' : 'bg-rose-500';
-              return (
-                <div key={topic}>
-                  <div className="mb-1.5 flex justify-between gap-2 text-sm">
-                    <span className="truncate font-bold text-slate-800">{topic}</span>
-                    <span className="shrink-0 font-semibold text-slate-500">{perf.correct || 0}C · {perf.wrong || 0}W · {perf.skipped || 0}S</span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${accuracy}%` }} transition={{ duration: 0.7, ease: 'easeOut' }} className={`h-full rounded-full ${color}`} />
-                  </div>
-                </div>
-              );
-            }) : <p className="text-sm font-semibold text-slate-400">Question tags will unlock chapter-wise analysis.</p>}
-          </div>
-        </motion.div>
-      </section>
-
-      {/* Time sink + History */}
-      <section className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-black text-slate-900">Time Sink Questions</h2>
-          <div className="mt-5 space-y-3">
-            {highTimeQuestions.length ? highTimeQuestions.map((q, idx) => (
-              <div key={q.questionId || idx}>
-                <div className="mb-1 flex justify-between text-xs font-bold text-slate-500">
-                  <span>Q{latestTelemetryQuestions.findIndex((item) => item.questionId === q.questionId) + 1 || idx + 1}</span>
-                  <span>{formatDuration(q.timeSpentSeconds)} · {q.visitCount || 0} visits</span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, ((q.timeSpentSeconds || 0) / maxQuestionTime) * 100)}%` }} transition={{ duration: 0.6, delay: idx * 0.05 }} className="h-full rounded-full bg-slate-800" />
-                </div>
-              </div>
-            )) : <p className="text-sm font-semibold text-slate-400">Timing telemetry appears after a submitted test.</p>}
-          </div>
-        </motion.div>
-
+      {/* Attempt History */}
+      <section className="grid gap-5">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-black text-slate-900">Attempt History</h2>
           <div className="mt-5 overflow-hidden rounded-2xl border border-slate-100">
@@ -287,10 +220,10 @@ export default function AnalyticsPage({
                 <motion.button
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.96 }}
-                  onClick={() => onReview?.(result._id)}
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-600"
+                  onClick={() => onAnalyze?.(result._id)}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600"
                 >
-                  Review
+                  Analyze Test
                 </motion.button>
               </motion.div>
             ))}

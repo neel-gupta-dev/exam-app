@@ -56,6 +56,10 @@ const answerSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    timeToFirstActionSeconds: {
+      type: Number,
+      default: 0,
+    },
   },
   { _id: false }
 );
@@ -176,6 +180,7 @@ const testAttemptSchema = new mongoose.Schema(
           wrong: { type: Number, default: 0 },
           unattempted: { type: Number, default: 0 },
           score: { type: Number, default: 0 },
+          timeSpentSeconds: { type: Number, default: 0 },
         },
         { _id: false }
       ),
@@ -217,6 +222,7 @@ const testAttemptSchema = new mongoose.Schema(
           correct: { type: Number, default: 0 },
           wrong: { type: Number, default: 0 },
           skipped: { type: Number, default: 0 },
+          timeSpentSeconds: { type: Number, default: 0 },
         },
         { _id: false }
       ),

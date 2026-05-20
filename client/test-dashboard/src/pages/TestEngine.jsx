@@ -69,6 +69,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
   const activeVisitRef = useRef(null);
   const answerChangeCountRef = useRef({});
   const idleSecondsRef = useRef({});
+  const firstActionTimeRef = useRef({});
   const paletteScrollRef = useRef(null);
   const questionScrollRef = useRef(null);
   const token = user?.token || localStorage.getItem('test_token');
@@ -447,6 +448,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
            visitLog: telemetry.visitLog || [],
            answerChangeCount: answerChangeCountRef.current[a.questionId] || 0,
            idleSeconds: idleSecondsRef.current[a.questionId] || 0,
+           timeToFirstActionSeconds: firstActionTimeRef.current[a.questionId] || 0,
         };
       });
       Object.entries(telemetrySnapshot).forEach(([questionId, telemetry]) => {
@@ -461,6 +463,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
           visitLog: telemetry.visitLog || [],
           answerChangeCount: answerChangeCountRef.current[questionId] || 0,
           idleSeconds: idleSecondsRef.current[questionId] || 0,
+          timeToFirstActionSeconds: firstActionTimeRef.current[questionId] || 0,
         };
       });
       await apiFetch(`/assessment/${testId}/sync?attemptId=${attemptQuery}`, {
@@ -548,6 +551,15 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
     syncDirty.current = true;
   };
 
+  const recordFirstAction = (qId) => {
+    if (!firstActionTimeRef.current[qId]) {
+      const qTelemetry = telemetryRef.current[qId];
+      if (qTelemetry && qTelemetry.firstVisitedAt) {
+        firstActionTimeRef.current[qId] = Math.max(0, Math.round((Date.now() - new Date(qTelemetry.firstVisitedAt).getTime()) / 1000));
+      }
+    }
+  };
+
   const handleOptionSelect = (optionLabel) => {
     if (!currentQuestion) return;
     const current = answers.find((a) => a.questionId === currentQuestion._id) || { selectedAnswer: [] };
@@ -556,6 +568,8 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
     if (current.selectedAnswer.length > 0) {
       answerChangeCountRef.current[currentQuestion._id] = (answerChangeCountRef.current[currentQuestion._id] || 0) + 1;
     }
+    
+    recordFirstAction(currentQuestion._id);
 
     let newSelected;
     if (currentQuestion.type === 'multiple') {
@@ -573,6 +587,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
 
   const handleIntegerSelect = (val) => {
     if (!currentQuestion) return;
+    recordFirstAction(currentQuestion._id);
     const cleanVal = val.trim();
     const newSelected = cleanVal ? [cleanVal] : [];
     updateAnswer(currentQuestion._id, newSelected, newSelected.length > 0 ? 'answered' : 'unanswered');

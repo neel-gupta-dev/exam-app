@@ -39,6 +39,7 @@ const processQueue = async () => {
         let totalScore = 0;
         let maxPossibleScore = 0;
         const sectionScores = {};
+        const topicPerformance = {};
 
         // Build section scheme map
         const sectionSchemeMap = {};
@@ -66,7 +67,16 @@ const processQueue = async () => {
           maxPossibleScore += correctMarks;
 
           if (!sectionScores[section]) {
-            sectionScores[section] = { correct: 0, wrong: 0, unattempted: 0, partial: 0, score: 0 };
+            sectionScores[section] = { correct: 0, wrong: 0, unattempted: 0, partial: 0, score: 0, timeSpentSeconds: 0 };
+          }
+          sectionScores[section].timeSpentSeconds += (answer.timeSpentSeconds || 0);
+
+          const tags = question.tags || [];
+          for (const topic of tags) {
+            if (!topicPerformance[topic]) {
+              topicPerformance[topic] = { correct: 0, wrong: 0, skipped: 0, timeSpentSeconds: 0 };
+            }
+            topicPerformance[topic].timeSpentSeconds += (answer.timeSpentSeconds || 0);
           }
 
           const selectedAnswer = answer.selectedAnswer || [];
@@ -75,6 +85,7 @@ const processQueue = async () => {
             const unattemptedMark = override.unattempted ?? secScheme?.unattempted ?? 0;
             totalScore += unattemptedMark;
             sectionScores[section].score += unattemptedMark;
+            for (const topic of tags) topicPerformance[topic].skipped++;
             continue;
           }
 
@@ -87,10 +98,12 @@ const processQueue = async () => {
               totalScore += correctMarks;
               sectionScores[section].correct++;
               sectionScores[section].score += correctMarks;
+              for (const topic of tags) topicPerformance[topic].correct++;
             } else {
               totalScore -= incorrectMarks;
               sectionScores[section].wrong++;
               sectionScores[section].score -= incorrectMarks;
+              for (const topic of tags) topicPerformance[topic].wrong++;
             }
 
           } else if (question.type === 'multiple') {
@@ -99,19 +112,23 @@ const processQueue = async () => {
               totalScore -= incorrectMarks;
               sectionScores[section].wrong++;
               sectionScores[section].score -= incorrectMarks;
+              for (const topic of tags) topicPerformance[topic].wrong++;
             } else if (arraysEqual(selected.sort(), [...correctSet].sort())) {
               totalScore += correctMarks;
               sectionScores[section].correct++;
               sectionScores[section].score += correctMarks;
+              for (const topic of tags) topicPerformance[topic].correct++;
             } else if (isPartial && selected.length > 0) {
               const partialScore = Math.min(selected.length * partialPerOpt, correctMarks);
               totalScore += partialScore;
               sectionScores[section].partial++;
               sectionScores[section].score += partialScore;
+              for (const topic of tags) topicPerformance[topic].correct++; // treat partial as correct for topic stats
             } else {
               totalScore -= partialIncorr;
               sectionScores[section].wrong++;
               sectionScores[section].score -= partialIncorr;
+              for (const topic of tags) topicPerformance[topic].wrong++;
             }
           }
         } // end for answers
@@ -126,6 +143,7 @@ const processQueue = async () => {
         attempt.maxPossibleScore = maxPossibleScore;
         attempt.percentage = percentage;
         attempt.sectionScores = sectionScores;
+        attempt.topicPerformance = topicPerformance;
         attempt.evaluatedAt = new Date();
         attempt.status = 'EVALUATED';
 

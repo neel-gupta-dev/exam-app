@@ -175,9 +175,18 @@ export default function ReviewPage({ user, attemptId, loading = false, error = '
                       </span>
                       <span className="rounded-full bg-white border border-slate-200 px-3 py-1 text-xs font-black uppercase tracking-wider text-slate-500">{question.section || 'General'}</span>
                     </div>
-                    <div className="flex flex-wrap gap-2 text-xs font-bold">
-                      <span className="rounded-full bg-white border border-slate-200 px-3 py-1 text-slate-600">{formatDuration(question.timeSpentSeconds)}</span>
+                    <div className="flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-widest mt-2 sm:mt-0">
+                      <span className="rounded-full bg-white border border-slate-200 px-3 py-1 text-slate-600">{formatDuration(question.timeSpentSeconds)} spent</span>
                       <span className="rounded-full bg-white border border-slate-200 px-3 py-1 text-slate-600">{question.visitCount || 0} visits</span>
+                      {question.answerChangeCount > 0 && (
+                        <span className="rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-amber-700">{question.answerChangeCount} changes</span>
+                      )}
+                      {question.timeToFirstActionSeconds > 0 && (
+                        <span className="rounded-full bg-slate-50 border border-slate-200 px-3 py-1 text-slate-500">{formatDuration(question.timeToFirstActionSeconds)} to act</span>
+                      )}
+                      {question.idleSeconds > 0 && (
+                        <span className="rounded-full bg-slate-50 border border-slate-200 px-3 py-1 text-slate-500">{formatDuration(question.idleSeconds)} idle</span>
+                      )}
                       <span className={`rounded-full px-3 py-1 text-white ${isCorrect ? 'bg-emerald-600' : isWrong ? 'bg-rose-600' : 'bg-slate-500'}`}>
                         {isCorrect ? `+${question.positiveMarks}` : isWrong ? `-${question.negativeMarks}` : 'Skipped'}
                       </span>

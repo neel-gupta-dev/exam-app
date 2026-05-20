@@ -859,6 +859,7 @@ export const getMyAssessmentResults = asyncHandler(async (req, res) => {
       visitLog: answer.visitLog || [],
       answerChangeCount: Math.max(0, Math.round(Number(answer.answerChangeCount) || 0)),
       idleSeconds: Math.max(0, Math.round(Number(answer.idleSeconds) || 0)),
+      timeToFirstActionSeconds: Math.max(0, Math.round(Number(answer.timeToFirstActionSeconds) || 0)),
       effectiveTimeSeconds: Math.max(
         0,
         Math.round(Number(answer.timeSpentSeconds) || 0) - Math.round(Number(answer.idleSeconds) || 0)
@@ -1059,6 +1060,7 @@ export const getAssessmentReview = asyncHandler(async (req, res) => {
       visitLog: userAns.visitLog || [],
       answerChangeCount: userAns.answerChangeCount || 0,
       idleSeconds: userAns.idleSeconds || 0,
+      timeToFirstActionSeconds: userAns.timeToFirstActionSeconds || 0,
       effectiveTimeSeconds: Math.max(0, (userAns.timeSpentSeconds || 0) - (userAns.idleSeconds || 0)),
       resultStatus: isUnanswered ? 'skipped' : (isCorrect ? 'correct' : 'wrong'),
     };

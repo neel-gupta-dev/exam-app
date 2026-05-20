@@ -9,6 +9,7 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import TestsPage from './pages/TestsPage';
 import InstructionsPage from './pages/InstructionsPage';
 import ReviewPage from './pages/ReviewPage';
+import SingleAttemptAnalytics from './pages/SingleAttemptAnalytics';
 import LeaderboardPage from './pages/LeaderboardPage';
 import SettingsPage from './pages/SettingsPage';
 import SupportPage from './pages/SupportPage';
@@ -32,6 +33,7 @@ const getInitialView = () => {
   if (/^\/tests\/[^/]+$/i.test(path)) return 'instructions';
   if (path === '/tests') return 'test-series';
   if (path === '/pyp') return 'pyp';
+  if (/^\/analytics\/[^/]+$/i.test(path)) return 'attempt-analytics';
   if (path === '/analytics') return 'analytics';
   if (path === '/leaderboard') return 'leaderboard';
   if (path === '/settings') return 'settings';
@@ -42,6 +44,7 @@ const getInitialView = () => {
 const getPathForView = (view, test) => {
   if (view === 'test-series') return '/tests';
   if (view === 'pyp') return '/pyp';
+  if (view === 'attempt-analytics' && test?._id) return `/analytics/${test._id}`;
   if (view === 'analytics') return '/analytics';
   if (view === 'leaderboard') return '/leaderboard';
   if (view === 'settings') return '/settings';
@@ -98,6 +101,11 @@ export default function App() {
   const [leaderboardError, setLeaderboardError] = useState('');
   const [selectedReviewAttemptId, setSelectedReviewAttemptId] = useState(null);
   const [reviewData, setReviewData] = useState(null);
+  const [selectedAnalyticsAttemptId, setSelectedAnalyticsAttemptId] = useState(() => {
+    if (typeof window === 'undefined') return null;
+    const match = window.location.pathname.match(/^\/analytics\/([^/]+)$/i);
+    return match ? match[1] : null;
+  });
   const [loadingReview, setLoadingReview] = useState(false);
   const [reviewError, setReviewError] = useState('');
   const [user, setUser] = useState(() => {
@@ -118,6 +126,7 @@ export default function App() {
     setView(nextView);
     if (nextView !== 'instructions') setSelectedTest(null);
     if (nextView !== 'leaderboard') { setSelectedLeaderboardTest(null); setLeaderboardData(null); }
+    if (nextView !== 'attempt-analytics') setSelectedAnalyticsAttemptId(null);
     if (nextView !== 'review') { setReviewData(null); setSelectedReviewAttemptId(null); }
     setSearchQuery('');
     setMobileNavOpen(false);
@@ -125,6 +134,10 @@ export default function App() {
 
   const showDashboard = () => navigateTo('dashboard');
   const showTestSeries = () => navigateTo('test-series');
+  const openAttemptAnalytics = (attemptId) => {
+    setSelectedAnalyticsAttemptId(attemptId);
+    navigateTo('attempt-analytics', { test: { _id: attemptId } });
+  };
 
   useEffect(() => {
     document.documentElement.classList.remove('dark');
@@ -150,6 +163,11 @@ export default function App() {
       if (/^\/tests\/[^/]+$/i.test(path)) nextView = 'instructions';
       else if (path === '/tests') nextView = 'test-series';
       else if (path === '/pyp') nextView = 'pyp';
+      else if (/^\/analytics\/[^/]+$/i.test(path)) {
+        nextView = 'attempt-analytics';
+        const m = path.match(/^\/analytics\/([^/]+)$/i);
+        if (m) setSelectedAnalyticsAttemptId(m[1]);
+      }
       else if (path === '/analytics') nextView = 'analytics';
       else if (path === '/leaderboard') nextView = 'leaderboard';
       else if (path === '/settings') nextView = 'settings';
@@ -199,7 +217,7 @@ export default function App() {
   }, [view, selectedTest, tests]);
 
   useEffect(() => {
-    const shouldLoadResults = user && ['analytics', 'dashboard', 'test-series', 'pyp', 'leaderboard'].includes(view);
+    const shouldLoadResults = user && ['analytics', 'attempt-analytics', 'dashboard', 'test-series', 'pyp', 'leaderboard'].includes(view);
     if (!shouldLoadResults) return;
     setLoadingResults(true);
     setResultsError('');
@@ -447,11 +465,18 @@ export default function App() {
           </div>
         </div>
       );
-      return <InstructionsPage test={selectedTest} onBack={showTestSeries} onStart={() => openTestAttempt(selectedTest)} onReview={() => openReview(selectedTest.latestAttemptId)} />;
+      return <InstructionsPage test={selectedTest} onBack={showTestSeries} onStart={() => openTestAttempt(selectedTest)} onReview={() => openAttemptAnalytics(selectedTest.latestAttemptId)} />;
     }
-    if (view === 'review') return <ReviewPage user={user} attemptId={selectedReviewAttemptId} loading={loadingReview} error={reviewError} reviewData={reviewData} onBack={() => { setReviewData(null); setSelectedReviewAttemptId(null); navigateTo('test-series'); }} />;
+    if (view === 'analytics') return <AnalyticsPage loading={loadingResults} error={resultsError} results={results} completedResults={completedResults} averagePercentage={averagePercentage} bestResult={bestResult} latestResult={latestResult} trendResults={trendResults} onAnalyze={openAttemptAnalytics} />;
+    
+    if (view === 'attempt-analytics' && selectedAnalyticsAttemptId) {
+      const attemptData = results.find(r => r._id === selectedAnalyticsAttemptId);
+      if (!attemptData) return <div className="p-10 text-center">Attempt not found</div>;
+      return <SingleAttemptAnalytics attempt={attemptData} onReview={openReview} onBack={() => navigateTo('analytics')} />;
+    }
+
+    if (view === 'review' && selectedReviewAttemptId) return <ReviewPage user={user} attemptId={selectedReviewAttemptId} loading={loadingReview} error={reviewError} reviewData={reviewData} onBack={() => { setReviewData(null); setSelectedReviewAttemptId(null); navigateTo('test-series'); }} />;
     if (view === 'leaderboard') return <LeaderboardPage completedResults={completedResults} loadingResults={loadingResults} selectedTest={selectedLeaderboardTest} leaderboardData={leaderboardData} loadingLeaderboard={loadingLeaderboard} leaderboardError={leaderboardError} onSelectTest={(test) => { setSelectedLeaderboardTest(test); setLeaderboardData(null); }} onBack={() => { setSelectedLeaderboardTest(null); setLeaderboardData(null); }} onOpenTests={showTestSeries} />;
-    if (view === 'analytics') return <AnalyticsPage loading={loadingResults} error={resultsError} results={results} completedResults={completedResults} averagePercentage={averagePercentage} bestResult={bestResult} latestResult={latestResult} trendResults={trendResults} latestSectionEntries={latestSectionEntries} latestTopicEntries={latestTopicEntries} latestTelemetryQuestions={latestTelemetryQuestions} maxQuestionTime={maxQuestionTime} onReview={openReview} />;
     if (view === 'settings') return <SettingsPage user={user} onLogout={handleLogout} />;
     if (view === 'support') return <SupportPage />;
     if (view === 'privacy') return <PrivacyPolicyPage />;
