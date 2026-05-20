@@ -102,8 +102,9 @@ export default function LoginPage({ onLogin }) {
         <section className="flex flex-col justify-center p-7 sm:p-10">
           {/* Mobile logo */}
           <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 shadow-md shadow-indigo-200">
-              <span className="text-sm font-black text-white">V</span>
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-md shadow-indigo-200/50">
+              <img src="/vayl-logo.png" alt="Vayl" className="h-7 w-7 object-contain" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+              <span className="text-sm font-black text-slate-900 hidden">V</span>
             </div>
             <div>
               <p className="text-sm font-black uppercase tracking-widest text-slate-900">Vayl</p>
@@ -215,7 +216,7 @@ export default function LoginPage({ onLogin }) {
           </div>
 
           <p className="mt-8 text-center text-xs text-slate-400">
-            By continuing, you agree to Vayl's terms of service.
+            By continuing, you agree to Vayl's <a href="/terms" className="underline hover:text-slate-600 transition">terms of service</a> and <a href="/privacy-policy" className="underline hover:text-slate-600 transition">privacy policy</a>.
           </p>
         </section>
       </div>

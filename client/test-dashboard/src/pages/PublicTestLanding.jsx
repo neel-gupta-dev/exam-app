@@ -10,7 +10,7 @@ export default function PublicTestLanding({ testId, onLogin }) {
   useEffect(() => {
     const fetchDetails = async () => {
       try {
-        const res = await fetch(`${API_BASE}/tests/share/${testId}`);
+        const res = await fetch(`${API_BASE}/tests/${testId}/share-details`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Failed to load test details');
         setTest(data);
@@ -53,7 +53,7 @@ export default function PublicTestLanding({ testId, onLogin }) {
           <p className="mt-2 text-sm leading-6 text-slate-500">{error}</p>
           <a
             href="/"
-            className="mt-7 inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-3 text-sm font-black text-white shadow-md shadow-indigo-200 transition hover:shadow-lg"
+            className="mt-7 inline-flex w-full items-center justify-center rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-md shadow-indigo-200 transition hover:bg-indigo-700 hover:shadow-lg"
           >
             Return Home
           </a>
@@ -72,8 +72,9 @@ export default function PublicTestLanding({ testId, onLogin }) {
           className="mb-8 flex items-center justify-between rounded-3xl border border-slate-200 bg-white/80 px-5 py-4 shadow-sm backdrop-blur-xl"
         >
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 shadow-md shadow-indigo-200">
-              <span className="text-sm font-black text-white">V</span>
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-md shadow-indigo-200/50">
+              <img src="/vayl-logo.png" alt="Vayl" className="h-7 w-7 object-contain" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+              <span className="text-sm font-black text-slate-900 hidden">V</span>
             </div>
             <div>
               <p className="text-sm font-black uppercase tracking-widest text-slate-900">Vayl</p>
@@ -112,7 +113,7 @@ export default function PublicTestLanding({ testId, onLogin }) {
                 {[
                   ['Duration', `${test.durationMinutes || 0} mins`, 'schedule'],
                   ['Total Marks', test.totalMarks || 0, 'grade'],
-                  ['Sections', test.sections?.length || 1, 'splitscreen'],
+                  ['Questions', test.questionCount || (test.sections?.reduce((sum, s) => sum + (s.questionCount || 0), 0)) || 0, 'format_list_numbered'],
                 ].map(([label, value, icon], idx) => (
                   <motion.div
                     key={label}
@@ -162,7 +163,7 @@ export default function PublicTestLanding({ testId, onLogin }) {
               whileHover={{ scale: 1.02, y: -1 }}
               whileTap={{ scale: 0.97 }}
               onClick={onLogin}
-              className="mt-7 w-full rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-4 text-sm font-black text-white shadow-lg shadow-indigo-200 transition hover:shadow-xl"
+              className="mt-7 w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm font-black text-slate-700 shadow-sm transition hover:shadow-md hover:border-slate-300"
             >
               <span className="flex items-center justify-center gap-2">
                 <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24">
@@ -175,7 +176,7 @@ export default function PublicTestLanding({ testId, onLogin }) {
               </span>
             </motion.button>
             <p className="mt-4 text-center text-xs leading-5 text-slate-400">
-              By continuing, you agree to the platform terms and privacy policy.
+              By continuing, you agree to the platform <a href="/terms" className="underline hover:text-slate-600 transition">terms</a> and <a href="/privacy-policy" className="underline hover:text-slate-600 transition">privacy policy</a>.
             </p>
           </motion.aside>
         </main>

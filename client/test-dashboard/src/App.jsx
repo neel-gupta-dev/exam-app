@@ -12,6 +12,8 @@ import ReviewPage from './pages/ReviewPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import SettingsPage from './pages/SettingsPage';
 import SupportPage from './pages/SupportPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsPage from './pages/TermsPage';
 import { API_BASE } from './config/api';
 
 const getInitialView = () => {
@@ -21,8 +23,12 @@ const getInitialView = () => {
     localStorage.removeItem('post_submit_view');
     return postSubmitView;
   }
-  if (localStorage.getItem('shared_test_id')) return 'loading-shared';
   const path = window.location.pathname;
+  if (path === '/privacy-policy') return 'privacy';
+  if (path === '/terms') return 'terms';
+
+  if (localStorage.getItem('shared_test_id')) return 'loading-shared';
+  
   if (/^\/tests\/[^/]+$/i.test(path)) return 'instructions';
   if (path === '/tests') return 'test-series';
   if (path === '/pyp') return 'pyp';
@@ -40,6 +46,8 @@ const getPathForView = (view, test) => {
   if (view === 'leaderboard') return '/leaderboard';
   if (view === 'settings') return '/settings';
   if (view === 'support') return '/support';
+  if (view === 'privacy') return '/privacy-policy';
+  if (view === 'terms') return '/terms';
   if (view === 'instructions' && test?._id) return `/tests/${test._id}`;
   return '/';
 };
@@ -146,6 +154,8 @@ export default function App() {
       else if (path === '/leaderboard') nextView = 'leaderboard';
       else if (path === '/settings') nextView = 'settings';
       else if (path === '/support') nextView = 'support';
+      else if (path === '/privacy-policy') nextView = 'privacy';
+      else if (path === '/terms') nextView = 'terms';
       setExamFilter(nextExam);
       setView(nextView);
       if (nextView !== 'instructions') setSelectedTest(null);
@@ -363,6 +373,9 @@ export default function App() {
   }
 
   if (!user) {
+    if (view === 'privacy') return <PrivacyPolicyPage />;
+    if (view === 'terms') return <TermsPage />;
+    
     if (sharedTestId) {
       return (
         <PublicTestLanding
@@ -441,6 +454,8 @@ export default function App() {
     if (view === 'analytics') return <AnalyticsPage loading={loadingResults} error={resultsError} results={results} completedResults={completedResults} averagePercentage={averagePercentage} bestResult={bestResult} latestResult={latestResult} trendResults={trendResults} latestSectionEntries={latestSectionEntries} latestTopicEntries={latestTopicEntries} latestTelemetryQuestions={latestTelemetryQuestions} maxQuestionTime={maxQuestionTime} onReview={openReview} />;
     if (view === 'settings') return <SettingsPage user={user} onLogout={handleLogout} />;
     if (view === 'support') return <SupportPage />;
+    if (view === 'privacy') return <PrivacyPolicyPage />;
+    if (view === 'terms') return <TermsPage />;
     return null;
   };
 

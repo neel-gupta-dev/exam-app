@@ -715,14 +715,14 @@ export const uploadTestImage = asyncHandler(async (req, res) => {
  * @access  Public
  */
 export const getShareDetails = asyncHandler(async (req, res) => {
-  const { slugOrId } = req.params;
+  const slugOrId = req.params.slugOrId || req.params.testId;
 
   // Try slug first, fall back to ObjectId lookup
   const isObjectId = /^[a-f\d]{24}$/i.test(slugOrId);
   const query = isObjectId ? { _id: slugOrId } : { slug: slugOrId };
 
   const test = await Test.findOne(query).select(
-    'title description totalMarks durationMinutes category isPublished scheduledStartAt scheduledEndAt sections slug'
+    'title description totalMarks durationMinutes category isPublished scheduledStartAt scheduledEndAt sections slug questionCount'
   );
 
   if (!test) {
