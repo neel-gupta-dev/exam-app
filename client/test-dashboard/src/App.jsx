@@ -34,6 +34,7 @@ const getInitialView = () => {
   if (path === '/tests') return 'test-series';
   if (path === '/pyp') return 'pyp';
   if (/^\/analytics\/[^/]+$/i.test(path)) return 'attempt-analytics';
+  if (/^\/review\/[^/]+$/i.test(path)) return 'review';
   if (path === '/analytics') return 'analytics';
   if (path === '/leaderboard') return 'leaderboard';
   if (path === '/settings') return 'settings';
@@ -45,6 +46,7 @@ const getPathForView = (view, test) => {
   if (view === 'test-series') return '/tests';
   if (view === 'pyp') return '/pyp';
   if (view === 'attempt-analytics' && test?._id) return `/analytics/${test._id}`;
+  if (view === 'review' && test?._id) return `/review/${test._id}`;
   if (view === 'analytics') return '/analytics';
   if (view === 'leaderboard') return '/leaderboard';
   if (view === 'settings') return '/settings';
@@ -99,7 +101,11 @@ export default function App() {
   const [leaderboardData, setLeaderboardData] = useState(null);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
   const [leaderboardError, setLeaderboardError] = useState('');
-  const [selectedReviewAttemptId, setSelectedReviewAttemptId] = useState(null);
+  const [selectedReviewAttemptId, setSelectedReviewAttemptId] = useState(() => {
+    if (typeof window === 'undefined') return null;
+    const match = window.location.pathname.match(/^\/review\/([^/]+)$/i);
+    return match ? match[1] : null;
+  });
   const [reviewData, setReviewData] = useState(null);
   const [selectedAnalyticsAttemptId, setSelectedAnalyticsAttemptId] = useState(() => {
     if (typeof window === 'undefined') return null;
@@ -167,6 +173,11 @@ export default function App() {
         nextView = 'attempt-analytics';
         const m = path.match(/^\/analytics\/([^/]+)$/i);
         if (m) setSelectedAnalyticsAttemptId(m[1]);
+      }
+      else if (/^\/review\/[^/]+$/i.test(path)) {
+        nextView = 'review';
+        const m = path.match(/^\/review\/([^/]+)$/i);
+        if (m) setSelectedReviewAttemptId(m[1]);
       }
       else if (path === '/analytics') nextView = 'analytics';
       else if (path === '/leaderboard') nextView = 'leaderboard';
@@ -365,8 +376,7 @@ export default function App() {
 
   const openReview = (attemptId) => {
     setSelectedReviewAttemptId(attemptId);
-    setView('review');
-    window.history.pushState(null, '', '/analytics');
+    navigateTo('review', { test: { _id: attemptId } });
   };
 
   const dismissExamHint = () => {

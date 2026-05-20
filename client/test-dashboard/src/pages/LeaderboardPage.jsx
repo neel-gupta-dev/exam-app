@@ -99,7 +99,7 @@ export default function LeaderboardPage({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => onSelectTest?.(result.test)}
-                  className="mt-4 w-full rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-3 text-sm font-black text-white shadow-md shadow-indigo-200 transition hover:shadow-lg"
+                  className="mt-4 w-full rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-md shadow-indigo-200 transition hover:bg-indigo-700 hover:shadow-lg"
                 >
                   View Leaderboard
                 </motion.button>
@@ -164,27 +164,27 @@ export default function LeaderboardPage({
               initial={{ opacity: 0, scale: 0.97 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 }}
-              className="rounded-3xl bg-gradient-to-r from-indigo-600 to-violet-600 p-6 text-white shadow-lg shadow-indigo-200"
+              className="rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-blue-50 p-6 shadow-sm"
             >
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-5">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm">
-                    <span className="material-symbols-outlined text-3xl text-yellow-300" style={{ fontVariationSettings: "'FILL' 1" }}>emoji_events</span>
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-100/50 backdrop-blur-sm">
+                    <span className="material-symbols-outlined text-3xl text-yellow-500" style={{ fontVariationSettings: "'FILL' 1" }}>emoji_events</span>
                   </div>
                   <div>
-                    <p className="text-xs font-black uppercase tracking-widest text-indigo-200">Your Rank</p>
-                    <p className="mt-1 text-5xl font-black">#{leaderboardData.myRank}</p>
+                    <p className="text-xs font-black uppercase tracking-widest text-indigo-400">Your Rank</p>
+                    <p className="mt-1 text-5xl font-black text-slate-900">#{leaderboardData.myRank}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-2xl bg-white/10 px-5 py-4 text-center backdrop-blur-sm">
-                    <p className="text-xs font-bold uppercase tracking-widest text-indigo-200">Score</p>
-                    <p className="mt-1 text-2xl font-black">{myRow?.totalScore ?? 0}</p>
-                    <p className="text-xs text-indigo-200">/ {selectedTest.totalMarks}</p>
+                  <div className="rounded-2xl border border-indigo-50 bg-white/60 px-5 py-4 text-center shadow-sm backdrop-blur-sm">
+                    <p className="text-xs font-bold uppercase tracking-widest text-indigo-400">Score</p>
+                    <p className="mt-1 text-2xl font-black text-slate-900">{myRow?.totalScore ?? 0}</p>
+                    <p className="text-xs font-bold text-slate-400">/ {selectedTest.totalMarks}</p>
                   </div>
-                  <div className="rounded-2xl bg-white/10 px-5 py-4 text-center backdrop-blur-sm">
-                    <p className="text-xs font-bold uppercase tracking-widest text-indigo-200">Percent</p>
-                    <p className="mt-1 text-2xl font-black">{myRow?.percentage?.toFixed(1) ?? 0}%</p>
+                  <div className="rounded-2xl border border-indigo-50 bg-white/60 px-5 py-4 text-center shadow-sm backdrop-blur-sm">
+                    <p className="text-xs font-bold uppercase tracking-widest text-indigo-400">Percent</p>
+                    <p className="mt-1 text-2xl font-black text-slate-900">{myRow?.percentage?.toFixed(1) ?? 0}%</p>
                   </div>
                 </div>
               </div>

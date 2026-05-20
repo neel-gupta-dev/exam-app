@@ -102,27 +102,27 @@ export default function ReviewPage({ user, attemptId, loading = false, error = '
           <motion.section
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 to-indigo-950 p-7 shadow-xl"
+            className="relative overflow-hidden rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-blue-50 p-7 shadow-sm"
           >
-            <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl" />
+            <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-indigo-200/40 blur-3xl" />
             <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-300">Attempt Review</p>
-                <h1 className="mt-2 text-2xl font-black text-white md:text-3xl font-headline">{summary.testTitle}</h1>
-                <p className="mt-1.5 text-sm text-slate-400">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">Attempt Review</p>
+                <h1 className="mt-2 text-2xl font-black text-slate-900 md:text-3xl font-headline">{summary.testTitle}</h1>
+                <p className="mt-1.5 text-sm font-semibold text-slate-500">
                   Submitted {summary.submittedAt
                     ? new Date(summary.submittedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
                     : 'recently'}
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-3 shrink-0">
-                <div className="rounded-2xl bg-white/10 px-5 py-4 text-center backdrop-blur-sm">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-300">Score</p>
-                  <p className="mt-1 text-xl font-black text-white">{summary.totalScore} / {summary.maxPossibleScore}</p>
+                <div className="rounded-2xl border border-indigo-50 bg-white/60 px-5 py-4 text-center shadow-sm backdrop-blur-sm">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">Score</p>
+                  <p className="mt-1 text-xl font-black text-slate-900">{summary.totalScore} <span className="text-sm font-bold text-slate-400">/ {summary.maxPossibleScore}</span></p>
                 </div>
-                <div className="rounded-2xl bg-white/10 px-5 py-4 text-center backdrop-blur-sm">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-300">Percent</p>
-                  <p className="mt-1 text-xl font-black text-white">{summary.percentage}%</p>
+                <div className="rounded-2xl border border-indigo-50 bg-white/60 px-5 py-4 text-center shadow-sm backdrop-blur-sm">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">Percent</p>
+                  <p className="mt-1 text-xl font-black text-slate-900">{summary.percentage}%</p>
                 </div>
               </div>
             </div>

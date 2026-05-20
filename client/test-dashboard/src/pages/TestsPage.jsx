@@ -37,7 +37,8 @@ export default function TestsPage({
   onOpenAnalytics,
 }) {
   const isPyp = mode === 'pyp';
-  const completedCount = completedResults.length;
+  const uniqueCompletedTests = new Set(completedResults.map(r => r.test?._id || r.testId).filter(Boolean));
+  const completedCount = uniqueCompletedTests.size;
   const progress = tests.length ? Math.round((completedCount / tests.length) * 100) : 0;
 
   const handleAction = (test) => {
