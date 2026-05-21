@@ -211,8 +211,9 @@ export default function App() {
   useEffect(() => {
     const shouldLoadTests = user && ['dashboard', 'test-series', 'pyp', 'instructions', 'leaderboard'].includes(view);
     if (!shouldLoadTests) return;
+    const controller = new AbortController();
     setLoadingTests(true);
-    fetch(`${API_BASE}/tests`, { headers: { Authorization: `Bearer ${user.token}` } })
+    fetch(`${API_BASE}/tests`, { headers: { Authorization: `Bearer ${user.token}` }, signal: controller.signal })
       .then(async (res) => {
         const text = await res.text();
         let data;
@@ -222,8 +223,9 @@ export default function App() {
         return data;
       })
       .then((data) => setTests(data))
-      .catch((err) => console.error(err))
-      .finally(() => setLoadingTests(false));
+      .catch((err) => { if (err.name !== 'AbortError') console.error(err); })
+      .finally(() => { if (!controller.signal.aborted) setLoadingTests(false); });
+    return () => controller.abort();
   }, [user, view]);
 
   useEffect(() => {
@@ -237,9 +239,10 @@ export default function App() {
   useEffect(() => {
     const shouldLoadResults = user && ['analytics', 'attempt-analytics', 'dashboard', 'test-series', 'pyp', 'leaderboard'].includes(view);
     if (!shouldLoadResults) return;
+    const controller = new AbortController();
     setLoadingResults(true);
     setResultsError('');
-    fetch(`${API_BASE}/assessment/results`, { headers: { Authorization: `Bearer ${user.token}` } })
+    fetch(`${API_BASE}/assessment/results`, { headers: { Authorization: `Bearer ${user.token}` }, signal: controller.signal })
       .then(async (res) => {
         const text = await res.text();
         let data;
@@ -248,15 +251,17 @@ export default function App() {
         return Array.isArray(data) ? data : [];
       })
       .then((data) => setResults(data))
-      .catch((err) => setResultsError(err.message))
-      .finally(() => setLoadingResults(false));
+      .catch((err) => { if (err.name !== 'AbortError') setResultsError(err.message); })
+      .finally(() => { if (!controller.signal.aborted) setLoadingResults(false); });
+    return () => controller.abort();
   }, [user, view, resultsRefreshKey]);
 
   useEffect(() => {
     if (!user || view !== 'leaderboard' || !selectedLeaderboardTest?._id) return;
+    const controller = new AbortController();
     setLoadingLeaderboard(true);
     setLeaderboardError('');
-    fetch(`${API_BASE}/assessment/${selectedLeaderboardTest._id}/leaderboard`, { headers: { Authorization: `Bearer ${user.token}` } })
+    fetch(`${API_BASE}/assessment/${selectedLeaderboardTest._id}/leaderboard`, { headers: { Authorization: `Bearer ${user.token}` }, signal: controller.signal })
       .then(async (res) => {
         const text = await res.text();
         let data;
@@ -265,8 +270,9 @@ export default function App() {
         return data;
       })
       .then((data) => setLeaderboardData(data))
-      .catch((err) => setLeaderboardError(err.message))
-      .finally(() => setLoadingLeaderboard(false));
+      .catch((err) => { if (err.name !== 'AbortError') setLeaderboardError(err.message); })
+      .finally(() => { if (!controller.signal.aborted) setLoadingLeaderboard(false); });
+    return () => controller.abort();
   }, [user, view, selectedLeaderboardTest]);
 
   useEffect(() => {
@@ -303,9 +309,10 @@ export default function App() {
 
   useEffect(() => {
     if (!user || view !== 'review' || !selectedReviewAttemptId) return;
+    const controller = new AbortController();
     setLoadingReview(true);
     setReviewError('');
-    fetch(`${API_BASE}/assessment/attempts/${selectedReviewAttemptId}/review`, { headers: { Authorization: `Bearer ${user.token}` } })
+    fetch(`${API_BASE}/assessment/attempts/${selectedReviewAttemptId}/review`, { headers: { Authorization: `Bearer ${user.token}` }, signal: controller.signal })
       .then(async (res) => {
         const text = await res.text();
         let data;
@@ -314,12 +321,14 @@ export default function App() {
         return data;
       })
       .then((data) => setReviewData(data))
-      .catch((err) => setReviewError(err.message))
-      .finally(() => setLoadingReview(false));
+      .catch((err) => { if (err.name !== 'AbortError') setReviewError(err.message); })
+      .finally(() => { if (!controller.signal.aborted) setLoadingReview(false); });
+    return () => controller.abort();
   }, [user, view, selectedReviewAttemptId]);
 
   useEffect(() => {
     const openAnalytics = () => {
+      localStorage.removeItem('current_test');
       setSelectedTest(null);
       setResultsRefreshKey((key) => key + 1);
       navigateTo('analytics');
@@ -504,7 +513,10 @@ export default function App() {
     
     if (view === 'attempt-analytics' && selectedAnalyticsAttemptId) {
       const attemptData = results.find(r => r._id === selectedAnalyticsAttemptId);
-      if (!attemptData) return <div className="p-10 text-center">Attempt not found</div>;
+      if (!attemptData) {
+        if (loadingResults) return <div className="p-10 text-center text-slate-500 font-medium">Loading attempt data...</div>;
+        return <div className="p-10 text-center">Attempt not found</div>;
+      }
       return <SingleAttemptAnalytics attempt={attemptData} onReview={openReview} onBack={() => navigateTo('analytics')} />;
     }
 

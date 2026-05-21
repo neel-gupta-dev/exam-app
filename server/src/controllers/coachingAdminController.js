@@ -18,7 +18,7 @@ export const getCoachingResults = asyncHandler(async (req, res) => {
 
   // Filter directly by tenantId thanks to the new schema
   const attemptFilter = role === 'admin' ? {} : { tenantId };
-  attemptFilter.status = { $in: ['SUBMITTED', 'EVALUATED'] };
+  attemptFilter.status = { $in: ['completed', 'auto-submitted'] };
   
   if (req.query.testId) attemptFilter.testId = req.query.testId;
 
@@ -40,7 +40,7 @@ export const getTestSummary = asyncHandler(async (req, res) => {
   const { tenantId, role } = req.user;
 
   const attemptFilter = role === 'admin' ? { testId: req.params.testId } : { testId: req.params.testId, tenantId };
-  attemptFilter.status = { $in: ['SUBMITTED', 'EVALUATED'] };
+  attemptFilter.status = { $in: ['completed', 'auto-submitted'] };
 
   const attempts = await TestAttempt.find(attemptFilter)
     .populate('userId', 'name username')

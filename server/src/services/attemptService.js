@@ -113,6 +113,19 @@ export const startSession = async (testId, user) => {
   });
 
   if (!attempt) {
+    const completedCount = await TestAttempt.countDocuments({ 
+      userId: user._id, 
+      testId, 
+      status: { $in: ['completed', 'auto-submitted'] } 
+    });
+    
+    const allowed = Math.max(1, Number(test.allowedAttemptCount) || 1);
+    if (completedCount >= allowed) {
+      const err = new Error(`You have used all ${allowed} allowed attempt${allowed === 1 ? '' : 's'} for this test.`);
+      err.statusCode = 403;
+      throw err;
+    }
+
     // Initialize a fresh attempt with all questions set to 'unanswered'
     const answers = questions.map((q) => ({
       questionId: q._id,
@@ -121,12 +134,18 @@ export const startSession = async (testId, user) => {
       timeSpentSeconds: 0,
     }));
 
-    attempt = await TestAttempt.create({
-      userId: user._id,
-      testId,
-      status: 'in-progress',
-      answers,
-    });
+    attempt = await TestAttempt.findOneAndUpdate(
+      { userId: user._id, testId, status: 'in-progress' },
+      {
+        $setOnInsert: {
+          userId: user._id,
+          testId,
+          status: 'in-progress',
+          answers,
+        }
+      },
+      { new: true, upsert: true }
+    );
   }
 
   // 5. Also try to restore answer state from Redis

@@ -241,14 +241,21 @@ export const createAssessmentAttempt = asyncHandler(async (req, res) => {
       });
     }
 
-    attempt = await TestAttempt.create({
-      userId,
-      testId,
-      tenantId: req.user.tenantId || test.tenantId || undefined,
-      status: 'in-progress',
-      ipAddress: getClientIp(req),
-      answers: [],
-    });
+    attempt = await TestAttempt.findOneAndUpdate(
+      { userId, testId, status: 'in-progress' },
+      {
+        $setOnInsert: {
+          userId,
+          testId,
+          tenantId: req.user.tenantId || test.tenantId || undefined,
+          status: 'in-progress',
+          ipAddress: getClientIp(req),
+          answers: [],
+        }
+      },
+      { new: true, upsert: true }
+    );
+    // Fetch again to ensure we get +sessionTokenHash if it was already existing but just matched by findOneAndUpdate
     attempt = await TestAttempt.findById(attempt._id).select('+sessionTokenHash');
   }
 
@@ -271,130 +278,111 @@ export const createAssessmentAttempt = asyncHandler(async (req, res) => {
 const gradeAttempt = (attempt, test, questions) => {
   const questionMap = new Map(questions.map((q) => [q._id.toString(), q]));
   let totalScore = 0;
-  let maxPossibleScore = 0;
+  let maxPossible = 0;
   const sectionScores = {};
   const topicPerformance = {};
 
-  // Map section definitions for easy lookup
-  const sectionConfigs = {};
-  test.sections?.forEach(s => {
-    sectionConfigs[s.name] = s;
-  });
+  const sectionSchemeMap = {};
+  if (test.sections && test.sections.length > 0) {
+    for (const sec of test.sections) {
+      sectionSchemeMap[sec.name] = sec.markingScheme || null;
+    }
+  }
 
-  // Track attempts for capped sections
-  const sectionAttempts = {};
+  // Helper for array equality
+  const arraysEqual = (a, b) => {
+    if (a.length !== b.length) return false;
+    return a.every((val, idx) => val === b[idx]);
+  };
 
-  // Sort answers by original question order to ensure "first N" rule is consistent
-  const sortedAnswers = (attempt.answers || []).sort((a, b) => {
-    const qA = questionMap.get(a.questionId.toString());
-    const qB = questionMap.get(b.questionId.toString());
-    return (qA?.order || 0) - (qB?.order || 0);
-  });
-
-  for (const answer of sortedAnswers) {
-    const question = questionMap.get(answer.questionId.toString());
+  for (const ans of attempt.answers || []) {
+    const question = questionMap.get(ans.questionId.toString());
     if (!question) continue;
 
+    if (question.type === 'comprehension_parent') continue;
+
     const section = question.section || 'General';
-    const config = sectionConfigs[section];
-    const pos = question.positiveMarks ?? test.defaultPositiveMarks;
-    const neg = question.negativeMarks ?? test.defaultNegativeMarks;
+    const secScheme = sectionSchemeMap[section] || null;
+    const override = question.markingSchemeOverride || {};
+
+    const correctMarks  = override.correct    ?? secScheme?.correct    ?? question.positiveMarks ?? test.defaultPositiveMarks;
+    const incorrectMarks = override.incorrect  ?? secScheme?.incorrect  ?? question.negativeMarks ?? test.defaultNegativeMarks;
+    const isPartial     = override.partial     ?? secScheme?.partial    ?? false;
+    const partialPerOpt = override.partialMarkPerOption ?? secScheme?.partialMarkPerOption ?? 1;
+    const partialIncorr = override.partialIncorrect     ?? secScheme?.partialIncorrect     ?? incorrectMarks;
+
+    maxPossible += correctMarks;
 
     if (!sectionScores[section]) {
-      sectionScores[section] = { correct: 0, wrong: 0, unattempted: 0, score: 0, ignored: 0 };
+      sectionScores[section] = { correct: 0, wrong: 0, unattempted: 0, partial: 0, score: 0 };
     }
 
-    const selected = [...(answer.selectedAnswer || [])].sort();
-    const isAttempted = selected.length > 0;
     const recordTopics = (bucket) => {
-      const tags = Array.isArray(question.tags) && question.tags.length ? question.tags : [question.section || 'General'];
+      const tags = Array.isArray(question.tags) && question.tags.length ? question.tags : [section];
       tags.forEach((tag) => {
         const key = String(tag || 'General').trim() || 'General';
-        if (!topicPerformance[key]) {
-          topicPerformance[key] = { correct: 0, wrong: 0, skipped: 0 };
-        }
+        if (!topicPerformance[key]) topicPerformance[key] = { correct: 0, wrong: 0, skipped: 0 };
         topicPerformance[key][bucket] += 1;
       });
     };
 
-    // NEET/Capped Logic: Check if we've exceeded the maxAttemptable for this section
-    if (config?.maxAttemptable && isAttempted) {
-      if (!sectionAttempts[section]) sectionAttempts[section] = 0;
-      
-      if (sectionAttempts[section] >= config.maxAttemptable) {
-        // This question is beyond the limit. Ignore it for scoring.
-        sectionScores[section].ignored += 1;
-        continue;
-      }
-      sectionAttempts[section] += 1;
-    }
-
-    // Update maxPossibleScore: 
-    // If section is capped, maxPossibleScore for that section should ideally be cap * pos.
-    // However, questions might have different pos marks. 
-    // Simplified: we add 'pos' to maxPossibleScore only if we haven't reached the count of questions that SHOULD be scored.
-    // In NEET, it's usually 35 (Sec A) + 10 (Sec B) = 45 questions * 4 = 180 marks per subject.
-    
-    // For now, we sum 'pos' for every question, but we need to adjust for capped sections.
-    // A better way: calculate maxPossibleScore separately based on test structure.
-    maxPossibleScore += pos; 
-
-    if (!isAttempted) {
-      sectionScores[section].unattempted += 1;
+    if (!ans.selectedAnswer || ans.selectedAnswer.length === 0) {
+      sectionScores[section].unattempted++;
+      const unattemptedMark = override.unattempted ?? secScheme?.unattempted ?? 0;
+      totalScore += unattemptedMark;
+      sectionScores[section].score += unattemptedMark;
       recordTopics('skipped');
       continue;
     }
 
-    const expected = [...(question.correctAnswer || [])].sort();
-    const isCorrect =
-      selected.length === expected.length &&
-      selected.every((option, idx) => option === expected[idx]);
+    const correctSet = new Set((question.correctAnswer || []).map(String));
+    const selected   = (ans.selectedAnswer || []).map(String);
 
-    if (isCorrect) {
-      totalScore += pos;
-      sectionScores[section].correct += 1;
-      sectionScores[section].score += pos;
-      recordTopics('correct');
-    } else {
-      totalScore -= neg;
-      sectionScores[section].wrong += 1;
-      sectionScores[section].score -= neg;
-      recordTopics('wrong');
+    if (question.type === 'single' || question.type === 'integer' || question.type === 'float' || question.type === 'matrix') {
+      const exactCorrect = arraysEqual(selected.sort(), [...correctSet].sort());
+      if (exactCorrect) {
+        totalScore += correctMarks;
+        sectionScores[section].correct++;
+        sectionScores[section].score += correctMarks;
+        recordTopics('correct');
+      } else {
+        totalScore -= incorrectMarks;
+        sectionScores[section].wrong++;
+        sectionScores[section].score -= incorrectMarks;
+        recordTopics('wrong');
+      }
+    } else if (question.type === 'multiple') {
+      const hasWrongSelected = selected.some(s => !correctSet.has(s));
+
+      if (hasWrongSelected) {
+        totalScore -= incorrectMarks;
+        sectionScores[section].wrong++;
+        sectionScores[section].score -= incorrectMarks;
+        recordTopics('wrong');
+      } else if (arraysEqual(selected.sort(), [...correctSet].sort())) {
+        totalScore += correctMarks;
+        sectionScores[section].correct++;
+        sectionScores[section].score += correctMarks;
+        recordTopics('correct');
+      } else if (isPartial && selected.length > 0) {
+        const partialScore = Math.min(selected.length * partialPerOpt, correctMarks);
+        totalScore += partialScore;
+        sectionScores[section].partial++;
+        sectionScores[section].score += partialScore;
+        recordTopics('correct');
+      } else {
+        totalScore -= partialIncorr;
+        sectionScores[section].wrong++;
+        sectionScores[section].score -= partialIncorr;
+        recordTopics('wrong');
+      }
     }
   }
 
-  // Final adjustment for maxPossibleScore if there were capped sections
-  // This is a complex area because if a section has 15 Qs and cap is 10, 
-  // maxPossibleScore should subtract the positive marks of the 5 questions that WEREN'T scored.
-  // We'll calculate the 'real' maxPossibleScore by iterating through sections.
-  let adjustedMaxPossibleScore = 0;
-  const questionsBySection = {};
-  questions.forEach(q => {
-    const s = q.section || 'General';
-    if (!questionsBySection[s]) questionsBySection[s] = [];
-    questionsBySection[s].push(q);
-  });
-
-  Object.keys(questionsBySection).forEach(sName => {
-    const sQs = questionsBySection[sName];
-    const config = sectionConfigs[sName];
-    const sortedQs = [...sQs].sort((a, b) => a.order - b.order);
-    
-    if (config?.maxAttemptable) {
-      // Sum the top N positive marks
-      const topN = sortedQs.slice(0, config.maxAttemptable);
-      topN.forEach(q => { adjustedMaxPossibleScore += (q.positiveMarks ?? test.defaultPositiveMarks); });
-    } else {
-      sQs.forEach(q => { adjustedMaxPossibleScore += (q.positiveMarks ?? test.defaultPositiveMarks); });
-    }
-  });
-
   attempt.score = totalScore;
   attempt.totalScore = totalScore;
-  attempt.maxPossibleScore = adjustedMaxPossibleScore;
-  attempt.percentage = adjustedMaxPossibleScore > 0
-    ? Math.round((totalScore / adjustedMaxPossibleScore) * 10000) / 100
-    : 0;
+  attempt.maxPossibleScore = maxPossible;
+  attempt.percentage = maxPossible > 0 ? Math.round((totalScore / maxPossible) * 10000) / 100 : 0;
   attempt.sectionScores = sectionScores;
   attempt.topicPerformance = topicPerformance;
   attempt.submittedAt = new Date();

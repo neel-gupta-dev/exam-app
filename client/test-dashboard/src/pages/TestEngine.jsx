@@ -364,10 +364,15 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
   // ─── Countdown timer ───
   useEffect(() => {
     if (loading || submitted) return;
-    if (timeLeft <= 0) {
-      handleSubmitRef.current?.(true);
-      return;
-    }
+    
+    setTimeLeft((prev) => {
+      if (prev <= 0) {
+        handleSubmitRef.current?.(true);
+        return 0;
+      }
+      return prev;
+    });
+
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -379,7 +384,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
       });
     }, 1000);
     return () => clearInterval(timerRef.current);
-  }, [loading, submitted, timeLeft]);
+  }, [loading, submitted]);
 
   // ─── Mark viewed questions as unanswered ───
   useEffect(() => {

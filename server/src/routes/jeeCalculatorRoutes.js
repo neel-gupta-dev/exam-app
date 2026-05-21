@@ -7,14 +7,17 @@ import JeeAdvResult from '../models/JeeAdvResult.js';
 
 const router = Router();
 
+import { safeFetch } from '../utils/securityUtils.js';
+
 const processPaper = async (url, html, year, paperNum) => {
   let content = html;
   if (url) {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      }
+    const response = await safeFetch(url, {
+      maxBodySize: 5 * 1024 * 1024, // 5MB max for JEE response sheets
+      timeoutMs: 10000, // 10 seconds timeout
+      followRedirects: false
     });
+    
     if (!response.ok) {
       throw new Error(`Failed to fetch URL for Paper ${paperNum}. Status: ${response.status}`);
     }

@@ -4,6 +4,7 @@ import { uploadBufferToCloudinary, deleteFromCloudinary } from '../utils/cloudin
 import { notifyGoogleOfUrl } from '../utils/googleIndexing.js';
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://vayl.in';
+const escapeRegex = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
  * @desc    Upload new study material PDF (Admin Only)
@@ -83,13 +84,14 @@ export const getStudyMaterials = asyncHandler(async (req, res) => {
 
   if (subject && subject !== 'All') {
     // Case-insensitive matching for subjects
-    query.subject = { $regex: new RegExp(`^${subject}$`, 'i') };
+    query.subject = { $regex: new RegExp(`^${escapeRegex(subject)}$`, 'i') };
   }
 
   if (search) {
+    const escapedSearch = escapeRegex(search);
     query.$or = [
-      { title: { $regex: search, $options: 'i' } },
-      { subject: { $regex: search, $options: 'i' } }
+      { title: { $regex: escapedSearch, $options: 'i' } },
+      { subject: { $regex: escapedSearch, $options: 'i' } }
     ];
   }
 
@@ -110,13 +112,14 @@ export const getAdminStudyMaterials = asyncHandler(async (req, res) => {
   const query = {}; // No restriction on isPublished for admins
 
   if (subject && subject !== 'All') {
-    query.subject = { $regex: new RegExp(`^${subject}$`, 'i') };
+    query.subject = { $regex: new RegExp(`^${escapeRegex(subject)}$`, 'i') };
   }
 
   if (search) {
+    const escapedSearch = escapeRegex(search);
     query.$or = [
-      { title: { $regex: search, $options: 'i' } },
-      { subject: { $regex: search, $options: 'i' } }
+      { title: { $regex: escapedSearch, $options: 'i' } },
+      { subject: { $regex: escapedSearch, $options: 'i' } }
     ];
   }
 

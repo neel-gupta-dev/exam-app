@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import Follow from '../models/Follow.js';
 import PredictorLead from '../models/PredictorLead.js';
 import { load } from 'cheerio';
+import { safeFetch } from '../utils/securityUtils.js';
 
 const MAX_TEXT = 500;
 const MAX_ARRAY_ITEMS = 50;
@@ -207,174 +208,47 @@ export const getUrlMetadata = asyncHandler(async (req, res) => {
     throw new Error('URL is required');
   }
 
-  try {
-    // Ensure URL has protocol
-    const targetUrl = url.startsWith('http') ? url : `https://${url}`;
-
-    // SSRF Mitigation — validate BOTH hostname string and resolved IP
-    let parsedUrl;
     try {
-      parsedUrl = new URL(targetUrl);
-    } catch (e) {
-      return res.status(400).json({ message: 'Invalid URL format' });
-    }
+      const response = await safeFetch(url, { maxBodySize: 2 * 1024 * 1024 });
 
-    // Only allow http/https
-    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
-      return res.status(400).json({ message: 'Only http/https URLs are supported' });
-    }
-
-    const hostname = parsedUrl.hostname;
-
-    // Block obvious hostnames first (fast path)
-    const isLocalhost = hostname === 'localhost' || hostname.endsWith('.localhost');
-    const isLoopback4 = /^127\./.test(hostname);
-    const isLoopback6 = hostname === '[::1]' || hostname === '::1';
-    const isZero = hostname === '0.0.0.0' || hostname === '[::]';
-    const isPrivateA = /^10\./.test(hostname);
-    const isPrivateB = /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname);
-    const isPrivateC = /^192\.168\./.test(hostname);
-    const isLinkLocal = /^169\.254\./.test(hostname) || hostname.startsWith('fe80');
-
-    if (isLocalhost || isLoopback4 || isLoopback6 || isZero || isPrivateA || isPrivateB || isPrivateC || isLinkLocal) {
-      return res.status(403).json({ message: 'Fetching metadata from private or local addresses is strictly prohibited.' });
-    }
-
-    // Resolve DNS to get actual IPs — defeats DNS rebinding attacks
-    // SECURITY: Resolve BOTH IPv4 and IPv6 to prevent bypass via IPv6-only domains
-    const dns = await import('dns');
-    const { promisify } = await import('util');
-    const dnsResolve4 = promisify(dns.default.resolve4);
-    const dnsResolve6 = promisify(dns.default.resolve6);
-
-    /** Check if an IPv6 address is private/reserved */
-    const isPrivateIPv6 = (ip) => {
-      const lower = ip.toLowerCase();
-      return (
-        lower === '::1' ||                          // Loopback
-        lower.startsWith('fc') || lower.startsWith('fd') ||  // Unique Local (fc00::/7)
-        lower.startsWith('fe80') ||                  // Link-Local (fe80::/10)
-        lower === '::' ||                            // Unspecified
-        lower.startsWith('::ffff:127.') ||           // IPv4-mapped loopback
-        lower.startsWith('::ffff:10.') ||            // IPv4-mapped private
-        lower.startsWith('::ffff:192.168.') ||       // IPv4-mapped private
-        lower.startsWith('::ffff:169.254.')           // IPv4-mapped link-local
-      );
-    };
-
-    try {
-      // Resolve IPv4
-      let ipv4Addresses = [];
-      try { ipv4Addresses = await dnsResolve4(hostname); } catch (e) { /* no A records */ }
-
-      for (const ip of ipv4Addresses) {
-        if (
-          /^127\./.test(ip) ||
-          /^10\./.test(ip) ||
-          /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(ip) ||
-          /^192\.168\./.test(ip) ||
-          /^169\.254\./.test(ip) ||
-          ip === '0.0.0.0'
-        ) {
-          return res.status(403).json({ message: 'Resolved IP address is private — request blocked.' });
-        }
+      // Handle redirects safely — don't follow, just return basic metadata
+      if ([301, 302, 303, 307, 308].includes(response.status)) {
+        return res.json({
+          title: 'Redirected Page',
+          description: 'This URL redirects to another location.',
+          image: '',
+          url: response.url,
+          siteName: response.parsedUrl.hostname,
+        });
       }
 
-      // Resolve IPv6
-      let ipv6Addresses = [];
-      try { ipv6Addresses = await dnsResolve6(hostname); } catch (e) { /* no AAAA records */ }
-
-      for (const ip of ipv6Addresses) {
-        if (isPrivateIPv6(ip)) {
-          return res.status(403).json({ message: 'Resolved IPv6 address is private — request blocked.' });
-        }
+      if (!response.ok) {
+        throw new Error(`Target site returned ${response.status}`);
       }
 
-      // SECURITY: If hostname resolved to zero addresses total, block the request
-      // (fail-closed). This prevents bypass via hostnames that only resolve at
-      // fetch-time via a different resolver or DNS rebinding.
-      if (ipv4Addresses.length === 0 && ipv6Addresses.length === 0) {
-        return res.status(400).json({ message: 'Could not resolve hostname — request blocked.' });
+      const html = await response.text();
+      const $ = load(html);
+
+      const metadata = {
+        title: $('meta[property="og:title"]').attr('content') || $('title').text() || $('meta[name="twitter:title"]').attr('content') || 'No Title',
+        description: $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content') || $('meta[name="twitter:description"]').attr('content') || 'No description available.',
+        image: $('meta[property="og:image"]').attr('content') || $('meta[name="twitter:image"]').attr('content') || '',
+        url: response.url,
+        siteName: $('meta[property="og:site_name"]').attr('content') || response.parsedUrl.hostname
+      };
+
+      res.json(metadata);
+    } catch (error) {
+      if (error.message.includes('timed out')) {
+        return res.status(504).json({ message: 'Request to target URL timed out (5s)' });
       }
-    } catch (dnsErr) {
-      // DNS resolution failed entirely — fail closed to prevent bypass
-      return res.status(400).json({ message: 'DNS resolution failed — request blocked.' });
-    }
-
-    // Timeout to prevent hanging on slow/malicious targets
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
-
-    const response = await fetch(targetUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8'
-      },
-      redirect: 'manual', // SECURITY: Don't follow redirects — prevents redirect-to-internal SSRF
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeout);
-
-    // Handle redirects safely — don't follow, just return basic metadata
-    if ([301, 302, 303, 307, 308].includes(response.status)) {
-      return res.json({
-        title: 'Redirected Page',
-        description: 'This URL redirects to another location.',
-        image: '',
-        url: targetUrl,
-        siteName: parsedUrl.hostname,
+      if (error.message.includes('blocked') || error.message.includes('prohibited')) {
+        return res.status(403).json({ message: error.message });
+      }
+      console.error(`[Metadata Proxy] Error for ${url}:`, error.message);
+      res.status(500).json({ 
+        message: 'Failed to analyze URL', 
+        error: error.message 
       });
     }
-
-    if (!response.ok) {
-      throw new Error(`Target site returned ${response.status}`);
-    }
-
-    // SECURITY: Limit response body to 2MB to prevent OOM
-    const MAX_BODY_SIZE = 2 * 1024 * 1024;
-    const contentLength = parseInt(response.headers.get('content-length') || '0', 10);
-    if (contentLength > MAX_BODY_SIZE) {
-      throw new Error('Response too large');
-    }
-
-    // Read body with size guard
-    const chunks = [];
-    let totalSize = 0;
-    const reader = response.body?.getReader();
-    if (!reader) throw new Error('No response body');
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      totalSize += value.length;
-      if (totalSize > MAX_BODY_SIZE) {
-        reader.cancel();
-        throw new Error('Response body exceeded 2MB limit');
-      }
-      chunks.push(value);
-    }
-
-    const html = Buffer.concat(chunks).toString('utf-8');
-    const $ = load(html);
-
-    const metadata = {
-      title: $('meta[property="og:title"]').attr('content') || $('title').text() || $('meta[name="twitter:title"]').attr('content') || 'No Title',
-      description: $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content') || $('meta[name="twitter:description"]').attr('content') || 'No description available.',
-      image: $('meta[property="og:image"]').attr('content') || $('meta[name="twitter:image"]').attr('content') || '',
-      url: targetUrl,
-      siteName: $('meta[property="og:site_name"]').attr('content') || parsedUrl.hostname
-    };
-
-    res.json(metadata);
-  } catch (error) {
-    if (error.name === 'AbortError') {
-      return res.status(504).json({ message: 'Request to target URL timed out (5s)' });
-    }
-    console.error(`[Metadata Proxy] Error for ${url}:`, error.message);
-    res.status(500).json({ 
-      message: 'Failed to analyze URL', 
-      error: error.message 
-    });
-  }
 });
