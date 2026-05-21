@@ -263,7 +263,7 @@ export const getStudentTests = asyncHandler(async (req, res) => {
       { scheduledEndAt: { $gte: now } },
     ],
   })
-    .select('title description category testType durationMinutes totalMarks sections syllabus instructions questionCount visibility scheduledStartAt scheduledEndAt allowedAttemptCount solutionReleaseMode solutionsReleasedAt')
+    .select('title description category slug testType durationMinutes totalMarks sections syllabus instructions questionCount visibility scheduledStartAt scheduledEndAt allowedAttemptCount solutionReleaseMode solutionsReleasedAt')
     .sort({ createdAt: -1 });
 
   const redis = getRedis();

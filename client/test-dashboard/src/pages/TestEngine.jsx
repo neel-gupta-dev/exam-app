@@ -199,7 +199,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
       } catch { /* non-critical */ }
     };
     if (testId) captureDeviceInfo();
-  }, [testId, apiFetch]);
+  }, [testId, attemptQuery, apiFetch]);
 
   const currentQuestion = questions[currentIdx];
   const currentQuestionId = currentQuestion?._id;
@@ -400,7 +400,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
       }
     }, 10000); // 10 seconds sync for Redis is safe
     return () => clearInterval(syncRef.current);
-  }, [submitted]);
+  }, [submitted, apiFetch, testId, attemptQuery]);
 
   // Anti-cheat
   useEffect(() => {
@@ -429,7 +429,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
     };
     document.addEventListener('visibilitychange', handler);
     return () => document.removeEventListener('visibilitychange', handler);
-  }, [submitted]);
+  }, [submitted, apiFetch, testId, attemptQuery]);
 
   const doSync = async ({ silent = true, closeCurrent = false } = {}) => {
     try {

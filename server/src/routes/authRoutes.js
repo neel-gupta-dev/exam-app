@@ -63,6 +63,8 @@ const BATTLE_FRONTEND_URL = process.env.BATTLE_FRONTEND_URL ||
 const TESTS_FRONTEND_URL = process.env.TESTS_FRONTEND_URL || 
   (process.env.NODE_ENV === 'production' ? 'https://tests.vayl.in' : 'http://localhost:5173');
 
+const isSafeSharedTestIdentifier = (value) => /^[a-z0-9][a-z0-9-]{0,79}$/i.test(String(value || ''));
+
 router.get('/google/callback', 
   passport.authenticate('google', { session: false, failureRedirect: FRONTEND_URL }),
   (req, res) => {
@@ -86,10 +88,10 @@ router.get('/google/callback',
       res.clearCookie('oauth_shared_test_id');
       
       let url = `${TESTS_FRONTEND_URL}/`;
-      // SECURITY: Validate sharedTestId is a valid MongoDB ObjectId (24 hex chars)
-      // before injecting into URL — prevents query string injection / open redirect
-      if (sharedTestId && /^[a-f0-9]{24}$/i.test(sharedTestId)) {
-        url += `?shared_test_id=${sharedTestId}`;
+      // SECURITY: Share links may carry either a Mongo ObjectId or the test slug.
+      // Keep this as a path-safe identifier before reflecting it into the URL.
+      if (sharedTestId && isSafeSharedTestIdentifier(sharedTestId)) {
+        url += `?shared_test_id=${encodeURIComponent(sharedTestId)}`;
       }
       return res.redirect(`${url}#token=${token}`);
     }

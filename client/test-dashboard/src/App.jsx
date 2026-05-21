@@ -63,6 +63,14 @@ const getExamFromUrl = () => {
   return new URLSearchParams(window.location.search).get('exam') || 'jee-mains';
 };
 
+const normalizeSharedIdentifier = (value) => String(value || '').trim().toLowerCase();
+
+const isSharedTestMatch = (test, sharedIdentifier) => {
+  const normalizedSharedIdentifier = normalizeSharedIdentifier(sharedIdentifier);
+  if (!normalizedSharedIdentifier) return false;
+  return [test?._id, test?.slug].some((value) => normalizeSharedIdentifier(value) === normalizedSharedIdentifier);
+};
+
 const navItems = [
   { view: 'dashboard', icon: 'grid_view', label: 'Dashboard' },
   { view: 'test-series', icon: 'layers', label: 'Tests' },
@@ -121,7 +129,6 @@ export default function App() {
       return saved ? JSON.parse(saved) : null;
     } catch { return null; }
   });
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const navigateTo = useCallback((nextView, options = {}) => {
     const nextPath = getPathForView(nextView, options.test);
@@ -136,7 +143,6 @@ export default function App() {
     if (nextView !== 'attempt-analytics') setSelectedAnalyticsAttemptId(null);
     if (nextView !== 'review') { setReviewData(null); setSelectedReviewAttemptId(null); }
     setSearchQuery('');
-    setMobileNavOpen(false);
   }, [examFilter]);
 
   const showDashboard = () => navigateTo('dashboard');
@@ -275,7 +281,7 @@ export default function App() {
           navigateTo('test-series');
           return;
         }
-        const target = data.find((test) => test._id === sharedTestId);
+        const target = data.find((test) => isSharedTestMatch(test, sharedTestId));
         localStorage.removeItem('shared_test_id');
         setSharedTestId(null);
         if (target) {
@@ -336,6 +342,12 @@ export default function App() {
     };
   }, [navigateTo]);
 
+  const handleLogin = useCallback((userData) => {
+    localStorage.setItem('test_user', JSON.stringify(userData));
+    localStorage.setItem('test_token', userData.token);
+    setUser(userData);
+  }, []);
+
   useEffect(() => {
     const hash = window.location.hash;
     if (!hash.startsWith('#token=')) return;
@@ -350,13 +362,7 @@ export default function App() {
         // If token verification fails while on loading-shared, fall back to dashboard
         if (view === 'loading-shared') setView('dashboard');
       });
-  }, []);
-
-  const handleLogin = (userData) => {
-    localStorage.setItem('test_user', JSON.stringify(userData));
-    localStorage.setItem('test_token', userData.token);
-    setUser(userData);
-  };
+  }, [handleLogin, view]);
 
   const handleLogout = () => {
     localStorage.removeItem('test_user');
@@ -480,11 +486,6 @@ export default function App() {
   const averagePercentage = completedResults.length ? Math.round(completedResults.reduce((sum, r) => sum + (r.percentage || 0), 0) / completedResults.length) : 0;
   const latestResult = sortedResults[0] || null;
   const trendResults = sortedResults.slice(0, 8).reverse();
-  const latestSectionEntries = Object.entries(latestResult?.sectionScores || {});
-  const latestTopicEntries = Object.entries(latestResult?.topicPerformance || {});
-  const latestTelemetryQuestions = latestResult?.telemetry?.questions || [];
-  const maxQuestionTime = Math.max(1, ...latestTelemetryQuestions.map((q) => q.timeSpentSeconds || 0));
-
   const renderContent = () => {
     if (view === 'dashboard') return <DashboardHome user={user} loading={loadingTests || loadingResults} tests={tests} completedResults={completedResults} givenCount={givenCount} ongoingCount={ongoingCount} upcomingCount={upcomingCount} missedCount={missedCount} averagePercentage={averagePercentage} bestResult={bestResult} latestResult={latestResult} trendResults={trendResults} onOpenTests={showTestSeries} onOpenAnalytics={() => navigateTo('analytics')} />;
     if (view === 'test-series' || view === 'pyp') return <TestsPage mode={view === 'pyp' ? 'pyp' : 'tests'} tests={filteredTests} loading={loadingTests} searchQuery={searchQuery} activeCategory={activeCategory} onCategoryChange={setActiveCategory} examFilter={examFilter} onExamFilterChange={handleExamFilterChange} showExamHint={showExamHint} onDismissExamHint={dismissExamHint} completedResults={completedResults} averagePercentage={averagePercentage} bestResult={bestResult} onSelectTest={openTestDetails} onOpenAnalytics={() => navigateTo('analytics')} />;

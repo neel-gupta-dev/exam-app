@@ -40,28 +40,28 @@ export default function InstructionsPage({ test, onBack, onStart, onReview }) {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.05 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 to-indigo-950 p-6 shadow-xl md:p-8"
+        className="relative overflow-hidden rounded-3xl border border-indigo-100 bg-gradient-to-br from-white via-indigo-50/60 to-slate-50 p-6 shadow-xl shadow-slate-200/70 md:p-8"
       >
-        <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-indigo-200/45 blur-3xl" />
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex-1">
-            <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-wider text-indigo-200">
+            <span className="inline-flex items-center rounded-full bg-indigo-100 px-3 py-1 text-xs font-black uppercase tracking-wider text-indigo-700">
               {test?.category || 'Assessment'}
             </span>
-            <h1 className="mt-4 text-2xl font-black tracking-tight text-white md:text-4xl font-headline">{test?.title || 'Test Instructions'}</h1>
-            <p className="mt-2 text-sm leading-7 text-slate-300">Read the instructions carefully before opening the secure CBT window.</p>
+            <h1 className="mt-4 text-2xl font-black tracking-tight text-slate-950 md:text-4xl font-headline">{test?.title || 'Test Instructions'}</h1>
+            <p className="mt-2 text-sm font-semibold leading-7 text-slate-600">Read the instructions carefully before opening the secure CBT window.</p>
           </div>
           <div className="grid grid-cols-2 gap-3 shrink-0 lg:w-64">
             {[
               ['Duration', `${test?.durationMinutes || 0} mins`, 'schedule'],
               ['Total Marks', `${test?.totalMarks || 0}`, 'grade'],
               ['Sections', `${test?.sections?.length || 1}`, 'splitscreen'],
-              ['Questions', `${test?.totalQuestions || '—'}`, 'quiz'],
+              ['Questions', `${test?.totalQuestions || test?.questionCount || '—'}`, 'quiz'],
             ].map(([label, val, icon]) => (
-              <div key={label} className="rounded-2xl bg-white/10 px-4 py-3 text-center backdrop-blur-sm">
-                <span className="material-symbols-outlined text-base text-indigo-300">{icon}</span>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-200 mt-0.5">{label}</p>
-                <p className="text-base font-black text-white">{val}</p>
+              <div key={label} className="rounded-2xl border border-indigo-100 bg-white/80 px-4 py-3 text-center shadow-sm backdrop-blur-sm">
+                <span className="material-symbols-outlined text-base text-indigo-600">{icon}</span>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-700 mt-0.5">{label}</p>
+                <p className="text-base font-black text-slate-950">{val}</p>
               </div>
             ))}
           </div>
@@ -127,7 +127,7 @@ export default function InstructionsPage({ test, onBack, onStart, onReview }) {
               whileHover={{ scale: 1.02, y: -1 }}
               whileTap={{ scale: 0.97 }}
               onClick={onStart}
-              className="w-full rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-4 text-base font-black text-white shadow-lg shadow-indigo-200 transition hover:shadow-xl hover:shadow-indigo-300"
+              className="w-full rounded-2xl bg-indigo-600 px-5 py-4 text-base font-black text-white shadow-lg shadow-indigo-200 transition hover:bg-indigo-700 hover:shadow-xl hover:shadow-indigo-300"
             >
               <span className="flex items-center justify-center gap-2">
                 <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>play_circle</span>
