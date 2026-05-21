@@ -2,33 +2,59 @@
 // We can expand this or move to DB later
 const HARDCODED_KEYS = {
   '2026_1': {
-    // Math Sec 1 (MCQ)
-    '2015961': { type: 'MCQ', answer: 'B' },
-    '2015962': { type: 'MCQ', answer: 'C' },
-    '2015963': { type: 'MCQ', answer: 'A' },
-    '2015964': { type: 'MCQ', answer: 'D' }, // assuming D for missing in sample
-    
-    // Math Sec 2 (MSQ)
-    '2015965': { type: 'MSQ', answer: ['A', 'C'] },
-    '2015966': { type: 'MSQ', answer: ['B', 'D'] },
-    '2015967': { type: 'MSQ', answer: ['A', 'B', 'C'] },
-    '2015968': { type: 'MSQ', answer: ['B', 'C'] },
-    
-    // Math Sec 3 (SA)
-    '2015969': { type: 'SA', answer: 11, tolerance: 0 },
-    '20159610': { type: 'SA', answer: 4, tolerance: 0 },
-    '20159611': { type: 'SA', answer: 98, tolerance: 0 },
-    '20159612': { type: 'SA', answer: 2, tolerance: 0 }, // assuming 2
-    
-    // Math Sec 4 (MCQ)
+    // Mathematics
+    '2015962': { type: 'MCQ', answer: 'A' },
+    '2015961': { type: 'MCQ', answer: 'D' },
+    '2015964': { type: 'MCQ', answer: 'A' },
+    '2015963': { type: 'MCQ', answer: 'B' },
+    '2015967': { type: 'MSQ', answer: ['B', 'C'] },
+    '2015966': { type: 'MSQ', answer: ['C', 'D'] },
+    '2015965': { type: 'MSQ', answer: ['B', 'C'] },
+    '2015968': { type: 'MSQ', answer: ['B', 'C', 'D'] },
+    '20159610': { type: 'SA', answer: 5, tolerance: 0 },
+    '20159611': { type: 'SA', answer: 206, tolerance: 0 },
+    '2015969': { type: 'SA', answer: 2520, tolerance: 0 },
+    '20159612': { type: 'SA', answer: 5, tolerance: 0 },
+    '20159615': { type: 'MCQ', answer: 'B' },
     '20159613': { type: 'MCQ', answer: 'C' },
     '20159614': { type: 'MCQ', answer: 'A' },
-    '20159615': { type: 'MCQ', answer: 'B' }, // assuming
-    '20159616': { type: 'MCQ', answer: 'D' }, // assuming
+    '20159616': { type: 'MCQ', answer: 'C' },
 
-    // Note: The rest of the keys for Physics and Chemistry would be added here
-    // as well. Since we only have a partial HTML sample, we'll gracefully handle
-    // missing keys by treating them as 0 marks for now.
+    // Physics
+    '20159618': { type: 'MCQ', answer: 'D' },
+    '20159619': { type: 'MCQ', answer: 'B' },
+    '20159620': { type: 'MCQ', answer: 'B' },
+    '20159617': { type: 'MCQ', answer: 'D' },
+    '20159623': { type: 'MSQ', answer: ['B', 'D'] },
+    '20159624': { type: 'MSQ', answer: ['C', 'D'] },
+    '20159622': { type: 'MSQ', answer: ['B', 'C'] },
+    '20159621': { type: 'MSQ', answer: ['A', 'B', 'C'] },
+    '20159628': { type: 'SA', answer: 3, tolerance: 0 },
+    '20159627': { type: 'SA', answer: 1.4, tolerance: 0 },
+    '20159626': { type: 'SA', answer: 0.33, tolerance: 0 },
+    '20159625': { type: 'SA', answer: 3, tolerance: 0 },
+    '20159632': { type: 'MCQ', answer: 'B' },
+    '20159631': { type: 'MCQ', answer: 'C' },
+    '20159629': { type: 'MCQ', answer: 'B' },
+    '20159630': { type: 'MCQ', answer: 'D' },
+
+    // Chemistry
+    '20159633': { type: 'MCQ', answer: 'A' },
+    '20159635': { type: 'MCQ', answer: 'C' },
+    '20159636': { type: 'MCQ', answer: 'A' },
+    '20159634': { type: 'MCQ', answer: 'C' },
+    '20159638': { type: 'MSQ', answer: ['A', 'B', 'C'] },
+    '20159640': { type: 'MSQ', answer: ['A', 'B', 'D'] },
+    '20159639': { type: 'MSQ', answer: ['A', 'D'] },
+    '20159637': { type: 'MSQ', answer: ['A'] },
+    '20159644': { type: 'SA', answer: 3, tolerance: 0 },
+    '20159643': { type: 'SA', answer: 6, tolerance: 0 },
+    '20159641': { type: 'SA', answer: 4, tolerance: 0 },
+    '20159642': { type: 'SA', answer: 4, tolerance: 0 },
+    '20159645': { type: 'MCQ', answer: 'B' },
+    '20159646': { type: 'MCQ', answer: 'A' },
+    '20159648': { type: 'MCQ', answer: 'A' },
+    '20159647': { type: 'MCQ', answer: 'A' }
   }
 };
 
