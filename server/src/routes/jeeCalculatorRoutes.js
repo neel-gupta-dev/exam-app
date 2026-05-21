@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import asyncHandler from 'express-async-handler';
-import axios from 'axios';
 import { parseResponseSheet } from '../services/jeeParserService.js';
 import { calculateScores } from '../services/scoringService.js';
 
@@ -17,13 +16,17 @@ router.post('/calculate', asyncHandler(async (req, res) => {
   }
 
   try {
-    const response = await axios.get(url, {
+    const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       }
     });
     
-    const html = response.data;
+    if (!response.ok) {
+      throw new Error(`Failed to fetch URL. Status: ${response.status}`);
+    }
+    
+    const html = await response.text();
     const parsedData = parseResponseSheet(html);
     
     // Auto-detect year/paper if not provided
