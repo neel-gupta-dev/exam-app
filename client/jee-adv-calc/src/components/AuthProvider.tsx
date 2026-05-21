@@ -68,8 +68,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginWithGoogle = () => {
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-    // Remove /api from base url for auth route
-    const authUrl = API_BASE_URL.replace('/api', '') + '/auth/google?origin=jeecalc';
+    
+    // The backend mounts routes on both '/' and '/api', so we can just append
+    // /auth/google directly to whatever base URL is provided.
+    // If API_BASE_URL doesn't end with a slash, we add one implicitly.
+    const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+    const authUrl = `${baseUrl}/auth/google?origin=jeecalc`;
+    
     window.location.href = authUrl;
   };
 

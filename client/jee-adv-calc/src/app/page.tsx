@@ -3,6 +3,7 @@
 import JeeCalculator from "../components/JeeCalculator";
 import { useAuth } from "../components/AuthProvider";
 import { Loader2 } from "lucide-react";
+import Image from "next/image";
 
 export default function Home() {
   const { user, loading, loginWithGoogle, logout } = useAuth();
@@ -45,8 +46,15 @@ export default function Home() {
     <div className="flex-1 flex flex-col p-4 md:p-8">
       {/* Top Navbar */}
       <header className="flex justify-between items-center mb-8 bg-slate-800/40 rounded-full py-3 px-6 border border-slate-700/50 backdrop-blur-md">
-        <div className="font-bold text-white flex items-center gap-2">
-          <span className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-sm shadow-lg">V</span>
+        <div className="font-bold text-white flex items-center gap-3">
+          <div className="w-8 h-8 relative rounded-full overflow-hidden shadow-lg bg-white/10 flex items-center justify-center p-1">
+            <Image 
+              src="/vayl-logo.png" 
+              alt="Vaylin Logo" 
+              fill
+              className="object-contain"
+            />
+          </div>
           <span className="hidden sm:inline">Vaylin</span>
         </div>
         <div className="flex items-center gap-4">

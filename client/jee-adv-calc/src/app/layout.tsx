@@ -20,6 +20,11 @@ export const metadata: Metadata = {
     title: "JEE Advanced Marks Calculator",
     description: "Instantly calculate your JEE Advanced score from the official response sheet.",
   },
+  icons: {
+    icon: "/vayl-logo.png",
+    shortcut: "/vayl-logo.png",
+    apple: "/vayl-logo.png",
+  },
   robots: {
     index: true,
     follow: true,
