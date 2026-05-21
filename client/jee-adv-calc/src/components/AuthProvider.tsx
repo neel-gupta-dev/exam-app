@@ -15,6 +15,7 @@ interface AuthContextType {
   loading: boolean;
   logout: () => void;
   loginWithGoogle: () => void;
+  loginWithCredentials: (email: string, password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -22,6 +23,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   logout: () => {},
   loginWithGoogle: () => {},
+  loginWithCredentials: async () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -78,8 +80,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.href = authUrl;
   };
 
+  const loginWithCredentials = async (email: string, password: string) => {
+    try {
+      const { data } = await api.post('/auth/login', { email, password });
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        setUser(data);
+      }
+    } catch (error) {
+      console.error('Credentials login failed:', error);
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, logout, loginWithGoogle }}>
+    <AuthContext.Provider value={{ user, loading, logout, loginWithGoogle, loginWithCredentials }}>
       {children}
     </AuthContext.Provider>
   );

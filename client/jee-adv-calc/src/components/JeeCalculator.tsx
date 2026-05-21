@@ -2,13 +2,12 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Link as LinkIcon, FileCode, CheckCircle2, XCircle, MinusCircle, AlertCircle, RefreshCcw } from 'lucide-react';
+import { Loader2, Link as LinkIcon, CheckCircle2, XCircle, MinusCircle, AlertCircle, RefreshCcw, FileCode } from 'lucide-react';
 import api from '../lib/api';
 
 export default function JeeCalculator() {
-  const [url, setUrl] = useState('');
-  const [html, setHtml] = useState('');
-  const [mode, setMode] = useState<'url' | 'html'>('url');
+  const [paper1Url, setPaper1Url] = useState('');
+  const [paper2Url, setPaper2Url] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [results, setResults] = useState<any>(null);
@@ -19,10 +18,7 @@ export default function JeeCalculator() {
     setError('');
     
     try {
-      const endpoint = mode === 'url' ? '/jee-calculator/calculate' : '/jee-calculator/calculate-html';
-      const payload = mode === 'url' ? { url } : { html };
-      
-      const { data } = await api.post(endpoint, payload);
+      const { data } = await api.post('/jee-calculator/calculate', { paper1Url, paper2Url });
       setResults(data);
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'An error occurred');
@@ -33,8 +29,8 @@ export default function JeeCalculator() {
 
   const reset = () => {
     setResults(null);
-    setUrl('');
-    setHtml('');
+    setPaper1Url('');
+    setPaper2Url('');
     setError('');
   };
 
@@ -64,48 +60,29 @@ export default function JeeCalculator() {
             <div className="glass p-8 rounded-3xl w-full max-w-2xl shadow-2xl relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-emerald-500" />
               
-              <div className="flex gap-4 mb-6 p-1 bg-slate-800/50 rounded-lg w-fit mx-auto">
-                <button 
-                  onClick={() => setMode('url')}
-                  className={`px-6 py-2 rounded-md font-medium transition-all ${mode === 'url' ? 'bg-blue-500 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
-                >
-                  <LinkIcon className="w-4 h-4 inline-block mr-2" />
-                  URL Fetch
-                </button>
-                <button 
-                  onClick={() => setMode('html')}
-                  className={`px-6 py-2 rounded-md font-medium transition-all ${mode === 'html' ? 'bg-blue-500 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}
-                >
-                  <FileCode className="w-4 h-4 inline-block mr-2" />
-                  Paste HTML
-                </button>
-              </div>
-
               <form onSubmit={handleCalculate} className="space-y-4">
-                {mode === 'url' ? (
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Response Sheet URL</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Paper 1 Response Sheet URL</label>
                     <input 
                       type="url" 
-                      required
-                      value={url}
-                      onChange={(e) => setUrl(e.target.value)}
+                      value={paper1Url}
+                      onChange={(e) => setPaper1Url(e.target.value)}
                       placeholder="https://cdn3.digialm.com/..." 
-                      className="w-full bg-slate-900/50 border border-slate-600 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full bg-slate-900/50 border border-slate-650 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
                     />
                   </div>
-                ) : (
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Raw HTML Source (Ctrl+U then Ctrl+C)</label>
-                    <textarea 
-                      required
-                      value={html}
-                      onChange={(e) => setHtml(e.target.value)}
-                      placeholder="<html><head>..." 
-                      className="w-full h-32 bg-slate-900/50 border border-slate-600 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-mono text-xs resize-none"
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Paper 2 Response Sheet URL</label>
+                    <input 
+                      type="url" 
+                      value={paper2Url}
+                      onChange={(e) => setPaper2Url(e.target.value)}
+                      placeholder="https://cdn3.digialm.com/..." 
+                      className="w-full bg-slate-900/50 border border-slate-650 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
                     />
                   </div>
-                )}
+                </div>
 
                 {error && (
                   <div className="flex items-center gap-2 text-red-400 bg-red-400/10 p-3 rounded-lg text-sm border border-red-500/20">
@@ -115,9 +92,9 @@ export default function JeeCalculator() {
                 )}
 
                 <button 
-                  disabled={loading || (mode === 'url' && !url) || (mode === 'html' && !html)}
+                  disabled={loading || !paper1Url || !paper2Url}
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg hover:shadow-blue-500/25 flex items-center justify-center gap-2"
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg hover:shadow-blue-500/25 flex items-center justify-center gap-2 cursor-pointer text-sm"
                 >
                   {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Calculate Score'}
                 </button>
@@ -132,39 +109,100 @@ export default function JeeCalculator() {
             className="py-10"
           >
             {/* Header / Meta */}
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-8 pb-8 border-b border-slate-800">
+            <div className="flex flex-wrap items-center justify-between gap-6 mb-8 pb-8 border-b border-slate-800">
               <div>
-                <h2 className="text-3xl font-bold text-white mb-2">{results.candidateInfo?.examTitle || 'JEE Advanced Results'}</h2>
-                <div className="flex gap-4 text-slate-400 text-sm">
-                  <span><span className="text-slate-500">Name:</span> {results.candidateInfo?.candidateName}</span>
-                  <span><span className="text-slate-500">ID:</span> {results.candidateInfo?.candidateId}</span>
+                <h2 className="text-3xl font-bold text-white mb-3">{results.candidateInfo?.examTitle || 'JEE Advanced Results'}</h2>
+                <div className="flex flex-wrap gap-x-6 gap-y-2 text-slate-400 text-sm">
+                  <div>
+                    <span className="text-slate-500 font-medium">Candidate Name:</span>{' '}
+                    <span className="text-slate-200 font-semibold">
+                      {results.candidateInfo?.['Candidate Name'] || results.candidateInfo?.['Participant Name'] || results.candidateInfo?.candidateName || 'N/A'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 font-medium">Candidate ID:</span>{' '}
+                    <span className="text-slate-200 font-semibold font-mono">
+                      {results.candidateInfo?.['Candidate ID'] || results.candidateInfo?.['Participant ID'] || results.candidateInfo?.candidateId || 'N/A'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 font-medium">Subject:</span>{' '}
+                    <span className="text-slate-200 font-semibold">
+                      {results.candidateInfo?.['Subject'] || results.candidateInfo?.Subject || 'N/A'}
+                    </span>
+                  </div>
                 </div>
               </div>
-              <button onClick={reset} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors text-sm font-medium">
+              <button onClick={reset} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 transition-colors border border-slate-700/50 text-sm font-medium shadow-md">
                 <RefreshCcw className="w-4 h-4" /> Try Another
               </button>
             </div>
 
-            {/* Top Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <div className="md:col-span-1 glass rounded-2xl p-6 flex flex-col justify-center items-center relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <p className="text-slate-400 font-medium mb-2 z-10">Total Score</p>
-                <div className="flex items-baseline gap-2 z-10">
-                  <span className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
-                    {results.totalScore}
-                  </span>
-                  <span className="text-slate-500 font-bold">/ {results.maxScore}</span>
-                </div>
-              </div>
+            {/* Dynamic calculations for paper-wise scores */}
+            {(() => {
+              const paper1Questions = results.questions.filter((q: any) => q.paper === 1);
+              const paper2Questions = results.questions.filter((q: any) => q.paper === 2);
+              
+              const hasPaper1 = paper1Questions.length > 0;
+              const hasPaper2 = paper2Questions.length > 0;
+              
+              const paper1Score = hasPaper1 ? paper1Questions.reduce((sum: number, q: any) => sum + q.marks, 0) : results.totalScore;
+              const paper2Score = hasPaper2 ? paper2Questions.reduce((sum: number, q: any) => sum + q.marks, 0) : 0;
+              
+              const paper1Attempted = paper1Questions.filter((q: any) => q.isAttempted).length;
+              const paper2Attempted = paper2Questions.filter((q: any) => q.isAttempted).length;
 
-              <div className="md:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-4">
-                <StatCard label="Attempted" value={`${results.totalAttempted}/48`} icon={<FileCode className="text-blue-400 w-5 h-5"/>} />
-                <StatCard label="Correct" value={results.totalCorrect} icon={<CheckCircle2 className="text-emerald-400 w-5 h-5"/>} />
-                <StatCard label="Positive Marks" value={`+${results.positiveMarks}`} icon={<span className="text-emerald-400 font-bold">+</span>} />
-                <StatCard label="Negative Marks" value={results.negativeMarks} icon={<span className="text-red-400 font-bold">-</span>} />
-              </div>
-            </div>
+              return (
+                <>
+                  {/* Top Stats */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div className="md:col-span-1 glass rounded-2xl p-6 flex flex-col justify-center items-center relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <p className="text-slate-400 font-medium mb-2 z-10">Total Score</p>
+                      <div className="flex items-baseline gap-2 z-10">
+                        <span className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
+                          {results.totalScore}
+                        </span>
+                        <span className="text-slate-500 font-bold">/ {results.maxScore}</span>
+                      </div>
+                    </div>
+
+                    <div className="md:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <StatCard label="Attempted" value={`${results.totalAttempted}/${results.questions.length}`} icon={<FileCode className="text-blue-400 w-5 h-5"/>} />
+                      <StatCard label="Correct" value={results.totalCorrect} icon={<CheckCircle2 className="text-emerald-400 w-5 h-5"/>} />
+                      <StatCard label="Positive Marks" value={`+${results.positiveMarks}`} icon={<span className="text-emerald-400 font-bold">+</span>} />
+                      <StatCard label="Negative Marks" value={results.negativeMarks} icon={<span className="text-red-400 font-bold">-</span>} />
+                    </div>
+                  </div>
+
+                  {/* Individual Paper Scores */}
+                  {hasPaper2 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 animate-in fade-in duration-500">
+                      <div className="bg-slate-800/35 border border-slate-700/50 rounded-2xl p-5 flex items-center justify-between">
+                        <div>
+                          <h4 className="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-1">Paper 1 Score</h4>
+                          <p className="text-xs text-slate-500">Attempted: {paper1Attempted} / {paper1Questions.length} Qs</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-3xl font-black text-blue-400">{paper1Score}</span>
+                          <span className="text-slate-500 font-semibold text-sm"> / 168</span>
+                        </div>
+                      </div>
+                      <div className="bg-slate-800/35 border border-slate-700/50 rounded-2xl p-5 flex items-center justify-between">
+                        <div>
+                          <h4 className="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-1">Paper 2 Score</h4>
+                          <p className="text-xs text-slate-500">Attempted: {paper2Attempted} / {paper2Questions.length} Qs</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-3xl font-black text-emerald-400">{paper2Score}</span>
+                          <span className="text-slate-500 font-semibold text-sm"> / 168</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
 
             {/* Subject Breakdown */}
             <h3 className="text-xl font-bold text-slate-200 mb-4">Subject-wise Breakdown</h3>
@@ -208,6 +246,7 @@ export default function JeeCalculator() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-800/80 border-b border-slate-700 text-slate-400 text-sm">
+                      <th className="p-4 font-medium">Paper</th>
                       <th className="p-4 font-medium">Q.ID</th>
                       <th className="p-4 font-medium">Subject</th>
                       <th className="p-4 font-medium">Section</th>
@@ -218,7 +257,8 @@ export default function JeeCalculator() {
                   </thead>
                   <tbody className="divide-y divide-slate-800/50">
                     {results.questions.map((q: any) => (
-                      <tr key={q.questionId} className="hover:bg-slate-800/30 transition-colors">
+                      <tr key={`${q.paper || 1}_${q.questionId}`} className="hover:bg-slate-800/30 transition-colors">
+                        <td className="p-4 text-sm font-semibold text-blue-400">Paper {q.paper || 1}</td>
                         <td className="p-4 font-mono text-sm text-slate-300">{q.questionId}</td>
                         <td className="p-4 text-sm">{q.subject}</td>
                         <td className="p-4 text-sm text-slate-400">{q.section}</td>

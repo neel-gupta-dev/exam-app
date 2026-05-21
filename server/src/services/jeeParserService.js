@@ -5,7 +5,7 @@ import * as cheerio from 'cheerio';
  * @param {string} htmlString - Raw HTML from digialm
  * @returns {Object} Parsed response sheet data
  */
-export const parseResponseSheet = (htmlString) => {
+export const parseResponseSheet = (htmlString, baseUrl = null) => {
   const $ = cheerio.load(htmlString);
   
   // Extract Header Info
@@ -18,6 +18,14 @@ export const parseResponseSheet = (htmlString) => {
       const key = $(tds[0]).text().trim();
       const val = $(tds[1]).text().trim();
       candidateInfo[key] = val;
+      
+      const lowerKey = key.toLowerCase();
+      if (lowerKey.includes('name')) {
+        candidateInfo.candidateName = val;
+      }
+      if (lowerKey.includes('id') || lowerKey.includes('roll number') || lowerKey.includes('roll no') || lowerKey.includes('application')) {
+        candidateInfo.candidateId = val;
+      }
     }
   });
 
@@ -47,8 +55,25 @@ export const parseResponseSheet = (htmlString) => {
       
       const questionData = {
         section: sectionLabel,
-        subject: fullSubject
+        subject: fullSubject,
+        images: []
       };
+
+      // Extract images from the question panel
+      $(qPanel).find('img').each((_, imgEl) => {
+        if ($(imgEl).closest('table.menu-tbl').length > 0) return;
+        let src = $(imgEl).attr('src');
+        if (src) {
+          if (baseUrl && !src.startsWith('http') && !src.startsWith('//')) {
+            try {
+              src = new URL(src, baseUrl).toString();
+            } catch (e) {
+              console.error('Failed to resolve relative image URL:', e.message);
+            }
+          }
+          questionData.images.push(src);
+        }
+      });
 
       // Extract from right menu table
       menuTbl.find('tr').each((_, tr) => {
