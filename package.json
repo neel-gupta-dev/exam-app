@@ -5,9 +5,10 @@
   "scripts": {
     "dev:client": "cd client/frontend && npm run dev",
     "dev:server": "cd server && npm run dev",
-    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
+    "dev:jee-calc": "cd client/jee-adv-calc && npm run dev -- -p 3002",
+    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\" \"npm run dev:jee-calc\"",
     "build": "cd client/frontend && npm install && npm run build",
-    "install-all": "npm install && cd client/frontend && npm install && cd ../../server && npm install"
+    "install-all": "npm install && cd client/frontend && npm install && cd ../../server && npm install && cd ../client/jee-adv-calc && npm install"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

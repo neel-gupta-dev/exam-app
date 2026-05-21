@@ -4,6 +4,7 @@ import { register, login, ping, logout, sendOtp, verifyOtp, onboard, getMe, upda
 import { protect } from '../middlewares/authMiddleware.js';
 import passport from 'passport';
 import generateToken from '../utils/generateToken.js';
+import { FRONTEND_URL } from '../config/index.js';
 
 const router = Router();
 
@@ -55,13 +56,15 @@ router.get('/google', (req, res, next) => {
   })(req, res, next);
 });
 
-import { FRONTEND_URL } from '../config/index.js';
 
 const BATTLE_FRONTEND_URL = process.env.BATTLE_FRONTEND_URL || 
   (process.env.NODE_ENV === 'production' ? 'https://battle.vayl.in' : 'http://localhost:3001');
 
 const TESTS_FRONTEND_URL = process.env.TESTS_FRONTEND_URL || 
   (process.env.NODE_ENV === 'production' ? 'https://tests.vayl.in' : 'http://localhost:5173');
+
+const JEE_CALC_FRONTEND_URL = process.env.JEE_CALC_FRONTEND_URL ||
+  (process.env.NODE_ENV === 'production' ? 'https://jee-calc.vayl.in' : 'http://localhost:3002');
 
 const isSafeSharedTestIdentifier = (value) => /^[a-z0-9][a-z0-9-]{0,79}$/i.test(String(value || ''));
 
@@ -94,6 +97,10 @@ router.get('/google/callback',
         url += `?shared_test_id=${encodeURIComponent(sharedTestId)}`;
       }
       return res.redirect(`${url}#token=${token}`);
+    }
+
+    if (origin === 'jeecalc') {
+      return res.redirect(`${JEE_CALC_FRONTEND_URL}/#token=${token}`);
     }
 
     // Default: redirect to main frontend
