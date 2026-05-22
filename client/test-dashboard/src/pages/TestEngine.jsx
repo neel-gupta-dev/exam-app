@@ -471,6 +471,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
           timeToFirstActionSeconds: firstActionTimeRef.current[questionId] || 0,
         };
       });
+      syncDirty.current = false; // Set to false BEFORE the async request to avoid race condition
       await apiFetch(`/assessment/${testId}/sync?attemptId=${attemptQuery}`, {
         method: 'POST',
         body: JSON.stringify({
@@ -479,14 +480,13 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
           tabSwitchCount: Number(sessionStorage.getItem('cbt_tab_switch_count') || 0),
         }),
       });
-      syncDirty.current = false;
       return true;
     } catch (e) {
       if (e.message.includes('No matching document') || e.message.includes('VersionError')) {
         console.warn('Sync version collision ignored:', e.message);
-        syncDirty.current = false;
         return true;
       }
+      syncDirty.current = true; // Revert to true if the request actually failed
       console.warn('[Sync] Failed:', e.message);
       if (!silent) throw e;
       return false;

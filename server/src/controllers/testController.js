@@ -277,7 +277,22 @@ export const getStudentTests = asyncHandler(async (req, res) => {
     if (!latestAttemptByTest.has(key)) latestAttemptByTest.set(key, attempt);
   }
 
-  const enrichedTests = await Promise.all(rawTests.map(async (t) => {
+  // Batch check redis sessions to prevent N+1 query bottleneck
+  const redisSessionChecks = new Map();
+  if (redis && rawTests.length > 0) {
+    const pipeline = redis.pipeline();
+    const sessionKeys = rawTests.map(t => `cbt_session:${userId.toString()}:${t._id.toString()}`);
+    sessionKeys.forEach(key => pipeline.exists(key));
+    const results = await pipeline.exec();
+    
+    rawTests.forEach((t, i) => {
+      // ioredis pipeline results are returned as [[error, result], ...]
+      const result = results && results[i] ? results[i][1] : 0;
+      redisSessionChecks.set(t._id.toString(), Boolean(result));
+    });
+  }
+
+  const enrichedTests = rawTests.map((t) => {
     const testObj = t.toObject();
     const attempt = latestAttemptByTest.get(t._id.toString());
     
@@ -286,8 +301,7 @@ export const getStudentTests = asyncHandler(async (req, res) => {
     let hasRedisSession = false;
     
     if (redis) {
-      const sessionKey = `cbt_session:${userId.toString()}:${t._id.toString()}`;
-      hasRedisSession = Boolean(await redis.exists(sessionKey));
+      hasRedisSession = redisSessionChecks.get(t._id.toString()) || false;
     }
 
     if (hasRedisSession) {
@@ -321,7 +335,7 @@ export const getStudentTests = asyncHandler(async (req, res) => {
       status,
       latestAttemptId: attempt ? attempt._id : null,
     };
-  }));
+  });
 
   res.json(enrichedTests);
 });
