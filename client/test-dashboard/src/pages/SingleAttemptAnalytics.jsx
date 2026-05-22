@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+import { PrintableReport } from '../components/PrintableReport';
 
 const formatDuration = (seconds = 0) => {
   const total = Math.max(0, Math.round(Number(seconds) || 0));
@@ -17,8 +20,100 @@ const fadeUp = {
   show: { opacity: 1, y: 0, transition: { duration: 0.35 } },
 };
 
+const JourneyMap = ({ questions }) => {
+  const allVisits = [];
+  if (questions) {
+    questions.forEach((q, index) => {
+      const qNum = q.questionNumber || index + 1;
+      if (q.visitLog && Array.isArray(q.visitLog)) {
+        q.visitLog.forEach(visit => {
+          if (visit.enteredAt) {
+            allVisits.push({
+              qNum,
+              questionId: q.questionId,
+              enteredAt: new Date(visit.enteredAt),
+              leftAt: visit.leftAt ? new Date(visit.leftAt) : null,
+              durationSeconds: visit.durationSeconds || 0
+            });
+          }
+        });
+      }
+    });
+  }
+  allVisits.sort((a, b) => a.enteredAt - b.enteredAt);
+
+  if (allVisits.length === 0) {
+    return <p className="text-sm font-semibold text-slate-400 mt-2">No chronological journey data available.</p>;
+  }
+
+  return (
+    <div className="flex overflow-x-auto py-10 px-4 items-center" style={{ scrollbarWidth: 'thin' }}>
+      {allVisits.map((visit, i) => (
+        <div key={i} className="flex items-center shrink-0">
+          <div className="relative flex flex-col items-center">
+            <div className="w-12 h-12 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold shadow-md z-10 shrink-0">
+              Q{visit.qNum}
+            </div>
+            <div className="absolute top-14 text-[10px] font-semibold text-slate-500 whitespace-nowrap">
+              {visit.enteredAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
+            </div>
+          </div>
+          {i < allVisits.length - 1 && (
+            <div className="relative w-20 h-0.5 bg-slate-300 flex items-center justify-center z-0 -ml-1 -mr-1">
+               <div className="absolute -top-6 text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full whitespace-nowrap shadow-sm">
+                 {formatDuration(visit.durationSeconds)}
+               </div>
+               <div className="absolute right-0 w-2 h-2 border-t-2 border-r-2 border-slate-400 transform rotate-45 -mt-1" />
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 export default function SingleAttemptAnalytics({ attempt, onReview, onBack }) {
   const { test, telemetry, sectionScores = {}, topicPerformance = {} } = attempt;
+  const printRef = useRef(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    if (!printRef.current) return;
+    setIsGenerating(true);
+    try {
+      // Create canvas from the hidden printable report component
+      const canvas = await html2canvas(printRef.current, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL('image/png');
+      
+      // Calculate A4 dimensions
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      let position = 0;
+      let heightLeft = pdfHeight;
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      // First page
+      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+      heightLeft -= pageHeight;
+
+      // Add subsequent pages if content overflows
+      while (heightLeft >= 0) {
+        position = heightLeft - pdfHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`Vayl_Report_${test?.title?.replace(/\s+/g, '_') || 'Attempt'}.pdf`);
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      alert('Failed to generate PDF report.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   // Process data for charts
   const sectionEntries = Object.entries(sectionScores).sort((a, b) => b[1].score - a[1].score);
@@ -43,9 +138,27 @@ export default function SingleAttemptAnalytics({ attempt, onReview, onBack }) {
           <span className="material-symbols-outlined text-lg">arrow_back</span>
           Back to Analytics
         </motion.button>
-        <motion.button
-          initial={{ opacity: 0, x: 10 }}
-          animate={{ opacity: 1, x: 0 }}
+        <div className="flex gap-2">
+          <motion.button
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleDownloadPDF}
+            disabled={isGenerating}
+            className="inline-flex items-center gap-2 rounded-2xl bg-indigo-50 px-4 py-2 text-sm font-bold text-indigo-700 shadow-sm transition hover:bg-indigo-100 disabled:opacity-50"
+          >
+            {isGenerating ? (
+              <div className="h-4 w-4 border-2 border-indigo-200 border-t-indigo-700 rounded-full animate-spin" />
+            ) : (
+              <span className="material-symbols-outlined text-lg">download</span>
+            )}
+            {isGenerating ? 'Generating...' : 'Download PDF'}
+          </motion.button>
+          
+          <motion.button
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
           whileHover={{ x: 3 }}
           onClick={() => onReview(attempt._id)}
           className="inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-indigo-700 hover:shadow-md"
@@ -53,6 +166,7 @@ export default function SingleAttemptAnalytics({ attempt, onReview, onBack }) {
           <span className="material-symbols-outlined text-lg">fact_check</span>
           Review Questions
         </motion.button>
+        </div>
       </div>
 
       {/* Hero Overview */}
@@ -106,33 +220,57 @@ export default function SingleAttemptAnalytics({ attempt, onReview, onBack }) {
         ))}
       </motion.section>
 
-      {/* Fatigue Curve */}
+      {/* Journey Map */}
       {questions.length > 0 && (
         <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm overflow-hidden">
-          <h2 className="text-xl font-black text-slate-900">Navigation Path & Fatigue</h2>
-          <p className="mt-1 text-xs text-slate-500 mb-6">Chronological timeline of your test attempt. Bubbles represent questions visited over time.</p>
-          <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-2 pb-2">
-            {[...questions]
-              .filter(q => q.firstVisitedAt)
-              .sort((a,b) => new Date(a.firstVisitedAt) - new Date(b.firstVisitedAt))
-              .map((q, idx) => {
-                const color = q.answered ? 'bg-indigo-500' : 'bg-slate-200';
-                return (
-                  <div key={q.questionId} className="relative group flex flex-col items-center">
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: idx * 0.01 }}
-                      className={`h-4 w-4 rounded-full ${color} shrink-0 cursor-pointer transition-transform hover:scale-125`}
-                    />
-                    <div className="pointer-events-none absolute bottom-6 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-slate-900 text-white text-[10px] py-1 px-2 rounded-lg z-10 shadow-xl">
-                      Q{idx + 1} · {q.answered ? 'Answered' : 'Skipped'} <br/>
-                      Visited: {q.visitCount} times <br/>
-                      Time: {formatDuration(q.timeSpentSeconds)}
-                    </div>
-                  </div>
-                );
-              })}
+          <h2 className="text-xl font-black text-slate-900">Test Journey</h2>
+          <p className="mt-1 text-xs text-slate-500">Your exact path through the paper. See where you spent time and how you navigated.</p>
+          <JourneyMap questions={questions} />
+        </motion.section>
+      )}
+
+      {/* Time vs Score Analysis */}
+      {questions.length > 0 && (
+        <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm overflow-hidden">
+          <h2 className="text-xl font-black text-slate-900">Time vs Score Analysis</h2>
+          <p className="mt-1 text-xs text-slate-500 mb-6">Identify time sinks. Red bars show high time spent on incorrect/skipped questions.</p>
+          <div className="space-y-4 max-h-96 overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
+            {[...questions].sort((a, b) => (b.timeSpentSeconds || 0) - (a.timeSpentSeconds || 0)).map((q, idx) => {
+              const qNum = q.questionNumber || questions.findIndex(item => item.questionId === q.questionId) + 1;
+              const time = q.timeSpentSeconds || 0;
+              const isAnswered = q.answered;
+              const isWrong = q.resultStatus === 'wrong' || (q.score !== undefined && q.score < 0);
+              const isCorrect = q.resultStatus === 'correct' || (q.score !== undefined && q.score > 0);
+              
+              const statusText = isCorrect ? 'Correct' : isWrong ? 'Wrong' : isAnswered ? 'Answered' : 'Skipped';
+              const color = isCorrect ? 'bg-emerald-500' : isWrong ? 'bg-rose-500' : isAnswered ? 'bg-indigo-500' : 'bg-slate-300';
+              const isTrap = time > 120 && (isWrong || (!isAnswered)); // Traps = more than 2 mins and wrong/skipped
+              
+              return (
+                <div key={q.questionId || idx} className="flex flex-col sm:flex-row sm:items-center gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                   <div className="flex items-center gap-3 min-w-[80px]">
+                     <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xs font-black text-slate-600 shadow-sm shrink-0">
+                       Q{qNum}
+                     </div>
+                     {isTrap && <span className="text-[10px] font-black bg-rose-100 text-rose-700 px-2 py-0.5 rounded uppercase tracking-wider">Trap</span>}
+                   </div>
+                   <div className="flex-1 h-2.5 bg-slate-200 rounded-full overflow-hidden relative min-w-[100px]">
+                      <motion.div 
+                        initial={{ width: 0 }} 
+                        animate={{ width: `${Math.min(100, (time / (maxQuestionTime || 120)) * 100)}%` }} 
+                        transition={{ duration: 0.8 }}
+                        className={`absolute top-0 left-0 h-full ${color}`} 
+                      />
+                   </div>
+                   <div className="flex items-center gap-3 sm:w-48 justify-end shrink-0">
+                     <span className="text-sm font-black text-slate-700">{formatDuration(time)}</span>
+                     <span className={`w-20 text-[10px] font-bold text-center rounded-lg px-2 py-1 uppercase tracking-widest ${isCorrect ? 'text-emerald-700 bg-emerald-100' : isWrong ? 'text-rose-700 bg-rose-100' : 'text-slate-600 bg-slate-200'}`}>
+                       {statusText}
+                     </span>
+                   </div>
+                </div>
+              );
+            })}
           </div>
         </motion.section>
       )}
@@ -212,6 +350,11 @@ export default function SingleAttemptAnalytics({ attempt, onReview, onBack }) {
           </div>
         </motion.div>
       </section>
+
+      {/* Hidden Printable Report */}
+      <div className="overflow-hidden h-0 w-0 absolute left-[-9999px]">
+        <PrintableReport ref={printRef} attempt={attempt} />
+      </div>
     </div>
   );
 }
