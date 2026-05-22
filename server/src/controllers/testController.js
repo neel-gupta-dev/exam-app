@@ -280,14 +280,14 @@ export const getStudentTests = asyncHandler(async (req, res) => {
   // Batch check redis sessions to prevent N+1 query bottleneck
   const redisSessionChecks = new Map();
   if (redis && rawTests.length > 0) {
-    const pipeline = redis.pipeline();
+    const multi = redis.multi();
     const sessionKeys = rawTests.map(t => `cbt_session:${userId.toString()}:${t._id.toString()}`);
-    sessionKeys.forEach(key => pipeline.exists(key));
-    const results = await pipeline.exec();
+    sessionKeys.forEach(key => multi.exists(key));
+    const results = await multi.exec();
     
     rawTests.forEach((t, i) => {
-      // ioredis pipeline results are returned as [[error, result], ...]
-      const result = results && results[i] ? results[i][1] : 0;
+      // node-redis v4 multi() returns an array of results directly [res1, res2, ...]
+      const result = results && results[i] ? results[i] : 0;
       redisSessionChecks.set(t._id.toString(), Boolean(result));
     });
   }
@@ -383,6 +383,13 @@ export const updateTest = asyncHandler(async (req, res) => {
   }
 
   await test.save();
+
+  const redis = getRedis();
+  if (redis) {
+    await redis.del(`test:${test._id}:meta`);
+    await redis.del(`test:${test._id}:questions`);
+  }
+
   res.json(test);
 });
 
@@ -422,6 +429,12 @@ export const togglePublish = asyncHandler(async (req, res) => {
   // } else {
   //   await redisClient.del(`test_payload:${test._id}`);
   // }
+
+  const redis = getRedis();
+  if (redis) {
+    await redis.del(`test:${test._id}:meta`);
+    await redis.del(`test:${test._id}:questions`);
+  }
 
   res.json({ message: `Test ${test.isPublished ? 'published' : 'unpublished'}`, isPublished: test.isPublished });
 });
@@ -471,6 +484,12 @@ export const deleteTest = asyncHandler(async (req, res) => {
     Test.deleteOne({ _id: test._id }),
   ]);
 
+  const redis = getRedis();
+  if (redis) {
+    await redis.del(`test:${test._id}:meta`);
+    await redis.del(`test:${test._id}:questions`);
+  }
+
   res.json({ message: 'Test and all its questions deleted.' });
 });
 
@@ -497,6 +516,12 @@ export const addQuestion = asyncHandler(async (req, res) => {
   // Update denormalized count
   test.questionCount = await Question.countDocuments({ testId: test._id });
   await test.save();
+
+  const redis = getRedis();
+  if (redis) {
+    await redis.del(`test:${test._id}:meta`);
+    await redis.del(`test:${test._id}:questions`);
+  }
 
   res.status(201).json(question);
 });
@@ -531,6 +556,12 @@ export const bulkAddQuestions = asyncHandler(async (req, res) => {
   test.questionCount = await Question.countDocuments({ testId: test._id });
   await test.save();
 
+  const redis = getRedis();
+  if (redis) {
+    await redis.del(`test:${test._id}:meta`);
+    await redis.del(`test:${test._id}:questions`);
+  }
+
   res.status(201).json({ message: `${inserted.length} questions added`, count: inserted.length });
 });
 
@@ -562,6 +593,13 @@ export const updateQuestion = asyncHandler(async (req, res) => {
   }
 
   await question.save();
+
+  const redis = getRedis();
+  if (redis) {
+    await redis.del(`test:${req.params.testId}:meta`);
+    await redis.del(`test:${req.params.testId}:questions`);
+  }
+
   res.json(question);
 });
 
@@ -582,6 +620,12 @@ export const deleteQuestion = asyncHandler(async (req, res) => {
   if (test) {
     test.questionCount = await Question.countDocuments({ testId: test._id });
     await test.save();
+  }
+
+  const redis = getRedis();
+  if (redis) {
+    await redis.del(`test:${req.params.testId}:meta`);
+    await redis.del(`test:${req.params.testId}:questions`);
   }
 
   res.json({ message: 'Question deleted' });
@@ -641,6 +685,12 @@ export const importPdfQuestions = asyncHandler(async (req, res) => {
   // Update denormalized count
   test.questionCount = await Question.countDocuments({ testId: test._id });
   await test.save();
+
+  const redis = getRedis();
+  if (redis) {
+    await redis.del(`test:${test._id}:meta`);
+    await redis.del(`test:${test._id}:questions`);
+  }
 
   res.status(201).json({
     message: `${inserted.length} questions imported from PDF`,

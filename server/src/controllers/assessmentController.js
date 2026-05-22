@@ -420,8 +420,33 @@ export const startAssessment = asyncHandler(async (req, res) => {
     }
   }
 
-  const questions = await Question.find({ testId }).sort({ order: 1 });
-  const safeQuestions = toSafeQuestions(questions);
+  // --- QUESTIONS FETCH WITH REDIS CACHE ---
+  let safeQuestions = null;
+  const questionsCacheKey = `test:${testId}:questions`;
+
+  if (redis) {
+    try {
+      const cached = await redis.get(questionsCacheKey);
+      if (cached) {
+        safeQuestions = JSON.parse(cached);
+      }
+    } catch (e) {
+      console.warn('[startAssessment] Redis questions read failed:', e.message);
+    }
+  }
+
+  if (!safeQuestions) {
+    const questions = await Question.find({ testId }).sort({ order: 1 });
+    safeQuestions = toSafeQuestions(questions);
+
+    if (redis) {
+      try {
+        await redis.setEx(questionsCacheKey, 86400, JSON.stringify(safeQuestions));
+      } catch (e) {
+        console.warn('[startAssessment] Redis questions write failed:', e.message);
+      }
+    }
+  }
   let lockedAttempt = null;
   if (attemptId) {
     lockedAttempt = await TestAttempt.findOne({ _id: attemptId, userId, testId }).select('+sessionTokenHash');
@@ -484,7 +509,12 @@ export const startAssessment = asyncHandler(async (req, res) => {
     : `cbt_session:${userId}:${testId}`;
 
   // Check if an active session exists in Redis
-  const activeSessionRaw = await redis.hGet(sessionKey, 'data');
+  let activeSessionRaw = null;
+  try {
+    activeSessionRaw = await redis.hGet(sessionKey, 'data');
+  } catch (e) {
+    console.error('[startAssessment] Redis session fetch failed, falling back to MongoDB:', e.message);
+  }
   let activeSession;
 
   if (activeSessionRaw) {
@@ -518,9 +548,13 @@ export const startAssessment = asyncHandler(async (req, res) => {
         answers: {}, // map of questionId -> { status: 'not_visited', selectedOption: null, markedForReview: false }
       };
     }
-    await redis.hSet(sessionKey, 'data', JSON.stringify(activeSession));
-    // Set expiry for safety (duration + 1 hour buffer)
-    await redis.expire(sessionKey, (test.durationMinutes * 60) + 3600);
+    try {
+      await redis.hSet(sessionKey, 'data', JSON.stringify(activeSession));
+      // Set expiry for safety (duration + 1 hour buffer)
+      await redis.expire(sessionKey, (test.durationMinutes * 60) + 3600);
+    } catch (e) {
+      console.error('[startAssessment] Redis session write failed:', e.message);
+    }
   }
   activeSession.timeLeft = computeTimeLeft(test, activeSession.startTime);
   activeSession.publicIp = lockedAttempt?.ipAddress || activeSession.publicIp || getClientIp(req);
