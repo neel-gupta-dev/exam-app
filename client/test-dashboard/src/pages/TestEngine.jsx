@@ -53,6 +53,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
   const [publicIp, setPublicIp] = useState('');
   const [showInstructionsPanel, setShowInstructionsPanel] = useState(false);
   const [showQuestionPaper, setShowQuestionPaper] = useState(false);
+  const [fontScale, setFontScale] = useState(1);
   const [showGridMobile, setShowGridMobile] = useState(false);
   const [tooltipData, setTooltipData] = useState(null);
   const [showProfilePopup, setShowProfilePopup] = useState(false);
@@ -494,6 +495,31 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
   };
   doSyncRef.current = doSync;
 
+  // ─── Advanced Anti-Cheat Restrictions ───
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'p', 's', 'x'].includes(e.key.toLowerCase())) {
+        e.preventDefault();
+        return false;
+      }
+    };
+    const handlePrevent = (e) => e.preventDefault();
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('copy', handlePrevent);
+    document.addEventListener('paste', handlePrevent);
+    document.addEventListener('cut', handlePrevent);
+    document.addEventListener('dragstart', handlePrevent);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('copy', handlePrevent);
+      document.removeEventListener('paste', handlePrevent);
+      document.removeEventListener('cut', handlePrevent);
+      document.removeEventListener('dragstart', handlePrevent);
+    };
+  }, []);
+
   // ─── Idle time detection ───
   useEffect(() => {
     if (submitted || loading) return;
@@ -845,6 +871,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
   const sectionSummary = getSectionSummary(activeSection || sections[0]?.name);
   const fullName = user?.name || user?.username || user?.email || 'Student';
   const watermarkName = fullName;
+  const watermarkEmail = user?.email || '';
   const watermarkIp = publicIp || 'IP not captured';
   const activeSectionQuestions = getFilteredQuestions();
   const currentLocalIdx = Math.max(0, activeSectionQuestions.findIndex((q) => q._id === currentQuestion?._id));
@@ -911,6 +938,14 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
           {testMeta?.title || 'Mock Test'}
         </div>
         <div className="flex h-full items-center text-[14px] font-bold">
+          {/* Font Scaling Options */}
+          <div className="flex items-center gap-[2px] mr-2 px-2 h-[26px] bg-[#222] rounded-[3px] border border-[#555]">
+            <button onClick={() => setFontScale(s => Math.max(0.8, s - 0.1))} className="px-2 text-[#ccc] hover:text-white font-bold" title="Decrease Font Size">A-</button>
+            <div className="w-[1px] h-3 bg-[#555] mx-1"></div>
+            <button onClick={() => setFontScale(1)} className="px-2 text-[#ccc] hover:text-white font-bold" title="Default Font Size">A</button>
+            <div className="w-[1px] h-3 bg-[#555] mx-1"></div>
+            <button onClick={() => setFontScale(s => Math.min(1.4, s + 0.1))} className="px-2 text-[#ccc] hover:text-white font-bold" title="Increase Font Size">A+</button>
+          </div>
           <button onClick={() => setShowInstructionsPanel(true)} className="flex h-full items-center gap-2 px-4 text-white hover:bg-[#3f3f3f] transition-all">
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4aaee8] text-[18px] italic leading-none text-white shadow-inner">i</span>
             Instructions
@@ -1060,11 +1095,13 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
           <div className="relative min-h-0 flex-1 border-b border-[#cfcfcf] bg-white">
             <div ref={questionScrollRef} className="w-full h-full overflow-y-auto relative">
               <div className="relative min-h-full w-full">
-                <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-[0.085]">
+                {/* z-50 ensures watermark is overlaid ON TOP of images/math blocks that might have opaque backgrounds */}
+                <div className="pointer-events-none absolute inset-0 z-50 overflow-hidden opacity-[0.085]">
                   <div className="grid w-full grid-cols-3 sm:grid-cols-4 gap-x-14 gap-y-24 pt-12 -rotate-12 place-items-center text-[16px] font-bold uppercase tracking-wide text-[#111]">
                     {Array.from({ length: 200 }).map((_, idx) => (
                       <span key={idx} className="flex max-w-[240px] flex-col items-center gap-1 text-center leading-tight">
                         <span className="max-w-full whitespace-nowrap">{watermarkName}</span>
+                        {watermarkEmail && <span className="max-w-full whitespace-nowrap text-[12px]">{watermarkEmail}</span>}
                         <span className="max-w-full whitespace-nowrap text-[12px]">{watermarkIp}</span>
                       </span>
                     ))}
@@ -1072,7 +1109,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
                 </div>
                 <div className="relative z-10">
               {/* Fixed Header Extract */}
-              <div className="px-[18px] py-[14px] text-[18px] leading-[1.42]">
+              <div className="px-[18px] py-[14px] text-[18px] leading-[1.42]" style={{ fontSize: `calc(18px * ${fontScale})` }}>
                 <div className="mb-7 min-h-[34px] whitespace-pre-wrap text-black">
                   <LatexRenderer text={currentQuestion?.content} />
                   {currentQuestion?.imageUrl && <img src={currentQuestion.imageUrl} alt="" className="mt-4 max-w-full" />}

@@ -236,6 +236,7 @@ const testAttemptSchema = new mongoose.Schema(
 testAttemptSchema.index({ tenantId: 1, testId: 1 });
 testAttemptSchema.index({ userId: 1, status: 1 });
 testAttemptSchema.index({ userId: 1, testId: 1, status: 1 });
+testAttemptSchema.index({ status: 1, isManual: 1 }); // Required for evaluationWorker polling
 
 const TestAttempt = coreConnection.model('TestAttempt', testAttemptSchema);
 

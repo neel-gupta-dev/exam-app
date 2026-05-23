@@ -24,11 +24,25 @@ const processQueue = async () => {
       return;
     }
 
+    // In-memory batch cache to prevent N+1 queries
+    const testCache = new Map();
+    const questionsCache = new Map();
+
     for (const attempt of pendingAttempts) {
       try {
-        const testId = attempt.testId;
-        const test = await Test.findById(testId).lean();
-        const questions = await Question.find({ testId }).lean();
+        const testId = attempt.testId.toString();
+        
+        let test = testCache.get(testId);
+        if (!test) {
+          test = await Test.findById(testId).lean();
+          testCache.set(testId, test);
+        }
+        
+        let questions = questionsCache.get(testId);
+        if (!questions) {
+          questions = await Question.find({ testId }).lean();
+          questionsCache.set(testId, questions);
+        }
 
         if (!test || !questions) {
            console.log(`[EvaluationWorker] Missing Test/Questions for attempt ${attempt._id}`);
