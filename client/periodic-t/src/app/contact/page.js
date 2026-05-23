@@ -21,7 +21,7 @@ export default function Contact() {
           <Link href="/">
             <img src="/vayl-logo.png" alt="Vayl Logo" style={{ height: "32px", width: "auto", cursor: "pointer" }} />
           </Link>
-          <div className="hdr-title">Vayl <span>Contact</span></div>
+          <h1 className="hdr-title" style={{ margin: 0, padding: 0 }}>Vayl <span>Contact</span></h1>
         </div>
         <div className="hdr-right">
           <Link href="/" className="btn" style={{ textDecoration: 'none' }}>Home</Link>

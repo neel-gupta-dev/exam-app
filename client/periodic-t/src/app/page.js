@@ -37,7 +37,7 @@ export default function PeriodicTable() {
       <header className="hdr">
         <div className="hdr-left">
           <img src="/vayl-logo.png" alt="Vayl Logo" style={{ height: "32px", width: "auto" }} />
-          <div className="hdr-title">Vayl <span>Periodic Table</span></div>
+          <h1 className="hdr-title" style={{ margin: 0, padding: 0 }}>Vayl <span>Periodic Table</span></h1>
         </div>
         <div className="hdr-right">
           <Link href="/contact" className="btn" style={{ textDecoration: 'none' }}>Contact</Link>
