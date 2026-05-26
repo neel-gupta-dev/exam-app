@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    container_name: node-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Tell your Node app to use this Redis URL
+      - REDIS_URL=redis://redis:6379
+    expose:
+      - "5000"
+    depends_on:
+      - redis
+    networks:
+      - caddy_net
+
+  redis:
+    image: redis:alpine
+    container_name: redis-cache
+    restart: unless-stopped
+    expose:
+      - "6379"
+    # Notice we DO NOT use 'ports: - "6379:6379"'.
+    # This keeps Redis completely hidden from the public internet!
+    networks:
+      - caddy_net
+
+networks:
+  caddy_net:
+    external: true

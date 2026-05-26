@@ -1,5 +1,5 @@
 # Use the official Node.js image
-FROM node:24-alpine
+FROM node:22-alpine
 WORKDIR /app
 
 # Install dependencies first (for better Docker caching)
