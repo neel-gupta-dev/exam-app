@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   backend:
     build: .
@@ -13,9 +11,23 @@ services:
     expose:
       - "5000"
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     networks:
       - caddy_net
+    # Auto-restart if the /health endpoint stops responding
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Prevent Docker logs from filling up your disk
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   redis:
     image: redis:alpine
@@ -25,9 +37,27 @@ services:
       - "6379"
     # Notice we DO NOT use 'ports: - "6379:6379"'.
     # This keeps Redis completely hidden from the public internet!
+    volumes:
+      # Persist Redis data so cache survives VPS restarts
+      - redis_data:/data
     networks:
       - caddy_net
+    # Redis health check so backend waits for it to be truly ready
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
 
 networks:
   caddy_net:
     external: true
+
+volumes:
+  # Named volume for Redis persistence across container/VPS restarts
+  redis_data:

@@ -1,14 +1,25 @@
-version: '3.8'
-
 services:
   nextjs:
     build: .
     container_name: nextjs-app
     restart: unless-stopped
     expose:
-      - "3000"  # Expose internally to the network, no need to expose publicly!
+      - "3000"  # Expose internally to Caddy only — not to the public internet!
     networks:
       - caddy_net
+    # Auto-restart if the app becomes unresponsive
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    # Prevent Docker logs from filling up your disk
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   caddy_net:
