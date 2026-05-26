@@ -41,7 +41,7 @@ export const sendFeedbackEmail = async (userEmail, userName = 'Student') => {
         </div>
 
         <p style="margin-top: 40px; font-size: 14px; color: #555;">
-          Got a minute? We'd love a detailed review. Just reply to this email or reach out to us at <strong>support@vayl.in</strong>.
+          Got a minute? We'd love a detailed review. Just reply to this email or reach out to us at <strong>${process.env.EMAIL_SUPPORT_ADDRESS || 'support@vayl.in'}</strong>.
         </p>
       </div>
     `
@@ -64,7 +64,7 @@ export const sendFeedbackEmail = async (userEmail, userName = 'Student') => {
         'Authorization': `Zoho-enczapikey ${apiKey}`
       },
       body: JSON.stringify({
-        from: { "address": "noreply@vayl.in", "name": "Vayl Study OS" },
+        from: { "address": process.env.EMAIL_FROM_ADDRESS || "noreply@vayl.in", "name": "Vayl Study OS" },
         to: [{ "email_address": { "address": userEmail } }],
         subject: mailOptions.subject,
         htmlbody: mailOptions.html
@@ -88,7 +88,7 @@ export const sendFeedbackEmail = async (userEmail, userName = 'Student') => {
 // ─── OTP Email (new — uses ZeptoMail) ──────────────────────────────────
 export const sendOtpEmail = async (recipientEmail, otpCode) => {
   const mailOptions = {
-    from: '"Vayl" <noreply@vayl.in>',
+    from: `"Vayl" <${process.env.EMAIL_FROM_ADDRESS || 'noreply@vayl.in'}>`,
     to: recipientEmail,
     subject: `${otpCode} — Your Vayl Verification Code`,
     html: `
@@ -151,7 +151,7 @@ export const sendOtpEmail = async (recipientEmail, otpCode) => {
         'Authorization': `Zoho-enczapikey ${apiKey}`
       },
       body: JSON.stringify({
-        from: { "address": "noreply@vayl.in", "name": "Vayl" },
+        from: { "address": process.env.EMAIL_FROM_ADDRESS || "noreply@vayl.in", "name": "Vayl" },
         to: [{ "email_address": { "address": recipientEmail } }],
         subject: `${otpCode} — Your Vayl Verification Code`,
         htmlbody: mailOptions.html

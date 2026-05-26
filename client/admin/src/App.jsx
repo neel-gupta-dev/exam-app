@@ -28,9 +28,17 @@ import UserSegmentation from './pages/UserSegmentation';
 export const AuthCtx = createContext(null);
 
 const getAdminBasename = () => {
-  const base = import.meta.env.VITE_ADMIN_BASE || import.meta.env.BASE_URL || '/sys-9f3k-ctrl/';
-  if (base === '/') return '/';
-  return base.replace(/\/$/, '');
+  // Auto-detect the admin base path from the current URL at runtime.
+  // The server serves this SPA at ADMIN_PATH, so the first path segment
+  // (e.g. "/adminurl") IS the base. This means changing ADMIN_PATH in
+  // the server's .env and restarting is all you need — no rebuild required.
+  if (typeof window !== 'undefined' && window.__ADMIN_BASE__) {
+    return window.__ADMIN_BASE__;
+  }
+  const path = window.location.pathname;
+  // Extract the first path segment as the basename (e.g. "/adminurl" from "/adminurl/dashboard")
+  const match = path.match(/^(\/[^/]+)/);
+  return match ? match[1] : '/';
 };
 
 function PrivateRoute({ children }) {
