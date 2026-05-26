@@ -50,9 +50,11 @@ export const JWT_SECRET = (() => {
 export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 export const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL || 
-  (isProd 
-    ? '' 
-    : 'http://localhost:5000/auth/google/callback');
+  (process.env.BACKEND_URL 
+    ? `${process.env.BACKEND_URL}/auth/google/callback` 
+    : (isProd 
+      ? 'https://api.vayl.in/auth/google/callback' 
+      : 'http://localhost:5000/auth/google/callback'));
 
 // Validation — crash in production if critical vars are missing
 if (isProd) {

@@ -2,6 +2,7 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from '../models/User.js';
 import { generateVaultId } from '../utils/generateVaultId.js';
+import { GOOGLE_CALLBACK_URL } from './index.js';
 
 const configurePassport = () => {
   if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
@@ -10,10 +11,7 @@ const configurePassport = () => {
         {
           clientID: process.env.GOOGLE_CLIENT_ID,
           clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-          callbackURL: process.env.GOOGLE_CALLBACK_URL || 
-            (process.env.NODE_ENV === 'production' 
-              ? '' 
-              : 'http://localhost:5000/auth/google/callback'),
+          callbackURL: GOOGLE_CALLBACK_URL,
         },
         async (accessToken, refreshToken, params, profile, done) => {
           const { id, displayName, emails, photos } = profile;
