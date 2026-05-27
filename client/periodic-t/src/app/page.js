@@ -137,6 +137,17 @@ export default function PeriodicTable() {
 
   const getTrendStyle = useCallback((el) => {
     if (activeTrend === "none") return null;
+
+    if (activeTrend === "block") {
+      const blockLetter = BLOCKS[el.n];
+      if (!blockLetter) return { "--cat-bg": "rgba(100,100,100,0.1)", "--cat-color": "#555" };
+      const info = BLOCK_INFO[blockLetter];
+      return {
+        "--cat-bg": info.bg,
+        "--cat-color": info.color
+      };
+    }
+
     let val = 0, max = 1;
     if (activeTrend === "en") { val = el.en || 0; max = trendMaxValues.en; }
     if (activeTrend === "mass") { val = el.mass || 0; max = trendMaxValues.mass; }
@@ -220,6 +231,7 @@ export default function PeriodicTable() {
             title="View Periodic Trends"
           >
             <option value="none">Standard View</option>
+            <option value="block">🏗️ Color by Block (s,p,d,f)</option>
             <option value="en">🔥 Electronegativity</option>
             <option value="mass">⚖️ Atomic Mass</option>
             <option value="melt">🌡️ Melting Point</option>
@@ -266,6 +278,10 @@ export default function PeriodicTable() {
 
                 // If trend is active, show the trend value instead of mass
                 let valStr = el.mass;
+                if (activeTrend === "block") {
+                  const b = BLOCKS[el.n];
+                  valStr = b ? `${b}-block` : "-";
+                }
                 if (activeTrend === "en") valStr = el.en || "-";
                 if (activeTrend === "melt") valStr = el.melt ? `${el.melt}K` : "-";
                 if (activeTrend === "boil") valStr = el.boil ? `${el.boil}K` : "-";
@@ -332,12 +348,36 @@ export default function PeriodicTable() {
                     ))}
                   </tr>
                   <tr>
+                    <td>Block</td>
+                    {compareList.map(el => (
+                      <td key={el.n}>
+                        {BLOCKS[el.n] ? (
+                          <span className="compare-cat-badge" style={{ backgroundColor: BLOCK_INFO[BLOCKS[el.n]]?.bg, color: BLOCK_INFO[BLOCKS[el.n]]?.color }}>
+                            {BLOCK_INFO[BLOCKS[el.n]]?.label}
+                          </span>
+                        ) : "N/A"}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
                     <td>State (20°C)</td>
                     {compareList.map(el => <td key={el.n} className="capitalize">{el.state}</td>)}
                   </tr>
                   <tr>
                     <td>Electronegativity</td>
                     {compareList.map(el => <td key={el.n}>{el.en || "N/A"}</td>)}
+                  </tr>
+                  <tr>
+                    <td>Oxidation States</td>
+                    {compareList.map(el => (
+                      <td key={el.n}>
+                        {OXIDATION_STATES[el.n] ? (
+                          <span style={{ fontSize: '12px' }}>
+                            {OXIDATION_STATES[el.n].map(o => (o > 0 ? `+${o}` : o)).join(", ")}
+                          </span>
+                        ) : "N/A"}
+                      </td>
+                    ))}
                   </tr>
                   <tr>
                     <td>Melting Point</td>
