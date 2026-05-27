@@ -161,6 +161,11 @@ export const createTest = asyncHandler(async (req, res) => {
     instructions,
   } = req.body;
 
+  if (!title || typeof title !== 'string' || !title.trim()) {
+    res.status(400);
+    throw new Error('Test title is required.');
+  }
+
   const slug = generateSlug(title);
 
   const test = await Test.create({
@@ -278,18 +283,42 @@ export const getStudentTests = asyncHandler(async (req, res) => {
   }
 
   // Batch check redis sessions to prevent N+1 query bottleneck
+  // We check for BOTH key formats: cbt_session:userId:testId AND cbt_session:userId:testId:*
   const redisSessionChecks = new Map();
   if (redis && rawTests.length > 0) {
     const multi = redis.multi();
-    const sessionKeys = rawTests.map(t => `cbt_session:${userId.toString()}:${t._id.toString()}`);
-    sessionKeys.forEach(key => multi.exists(key));
-    const results = await multi.exec();
-    
+    const sessionKeysBase = rawTests.map(t => `cbt_session:${userId.toString()}:${t._id.toString()}`);
+    // Check both the base key and a wildcard scan for keys with attemptId suffix
+    sessionKeysBase.forEach(key => multi.exists(key));
+    const baseResults = await multi.exec();
+
+    // For tests not found by base key, check with pattern match
+    const missingTests = [];
     rawTests.forEach((t, i) => {
-      // node-redis v4 multi() returns an array of results directly [res1, res2, ...]
-      const result = results && results[i] ? results[i] : 0;
-      redisSessionChecks.set(t._id.toString(), Boolean(result));
+      const result = baseResults && baseResults[i] ? baseResults[i] : 0;
+      if (result) {
+        redisSessionChecks.set(t._id.toString(), true);
+      } else {
+        missingTests.push(t);
+      }
     });
+
+    // Check pattern keys for remaining tests (keys with attemptId suffix)
+    if (missingTests.length > 0) {
+      const patternMulti = redis.multi();
+      missingTests.forEach(t => {
+        patternMulti.keys(`cbt_session:${userId.toString()}:${t._id.toString()}:*`);
+      });
+      try {
+        const patternResults = await patternMulti.exec();
+        missingTests.forEach((t, i) => {
+          const keys = patternResults && patternResults[i] ? patternResults[i] : [];
+          redisSessionChecks.set(t._id.toString(), Array.isArray(keys) && keys.length > 0);
+        });
+      } catch {
+        // If pattern scan fails, leave as false (fallback to MongoDB check below)
+      }
+    }
   }
 
   const enrichedTests = rawTests.map((t) => {

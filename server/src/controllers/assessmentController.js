@@ -810,36 +810,29 @@ export const submitAssessment = asyncHandler(async (req, res) => {
   const questions = await Question.find({ testId }).sort({ order: 1 }).lean();
   const answerRows = buildCompleteAnswerRows(questions, answers);
 
-  if (lockedAttempt) {
-    lockedAttempt.status = 'completed';
-    lockedAttempt.startedAt = startTime ? new Date(startTime) : lockedAttempt.startedAt;
-    lockedAttempt.durationUsedMinutes = durationUsedMinutes;
-    lockedAttempt.ipAddress = publicIp || lockedAttempt.ipAddress || getClientIp(req);
-    lockedAttempt.deviceInfo = normalizeDeviceInfo(deviceInfo);
-    lockedAttempt.tabSwitchCount = Math.max(lockedAttempt.tabSwitchCount || 0, Math.round(Number(tabSwitchCount) || 0));
-    lockedAttempt.warnings = Array.isArray(warnings) ? warnings.map((warning) => ({
-      type: String(warning?.type || warning || 'warning').slice(0, 80),
-      timestamp: warning?.timestamp ? new Date(warning.timestamp) : new Date(),
-    })) : lockedAttempt.warnings;
-    lockedAttempt.answers = answerRows;
-    lockedAttempt.lockReleasedAt = new Date();
-    lockedAttempt.sessionTokenHash = '';
-  }
-  const attempt = lockedAttempt || new TestAttempt({
+  const attempt = lockedAttempt || await TestAttempt.findOne({
     userId,
     testId,
-    status: 'completed',
-    startedAt: startTime ? new Date(startTime) : undefined,
-    durationUsedMinutes,
-    ipAddress: publicIp || getClientIp(req),
-    deviceInfo: normalizeDeviceInfo(deviceInfo),
-    tabSwitchCount: Math.max(0, Math.round(Number(tabSwitchCount) || 0)),
-    warnings: Array.isArray(warnings) ? warnings.map((warning) => ({
-      type: String(warning?.type || warning || 'warning').slice(0, 80),
-      timestamp: warning?.timestamp ? new Date(warning.timestamp) : new Date(),
-    })) : [],
-    answers: answerRows,
-  });
+    status: 'in-progress',
+  }).sort({ createdAt: -1 });
+
+  if (!attempt) {
+    return res.status(404).json({ message: 'Session expired or not found. Cannot evaluate.' });
+  }
+
+  attempt.status = 'completed';
+  attempt.startedAt = startTime ? new Date(startTime) : attempt.startedAt;
+  attempt.durationUsedMinutes = durationUsedMinutes;
+  attempt.ipAddress = publicIp || attempt.ipAddress || getClientIp(req);
+  attempt.deviceInfo = normalizeDeviceInfo(deviceInfo);
+  attempt.tabSwitchCount = Math.max(attempt.tabSwitchCount || 0, Math.round(Number(tabSwitchCount) || 0));
+  attempt.warnings = Array.isArray(warnings) ? warnings.map((warning) => ({
+    type: String(warning?.type || warning || 'warning').slice(0, 80),
+    timestamp: warning?.timestamp ? new Date(warning.timestamp) : new Date(),
+  })) : attempt.warnings;
+  attempt.answers = answerRows;
+  attempt.lockReleasedAt = new Date();
+  attempt.sessionTokenHash = '';
   if (lockedAttempt) {
     attempt.tenantId = lockedAttempt.tenantId || req.user.tenantId || test.tenantId || undefined;
   }
@@ -940,7 +933,9 @@ export const getTestLeaderboard = asyncHandler(async (req, res) => {
     testId,
     status: { $in: ['completed', 'auto-submitted'] }
   })
+    .select('userId testId totalScore score maxPossibleScore percentage sectionScores submittedAt status')
     .sort({ submittedAt: 1 })
+    .limit(5000)
     .lean();
 
   const userIds = [...new Set(attempts.map(a => a.userId))];

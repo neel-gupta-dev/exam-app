@@ -162,7 +162,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
         setActiveSection(initialSection);
 
         if (data.questions && data.questions.length > 0) {
-          const firstQIndex = data.questions.findIndex((q) => q.section === initialSection);
+          const firstQIndex = data.questions.findIndex((q) => (q.section || 'General') === initialSection);
           if (firstQIndex !== -1) {
             setCurrentIdx(firstQIndex);
             
@@ -424,7 +424,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
             }),
           }).catch(() => {});
           if (newCount >= 4) {
-            handleSubmitRef.current?.();
+            handleSubmitRef.current?.(true);
           } else {
             setShowWarning(true);
             setTimeout(() => setShowWarning(false), 5000);
@@ -562,7 +562,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
         // Count how many questions are already answered in THIS section
         const answeredInSection = answers.filter(a => {
           const qu = questions.find(qObj => qObj._id === a.questionId);
-          return qu?.section === sectionName && a.selectedAnswer.length > 0;
+          return (qu?.section || 'General') === sectionName && a.selectedAnswer.length > 0;
         }).length;
 
         if (answeredInSection >= sectionConfig.maxAttemptable) {
@@ -684,7 +684,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
       if (currSectionIdx >= 0 && currSectionIdx < sections.length - 1) {
         for (let i = currSectionIdx + 1; i < sections.length; i++) {
            const nextSection = sections[i].name;
-           const firstQ = questions.find(q => q.section === nextSection);
+           const firstQ = questions.find(q => (q.section || 'General') === nextSection);
            if (firstQ) {
                setActiveSection(nextSection);
                setCurrentIdx(questions.indexOf(firstQ));
@@ -743,7 +743,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
 
   const getFilteredQuestions = () => {
     if (!activeSection) return questions;
-    return questions.filter((q) => q.section === activeSection);
+    return questions.filter((q) => (q.section || 'General') === activeSection);
   };
 
   const goPrevious = () => {
@@ -761,7 +761,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
     if (currSectionIdx > 0) {
       for (let i = currSectionIdx - 1; i >= 0; i--) {
         const previousSection = sections[i].name;
-        const previousQuestions = questions.filter(q => q.section === previousSection);
+        const previousQuestions = questions.filter(q => (q.section || 'General') === previousSection);
         if (previousQuestions.length) {
           setActiveSection(previousSection);
           setCurrentIdx(questions.indexOf(previousQuestions[previousQuestions.length - 1]));

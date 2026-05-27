@@ -255,7 +255,10 @@ export const getTestQuestionAnalytics = asyncHandler(async (req, res) => {
   const [test, questions, attempts] = await Promise.all([
     Test.findById(testId).select('title totalMarks sections').lean(),
     Question.find({ testId }).sort({ order: 1 }).lean(),
-    TestAttempt.find({ testId, status: { $in: ['completed', 'auto-submitted'] } }).lean(),
+    TestAttempt.find({ testId, status: { $in: ['completed', 'auto-submitted'] } })
+      .select('answers')
+      .limit(5000)
+      .lean(),
   ]);
 
   if (!test) {
