@@ -636,12 +636,12 @@ export default function App() {
             </div>
         </div>
 
-        <div className="mr-3 flex flex-1 max-w-md items-center gap-2.5 rounded-2xl bg-slate-100 px-3 py-2 transition focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-300 focus-within:shadow-md">
+        <div className="flex flex-1 max-w-md items-center gap-2.5 rounded-2xl bg-slate-100 px-3 py-2 transition focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-300 focus-within:shadow-md">
           <span className="material-symbols-outlined shrink-0 text-[18px] text-slate-400">search</span>
           <input
             ref={searchInputRef}
-            className="flex-1 border-none bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
-            placeholder="Search tests, topics..."
+            className="flex-1 border-none bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 w-full"
+            placeholder="Search..."
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -655,7 +655,18 @@ export default function App() {
           <span className="hidden rounded-lg bg-white border border-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-400 md:block">{osKey} K</span>
         </div>
 
-        <div className="hidden items-center gap-3 sm:flex">
+        {/* Mobile Settings Button */}
+        <div className="ml-3 flex shrink-0 items-center lg:hidden">
+          <button
+            onClick={() => navigateTo('settings')}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition"
+            title="Settings"
+          >
+            <span className="material-symbols-outlined text-xl">settings</span>
+          </button>
+        </div>
+
+        <div className="hidden items-center gap-3 lg:flex ml-4">
           <div className="text-right">
             <p className="text-xs font-black uppercase tracking-wider text-slate-700">The Focused Scholar</p>
             <p className="text-[10px] text-slate-400">Powered by Vayl</p>
