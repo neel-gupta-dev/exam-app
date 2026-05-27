@@ -89,15 +89,12 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 .detail-back{position:fixed;top:16px;left:16px;z-index:400;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;padding:9px 18px;display:flex;align-items:center;gap:8px;transition:.2s;box-shadow:var(--shadow)}
 .detail-back:hover{transform:translateX(-3px)}
 
-.detail-atom{position:relative;width:160px;height:160px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.detail-atom{position:relative;width:280px;height:280px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .atom-core{width:56px;height:56px;border-radius:50%;background:var(--cat-color);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 0 6px var(--cat-bg),0 0 30px var(--cat-color-glow);z-index:5;position:relative}
 .atom-sym{font-size:22px;font-weight:900;color:#fff;line-height:1}
 .atom-num{font-size:9px;font-weight:600;color:rgba(255,255,255,.75);line-height:1}
 .orbit{position:absolute;border-radius:50%;border:1px solid var(--cat-color);opacity:.35}
-.orbit-1{width:90px;height:90px;animation:spin 3s linear infinite}
-.orbit-2{width:122px;height:122px;animation:spin 5s linear infinite reverse}
-.orbit-3{width:154px;height:154px;animation:spin 8s linear infinite}
-.electron{position:absolute;width:7px;height:7px;border-radius:50%;background:var(--cat-color);top:-3.5px;left:calc(50% - 3.5px);box-shadow:0 0 6px var(--cat-color)}
+.electron{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--cat-color);box-shadow:0 0 6px var(--cat-color)}
 
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 

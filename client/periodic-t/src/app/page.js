@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ELEMENTS, CATS } from "../data/elements";
+import ELECTRON_SHELLS from "../data/electronShells";
 
 export default function PeriodicTable() {
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -114,12 +115,53 @@ export default function PeriodicTable() {
                   <div className="atom-sym">{selectedElement.sym}</div>
                   <div className="atom-num">{selectedElement.n}</div>
                 </div>
-                <div className="orbit orbit-1" style={{ borderColor: CATS[selectedElement.cat]?.color || '#888' }}>
-                  <div className="electron" style={{ backgroundColor: CATS[selectedElement.cat]?.color || '#888' }}></div>
-                </div>
-                <div className="orbit orbit-2" style={{ borderColor: CATS[selectedElement.cat]?.color || '#888' }}>
-                  <div className="electron" style={{ backgroundColor: CATS[selectedElement.cat]?.color || '#888' }}></div>
-                </div>
+                {(() => {
+                  const shells = ELECTRON_SHELLS[selectedElement.n] || [];
+                  const catColor = CATS[selectedElement.cat]?.color || '#888';
+                  const maxShells = Math.min(shells.length, 7);
+                  // Base size for innermost orbit; each subsequent one grows
+                  const baseSize = 80;
+                  const step = 32;
+                  return shells.slice(0, maxShells).map((electronCount, shellIndex) => {
+                    const size = baseSize + shellIndex * step;
+                    // Alternate rotation direction, and slow down outer shells
+                    const duration = 3 + shellIndex * 2;
+                    const direction = shellIndex % 2 === 0 ? 'normal' : 'reverse';
+                    return (
+                      <div
+                        key={shellIndex}
+                        className="orbit"
+                        style={{
+                          width: size,
+                          height: size,
+                          borderColor: catColor,
+                          animation: `spin ${duration}s linear infinite ${direction}`,
+                        }}
+                      >
+                        {Array.from({ length: electronCount }).map((_, eIdx) => {
+                          // Evenly distribute electrons around the orbit
+                          const angle = (360 / electronCount) * eIdx;
+                          const radius = size / 2;
+                          return (
+                            <div
+                              key={eIdx}
+                              className="electron"
+                              style={{
+                                backgroundColor: catColor,
+                                boxShadow: `0 0 6px ${catColor}`,
+                                // Position each electron at the right angle on the circle
+                                top: '50%',
+                                left: '50%',
+                                transform: `rotate(${angle}deg) translateY(-${radius}px) translate(-50%, -50%)`,
+                                transformOrigin: '0 0',
+                              }}
+                            />
+                          );
+                        })}
+                      </div>
+                    );
+                  });
+                })()}
               </div>
 
               <div className="detail-info">
