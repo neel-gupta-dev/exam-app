@@ -354,7 +354,15 @@ export const sendOtp = async (email) => {
  */
 export const verifyOtp = async ({ email, code }) => {
   const cleanEmail = normalizeEmail(email);
-  const otpRecord = await OtpCode.findOne({ email: cleanEmail, code, type: 'student_verify' });
+  // SECURITY: Force code to a plain string to prevent NoSQL injection
+  // (e.g., an attacker sending { code: { $ne: '' } } to match any OTP)
+  const safeCode = String(code || '');
+  if (!safeCode) {
+    const error = new Error('Verification code is required');
+    error.statusCode = 400;
+    throw error;
+  }
+  const otpRecord = await OtpCode.findOne({ email: cleanEmail, code: safeCode, type: 'student_verify' });
 
   if (!otpRecord) {
     const error = new Error('Invalid or expired OTP');
@@ -426,7 +434,14 @@ export const sendSignupOtp = async (email) => {
 export const verifySignupOtp = async ({ email, code }) => {
   const cleanEmail = normalizeEmail(email);
 
-  const otpRecord = await OtpCode.findOne({ email: cleanEmail, code, type: 'signup' });
+  // SECURITY: Force code to a plain string to prevent NoSQL injection
+  const safeCode = String(code || '');
+  if (!safeCode) {
+    const error = new Error('Verification code is required');
+    error.statusCode = 400;
+    throw error;
+  }
+  const otpRecord = await OtpCode.findOne({ email: cleanEmail, code: safeCode, type: 'signup' });
 
   if (!otpRecord) {
     const error = new Error('Invalid verification code');

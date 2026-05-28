@@ -44,6 +44,14 @@ const userSchema = new mongoose.Schema(
       default: 'student',
     },
     /**
+     * Soft-ban flag: when true, the auth middleware rejects all requests.
+     * Admins can ban users without deleting their data.
+     */
+    isBanned: {
+      type: Boolean,
+      default: false,
+    },
+    /**
      * B2B-only: login username (e.g., rahulgupta_RST_001).
      * Null for B2C users who log in via email.
      */

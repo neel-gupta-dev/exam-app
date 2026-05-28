@@ -93,7 +93,16 @@ export const startSession = async (testId, user) => {
 
   if (!questions) {
     const rawQuestions = await Question.find({ testId }).sort({ order: 1 });
-    questions = rawQuestions.map((q) => q.toStudentPayload());
+    // BUGFIX (C-06): Question model has no toStudentPayload() method.
+    // Inline the logic to strip sensitive fields (correctAnswer, solution)
+    // before sending to the student client.
+    questions = rawQuestions.map((q) => {
+      const qObj = q.toObject();
+      delete qObj.correctAnswer;
+      delete qObj.solution;
+      delete qObj.solutionImageUrl;
+      return qObj;
+    });
 
     // Cache for future students
     if (redis) {
@@ -302,10 +311,11 @@ export const submitSession = async (attemptId, userId, finalStatus = 'completed'
     const override = question.markingSchemeOverride || {};
 
     const correctMarks  = override.correct    ?? secScheme?.correct    ?? question.positiveMarks ?? test.defaultPositiveMarks;
-    const incorrectMarks = override.incorrect  ?? secScheme?.incorrect  ?? question.negativeMarks ?? test.defaultNegativeMarks;
+    // SECURITY: Use Math.abs() to ensure incorrectMarks is always positive for deduction.
+    const incorrectMarks = Math.abs(override.incorrect  ?? secScheme?.incorrect  ?? question.negativeMarks ?? test.defaultNegativeMarks);
     const isPartial     = override.partial     ?? secScheme?.partial    ?? false;
     const partialPerOpt = override.partialMarkPerOption ?? secScheme?.partialMarkPerOption ?? 1;
-    const partialIncorr = override.partialIncorrect     ?? secScheme?.partialIncorrect     ?? incorrectMarks;
+    const partialIncorr = Math.abs(override.partialIncorrect     ?? secScheme?.partialIncorrect     ?? incorrectMarks);
 
     maxPossible += correctMarks;
 

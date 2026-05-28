@@ -7,6 +7,7 @@ import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 import basicAuth from 'express-basic-auth';
 import cookieParser from 'cookie-parser';
+import mongoSanitize from 'express-mongo-sanitize';
 import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import path from 'path';
@@ -48,6 +49,19 @@ import { MONGO_URI, PORT, ALLOWED_ORIGINS } from '../src/config/index.js';
 import { connectRedis } from '../src/config/redis.js';
 
 
+
+// ─── GLOBAL CRASH HANDLERS ────────────────────────────────────────────────
+// Prevent silent Node.js process crashes from unhandled async errors.
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[FATAL] Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit — log and keep running. Crashing would kill all active exams.
+});
+process.on('uncaughtException', (err) => {
+  console.error('[FATAL] Uncaught Exception:', err);
+  // For uncaught exceptions, exit to avoid corrupt state.
+  // Docker/PM2 will restart the process.
+  process.exit(1);
+});
 
 // Connect to Redis (non-blocking — app works without it)
 // On Vercel serverless, skip Redis entirely — no persistent connection available
@@ -125,8 +139,13 @@ app.use(
 );
 
 // Body parser (before connectDB — parsing the body doesn't need DB)
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// SECURITY: Limit body size to 2MB to prevent memory exhaustion DoS attacks.
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
+
+// SECURITY: Strip MongoDB query operators ($gt, $ne, $regex, etc.) from
+// req.body, req.query, and req.params to prevent NoSQL injection attacks.
+app.use(mongoSanitize());
 
 // Security headers — configured for cross-origin API server
 app.use(helmet({

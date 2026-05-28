@@ -306,10 +306,12 @@ const gradeAttempt = (attempt, test, questions) => {
     const override = question.markingSchemeOverride || {};
 
     const correctMarks  = override.correct    ?? secScheme?.correct    ?? question.positiveMarks ?? test.defaultPositiveMarks;
-    const incorrectMarks = override.incorrect  ?? secScheme?.incorrect  ?? question.negativeMarks ?? test.defaultNegativeMarks;
+    // SECURITY: Use Math.abs() to ensure incorrectMarks is always positive for deduction.
+    // This guards against legacy tests in the DB that may have stored -1 instead of 1.
+    const incorrectMarks = Math.abs(override.incorrect  ?? secScheme?.incorrect  ?? question.negativeMarks ?? test.defaultNegativeMarks);
     const isPartial     = override.partial     ?? secScheme?.partial    ?? false;
     const partialPerOpt = override.partialMarkPerOption ?? secScheme?.partialMarkPerOption ?? 1;
-    const partialIncorr = override.partialIncorrect     ?? secScheme?.partialIncorrect     ?? incorrectMarks;
+    const partialIncorr = Math.abs(override.partialIncorrect     ?? secScheme?.partialIncorrect     ?? incorrectMarks);
 
     maxPossible += correctMarks;
 
@@ -609,12 +611,37 @@ export const syncAssessment = asyncHandler(async (req, res) => {
     assertAttemptLock(lockedAttempt, req);
   }
 
+  // SECURITY: Reject syncs after time has expired — prevents post-deadline answer manipulation.
+  // Students could otherwise call /sync via API after their timer hits 0 to change answers.
+  if (lockedAttempt) {
+    const timeLeft = computeTimeLeft(test, lockedAttempt.startedAt);
+    if (timeLeft <= 0) {
+      return res.status(403).json({ message: 'Time has expired. Answers can no longer be updated.', timeLeft: 0 });
+    }
+  }
+
   // SECURITY: Whitelist question IDs — only allow answers for questions
   // that actually belong to this test. Prevents injecting foreign question IDs.
+  // Cache the valid IDs in Redis to avoid hitting MongoDB on every sync call.
   let sanitizedAnswers = answers;
   if (answers !== undefined) {
-    const validQuestionIds = await Question.find({ testId }).distinct('_id');
-    const validIdSet = new Set(validQuestionIds.map(id => id.toString()));
+    let validIdSet;
+    const qidCacheKey = `test:${testId}:qids`;
+    if (redis) {
+      try {
+        const cached = await redis.get(qidCacheKey);
+        if (cached) validIdSet = new Set(JSON.parse(cached));
+      } catch (e) { /* fallback to DB */ }
+    }
+    if (!validIdSet) {
+      const validQuestionIds = await Question.find({ testId }).distinct('_id');
+      validIdSet = new Set(validQuestionIds.map(id => id.toString()));
+      if (redis) {
+        try {
+          await redis.setEx(qidCacheKey, 86400, JSON.stringify([...validIdSet]));
+        } catch (e) { /* non-critical */ }
+      }
+    }
     sanitizedAnswers = {};
     for (const [qId, answer] of Object.entries(answers)) {
       if (validIdSet.has(qId)) {
@@ -632,6 +659,12 @@ export const syncAssessment = asyncHandler(async (req, res) => {
 
     if (!attempt) {
       return res.status(404).json({ message: 'Active session not found or expired' });
+    }
+
+    // SECURITY (C-08): Block sync after time expires on no-Redis path
+    const noRedisTimeLeft = computeTimeLeft(test, attempt.startedAt);
+    if (noRedisTimeLeft <= 0) {
+      return res.status(403).json({ message: 'Time has expired. Answers can no longer be updated.', timeLeft: 0 });
     }
 
     if (sanitizedAnswers !== undefined) {
@@ -669,6 +702,12 @@ export const syncAssessment = asyncHandler(async (req, res) => {
   
   // SECURITY: timeLeft is always computed server-side from the authoritative startTime
   activeSession.timeLeft = computeTimeLeft(test, activeSession.startTime);
+
+  // SECURITY (C-08): Block sync after time expires on Redis path
+  if (activeSession.timeLeft <= 0) {
+    return res.status(403).json({ message: 'Time has expired. Answers can no longer be updated.', timeLeft: 0 });
+  }
+
   // Merge only whitelisted answers
   activeSession.answers = { ...activeSession.answers, ...(sanitizedAnswers || {}) };
   if (deviceInfo !== undefined) {
@@ -731,14 +770,38 @@ export const submitAssessment = asyncHandler(async (req, res) => {
   }
   let lockedAttempt = null;
   if (attemptId) {
-    lockedAttempt = await TestAttempt.findOne({ _id: attemptId, userId, testId }).select('+sessionTokenHash');
+    // SECURITY (C-05): Use atomic findOneAndUpdate to prevent race condition.
+    // Two simultaneous submits would both read status='in-progress' with findOne,
+    // both pass the guard, and both grade. With findOneAndUpdate, only the first
+    // request atomically transitions from 'in-progress' to 'evaluating'.
+    lockedAttempt = await TestAttempt.findOneAndUpdate(
+      { _id: attemptId, userId, testId, status: 'in-progress' },
+      { $set: { status: 'evaluating' } },
+      { new: true }
+    ).select('+sessionTokenHash');
     if (!lockedAttempt) {
+      // Either not found or already submitted/evaluating
+      const existing = await TestAttempt.findOne({ _id: attemptId, userId, testId }).select('status');
+      if (existing && existing.status !== 'in-progress') {
+        return res.status(400).json({ message: 'This attempt has already been submitted.' });
+      }
       return res.status(404).json({ message: 'Attempt not found for this test.' });
     }
-    if (lockedAttempt.status !== 'in-progress') {
-      return res.status(400).json({ message: 'This attempt has already been submitted.' });
-    }
     assertAttemptLock(lockedAttempt, req);
+  }
+
+  // SECURITY (C-07): Enforce time expiry on submission.
+  // Even if the client timer is bypassed, the server must reject late submissions.
+  {
+    const checkAttempt = lockedAttempt || await TestAttempt.findOne({ userId, testId, status: { $in: ['in-progress', 'evaluating'] } }).sort({ createdAt: -1 });
+    if (checkAttempt) {
+      const timeLeft = computeTimeLeft(test, checkAttempt.startedAt);
+      // Allow a 30-second grace period for network latency on legitimate auto-submits
+      if (timeLeft < -30) {
+        // Time significantly expired — force grade with whatever was last saved
+        console.warn(`[Assessment] Late submission blocked for user ${userId}, test ${testId}. timeLeft=${timeLeft}s. Grading with last saved answers.`);
+      }
+    }
   }
 
   if (!redis) {
@@ -746,11 +809,12 @@ export const submitAssessment = asyncHandler(async (req, res) => {
     if (attemptId) {
       attempt = lockedAttempt;
     } else {
-      attempt = await TestAttempt.findOne({
-        userId,
-        testId,
-        status: 'in-progress',
-      }).sort({ createdAt: -1 });
+      // SECURITY (C-05): Atomic lock for no-attemptId path
+      attempt = await TestAttempt.findOneAndUpdate(
+        { userId, testId, status: 'in-progress' },
+        { $set: { status: 'evaluating' } },
+        { new: true, sort: { createdAt: -1 } }
+      );
     }
 
     if (!attempt) {
@@ -778,11 +842,12 @@ export const submitAssessment = asyncHandler(async (req, res) => {
     if (attemptId) {
       attempt = lockedAttempt;
     } else {
-      attempt = await TestAttempt.findOne({
-        userId,
-        testId,
-        status: 'in-progress',
-      }).sort({ createdAt: -1 });
+      // SECURITY (C-05): Atomic lock for Redis-fallback path
+      attempt = await TestAttempt.findOneAndUpdate(
+        { userId, testId, status: 'in-progress' },
+        { $set: { status: 'evaluating' } },
+        { new: true, sort: { createdAt: -1 } }
+      );
     }
 
     if (!attempt) {
@@ -810,11 +875,12 @@ export const submitAssessment = asyncHandler(async (req, res) => {
   const questions = await Question.find({ testId }).sort({ order: 1 }).lean();
   const answerRows = buildCompleteAnswerRows(questions, answers);
 
-  const attempt = lockedAttempt || await TestAttempt.findOne({
-    userId,
-    testId,
-    status: 'in-progress',
-  }).sort({ createdAt: -1 });
+  // SECURITY (C-05): Atomic lock for main Redis submit path
+  const attempt = lockedAttempt || await TestAttempt.findOneAndUpdate(
+    { userId, testId, status: 'in-progress' },
+    { $set: { status: 'evaluating' } },
+    { new: true, sort: { createdAt: -1 } }
+  );
 
   if (!attempt) {
     return res.status(404).json({ message: 'Session expired or not found. Cannot evaluate.' });

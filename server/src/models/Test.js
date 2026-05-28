@@ -67,11 +67,11 @@ const testSchema = new mongoose.Schema(
         instructions: { type: String },
         markingScheme: {
           correct: { type: Number, default: 4 },
-          incorrect: { type: Number, default: -1 },
+          incorrect: { type: Number, default: 1 },
           unattempted: { type: Number, default: 0 },
           partial: { type: Boolean, default: false },
           partialMarkPerOption: { type: Number, default: 1 },
-          partialIncorrect: { type: Number, default: -1 },
+          partialIncorrect: { type: Number, default: 1 },
         }
       }
     ],

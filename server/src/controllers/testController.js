@@ -261,11 +261,15 @@ export const getStudentTests = asyncHandler(async (req, res) => {
   const now = new Date();
   const rawTests = await Test.find({
     isPublished: true,
-    ...audienceFilter,
-    $or: [
-      { scheduledEndAt: null },
-      { scheduledEndAt: { $exists: false } },
-      { scheduledEndAt: { $gte: now } },
+    $and: [
+      audienceFilter,
+      {
+        $or: [
+          { scheduledEndAt: null },
+          { scheduledEndAt: { $exists: false } },
+          { scheduledEndAt: { $gte: now } },
+        ],
+      },
     ],
   })
     .select('title description category slug testType durationMinutes totalMarks sections syllabus instructions questionCount visibility scheduledStartAt scheduledEndAt allowedAttemptCount solutionReleaseMode solutionsReleasedAt')
@@ -305,18 +309,19 @@ export const getStudentTests = asyncHandler(async (req, res) => {
 
     // Check pattern keys for remaining tests (keys with attemptId suffix)
     if (missingTests.length > 0) {
-      const patternMulti = redis.multi();
-      missingTests.forEach(t => {
-        patternMulti.keys(`cbt_session:${userId.toString()}:${t._id.toString()}:*`);
-      });
-      try {
-        const patternResults = await patternMulti.exec();
-        missingTests.forEach((t, i) => {
-          const keys = patternResults && patternResults[i] ? patternResults[i] : [];
-          redisSessionChecks.set(t._id.toString(), Array.isArray(keys) && keys.length > 0);
-        });
-      } catch {
-        // If pattern scan fails, leave as false (fallback to MongoDB check below)
+      for (const t of missingTests) {
+        const pattern = `cbt_session:${userId.toString()}:${t._id.toString()}:*`;
+        try {
+          // Use scanIterator for cursor-based, non-blocking pattern matching
+          let found = false;
+          for await (const key of redis.scanIterator({ MATCH: pattern, COUNT: 10 })) {
+            found = true;
+            break; // We only need to know if at least one exists
+          }
+          redisSessionChecks.set(t._id.toString(), found);
+        } catch {
+          // If scan fails, leave as false (fallback to MongoDB check below)
+        }
       }
     }
   }

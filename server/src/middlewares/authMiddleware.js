@@ -27,6 +27,13 @@ const protect = asyncHandler(async (req, res, next) => {
       throw new Error('Not authorized, user not found');
     }
 
+    // SECURITY (C-13): Check if the user has been soft-banned by an admin.
+    // Banned users' JWTs should be rejected immediately.
+    if (req.user.isBanned) {
+      res.status(403);
+      throw new Error('Your account has been suspended. Contact support for assistance.');
+    }
+
     // Fire-and-forget: stamp lastActiveAt without blocking the request chain.
     // Using updateOne bypasses Mongoose hooks for maximum performance.
     User.updateOne(

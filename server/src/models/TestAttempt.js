@@ -179,6 +179,7 @@ const testAttemptSchema = new mongoose.Schema(
           correct: { type: Number, default: 0 },
           wrong: { type: Number, default: 0 },
           unattempted: { type: Number, default: 0 },
+          partial: { type: Number, default: 0 },
           score: { type: Number, default: 0 },
           timeSpentSeconds: { type: Number, default: 0 },
         },
