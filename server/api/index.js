@@ -145,7 +145,21 @@ app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
 // SECURITY: Strip MongoDB query operators ($gt, $ne, $regex, etc.) from
 // req.body, req.query, and req.params to prevent NoSQL injection attacks.
-app.use(mongoSanitize());
+app.use((req, res, next) => {
+  ['body', 'params', 'query'].forEach((k) => {
+    if (req[k]) {
+      const sanitized = mongoSanitize.sanitize(req[k], { replaceWith: '_' });
+      try {
+        req[k] = sanitized;
+      } catch (e) {
+        // Fallback for environments where req.query is a getter-only property
+        Object.keys(req[k]).forEach(key => delete req[k][key]);
+        Object.assign(req[k], sanitized);
+      }
+    }
+  });
+  next();
+});
 
 // Security headers — configured for cross-origin API server
 app.use(helmet({
