@@ -594,7 +594,18 @@ export const syncAssessment = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: 'deviceInfo must be an object' });
   }
 
-  const test = await Test.findById(testId);
+  let test;
+  if (redis) {
+    const cachedTest = await redis.get(`cache:test_meta:${testId}`);
+    if (cachedTest) test = JSON.parse(cachedTest);
+  }
+  if (!test) {
+    test = await Test.findById(testId).lean();
+    if (test && redis) {
+      await redis.setEx(`cache:test_meta:${testId}`, 300, JSON.stringify(test));
+    }
+  }
+
   if (!test) {
     return res.status(404).json({ message: 'Test not found' });
   }
@@ -684,6 +695,7 @@ export const syncAssessment = asyncHandler(async (req, res) => {
         type: String(warning?.type || warning || 'warning').slice(0, 80),
         timestamp: warning?.timestamp ? new Date(warning.timestamp) : new Date(),
       })));
+      if (attempt.warnings.length > 200) attempt.warnings = attempt.warnings.slice(-200);
     }
     attempt.lastSyncAt = new Date();
     await attempt.save();
@@ -740,6 +752,7 @@ export const syncAssessment = asyncHandler(async (req, res) => {
         type: String(warning?.type || warning || 'warning').slice(0, 80),
         timestamp: warning?.timestamp ? new Date(warning.timestamp) : new Date(),
       })));
+      if (lockedAttempt.warnings.length > 200) lockedAttempt.warnings = lockedAttempt.warnings.slice(-200);
     }
     await lockedAttempt.save();
   }
@@ -895,7 +908,7 @@ export const submitAssessment = asyncHandler(async (req, res) => {
   attempt.warnings = Array.isArray(warnings) ? warnings.map((warning) => ({
     type: String(warning?.type || warning || 'warning').slice(0, 80),
     timestamp: warning?.timestamp ? new Date(warning.timestamp) : new Date(),
-  })) : attempt.warnings;
+  })).slice(-200) : attempt.warnings;
   attempt.answers = answerRows;
   attempt.lockReleasedAt = new Date();
   attempt.sessionTokenHash = '';

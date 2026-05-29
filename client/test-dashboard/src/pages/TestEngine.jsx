@@ -103,7 +103,6 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
 
   // ─── Start session on mount ───
   useEffect(() => {
-    sessionStorage.setItem('cbt_tab_switch_count', '0');
     const init = async () => {
       try {
         if (!testId) {
@@ -161,6 +160,11 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
         }
         setActiveSection(initialSection);
 
+        // H-02: Initialize tab switch from server
+        const serverTabSwitch = data.session?.tabSwitchCount || 0;
+        sessionStorage.setItem('cbt_tab_switch_count', String(serverTabSwitch));
+        setTabSwitchCount(serverTabSwitch);
+
         if (data.questions && data.questions.length > 0) {
           const firstQIndex = data.questions.findIndex((q) => (q.section || 'General') === initialSection);
           if (firstQIndex !== -1) {
@@ -175,6 +179,8 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
         }
 
         setLoading(false);
+        // H-07: Move setAnswers AFTER parsedAnswers is fully initialized
+        setAnswers(parsedAnswers);
       } catch (err) {
         setError(err.message);
         setLoading(false);
@@ -362,27 +368,37 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
     };
   }, []);
 
+  // H-05: Add beforeunload handler to warn users if they try to close/refresh
+  useEffect(() => {
+    if (submitted || loading) return;
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [submitted, loading]);
+
   // ─── Countdown timer ───
   useEffect(() => {
     if (loading || submitted) return;
     
-    setTimeLeft((prev) => {
-      if (prev <= 0) {
-        handleSubmitRef.current?.(true);
-        return 0;
-      }
-      return prev;
-    });
+    // H-01: Anchor timer to Date.now() to prevent drift
+    const endTimeMs = Date.now() + (latestTimeLeftRef.current * 1000);
+
+    if (latestTimeLeftRef.current <= 0) {
+      handleSubmitRef.current?.(true);
+      return;
+    }
 
     timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current);
-          handleSubmitRef.current?.(true);
-          return 0;
-        }
-        return prev - 1;
-      });
+      const remaining = Math.max(0, Math.floor((endTimeMs - Date.now()) / 1000));
+      setTimeLeft(remaining);
+      if (remaining <= 0) {
+        clearInterval(timerRef.current);
+        handleSubmitRef.current?.(true);
+      }
     }, 1000);
     return () => clearInterval(timerRef.current);
   }, [loading, submitted]);
@@ -552,27 +568,27 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
     const sectionName = q?.section || 'General';
     const sectionConfig = testMeta?.sections?.find(s => s.name === sectionName);
     
-    // If the section is capped and the user is trying to answer (selectedAnswer.length > 0)
-    if (sectionConfig?.maxAttemptable && selectedAnswer.length > 0) {
-      const existingAnswer = answers.find(a => a.questionId === questionId);
-      const isWasAlreadyAnswered = existingAnswer && existingAnswer.selectedAnswer.length > 0;
-      
-      // If this is a new answer (not just changing an existing one)
-      if (!isWasAlreadyAnswered) {
-        // Count how many questions are already answered in THIS section
-        const answeredInSection = answers.filter(a => {
-          const qu = questions.find(qObj => qObj._id === a.questionId);
-          return (qu?.section || 'General') === sectionName && a.selectedAnswer.length > 0;
-        }).length;
+    setAnswers((prev) => {
+      // H-04: Section cap validation uses latest state (prev) instead of stale closure
+      if (sectionConfig?.maxAttemptable && selectedAnswer.length > 0) {
+        const existingAnswer = prev.find(a => a.questionId === questionId);
+        const isWasAlreadyAnswered = existingAnswer && existingAnswer.selectedAnswer.length > 0;
+        
+        if (!isWasAlreadyAnswered) {
+          const answeredInSection = prev.filter(a => {
+            const qu = questions.find(qObj => qObj._id === a.questionId);
+            return (qu?.section || 'General') === sectionName && a.selectedAnswer.length > 0;
+          }).length;
 
-        if (answeredInSection >= sectionConfig.maxAttemptable) {
-          alert(`You have already answered the maximum allowed questions (${sectionConfig.maxAttemptable}) for ${sectionName}. Please clear a response to answer this question.`);
-          return;
+          if (answeredInSection >= sectionConfig.maxAttemptable) {
+            setTimeout(() => {
+              alert(`You have already answered the maximum allowed questions (${sectionConfig.maxAttemptable}) for ${sectionName}. Please clear a response to answer this question.`);
+            }, 10);
+            return prev;
+          }
         }
       }
-    }
 
-    setAnswers((prev) => {
       const exists = prev.find(p => p.questionId === questionId);
       if (exists) {
          return prev.map(a => a.questionId === questionId ? { ...a, selectedAnswer, status } : a);
@@ -711,7 +727,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
     
     let success = false;
     let attempts = 0;
-    const maxAttempts = isAutoSubmit ? 20 : 1;
+    const maxAttempts = isAutoSubmit ? 3 : 1; // H-09: Changed from 20 to 3 to prevent 60s silent lock
     while (!success && attempts < maxAttempts) {
       attempts += 1;
       try {
@@ -734,7 +750,12 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
       }
     }
     if (!success) {
-      setError('Auto-submit could not reach the server. Please reconnect and try submitting again.');
+      // Show manual retry button on screen via submit error state
+      setIsSubmitting(false);
+      submitLock.current = false;
+      setError('Auto-submit could not reach the server. Please check your internet connection and click the manual submit button.');
+      // Keep it on the same page so they can click submit again
+      return;
     }
     setIsSubmitting(false);
     submitLock.current = false;
@@ -824,13 +845,13 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
         <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4">
           <span className="material-symbols-outlined text-3xl">error</span>
         </div>
-        <h2 className="text-xl font-bold text-slate-800 mb-2">Failed to Start Test</h2>
+        <h2 className="text-xl font-bold text-slate-800 mb-2">{error.includes('Auto-submit') ? 'Submission Failed' : 'Failed to Start Test'}</h2>
         <p className="text-slate-600 mb-6 max-w-md">{error}</p>
         <button 
-          onClick={() => window.location.reload()}
+          onClick={() => error.includes('Auto-submit') ? (setError(null), handleSubmitRef.current?.()) : window.location.reload()}
           className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold shadow-lg hover:bg-indigo-700 transition-all"
         >
-          Try Again
+          {error.includes('Auto-submit') ? 'Try Submitting Again' : 'Try Again'}
         </button>
       </div>
     );
@@ -1039,7 +1060,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
                   key={s.name}
                   onClick={() => {
                     setActiveSection(s.name);
-                    const firstQ = questions.find((q) => q.section === s.name);
+                    const firstQ = questions.find((q) => (q.section || 'General') === s.name);
                     if (firstQ) setCurrentIdx(questions.indexOf(firstQ));
                   }}
                   className={`h-[34px] border px-3 text-[14px] font-bold transition-all flex items-center justify-center ${
@@ -1457,7 +1478,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
               </div>
               <div className="flex gap-3 mt-5">
                  <button onClick={() => setShowSubmitConfirm(false)} className="flex-1 py-2 border border-[#ccc] bg-[#f5f5f5] font-bold rounded">Cancel</button>
-                 <button onClick={() => { setShowSubmitConfirm(false); handleSubmit(); }} className="flex-1 py-2 bg-[#3b82f6] text-white font-bold rounded">Yes, Submit</button>
+                 <button onClick={() => { setShowSubmitConfirm(false); handleSubmitRef.current?.(); }} className="flex-1 py-2 bg-[#3b82f6] text-white font-bold rounded">Yes, Submit</button>
               </div>
            </div>
         </div>

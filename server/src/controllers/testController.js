@@ -273,7 +273,8 @@ export const getStudentTests = asyncHandler(async (req, res) => {
     ],
   })
     .select('title description category slug testType durationMinutes totalMarks sections syllabus instructions questionCount visibility scheduledStartAt scheduledEndAt allowedAttemptCount solutionReleaseMode solutionsReleasedAt')
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .limit(50);
 
   const redis = getRedis();
   const testIds = rawTests.map(t => t._id);

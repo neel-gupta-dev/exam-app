@@ -17,7 +17,8 @@ const processQueue = async () => {
 
   try {
     // Fetch a batch of un-evaluated attempts
-    const pendingAttempts = await TestAttempt.find({ status: 'SUBMITTED', isManual: false }).limit(10);
+    // H-10: Polling for 'completed' status instead of 'SUBMITTED'
+    const pendingAttempts = await TestAttempt.find({ status: 'completed', isManual: false }).limit(10);
 
     if (pendingAttempts.length === 0) {
       isRunning = false;
@@ -159,7 +160,7 @@ const processQueue = async () => {
         attempt.sectionScores = sectionScores;
         attempt.topicPerformance = topicPerformance;
         attempt.evaluatedAt = new Date();
-        attempt.status = 'EVALUATED';
+        attempt.status = 'evaluated'; // H-10: Standardized case
 
         await attempt.save();
         console.log(`[EvaluationWorker] Successfully graded Attempt ${attempt._id}. Score: ${totalScore}/${maxPossibleScore}`);

@@ -2,7 +2,8 @@ import mongoose from 'mongoose';
 import { MONGO_URI, ANALYTICS_MONGO_URI } from './index.js';
 
 const connectionOptions = {
-  maxPoolSize: 10,
+  maxPoolSize: 50,
+  minPoolSize: 5,
   socketTimeoutMS: 45000,
   serverSelectionTimeoutMS: 10000, // Increased to 10s for slower local startups
   heartbeatFrequencyMS: 10000,
