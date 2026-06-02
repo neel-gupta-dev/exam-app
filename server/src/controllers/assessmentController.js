@@ -6,6 +6,7 @@ import User from '../models/User.js';
 import { getRedis } from '../config/redis.js';
 import { assertCanAttemptTest } from '../services/attemptService.js';
 import crypto from 'crypto';
+import { logActivity } from '../utils/telemetry.js';
 
 /** Split an array into chunks of `size` */
 const chunkArray = (arr, size) => {
@@ -329,6 +330,14 @@ const gradeAttempt = (attempt, test, questions) => {
     };
 
     if (!ans.selectedAnswer || ans.selectedAnswer.length === 0) {
+      if (ans.timeSpentSeconds > 2) {
+        logActivity({
+          userId: attempt.userId,
+          actionType: 'QUESTION_SKIPPED',
+          resourceId: question._id,
+          metadata: { testId: test._id, timeSpent: ans.timeSpentSeconds }
+        });
+      }
       sectionScores[section].unattempted++;
       const unattemptedMark = override.unattempted ?? secScheme?.unattempted ?? 0;
       totalScore += unattemptedMark;
@@ -557,6 +566,12 @@ export const startAssessment = asyncHandler(async (req, res) => {
         publicIp: getClientIp(req),
         answers: {}, // map of questionId -> { status: 'not_visited', selectedOption: null, markedForReview: false }
       };
+      logActivity({
+        userId,
+        actionType: 'TEST_STARTED',
+        resourceId: testId,
+        metadata: { ip: activeSession.publicIp }
+      });
     }
     try {
       await redis.hSet(sessionKey, 'data', JSON.stringify(activeSession));
@@ -728,6 +743,26 @@ export const syncAssessment = asyncHandler(async (req, res) => {
     return res.status(403).json({ message: 'Time has expired. Answers can no longer be updated.', timeLeft: 0 });
   }
 
+  // Detect ANSWER_CHANGED events
+  if (sanitizedAnswers) {
+    for (const [qId, newAns] of Object.entries(sanitizedAnswers)) {
+      const oldAns = activeSession.answers[qId];
+      if (oldAns && newAns && oldAns.selectedOption && newAns.selectedOption) {
+        // Compare stringified versions in case they are arrays
+        const oldStr = JSON.stringify(oldAns.selectedOption);
+        const newStr = JSON.stringify(newAns.selectedOption);
+        if (oldStr !== newStr && oldStr !== '[]' && newStr !== '[]') {
+          logActivity({
+            userId,
+            actionType: 'ANSWER_CHANGED',
+            resourceId: qId,
+            metadata: { testId, oldAnswer: oldAns.selectedOption, newAnswer: newAns.selectedOption }
+          });
+        }
+      }
+    }
+  }
+
   // Merge only whitelisted answers
   activeSession.answers = { ...activeSession.answers, ...(sanitizedAnswers || {}) };
   if (deviceInfo !== undefined) {
@@ -852,6 +887,8 @@ export const submitAssessment = asyncHandler(async (req, res) => {
     attempt.sessionTokenHash = '';
     gradeAttempt(attempt, test, questions);
     await attempt.save();
+    
+    logActivity({ userId, actionType: 'TEST_SUBMITTED', resourceId: testId, metadata: { score: attempt.score, duration: attempt.durationUsedMinutes } });
 
     return res.status(201).json({ message: 'Evaluation completed', attempt });
   }
@@ -885,6 +922,8 @@ export const submitAssessment = asyncHandler(async (req, res) => {
     attempt.sessionTokenHash = '';
     gradeAttempt(attempt, test, questions);
     await attempt.save();
+    
+    logActivity({ userId, actionType: 'TEST_SUBMITTED', resourceId: testId, metadata: { score: attempt.score, duration: attempt.durationUsedMinutes } });
 
     return res.status(201).json({ message: 'Evaluation completed', attempt });
   }
@@ -928,6 +967,8 @@ export const submitAssessment = asyncHandler(async (req, res) => {
 
   // Cleanup Redis
   await redis.del(sessionKey);
+  
+  logActivity({ userId, actionType: 'TEST_SUBMITTED', resourceId: testId, metadata: { score: attempt.score, duration: attempt.durationUsedMinutes } });
 
   res.status(201).json({ message: 'Evaluation completed', attempt });
 });

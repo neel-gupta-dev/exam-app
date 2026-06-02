@@ -453,6 +453,28 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
     return () => document.removeEventListener('visibilitychange', handler);
   }, [submitted, apiFetch, testId, attemptQuery]);
 
+  // TEL-04: Rage click detection
+  useEffect(() => {
+    if (submitted) return;
+    let clickTimes = [];
+    const handleGlobalClick = () => {
+      const now = Date.now();
+      clickTimes = clickTimes.filter(t => now - t < 1000);
+      clickTimes.push(now);
+      if (clickTimes.length >= 5) {
+        clickTimes = []; // reset
+        apiFetch(`/assessment/${testId}/sync?attemptId=${attemptQuery}`, {
+          method: 'POST',
+          body: JSON.stringify({
+            warnings: [{ type: 'IMPLICIT_RAGE_CLICK', timestamp: new Date().toISOString() }],
+          }),
+        }).catch(() => {});
+      }
+    };
+    window.addEventListener('click', handleGlobalClick);
+    return () => window.removeEventListener('click', handleGlobalClick);
+  }, [submitted, apiFetch, testId, attemptQuery]);
+
   const doSync = async ({ silent = true, closeCurrent = false } = {}) => {
     try {
       // Map back to Object for Redis

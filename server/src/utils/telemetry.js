@@ -29,17 +29,41 @@ import ActivityLog from '../models/ActivityLog.js';
  * @param {import('mongoose').Types.ObjectId|string} [params.resourceId] - Related resource (optional)
  * @param {Object}  [params.metadata]   - Free-form context payload
  */
-export async function logActivity({ userId, actionType, resourceId = null, metadata = {} }) {
+let telemetryQueue = [];
+const MAX_BATCH_SIZE = 50;
+const BATCH_INTERVAL_MS = 5000;
+let flushTimer = null;
+
+const flushTelemetryQueue = async () => {
+  if (telemetryQueue.length === 0) return;
+  const batch = [...telemetryQueue];
+  telemetryQueue = [];
   try {
-    await ActivityLog.create({
-      user: userId,
-      actionType,
-      resourceId,
-      metadata,
-    });
+    await ActivityLog.insertMany(batch, { ordered: false });
   } catch (err) {
-    // Telemetry must never break core functionality.
-    // Log to stderr for observability (can pipe to Datadog, Sentry, etc. later).
-    console.error(`[Telemetry] Failed to log activity "${actionType}" for user ${userId}:`, err.message);
+    console.error(`[Telemetry] Failed to batch insert ${batch.length} events:`, err.message);
+  }
+};
+
+export async function logActivity({ userId, actionType, resourceId = null, metadata = {} }) {
+  if (!userId || !actionType) return;
+
+  telemetryQueue.push({
+    user: userId,
+    actionType,
+    resourceId,
+    metadata,
+  });
+
+  if (telemetryQueue.length >= MAX_BATCH_SIZE) {
+    if (flushTimer) clearTimeout(flushTimer);
+    flushTimer = null;
+    // Don't await, fire and forget
+    flushTelemetryQueue();
+  } else if (!flushTimer) {
+    flushTimer = setTimeout(() => {
+      flushTimer = null;
+      flushTelemetryQueue();
+    }, BATCH_INTERVAL_MS);
   }
 }
