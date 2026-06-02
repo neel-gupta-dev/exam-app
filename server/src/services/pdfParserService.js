@@ -513,6 +513,9 @@ export async function parsePdfBuffer(buffer, opts = {}) {
   const { default: pdfParse } = await import('pdf-parse');
   const data = await pdfParse(buffer);
   const rawText = data.text;
+  
+  // M-19 Fix: Explicitly clear the large buffer from scope so V8 can GC it while we run regexes
+  buffer = null;
 
   const config = {
     section: opts.section || null,

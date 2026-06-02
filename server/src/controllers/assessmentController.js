@@ -117,7 +117,7 @@ const toValidDate = (value) => {
 
 const normalizeVisitLog = (visitLog = []) => {
   if (!Array.isArray(visitLog)) return [];
-  return visitLog.slice(-500).map((visit) => ({
+  return visitLog.slice(-50).map((visit) => ({
     enteredAt: toValidDate(visit?.enteredAt),
     leftAt: toValidDate(visit?.leftAt),
     durationSeconds: Math.max(0, Math.round(Number(visit?.durationSeconds) || 0)),
@@ -341,7 +341,15 @@ const gradeAttempt = (attempt, test, questions) => {
     const selected   = (ans.selectedAnswer || []).map(String);
 
     if (question.type === 'single' || question.type === 'integer' || question.type === 'float' || question.type === 'matrix') {
-      const exactCorrect = arraysEqual(selected.sort(), [...correctSet].sort());
+      let exactCorrect = false;
+      if (question.type === 'float') {
+        const sortedSelected = selected.sort();
+        const sortedCorrect = [...correctSet].sort();
+        exactCorrect = sortedSelected.length === sortedCorrect.length &&
+                       sortedSelected.every((val, idx) => Math.abs(parseFloat(val) - parseFloat(sortedCorrect[idx])) < 0.001);
+      } else {
+        exactCorrect = arraysEqual(selected.sort(), [...correctSet].sort());
+      }
       if (exactCorrect) {
         totalScore += correctMarks;
         sectionScores[section].correct++;
@@ -1013,7 +1021,7 @@ export const getTestLeaderboard = asyncHandler(async (req, res) => {
     status: { $in: ['completed', 'auto-submitted'] }
   })
     .select('userId testId totalScore score maxPossibleScore percentage sectionScores submittedAt status')
-    .sort({ submittedAt: 1 })
+    .sort({ score: -1, submittedAt: 1 })
     .limit(5000)
     .lean();
 
@@ -1082,7 +1090,7 @@ export const getAssessmentReview = asyncHandler(async (req, res) => {
   const { attemptId } = req.params;
   const userId = req.user._id.toString();
 
-  const attempt = await TestAttempt.findById(attemptId).lean();
+  const attempt = await TestAttempt.findOne({ _id: attemptId, userId }).lean();
 
   if (!attempt) {
     return res.status(404).json({ message: 'Attempt not found.' });
@@ -1094,9 +1102,7 @@ export const getAssessmentReview = asyncHandler(async (req, res) => {
   attempt.test = test;
   const solutionsUnlocked = areSolutionsUnlocked(test || {});
 
-  if (attempt.userId.toString() !== userId) {
-    return res.status(403).json({ message: 'Access denied.' });
-  }
+  // Ownership is now checked in the DB query above
 
   if (attempt.status !== 'completed' && attempt.status !== 'auto-submitted') {
     return res.status(400).json({ message: 'Attempt must be completed to review answers.' });

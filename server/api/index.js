@@ -127,7 +127,7 @@ app.use(
       }
  
       // Allow whitelisted origins
-      if (runtimeAllowedOrigins.includes(origin) || runtimeAllowedOrigins.includes('*')) {
+      if (runtimeAllowedOrigins.includes(origin)) {
         return callback(null, true);
       }
  
