@@ -616,7 +616,11 @@ export default function App() {
               </div>
             </div>
             <motion.button
-              onClick={handleLogout}
+              onClick={() => {
+                if (window.confirm('Are you sure you want to log out?')) {
+                  handleLogout();
+                }
+              }}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               title="Logout"
