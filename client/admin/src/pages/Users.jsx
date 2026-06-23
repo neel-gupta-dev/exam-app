@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';
 import Pagination from '../components/Pagination';
+import { AuthCtx } from '../App';
 
 export default function Users() {
   const [data, setData] = useState({ users: [], total: 0, page: 1, pages: 1 });
@@ -11,6 +12,7 @@ export default function Users() {
   const [authMethod, setAuthMethod] = useState('');
   const [page, setPage] = useState(1);
   const [msg, setMsg] = useState({ type: '', text: '' });
+  const { user } = useContext(AuthCtx);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -134,18 +136,23 @@ export default function Users() {
                       <td>
                         <div className="btn-group">
                           <Link to={`/users/${u._id}`} className="btn btn-sm btn-primary">View</Link>
-                          <select
-                            className="btn btn-sm"
-                            value={u.role}
-                            onChange={e => changeRole(u, e.target.value)}
-                            title="Change role"
-                          >
-                            <option value="student">Student</option>
-                            <option value="writer">Writer</option>
-                            <option value="admin">Admin</option>
-                            <option value="coachingAdmin">Coach Admin</option>
-                          </select>
-                          <button className="btn btn-sm btn-danger" onClick={() => deleteUser(u)}>Del</button>
+                          {user?.role !== 'subAdmin' && (
+                            <>
+                              <select
+                                className="btn btn-sm"
+                                value={u.role}
+                                onChange={e => changeRole(u, e.target.value)}
+                                title="Change role"
+                              >
+                                <option value="student">Student</option>
+                                <option value="writer">Writer</option>
+                                <option value="admin">Admin</option>
+                                <option value="subAdmin">Sub-Admin</option>
+                                <option value="coachingAdmin">Coach Admin</option>
+                              </select>
+                              <button className="btn btn-sm btn-danger" onClick={() => deleteUser(u)}>Del</button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>

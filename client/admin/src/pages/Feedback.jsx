@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import api from '../api';
 import Pagination from '../components/Pagination';
+import { AuthCtx } from '../App';
 
 const Stars = ({ n }) => '★'.repeat(n) + '☆'.repeat(5 - n);
 
@@ -9,6 +10,7 @@ export default function FeedbackPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [msg, setMsg] = useState({ type: '', text: '' });
+  const { user } = useContext(AuthCtx);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -92,7 +94,9 @@ export default function FeedbackPage() {
                       <td>{f.comment}</td>
                       <td className="td-mono">{new Date(f.createdAt).toLocaleString()}</td>
                       <td>
-                        <button className="btn btn-sm btn-danger" onClick={() => deleteFeedback(f._id)}>Del</button>
+                        {user?.role !== 'subAdmin' && (
+                          <button className="btn btn-sm btn-danger" onClick={() => deleteFeedback(f._id)}>Del</button>
+                        )}
                       </td>
                     </tr>
                   ))}

@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';
 import Pagination from '../components/Pagination';
+import { AuthCtx } from '../App';
 
 export default function Resources() {
   const [data, setData] = useState({ resources: [], total: 0, page: 1, pages: 1 });
@@ -10,6 +11,7 @@ export default function Resources() {
   const [type, setType] = useState('');
   const [page, setPage] = useState(1);
   const [msg, setMsg] = useState({ type: '', text: '' });
+  const { user } = useContext(AuthCtx);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -111,7 +113,9 @@ export default function Resources() {
                       </td>
                       <td className="td-mono">{new Date(r.createdAt).toLocaleDateString()}</td>
                       <td>
-                        <button className="btn btn-sm btn-danger" onClick={() => deleteResource(r._id, r.title)}>Del</button>
+                        {user?.role !== 'subAdmin' && (
+                          <button className="btn btn-sm btn-danger" onClick={() => deleteResource(r._id, r.title)}>Del</button>
+                        )}
                       </td>
                     </tr>
                   ))}

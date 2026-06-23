@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { protectAdmin } from '../middlewares/adminMiddleware.js';
+import bcrypt from 'bcryptjs';
+import { protectAdmin, superAdminOnly } from '../middlewares/adminMiddleware.js';
 import User from '../models/User.js';
 import Session from '../models/Session.js';
 import Resource from '../models/Resource.js';
@@ -66,7 +67,7 @@ router.get('/metadata-proxy', getUrlMetadata);
  * GET /api/admin/trigger-feedback-blast
  * Sends a mass feedback request email to all users.
  */
-router.get('/trigger-feedback-blast', asyncHandler(async (req, res) => {
+router.get('/trigger-feedback-blast', superAdminOnly, asyncHandler(async (req, res) => {
   try {
     // Find all users (including admins)
     const users = await User.find({ email: { $exists: true, $ne: '' } }).select('email name');
@@ -177,10 +178,10 @@ router.get('/users/:id', asyncHandler(async (req, res) => {
  * PATCH /api/admin/users/:id/role
  * Change user role
  */
-router.patch('/users/:id/role', asyncHandler(async (req, res) => {
+router.patch('/users/:id/role', superAdminOnly, asyncHandler(async (req, res) => {
   const { role } = req.body;
-  if (!['student', 'writer', 'admin', 'coachingAdmin'].includes(role)) {
-    res.status(400); throw new Error('Invalid role. Must be student, writer, admin, or coachingAdmin.');
+  if (!['student', 'writer', 'admin', 'subAdmin', 'coachingAdmin'].includes(role)) {
+    res.status(400); throw new Error('Invalid role. Must be student, writer, admin, subAdmin, or coachingAdmin.');
   }
   if (req.params.id === req.user._id.toString() && role !== 'admin') {
     res.status(400); throw new Error('You cannot demote yourself.');
@@ -191,10 +192,28 @@ router.patch('/users/:id/role', asyncHandler(async (req, res) => {
 }));
 
 /**
+ * POST /api/admin/users/:id/set-password
+ * Set password for Google-only users so they can log into the admin panel
+ */
+router.post('/users/:id/set-password', superAdminOnly, asyncHandler(async (req, res) => {
+  const { password } = req.body;
+  if (!password || password.length < 8) {
+    res.status(400); throw new Error('Password must be at least 8 characters long');
+  }
+  const user = await User.findById(req.params.id);
+  if (!user) { res.status(404); throw new Error('User not found'); }
+  
+  user.password = password; // pre-save hook will hash it
+  await user.save();
+  
+  res.json({ message: 'Password set successfully for user' });
+}));
+
+/**
  * PATCH /api/admin/users/:id
  * Soft ban mechanism
  */
-router.patch('/users/:id', asyncHandler(async (req, res) => {
+router.patch('/users/:id', superAdminOnly, asyncHandler(async (req, res) => {
   const allowed = ['name', 'email', 'role', 'isVerifiedStudent', 'isOnboarded', 'targetExam', 'targetYear'];
   const updates = {};
   for (const key of allowed) {
@@ -209,7 +228,7 @@ router.patch('/users/:id', asyncHandler(async (req, res) => {
  * DELETE /api/admin/users/:id
  * Delete user data
  */
-router.delete('/users/:id', asyncHandler(async (req, res) => {
+router.delete('/users/:id', superAdminOnly, asyncHandler(async (req, res) => {
   if (req.params.id === req.user._id.toString()) {
     res.status(400); throw new Error('You cannot delete your own account via admin panel.');
   }
@@ -257,7 +276,7 @@ router.get('/sessions', asyncHandler(async (req, res) => {
   res.json({ sessions, total, page, pages: Math.ceil(total / limit) });
 }));
 
-router.delete('/sessions/:id', asyncHandler(async (req, res) => {
+router.delete('/sessions/:id', superAdminOnly, asyncHandler(async (req, res) => {
   const session = await Session.findById(req.params.id);
   if (!session) { res.status(404); throw new Error('Session not found'); }
   session.logoutAt = new Date();
@@ -283,7 +302,7 @@ router.get('/resources', asyncHandler(async (req, res) => {
   res.json({ resources, total, page, pages: Math.ceil(total / limit) });
 }));
 
-router.delete('/resources/:id', asyncHandler(async (req, res) => {
+router.delete('/resources/:id', superAdminOnly, asyncHandler(async (req, res) => {
   const r = await Resource.findByIdAndDelete(req.params.id);
   if (!r) { res.status(404); throw new Error('Resource not found'); }
   res.json({ message: 'Resource deleted.' });
@@ -302,7 +321,7 @@ router.get('/feedback', asyncHandler(async (req, res) => {
   res.json({ feedback, total, page, pages: Math.ceil(total / limit), avgRating });
 }));
 
-router.delete('/feedback/:id', asyncHandler(async (req, res) => {
+router.delete('/feedback/:id', superAdminOnly, asyncHandler(async (req, res) => {
   const f = await Feedback.findByIdAndDelete(req.params.id);
   if (!f) { res.status(404); throw new Error('Feedback not found'); }
   res.json({ message: 'Feedback deleted.' });

@@ -1,7 +1,8 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useContext } from 'react';
 import api from '../api';
 import useUserAnalytics from '../hooks/useUserAnalytics';
-
+import { AuthCtx } from '../App';
 /**
  * UserDetail Component (God Mode Analytics - Refactored for Native CSS)
  * 
@@ -13,6 +14,7 @@ export default function UserDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { analytics, loading, error, refetch } = useUserAnalytics(id);
+  const { user: currentUser } = useContext(AuthCtx);
 
   const handleDelete = async () => {
     if (!confirm('Permanently delete this user and ALL data? This CANNOT be undone.')) return;
@@ -62,7 +64,9 @@ export default function UserDetail() {
         </div>
         <div className="btn-group">
           <button onClick={refetch} className="btn">↻ Refresh</button>
-          <button onClick={handleDelete} className="btn btn-danger">Delete Account</button>
+          {currentUser?.role !== 'subAdmin' && (
+            <button onClick={handleDelete} className="btn btn-danger">Delete Account</button>
+          )}
           <Link to="/users" className="btn">← Back to List</Link>
         </div>
       </div>

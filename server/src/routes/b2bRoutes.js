@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { protectAdmin } from '../middlewares/adminMiddleware.js';
+import { protectSuperAdmin } from '../middlewares/adminMiddleware.js';
 import {
   createTenant,
   getAllTenants,
@@ -12,7 +12,7 @@ import {
 const router = Router();
 
 // All B2B routes require superadmin
-router.use(protectAdmin);
+router.use(protectSuperAdmin);
 
 // ─── TENANTS ──────────────────────────────────────────────────────────────────
 router.post('/tenants', createTenant);

@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import api from '../api';
 import Pagination from '../components/Pagination';
 import { Link } from 'react-router-dom';
+import { AuthCtx } from '../App';
 
 export default function Sessions() {
   const [data, setData] = useState({ sessions: [], total: 0, page: 1, pages: 1 });
@@ -9,6 +10,7 @@ export default function Sessions() {
   const [active, setActive] = useState('');
   const [page, setPage] = useState(1);
   const [msg, setMsg] = useState({ type: '', text: '' });
+  const { user } = useContext(AuthCtx);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -111,7 +113,7 @@ export default function Sessions() {
                           : <span className="badge badge-gray">CLOSED</span>}
                       </td>
                       <td>
-                        {!s.logoutAt && (
+                        {!s.logoutAt && user?.role !== 'subAdmin' && (
                           <button className="btn btn-sm btn-danger" onClick={() => forceClose(s._id)}>
                             Force Close
                           </button>

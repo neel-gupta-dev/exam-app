@@ -36,12 +36,20 @@ export default function Layout() {
 
   const handleLogout = () => { logout(); nav('/'); };
 
+  const filteredNav = NAV.filter(item => {
+    if (user?.role === 'subAdmin') {
+      const restricted = ['/b2b', '/segmentation', '/settings'];
+      if (item.to && restricted.includes(item.to)) return false;
+    }
+    return true;
+  });
+
   return (
     <div className="layout">
       <aside className="sidebar">
         <div className="sidebar-brand">Vayl <span>Admin</span></div>
         <nav>
-          {NAV.map((item, i) =>
+          {filteredNav.map((item, i) =>
             item.section
               ? <div key={i} className="sidebar-section">{item.section}</div>
               : <NavLink key={item.to} to={item.to} className={({ isActive }) => isActive ? 'active' : ''}>
@@ -63,7 +71,10 @@ export default function Layout() {
           <span className="topbar-title">Vayl Admin Panel</span>
           <div className="topbar-right">
             <span>v1.4</span>
-            <span className="topbar-user">{user?.name}</span>
+            <span className="topbar-user">
+              {user?.name}
+              {user?.role === 'subAdmin' && <span style={{ marginLeft: 8, fontSize: 10, backgroundColor: '#f39c12', color: '#fff', padding: '2px 6px', borderRadius: 4 }}>Sub-Admin</span>}
+            </span>
           </div>
         </div>
         <Outlet />

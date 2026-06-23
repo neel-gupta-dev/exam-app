@@ -17,7 +17,7 @@ export default function Login() {
     setLoading(true);
     try {
       const { data } = await api.post('/auth/login', { email, password });
-      if (data.role !== 'admin') {
+      if (!['admin', 'subAdmin'].includes(data.role)) {
         setError('Access denied. Your account does not have admin privileges.');
         setLoading(false);
         return;
