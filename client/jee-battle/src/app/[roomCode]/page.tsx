@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { MathJax } from 'better-react-mathjax';
 import { Timer, ArrowRight, CheckCircle2, Zap, Delete } from 'lucide-react';
 import { toast } from 'sonner';
+import { useBattleActivityTracker } from '@/hooks/useBattleActivityTracker';
 
 type BattleQuestionType = 'single' | 'multi' | 'integer';
 
@@ -88,6 +89,9 @@ export default function BattleRoom({ params }: { params: Promise<{ roomCode: str
   const tabLeaveTimeRef = useRef<number | null>(null);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.vayl.in';
+
+  // ─── Study Timer Heartbeat ───
+  useBattleActivityTracker(token, battleState?.status ?? null);
 
   useEffect(() => {
     battleStateRef.current = battleState;

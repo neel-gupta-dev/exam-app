@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { List, ChevronLeft, ChevronRight, X, Grid } from 'lucide-react';
 import LatexRenderer from '../components/LatexRenderer';
 import { API_BASE } from '../config/api';
+import useTestActivityTracker from '../hooks/useTestActivityTracker';
 
 /* ─────────────────────────────────────────────────────────────────────────────
    RenderContentTable — beautifully renders the custom question/option table
@@ -75,6 +76,9 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
   const questionScrollRef = useRef(null);
   const token = user?.token || localStorage.getItem('test_token');
   const attemptQuery = `${attemptId || ''}${attemptToken ? `&attemptToken=${encodeURIComponent(attemptToken)}` : ''}`;
+
+  // ─── Study Timer Heartbeat ───
+  useTestActivityTracker(token);
 
   // ─── API helper ───
   const apiFetch = useCallback(async (path, opts = {}) => {

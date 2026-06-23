@@ -232,19 +232,10 @@ export const logoutUser = async ({ sessionId, userId }) => {
 
   session.logoutAt = new Date();
   session.lastActiveAt = session.logoutAt;
-  const duration = Math.max(0, Math.floor((session.logoutAt.getTime() - session.loginAt.getTime()) / 1000));
 
-  // Save session first (marks it as logged out)
-  await session.save();
-
-  // Credit the duration to the user atomically — $inc is safe under
-  // concurrent writes (no read-modify-write race condition).
-  await User.updateOne(
-    { _id: userId },
-    { $inc: { totalActiveSeconds: duration } }
-  );
-
-  // Mark the session as credited — if this fails, the janitor will recover it
+  // NOTE: Study time (totalActiveSeconds) is tracked exclusively by
+  // frontend heartbeats, NOT by session duration. This prevents AFK
+  // time inflation when users close their browser without logging out.
   session.durationCredited = true;
   await session.save();
 
@@ -266,44 +257,29 @@ export const closeExpiredSessions = async () => {
 
     for (const session of expiredSessions) {
       session.logoutAt = session.lastActiveAt;
-      const duration = Math.floor((session.logoutAt.getTime() - session.loginAt.getTime()) / 1000);
-      const safeDuration = duration > 0 ? duration : 0;
-      await session.save();
-
-      // Atomic $inc — safe under concurrent janitor runs and logoutUser calls
-      await User.updateOne(
-        { _id: session.userId },
-        { $inc: { totalActiveSeconds: safeDuration } }
-      );
+      // NOTE: Study time (totalActiveSeconds) is tracked exclusively by
+      // frontend heartbeats. We no longer credit session duration here
+      // to prevent AFK time inflation.
       session.durationCredited = true;
       await session.save();
     }
 
-    // 2. Recover orphaned sessions: logoutAt was set (by logoutUser) but
-    //    the user.totalActiveSeconds update failed before durationCredited
-    //    could be set to true. Without this, those durations are lost forever.
+    // 2. Mark any orphaned sessions (logoutAt set but durationCredited not set)
+    //    as credited. No study time is added — heartbeats already handled it.
     const orphanedSessions = await Session.find({
       logoutAt: { $ne: null },
       durationCredited: { $ne: true },
-      // Only process sessions older than 2 minutes to avoid racing with
-      // a logoutUser call that's still in progress.
       updatedAt: { $lt: new Date(Date.now() - 2 * 60 * 1000) },
     });
 
     for (const session of orphanedSessions) {
-      const duration = Math.max(0, Math.floor((session.logoutAt.getTime() - session.loginAt.getTime()) / 1000));
-      // Atomic $inc — safe under concurrent recovery attempts
-      await User.updateOne(
-        { _id: session.userId },
-        { $inc: { totalActiveSeconds: duration } }
-      );
       session.durationCredited = true;
       await session.save();
     }
 
     const totalProcessed = expiredSessions.length + orphanedSessions.length;
     if (totalProcessed > 0) {
-      console.log(`[Janitor] Closed ${expiredSessions.length} expired, recovered ${orphanedSessions.length} orphaned sessions.`);
+      console.log(`[Janitor] Closed ${expiredSessions.length} expired, cleaned ${orphanedSessions.length} orphaned sessions.`);
     }
   } catch (error) {
     console.error("[Janitor] Error closing expired sessions:", error);
