@@ -61,6 +61,7 @@ export default function UserDetail() {
         <div>
           <div className="breadcrumb"><Link to="/users">Users</Link> / {user.name} / Analytics</div>
           <h1>{user.name} <span className="text-muted" style={{ fontWeight: 400, marginLeft: 8 }}>({user.email})</span></h1>
+          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4, fontFamily: 'monospace' }}>User ID: {user._id}</div>
         </div>
         <div className="btn-group">
           <button onClick={refetch} className="btn">↻ Refresh</button>
