@@ -46,6 +46,11 @@ function PrivateRoute({ children }) {
   return user ? children : <Navigate to="/" replace />;
 }
 
+function AdminOnlyRoute({ children }) {
+  const { user } = useContext(AuthCtx);
+  return user?.role === 'admin' ? children : <Navigate to="/dashboard" replace />;
+}
+
 export default function App() {
   const [user, setUser] = useState(() => {
     try { return JSON.parse(localStorage.getItem('admin_user')); } catch { return null; }
@@ -69,20 +74,20 @@ export default function App() {
           <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
           <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/users" element={<Users />} />
-            <Route path="/writers" element={<Writers />} />
-            <Route path="/users/:id" element={<UserDetail />} />
-            <Route path="/sessions" element={<Sessions />} />
-            <Route path="/resources" element={<Resources />} />
+            <Route path="/users" element={<AdminOnlyRoute><Users /></AdminOnlyRoute>} />
+            <Route path="/writers" element={<AdminOnlyRoute><Writers /></AdminOnlyRoute>} />
+            <Route path="/users/:id" element={<AdminOnlyRoute><UserDetail /></AdminOnlyRoute>} />
+            <Route path="/sessions" element={<AdminOnlyRoute><Sessions /></AdminOnlyRoute>} />
+            <Route path="/resources" element={<AdminOnlyRoute><Resources /></AdminOnlyRoute>} />
             <Route path="/feedback" element={<FeedbackPage />} />
             <Route path="/tests" element={<TestManagement />} />
             <Route path="/test-telemetry" element={<TestTelemetry />} />
-            <Route path="/b2b" element={<B2BManagement />} />
+            <Route path="/b2b" element={<AdminOnlyRoute><B2BManagement /></AdminOnlyRoute>} />
             <Route path="/cheatsheets" element={<Cheatsheets />} />
             <Route path="/study-materials" element={<StudyMaterials />} />
             <Route path="/cutoffs" element={<CutoffsManagement />} />
             <Route path="/exams" element={<ExamManagement />} />
-            <Route path="/battle-questions" element={<BattleQuestions />} />
+            <Route path="/battle-questions" element={<AdminOnlyRoute><BattleQuestions /></AdminOnlyRoute>} />
             <Route path="/utm-generator" element={<UTMGenerator />} />
             <Route path="/link-shortener" element={<LinkShortener />} />
             <Route path="/meta-previewer" element={<MetaPreviewer />} />

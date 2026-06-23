@@ -38,7 +38,7 @@ export default function Layout() {
 
   const filteredNav = NAV.filter(item => {
     if (user?.role === 'subAdmin') {
-      const restricted = ['/b2b', '/segmentation', '/settings'];
+      const restricted = ['/b2b', '/battle-questions', '/users', '/writers', '/sessions', '/resources'];
       if (item.to && restricted.includes(item.to)) return false;
     }
     return true;
