@@ -74,6 +74,8 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
   const firstActionTimeRef = useRef({});
   const paletteScrollRef = useRef(null);
   const questionScrollRef = useRef(null);
+  const draftAnswerRef = useRef(null); // Uncommitted selection for current question
+  const [, setDraftVersion] = useState(0); // Trigger re-render when draft changes
   const token = user?.token || localStorage.getItem('test_token');
   const attemptQuery = `${attemptId || ''}${attemptToken ? `&attemptToken=${encodeURIComponent(attemptToken)}` : ''}`;
 
@@ -216,6 +218,11 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
   const currentQuestionId = currentQuestion?._id;
   const currentAnswer = answers.find((a) => a.questionId === currentQuestion?._id);
 
+  // effectiveAnswer: prefer draft if it exists for the current question, else use committed answer
+  const effectiveAnswer = (draftAnswerRef.current?.questionId === currentQuestion?._id)
+    ? draftAnswerRef.current
+    : currentAnswer;
+
   const closeActiveVisit = useCallback((leftAtMs = Date.now()) => {
     const activeVisit = activeVisitRef.current;
     if (!activeVisit?.questionId) return;
@@ -325,6 +332,11 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
     openQuestionVisit(currentQuestionId);
   }, [currentQuestionId, openQuestionVisit, submitted]);
 
+  // Discard any uncommitted draft when navigating to a different question
+  useEffect(() => {
+    draftAnswerRef.current = null;
+    setDraftVersion(v => v + 1);
+  }, [currentQuestionId]);
   useEffect(() => {
     if (questionScrollRef.current) {
       questionScrollRef.current.scrollTop = 0;
@@ -633,15 +645,29 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
     }
   };
 
+  // ─── Draft Answer Helpers ───
+  // Writes draft into the real answers array and marks for sync
+  const commitDraft = () => {
+    if (!currentQuestion) return;
+    const draft = draftAnswerRef.current;
+    if (draft && draft.questionId === currentQuestion._id) {
+      // Track answer changes (hesitation metric) when committing
+      const committed = answers.find(a => a.questionId === draft.questionId);
+      if (committed && committed.selectedAnswer.length > 0 && draft.selectedAnswer.length > 0) {
+        answerChangeCountRef.current[draft.questionId] = (answerChangeCountRef.current[draft.questionId] || 0) + 1;
+      }
+      updateAnswer(draft.questionId, draft.selectedAnswer, draft.status);
+      draftAnswerRef.current = null;
+    }
+  };
+
   const handleOptionSelect = (optionLabel) => {
     if (!currentQuestion) return;
-    const current = answers.find((a) => a.questionId === currentQuestion._id) || { selectedAnswer: [] };
-    
-    // Track answer changes (hesitation metric)
-    if (current.selectedAnswer.length > 0) {
-      answerChangeCountRef.current[currentQuestion._id] = (answerChangeCountRef.current[currentQuestion._id] || 0) + 1;
-    }
-    
+    // Use draft if it exists for this question, else fall back to committed answer
+    const current = (draftAnswerRef.current?.questionId === currentQuestion._id)
+      ? draftAnswerRef.current
+      : (answers.find((a) => a.questionId === currentQuestion._id) || { selectedAnswer: [] });
+
     recordFirstAction(currentQuestion._id);
 
     let newSelected;
@@ -655,7 +681,32 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
       newSelected = [optionLabel];
     }
 
-    updateAnswer(currentQuestion._id, newSelected, newSelected.length > 0 ? 'answered' : 'unanswered');
+    // ─── NEET / Capped Section Validation (check before writing draft) ───
+    const q = questions.find(qu => qu._id === currentQuestion._id);
+    const sectionName = q?.section || 'General';
+    const sectionConfig = testMeta?.sections?.find(s => s.name === sectionName);
+    if (sectionConfig?.maxAttemptable && newSelected.length > 0) {
+      const committedAnswer = answers.find(a => a.questionId === currentQuestion._id);
+      const wasAlreadyAnswered = committedAnswer && committedAnswer.selectedAnswer.length > 0;
+      if (!wasAlreadyAnswered) {
+        const answeredInSection = answers.filter(a => {
+          const qu = questions.find(qObj => qObj._id === a.questionId);
+          return (qu?.section || 'General') === sectionName && a.selectedAnswer.length > 0;
+        }).length;
+        if (answeredInSection >= sectionConfig.maxAttemptable) {
+          alert(`You have already answered the maximum allowed questions (${sectionConfig.maxAttemptable}) for ${sectionName}. Please clear a response to answer this question.`);
+          return;
+        }
+      }
+    }
+
+    // Write to draft only — NOT to the real answers array
+    draftAnswerRef.current = {
+      questionId: currentQuestion._id,
+      selectedAnswer: newSelected,
+      status: newSelected.length > 0 ? 'answered' : 'unanswered',
+    };
+    setDraftVersion(v => v + 1); // force re-render
   };
 
   const handleIntegerSelect = (val) => {
@@ -663,12 +714,21 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
     recordFirstAction(currentQuestion._id);
     const cleanVal = val.trim();
     const newSelected = cleanVal ? [cleanVal] : [];
-    updateAnswer(currentQuestion._id, newSelected, newSelected.length > 0 ? 'answered' : 'unanswered');
+    // Write to draft only
+    draftAnswerRef.current = {
+      questionId: currentQuestion._id,
+      selectedAnswer: newSelected,
+      status: newSelected.length > 0 ? 'answered' : 'unanswered',
+    };
+    setDraftVersion(v => v + 1);
   };
 
   const handleNumpadPress = (key) => {
     if (!currentQuestion || currentQuestion.type !== 'integer') return;
-    const currentValue = currentAnswer?.selectedAnswer?.[0] || '';
+    // Read from draft if present, else from committed answer
+    const currentValue = (draftAnswerRef.current?.questionId === currentQuestion._id)
+      ? (draftAnswerRef.current.selectedAnswer?.[0] || '')
+      : (currentAnswer?.selectedAnswer?.[0] || '');
     let nextValue = currentValue;
 
     if (key === 'backspace') {
@@ -688,20 +748,27 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
 
   const handleSaveNext = () => {
     if (!currentQuestion) return;
-    const current = answers.find((a) => a.questionId === currentQuestion._id);
-    const existingStatus = current ? current.status : 'not-visited';
-
-    if (current && current.selectedAnswer.length > 0 && existingStatus !== 'answered-and-marked') {
-      updateAnswer(currentQuestion._id, current.selectedAnswer, 'answered');
-    } else if (!current || current.selectedAnswer.length === 0) {
-      const newStatus = existingStatus === 'marked-for-review' ? 'marked-for-review' : 'unanswered';
-      updateAnswer(currentQuestion._id, [], newStatus);
+    // Check if there is a draft to commit
+    const hadDraft = draftAnswerRef.current?.questionId === currentQuestion._id;
+    if (hadDraft) {
+      // Commit the draft into real answers
+      commitDraft();
+    } else {
+      // No draft — preserve current committed status, just ensure the question is tracked
+      const current = answers.find((a) => a.questionId === currentQuestion._id);
+      const existingStatus = current ? current.status : 'not-visited';
+      if (!current || current.selectedAnswer.length === 0) {
+        const newStatus = existingStatus === 'marked-for-review' ? 'marked-for-review' : 'unanswered';
+        updateAnswer(currentQuestion._id, [], newStatus);
+      }
     }
     goNext();
   };
 
   const handleMarkForReview = () => {
     if (!currentQuestion) return;
+    // Commit draft first if present
+    commitDraft();
     const current = answers.find((a) => a.questionId === currentQuestion._id);
     const newStatus = current && current.selectedAnswer.length > 0 ? 'answered-and-marked' : 'marked-for-review';
     updateAnswer(currentQuestion._id, current ? current.selectedAnswer : [], newStatus);
@@ -710,6 +777,9 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
 
   const handleClearResponse = () => {
     if (!currentQuestion) return;
+    // Clear both draft and committed answer
+    draftAnswerRef.current = null;
+    setDraftVersion(v => v + 1);
     updateAnswer(currentQuestion._id, [], 'unanswered');
   };
 
@@ -1163,7 +1233,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
                   {currentQuestion?.contentTable && <RenderContentTable table={currentQuestion.contentTable} />}
                 </div>
                 {currentQuestion?.type !== 'integer' && currentQuestion?.options?.map((opt, i) => {
-                  const isSelected = currentAnswer?.selectedAnswer?.includes(opt.label);
+                  const isSelected = effectiveAnswer?.selectedAnswer?.includes(opt.label);
                   const isMultiple = currentQuestion.type === 'multiple';
                   
                   return (
@@ -1212,7 +1282,7 @@ export default function TestEngine({ testId, user, attemptId, attemptToken, onSu
                     <input
                       type="text"
                       readOnly
-                      value={currentAnswer?.selectedAnswer?.[0] || ''}
+                      value={effectiveAnswer?.selectedAnswer?.[0] || ''}
                       className="mb-3 h-[28px] w-[224px] border border-[#777] bg-white px-2 text-[18px] text-black outline-none"
                       aria-label="Numerical answer"
                     />
