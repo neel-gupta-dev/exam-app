@@ -18,6 +18,7 @@ import CutoffsManagement from './pages/CutoffsManagement';
 import ExamManagement from './pages/ExamManagement';
 import StudyMaterials from './pages/StudyMaterials';
 import Layout from './components/Layout';
+import LiveTracking from './pages/LiveTracking';
 
 import BattleQuestions from './pages/BattleQuestions';
 import UTMGenerator from './pages/UTMGenerator';
@@ -82,6 +83,7 @@ export default function App() {
             <Route path="/feedback" element={<FeedbackPage />} />
             <Route path="/tests" element={<TestManagement />} />
             <Route path="/test-telemetry" element={<TestTelemetry />} />
+            <Route path="/live-tracking" element={<LiveTracking />} />
             <Route path="/b2b" element={<AdminOnlyRoute><B2BManagement /></AdminOnlyRoute>} />
             <Route path="/cheatsheets" element={<Cheatsheets />} />
             <Route path="/study-materials" element={<StudyMaterials />} />

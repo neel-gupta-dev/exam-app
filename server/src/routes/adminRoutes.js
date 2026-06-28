@@ -46,6 +46,29 @@ router.use(protectAdmin);
 // ─── DASHBOARD ────────────────────────────────────────────────────────────────
 
 /**
+ * GET /api/admin/live-exams
+ * Returns all active (in-progress) test attempts with their current time left.
+ */
+router.get('/live-exams', asyncHandler(async (req, res) => {
+  const attempts = await TestAttempt.find({ status: 'in-progress' })
+    .populate('userId', 'name email')
+    .populate('testId', 'title durationMinutes')
+    .sort({ startedAt: -1 })
+    .lean();
+
+  const liveAttempts = attempts.map(attempt => {
+    let timeLeft = 0;
+    if (attempt.startedAt && attempt.testId && attempt.testId.durationMinutes) {
+      const elapsedSeconds = Math.floor((Date.now() - new Date(attempt.startedAt).getTime()) / 1000);
+      timeLeft = Math.max(0, (attempt.testId.durationMinutes * 60) - elapsedSeconds);
+    }
+    return { ...attempt, timeLeft };
+  });
+    
+  res.json({ liveAttempts });
+}));
+
+/**
  * GET /api/admin/stats
  * Returns aggregate counts for the dashboard overview.
  */

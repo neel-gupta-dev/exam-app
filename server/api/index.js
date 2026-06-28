@@ -209,7 +209,16 @@ app.use(globalLimiter);
 // --- API Routes ---
 const apiRouter = express.Router();
 apiRouter.get('/health', getHealth);
-apiRouter.use('/auth', authRoutes);
+
+// --- Strict Auth Rate Limiter ---
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30, // Limit each IP to 30 auth requests per 15 mins
+  message: { error: 'Too many authentication attempts, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+apiRouter.use('/auth', authLimiter, authRoutes);
 apiRouter.use('/resources', resourceRoutes);
 apiRouter.use('/users', userRoutes);
 apiRouter.use('/notes', noteRoutes);
