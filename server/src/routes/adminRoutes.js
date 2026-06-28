@@ -63,7 +63,7 @@ router.get('/live-exams', asyncHandler(async (req, res) => {
       timeLeft = Math.max(0, (attempt.testId.durationMinutes * 60) - elapsedSeconds);
     }
     return { ...attempt, timeLeft };
-  });
+  }).filter(attempt => attempt.timeLeft > 0);
     
   res.json({ liveAttempts });
 }));
